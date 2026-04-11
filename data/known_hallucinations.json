@@ -1,0 +1,31 @@
+{
+  "retired_patterns": [
+    "split-agent handoff",
+    "split-agent",
+    "Gemini executes W1 through W5",
+    "Workstreams W1 through W5 are executed by Gemini",
+    "Workstreams W6 and W7 are executed by Claude",
+    "Phase 1 (Production Readiness)",
+    "Phase: 1 (Production Readiness)",
+    "ahomw-Pillar-1",
+    "ahomw-Pillar-2",
+    "ahomw-Pillar-3",
+    "ahomw-Pillar-4",
+    "ahomw-Pillar-5",
+    "ahomw-Pillar-6",
+    "ahomw-Pillar-7",
+    "ahomw-Pillar-8",
+    "ahomw-Pillar-9",
+    "ahomw-Pillar-10",
+    "ahomw-G"
+  ],
+  "kjtcom_references_that_look_like_iao": [
+    "query_rag.py"
+  ],
+  "fabricated_history": [
+    "0.1.1 (2026-04-05)",
+    "Introduced run_report Bug",
+    "Introduced Versioning Bug",
+    "Introduced Legacy Harness"
+  ]
+}

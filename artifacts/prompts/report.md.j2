@@ -1,0 +1,19 @@
+{% include "_shared.md.j2" %}
+
+{% if seed %}
+=== GROUND TRUTH (SEED) ===
+{{ seed }}
+{% endif %}
+
+Task: write the **report** for aho iteration {{ iteration }}.
+
+A report is the post-iteration retrospective. It must:
+- Begin with a `# Report` header.
+- State the overall **status** (complete / partial / blocked) in a "## Summary" section.
+- Include a "## Workstream Scores" section with a table.
+- Summarize outcomes per workstream.
+- Identify what worked, what didn't, and what to carry into the next iteration.
+- Target length: 500-1000 words. DO NOT PAD.
+- Reference workstream ids.
+
+Output the markdown document only.

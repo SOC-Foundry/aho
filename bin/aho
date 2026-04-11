@@ -1,0 +1,22 @@
+#!/usr/bin/env fish
+# aho - Unified dispatcher for the AHO methodology fleet.
+
+set -l bin_dir (dirname (realpath (status filename)))
+
+switch $argv[1]
+    case "install"
+        # Delegate to aho-install if it exists, otherwise use cli
+        if test -x $bin_dir/aho-install
+            $bin_dir/aho-install $argv[2..-1]
+        else
+            $bin_dir/aho-cli $argv
+        end
+    case "mcp"
+        if test -x $bin_dir/aho-mcp
+            $bin_dir/aho-mcp $argv[2..-1]
+        else
+            $bin_dir/aho-cli $argv
+        end
+    case "*"
+        $bin_dir/aho-cli $argv
+end

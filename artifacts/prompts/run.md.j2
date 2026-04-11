@@ -1,0 +1,38 @@
+{# Run report template — mechanical assembly, not LLM synthesis. #}
+# Run Report — {{ prefix }} {{ iteration }}
+
+**Generated:** {{ now_utc }}
+**Iteration:** {{ iteration }}
+
+---
+
+## Workstream Summary
+
+| Workstream | Status | Agent |
+|---|---|---|
+{% for ws in workstreams %}- {{ ws.id }} | {{ ws.status }} | {{ ws.agent }}
+{% endfor %}
+
+---
+
+## Agent Questions for Kyle
+
+{% if agent_questions %}{% for q in agent_questions %}- {{ q }}
+{% endfor %}{% else %}(none){% endif %}
+
+---
+
+## Kyle's Notes for Next Iteration
+
+<!-- Fill in after reviewing the bundle -->
+
+
+---
+
+## Sign-off
+
+- [ ] I have reviewed the bundle
+- [ ] I have reviewed the build log
+- [ ] I have reviewed the report
+- [ ] I have answered all agent questions above
+- [ ] I am satisfied with this iteration's output

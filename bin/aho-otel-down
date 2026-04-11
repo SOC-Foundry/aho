@@ -1,0 +1,2 @@
+#!/usr/bin/env fish
+docker compose -f (dirname (status filename))/../docker-compose.otel.yml down

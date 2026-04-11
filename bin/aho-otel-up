@@ -1,0 +1,3 @@
+#!/usr/bin/env fish
+docker compose -f (dirname (status filename))/../docker-compose.otel.yml up -d
+echo "Jaeger UI: http://localhost:16686"

@@ -1,0 +1,69 @@
+{
+  "source_iteration": "0.1.4",
+  "target_iteration": "0.1.7",
+  "phase": 0,
+  "iteration_theme": "Let Qwen Cook \u2014 repair the artifact loop supporting Qwen",
+  "kyles_notes": "From 0.1.4 run report: component checklist per run, deploy openclaw/nemoclaw (claw3d is kjtcom).",
+  "agent_questions": [],
+  "carryover_debts": [
+    {
+      "source": "0.1.4 W5",
+      "description": "OpenClaw/NemoClaw non-functional stubs (NotImplementedError)",
+      "severity": "blocking"
+    },
+    {
+      "source": "0.1.4 W3",
+      "description": "Ambiguous pile pause mechanism never fired; 8 kjtcom gotchas migrated without classification",
+      "severity": "partial-doc"
+    },
+    {
+      "source": "0.1.5",
+      "description": "Artifact loop produces degenerate output \u2014 see INCOMPLETE.md",
+      "severity": "blocking"
+    }
+  ],
+  "scope_hints": "10 workstreams W0-W9. W1-W5 repair Qwen loop (streaming, structural gates, evaluator, rich seed, RAG recency). W6 experimental two-pass behind flag. W7 component checklist BUNDLE_SPEC \u00a722. W8 OpenClaw Ollama-native rebuild bypassing open-interpreter/tiktoken. W9 dogfood.",
+  "anti_hallucination_list": [
+    "query_registry.py",
+    "split-agent handoff",
+    "Gemini executes W1 through W5, Claude executes W6 and W7",
+    "Phase 1 (Production Readiness)",
+    "src/iao/harness/",
+    "src/iao/chain/",
+    "src/iao/llm/",
+    "src/iao/vector/"
+  ],
+  "retired_patterns": [
+    "split-agent handoff (retired in 0.1.4)"
+  ],
+  "known_file_paths": [
+    "src/iao/cli.py",
+    "src/iao/artifacts/loop.py",
+    "src/iao/artifacts/qwen_client.py",
+    "src/iao/artifacts/nemotron_client.py",
+    "src/iao/artifacts/glm_client.py",
+    "src/iao/artifacts/evaluator.py",
+    "src/iao/artifacts/repetition_detector.py",
+    "src/iao/rag/archive.py",
+    "src/iao/feedback/run_report.py",
+    "src/iao/feedback/seed.py",
+    "src/iao/postflight/structural_gates.py",
+    "src/iao/bundle.py",
+    "src/iao/agents/openclaw.py",
+    "src/iao/agents/nemoclaw.py"
+  ],
+  "known_cli_commands": [
+    "iao iteration design",
+    "iao iteration plan",
+    "iao iteration build-log",
+    "iao iteration report",
+    "iao iteration close",
+    "iao iteration seed",
+    "iao doctor quick",
+    "iao doctor preflight",
+    "iao doctor postflight",
+    "iao registry query",
+    "iao rag query",
+    "iao secret list"
+  ]
+}

@@ -1,0 +1,120 @@
+#!/usr/bin/env fish
+# aho-install - Idempotent environment installer for AHO.
+# Implementation for 0.1.14.
+
+set -l script_version "0.1.14"
+set -l target_home $HOME
+set -l dry_run 0
+
+# Parse arguments
+set -l i 1
+while test $i -le (count $argv)
+    switch $argv[$i]
+        case "--dry-run"
+            set dry_run 1
+        case "--target"
+            set i (math $i + 1)
+            set target_home $argv[$i]
+        case "*"
+            echo "Unknown argument: $argv[$i]"
+            exit 1
+    end
+    set i (math $i + 1)
+end
+
+function _info
+    set_color cyan; echo "[aho-install] $argv"; set_color normal
+end
+
+function _warn
+    set_color yellow; echo "[aho-install WARN] $argv"; set_color normal
+end
+
+function _error
+    set_color red; echo "[aho-install ERROR] $argv"; set_color normal
+end
+
+_info "Starting aho $script_version installation..."
+if test $dry_run -eq 1
+    _info "MODE: DRY RUN"
+end
+_info "Target HOME: $target_home"
+
+# 1. Create XDG directories
+set -l bin_dir "$target_home/.local/bin"
+set -l config_dir "$target_home/.config/aho"
+set -l share_dir "$target_home/.local/share/aho"
+
+for d in $bin_dir $config_dir $share_dir
+    if not test -d $d
+        _info "Creating directory: $d"
+        if test $dry_run -eq 0
+            mkdir -p $d
+        end
+    end
+end
+
+# 2. Symlink wrappers
+set -l project_root (dirname (dirname (realpath (status filename))))
+_info "Project root: $project_root"
+
+for wrapper in (command ls $project_root/bin/)
+    set -l src "$project_root/bin/$wrapper"
+    set -l dest "$bin_dir/$wrapper"
+    
+    if test "$wrapper" = "aho-install"
+        continue
+    end
+    
+    if not test -L $dest
+        _info "Linking $wrapper -> $bin_dir/"
+        if test $dry_run -eq 0
+            ln -sf $src $dest
+        end
+    else
+        _info "$wrapper already linked"
+    end
+end
+
+# 3. Update config.fish
+set -l config_fish "$target_home/.config/fish/config.fish"
+set -l marker_begin "# >>> aho >>>"
+set -l marker_end "# <<< aho <<<"
+
+if test -f $config_fish
+    if not grep -q "$marker_begin" $config_fish
+        _info "Adding aho block to $config_fish"
+        if test $dry_run -eq 0
+            printf '\n%s\n' "$marker_begin" >> $config_fish
+            printf '%s\n' "# Managed by aho install." >> $config_fish
+            printf 'set -gx AHO_PROJECT_ROOT "%s"\n' "$project_root" >> $config_fish
+            printf 'if test -d "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
+            printf '    fish_add_path "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
+            printf 'end\n' >> $config_fish
+            printf '%s\n' "$marker_end" >> $config_fish
+        end
+    else
+        _info "aho block already present in $config_fish"
+    end
+else
+    _warn "$config_fish not found, skipping shell config update"
+end
+
+# 4. Install python package
+_info "Ensuring aho package installed..."
+if test $dry_run -eq 0
+    cd $project_root
+    pip install -e . --break-system-packages --quiet
+else
+    _info "(dry-run) pip install -e ."
+end
+
+# 5. Run doctor
+_info "Running aho doctor..."
+if test $dry_run -eq 0
+    $project_root/bin/aho doctor quick
+else
+    _info "(dry-run) aho doctor quick"
+end
+
+_info "Installation complete."

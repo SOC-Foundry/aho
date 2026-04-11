@@ -1,0 +1,2 @@
+#!/usr/bin/env fish
+cd (dirname (status filename))/../app; flutter build web --release

@@ -1,0 +1,30 @@
+[project]
+name = "aho"
+version = "0.1.16"
+description = "Agentic Harness Orchestration middleware"
+requires-python = ">=3.11"
+dependencies = [
+    "litellm",
+    "jsonschema",
+    "opentelemetry-api>=1.25",
+    "opentelemetry-sdk>=1.25",
+    "opentelemetry-exporter-otlp>=1.25",
+]
+
+[project.urls]
+Homepage = "https://aho.run"
+Repository = "https://github.com/soc-foundry/aho"
+
+[project.scripts]
+aho = "aho.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["aho*"]
+
+[tool.pytest.ini_options]
+testpaths = ["artifacts/tests"]

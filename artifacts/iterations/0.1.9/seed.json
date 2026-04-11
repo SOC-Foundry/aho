@@ -1,0 +1,21 @@
+{
+  "project": "aho",
+  "iteration": "0.1.9",
+  "theme": "IAO -> AHO rename + RAG archive rebuild + build log filename split",
+  "status": "success",
+  "deliverables": [
+    "Python package renamed src/iao -> src/aho",
+    "CLI renamed bin/iao -> bin/aho",
+    "State files renamed .iao.json -> .aho.json",
+    "ChromaDB collection rebuilt as aho_archive with appendix filter",
+    "Gotcha codes renamed iaomw-G* -> aho-G*",
+    "Build log filename split implemented (ADR-042)",
+    "Evaluator baseline made dynamic",
+    "RAG query filter for forbidden substrings implemented"
+  ],
+  "anti_hallucination_list": [
+    "split-agent",
+    "iaomw-Pillar-1",
+    "open-interpreter"
+  ]
+}

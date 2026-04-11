@@ -1,0 +1,30 @@
+# Canonical artifacts that must carry current iteration version.
+# Checked by src/aho/postflight/canonical_artifacts_current.py
+artifacts:
+  - path: artifacts/harness/base.md
+    pattern: '\*\*Version:\*\* (\S+)'
+    description: Base harness
+
+  - path: artifacts/harness/agents-architecture.md
+    pattern: '\*\*Version:\*\* (\S+)'
+    description: Agents architecture
+
+  - path: artifacts/harness/model-fleet.md
+    pattern: '\*\*Version:\*\* (\S+)'
+    description: Model fleet spec
+
+  - path: artifacts/phase-charters/aho-phase-0.md
+    pattern: '\*\*Charter version:\*\* (\S+)'
+    description: Phase 0 charter
+
+  - path: README.md
+    pattern: '\*\*Iteration (\S+)\*\*'
+    description: README iteration reference
+
+  - path: pyproject.toml
+    pattern: '^version = "([^"]+)"'
+    description: Package version
+
+  - path: CLAUDE.md
+    pattern: 'updated during (\S+)'
+    description: CLAUDE.md iteration reference

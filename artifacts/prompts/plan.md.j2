@@ -1,0 +1,18 @@
+{% include "_shared.md.j2" %}
+
+{% if seed %}
+=== GROUND TRUTH (SEED) ===
+{{ seed }}
+{% endif %}
+
+Task: write the **plan** document for aho iteration {{ iteration }}.
+
+A plan turns the design into concrete, ordered work. It must:
+- Begin with a "What is aho" summary.
+- Include "Section A" through "Section E" covering pre-flight, dependencies, workstream implementation, acceptance, and schedule.
+- List each workstream with: goal, deliverables, dependencies, and acceptance checks.
+- Include preflight and postflight expectations.
+- Target length: 1500-2500 words. DO NOT PAD IF YOU RUN OUT OF CONTENT.
+- Reference every workstream id (W0, W1, ...).
+
+Output the markdown document only.

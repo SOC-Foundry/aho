@@ -1,0 +1,19 @@
+{% include "_shared.md.j2" %}
+
+{% if seed %}
+=== GROUND TRUTH (SEED) ===
+{{ seed }}
+{% endif %}
+
+Task: write the **build log** for aho iteration {{ iteration }}.
+
+A build log is a chronological record of what actually happened during execution. It must:
+- Begin with a `# Build Log` header.
+- Include a `Start:` timestamp line (use {{ now_utc }}).
+- Include a `## W0` section for environment hygiene.
+- For each workstream, include an entry summarizing actions and any deviations.
+- Include a `## Build Log Synthesis` section where you reflect on the overall execution flow, highlighting any patterns in the discrepancies or successes across workstreams.
+- Target length: 500-1500 words. DO NOT PAD. Focus on factual event record.
+- Reference workstream ids explicitly.
+
+Output the markdown document only.

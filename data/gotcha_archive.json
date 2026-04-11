@@ -1,0 +1,168 @@
+{
+  "gotchas": [
+    {
+      "id": "aho-G103",
+      "title": "Plaintext Secrets in Shell Config",
+      "pattern": "Secrets stored as 'set -x' in config.fish are world-readable to any process running as the user, including backups, screen sharing, and accidentally catting the file.",
+      "symptoms": [
+        "API keys or tokens visible in shell configuration files",
+        "Secrets appearing in shell history or environment snapshots",
+        "Risk of accidental exposure during live sessions"
+      ],
+      "mitigation": "Use iao encrypted secrets store (age + keyring). Remove plaintext 'set -x' lines and replace with 'iao secret export --fish | source'.",
+      "context": "Added in iao 0.1.2 W3 during secrets architecture overhaul."
+    },
+    {
+      "id": "aho-G104",
+      "title": "Flat-layout Python package shadows repo name",
+      "pattern": "A Python package at repo_root/pkg/pkg/ creates ambiguous imports and confusing directory navigation.",
+      "symptoms": [
+        "cd iao/iao is a valid command",
+        "Import tooling confused about which iao/ is the package",
+        "Editable installs resolve wrong directory"
+      ],
+      "mitigation": "Use src-layout from project start; refactor early if inherited. iao 0.1.3 W2 migrated iao/iao/ to iao/src/iao/.",
+      "context": "Added in iao 0.1.3 W2 during src-layout refactor."
+    },
+    {
+      "id": "aho-G105",
+      "title": "Existence-only acceptance criteria mask quality failures",
+      "pattern": "Success criteria that check only whether a file exists allow stubs and empty artifacts to pass quality gates.",
+      "symptoms": [
+        "Bundle at 3.2 KB passes post-flight despite reference being 600 KB",
+        "Artifacts contain only headers and no substantive content",
+        "Quality regressions invisible to automation"
+      ],
+      "mitigation": "Every success criterion must include a content check, not just an existence check. iao 0.1.3 W3 added bundle quality gates enforcing minimum size and section completeness.",
+      "context": "Added in iao 0.1.3 W3. Root cause: iao 0.1.2 W7 retrospective."
+    },
+    {
+      "id": "aho-G106",
+      "title": "README falls behind reality without enforcement",
+      "pattern": "README not updated during iterations, creating drift between documentation and actual package state.",
+      "symptoms": [
+        "README references old version numbers or missing features",
+        "New subpackages and CLI commands undocumented",
+        "README component count does not match actual filesystem"
+      ],
+      "mitigation": "Add post-flight check that verifies README.mtime > iteration_start. iao 0.1.3 W6 added readme_current check.",
+      "context": "Added in iao 0.1.3 W6."
+    },
+    {
+      "id": "aho-G107",
+      "title": "Four-octet versioning drift from kjtcom pattern-match",
+      "pattern": "iao versioning is locked to X.Y.Z three octets. kjtcom uses X.Y.Z.W because kjtcom Z is semantic. pattern-matching from kjtcom causes version drift.",
+      "symptoms": [
+        "Iteration versions appearing as 0.1.3.1 or 0.1.4.0",
+        "Inconsistent metadata across pyproject.toml, VERSION, and .iao.json",
+        "Post-flight validation failures on version strings"
+      ],
+      "mitigation": "Strictly adhere to three-octet X.Y.Z format. Use Regex validator in src/iao/config.py to enforce at iteration close.",
+      "context": "Added in iao 0.1.4 W1.7 resolution of 0.1.3 planning drift."
+    },
+    {
+      "id": "aho-G108",
+      "title": "Heredocs break agents",
+      "pattern": "`printf` only. Never `<<EOF`.",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "`printf` only. Never `<<EOF`.",
+      "context": "Migrated from kjtcom G1 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G1"
+    },
+    {
+      "id": "aho-G109",
+      "title": "Gemini runs bash by default",
+      "pattern": "Wrap fish-specific commands: `fish -c \"your command\"`. Bash works for general commands.",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Wrap fish-specific commands: `fish -c \"your command\"`. Bash works for general commands.",
+      "context": "Migrated from kjtcom G19 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G19"
+    },
+    {
+      "id": "aho-G110",
+      "title": "TripleDB schema drift during migration",
+      "pattern": "Inspect actual Firestore data before any schema migration; verify field consistency across all documents",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Inspect actual Firestore data before any schema migration; verify field consistency across all documents",
+      "context": "Migrated from kjtcom G31 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G31"
+    },
+    {
+      "id": "aho-G111",
+      "title": "Detail panel provider not accessible at all viewport sizes",
+      "pattern": "Ensure DetailPanel NotifierProvider is always in widget tree at all viewport sizes",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Ensure DetailPanel NotifierProvider is always in widget tree at all viewport sizes",
+      "context": "Migrated from kjtcom G39 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G39"
+    },
+    {
+      "id": "aho-G112",
+      "title": "Widget rebuild triggers event handlers multiple times",
+      "pattern": "Added deduplication logic and guard flags to prevent handler re-execution",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Added deduplication logic and guard flags to prevent handler re-execution",
+      "context": "Migrated from kjtcom G41 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G41"
+    },
+    {
+      "id": "aho-G113",
+      "title": "TripleDB results displaying show names in title case",
+      "pattern": "Data fix via fix_tripledb_shows_case.py (same as G37)",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Data fix via fix_tripledb_shows_case.py (same as G37)",
+      "context": "Migrated from kjtcom G49 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G49"
+    },
+    {
+      "id": "aho-G114",
+      "title": "Self-grading bias accepted as Tier-1",
+      "pattern": "ADR-015 hard cap + Pattern 20.",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "ADR-015 hard cap + Pattern 20.",
+      "context": "Migrated from kjtcom G62 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G62"
+    },
+    {
+      "id": "aho-G115",
+      "title": "Agent asks for permission",
+      "pattern": "Pre-flight notes-and-proceeds",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Pre-flight notes-and-proceeds",
+      "context": "Migrated from kjtcom G71 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G71"
+    },
+    {
+      "title": "Evaluator dynamic baseline loads at init, misses files created mid-run",
+      "surfaced_in": "0.1.11 W4",
+      "description": "The evaluator's allowed-files baseline loaded at module init, before the current run's W1 could create or rename files. Synthesis runs that referenced newly-created files were rejected as hallucinations, causing a 2-hour rejection loop in 0.1.11.",
+      "fix": "Reload baseline inside evaluate_text() on every call. ~10ms overhead, correct in the presence of mid-run file changes.",
+      "status": "fixed in 0.1.12 W1",
+      "id": "aho-G060"
+    },
+    {
+      "title": "Scripts emitting events should read iteration from checkpoint not env",
+      "surfaced_in": "0.1.11 W4",
+      "description": "smoke_instrumentation.py logged events stamped with the previous iteration version because it read from an env var that wasn't re-exported after checkpoint bump.",
+      "fix": "Scripts that emit events must read iteration from .aho-checkpoint.json at script start.",
+      "status": "fixed in 0.1.12 W2",
+      "id": "aho-G061"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "iteration": "0.1.16",
+  "phase": 0,
+  "run_type": "mixed",
+  "current_workstream": "W2",
+  "workstreams": {
+    "W0": "pass",
+    "W1": "pass",
+    "W2": "pass"
+  },
+  "executor": "claude-code",
+  "started_at": "2026-04-11T08:00:00Z",
+  "last_event": "close_complete",
+  "status": "closed",
+  "closed_at": "2026-04-11T13:47:12Z"
+}

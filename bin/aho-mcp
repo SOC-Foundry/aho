@@ -1,0 +1,28 @@
+#!/usr/bin/env fish
+# aho-mcp - Global MCP package manager for AHO.
+# Implementation planned for 0.1.14.
+
+function _info
+    set_color cyan; echo "[aho-mcp] $argv"; set_color normal
+end
+
+_info "Checking Node.js environment..."
+if command -q node
+    _info "Node.js version: "(node -v)
+else
+    _info "Node.js NOT found"
+end
+
+if command -q npm
+    _info "npm version: "(npm -v)
+else
+    _info "npm NOT found"
+end
+
+_info "Declared MCP packages (Skeleton):"
+echo "- @upstash/context7-mcp"
+echo "- firecrawl-mcp"
+echo "- @playwright/mcp"
+echo "- @modelcontextprotocol/server-filesystem"
+
+_info "MCP skeleton complete. Full implementation in 0.1.14."

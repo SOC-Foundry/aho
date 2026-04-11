@@ -1,0 +1,16 @@
+{# Shared context block included by every artifact template. #}
+Project: {{ project }} (code: {{ project_code }})
+Iteration: {{ iteration }}
+Generated: {{ now_utc }}
+
+Workstreams in this iteration:
+{% for ws in workstreams %}- {{ ws.id }}: {{ ws.description }}
+{% endfor %}
+{% if prior_artifacts %}
+Earlier artifacts already produced for this iteration (excerpts may be long; treat them as authoritative context):
+{% for kind, body in prior_artifacts.items() %}
+--- BEGIN {{ kind }} ---
+{{ body }}
+--- END {{ kind }} ---
+{% endfor %}
+{% endif %}

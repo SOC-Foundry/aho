@@ -1,0 +1,24 @@
+{% include "_shared.md.j2" %}
+
+{% if seed %}
+=== GROUND TRUTH (SEED) ===
+{{ seed }}
+{% endif %}
+
+Task: write the **design** document for aho iteration {{ iteration }}.
+
+A design document explains *what* the iteration is doing and *why*. It must:
+- Open with a "What is aho" section containing a one-paragraph executive summary.
+- Include sections labeled §1 through §10 covering phase position, rationale, and workstream details.
+- Include the Trident mermaid block and all Ten Pillars verbatim (these are provided below).
+- State the problem this iteration solves and the constraints it operates under.
+- Walk through each workstream in order, describing scope and intent.
+- Identify risks and the iteration's exit criteria.
+- Target length: 2000-3000 words. DO NOT PAD IF YOU RUN OUT OF CONTENT. Stop when you have nothing more substantive to say.
+- Reference each workstream by id (W0, W1, ...).
+
+{{ trident_block }}
+
+{{ ten_pillars_block }}
+
+Output the markdown document only. No preamble, no trailing commentary.

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# iao CLI dispatcher
+# v0.1.0
+set -e
+
+SCRIPT="$(readlink -f "${BASH_SOURCE[0]}")"
+BIN_DIR="$(dirname "$SCRIPT")"
+MIDDLEWARE_ROOT="$(dirname "$BIN_DIR")"
+
+if ! python3 -c "import aho" 2>/dev/null; then
+    export PYTHONPATH="$MIDDLEWARE_ROOT:$PYTHONPATH"
+fi
+
+exec python3 -m aho.cli "$@"

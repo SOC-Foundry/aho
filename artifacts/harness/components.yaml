@@ -1,0 +1,461 @@
+schema_version: 1
+components:
+  # === Named stubs (Phase 0 exit track) ===
+  - name: openclaw
+    kind: agent
+    path: src/aho/agents/openclaw.py
+    status: stub
+    owner: soc-foundry
+    next_iteration: "0.1.16"
+    notes: "ephemeral Python only; global wrapper + install pending 0.1.16"
+
+  - name: nemoclaw
+    kind: agent
+    path: src/aho/agents/nemoclaw.py
+    status: stub
+    owner: soc-foundry
+    next_iteration: "0.1.16"
+    notes: "orchestration layer; routing logic stubbed; global wrapper pending 0.1.16"
+
+  - name: telegram
+    kind: external_service
+    path: src/aho/telegram/notifications.py
+    status: stub
+    owner: soc-foundry
+    next_iteration: "0.1.16"
+    notes: "deferred since 0.1.4 charter; bridge real implementation pending 0.1.16"
+
+  # === LLM clients ===
+  - name: qwen-client
+    kind: llm
+    path: src/aho/artifacts/qwen_client.py
+    status: active
+    owner: soc-foundry
+
+  - name: nemotron-client
+    kind: llm
+    path: src/aho/artifacts/nemotron_client.py
+    status: active
+    owner: soc-foundry
+
+  - name: glm-client
+    kind: llm
+    path: src/aho/artifacts/glm_client.py
+    status: active
+    owner: soc-foundry
+
+  # === External services ===
+  - name: chromadb
+    kind: external_service
+    path: src/aho/rag/archive.py
+    status: active
+    owner: soc-foundry
+
+  - name: ollama
+    kind: external_service
+    path: src/aho/ollama_config.py
+    status: active
+    owner: soc-foundry
+
+  - name: opentelemetry
+    kind: external_service
+    path: src/aho/logger.py
+    status: active
+    owner: soc-foundry
+    notes: "dual emitter alongside JSONL; activated 0.1.15 W2"
+
+  # === Agent roles ===
+  - name: assistant-role
+    kind: agent
+    path: src/aho/agents/roles/assistant.py
+    status: active
+    owner: soc-foundry
+
+  - name: base-role
+    kind: agent
+    path: src/aho/agents/roles/base_role.py
+    status: active
+    owner: soc-foundry
+
+  - name: code-runner-role
+    kind: agent
+    path: src/aho/agents/roles/code_runner.py
+    status: active
+    owner: soc-foundry
+
+  - name: reviewer-role
+    kind: agent
+    path: src/aho/agents/roles/reviewer.py
+    status: active
+    owner: soc-foundry
+
+  # === Core modules ===
+  - name: cli
+    kind: python_module
+    path: src/aho/cli.py
+    status: active
+    owner: soc-foundry
+
+  - name: config
+    kind: python_module
+    path: src/aho/config.py
+    status: active
+    owner: soc-foundry
+
+  - name: doctor
+    kind: python_module
+    path: src/aho/doctor.py
+    status: active
+    owner: soc-foundry
+
+  - name: logger
+    kind: python_module
+    path: src/aho/logger.py
+    status: active
+    owner: soc-foundry
+
+  - name: paths
+    kind: python_module
+    path: src/aho/paths.py
+    status: active
+    owner: soc-foundry
+
+  - name: harness
+    kind: python_module
+    path: src/aho/harness.py
+    status: active
+    owner: soc-foundry
+
+  - name: compatibility
+    kind: python_module
+    path: src/aho/compatibility.py
+    status: active
+    owner: soc-foundry
+
+  - name: push
+    kind: python_module
+    path: src/aho/push.py
+    status: active
+    owner: soc-foundry
+
+  - name: registry
+    kind: python_module
+    path: src/aho/registry.py
+    status: active
+    owner: soc-foundry
+
+  - name: ollama-config
+    kind: python_module
+    path: src/aho/ollama_config.py
+    status: active
+    owner: soc-foundry
+
+  # === Artifact loop ===
+  - name: artifact-loop
+    kind: python_module
+    path: src/aho/artifacts/loop.py
+    status: active
+    owner: soc-foundry
+
+  - name: artifact-context
+    kind: python_module
+    path: src/aho/artifacts/context.py
+    status: active
+    owner: soc-foundry
+
+  - name: artifact-evaluator
+    kind: python_module
+    path: src/aho/artifacts/evaluator.py
+    status: active
+    owner: soc-foundry
+
+  - name: artifact-schemas
+    kind: python_module
+    path: src/aho/artifacts/schemas.py
+    status: active
+    owner: soc-foundry
+
+  - name: artifact-templates
+    kind: python_module
+    path: src/aho/artifacts/templates.py
+    status: active
+    owner: soc-foundry
+
+  - name: repetition-detector
+    kind: python_module
+    path: src/aho/artifacts/repetition_detector.py
+    status: active
+    owner: soc-foundry
+
+  # === Bundle ===
+  - name: bundle
+    kind: python_module
+    path: src/aho/bundle/__init__.py
+    status: active
+    owner: soc-foundry
+
+  - name: components-section
+    kind: python_module
+    path: src/aho/bundle/components_section.py
+    status: active
+    owner: soc-foundry
+
+  # === Feedback ===
+  - name: report-builder
+    kind: python_module
+    path: src/aho/feedback/report_builder.py
+    status: active
+    owner: soc-foundry
+    notes: "mechanical report builder, added 0.1.15 W0"
+
+  - name: feedback-run
+    kind: python_module
+    path: src/aho/feedback/run.py
+    status: active
+    owner: soc-foundry
+
+  - name: feedback-prompt
+    kind: python_module
+    path: src/aho/feedback/prompt.py
+    status: active
+    owner: soc-foundry
+
+  - name: feedback-questions
+    kind: python_module
+    path: src/aho/feedback/questions.py
+    status: active
+    owner: soc-foundry
+
+  - name: feedback-summary
+    kind: python_module
+    path: src/aho/feedback/summary.py
+    status: active
+    owner: soc-foundry
+
+  - name: feedback-seed
+    kind: python_module
+    path: src/aho/feedback/seed.py
+    status: active
+    owner: soc-foundry
+
+  - name: build-log-stub
+    kind: python_module
+    path: src/aho/feedback/build_log_stub.py
+    status: active
+    owner: soc-foundry
+
+  # === Pipelines ===
+  - name: pipeline-scaffold
+    kind: python_module
+    path: src/aho/pipelines/scaffold.py
+    status: active
+    owner: soc-foundry
+
+  - name: pipeline-validate
+    kind: python_module
+    path: src/aho/pipelines/validate.py
+    status: active
+    owner: soc-foundry
+
+  - name: pipeline-registry
+    kind: python_module
+    path: src/aho/pipelines/registry.py
+    status: active
+    owner: soc-foundry
+
+  - name: pipeline-pattern
+    kind: python_module
+    path: src/aho/pipelines/pattern.py
+    status: active
+    owner: soc-foundry
+
+  # === Postflight gates ===
+  - name: pf-artifacts-present
+    kind: python_module
+    path: src/aho/postflight/artifacts_present.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-build-log-complete
+    kind: python_module
+    path: src/aho/postflight/build_log_complete.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-bundle-quality
+    kind: python_module
+    path: src/aho/postflight/bundle_quality.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-gemini-compat
+    kind: python_module
+    path: src/aho/postflight/gemini_compat.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-iteration-complete
+    kind: python_module
+    path: src/aho/postflight/iteration_complete.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-layout
+    kind: python_module
+    path: src/aho/postflight/layout.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-manifest-current
+    kind: python_module
+    path: src/aho/postflight/manifest_current.py
+    status: active
+    owner: soc-foundry
+    notes: "added 0.1.15 W0"
+
+  - name: pf-changelog-current
+    kind: python_module
+    path: src/aho/postflight/changelog_current.py
+    status: active
+    owner: soc-foundry
+    notes: "added 0.1.15 W0"
+
+  - name: pf-pillars-present
+    kind: python_module
+    path: src/aho/postflight/pillars_present.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-pipeline-present
+    kind: python_module
+    path: src/aho/postflight/pipeline_present.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-readme-current
+    kind: python_module
+    path: src/aho/postflight/readme_current.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-run-complete
+    kind: python_module
+    path: src/aho/postflight/run_complete.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-run-quality
+    kind: python_module
+    path: src/aho/postflight/run_quality.py
+    status: active
+    owner: soc-foundry
+
+  - name: pf-structural-gates
+    kind: python_module
+    path: src/aho/postflight/structural_gates.py
+    status: active
+    owner: soc-foundry
+
+  # === Preflight ===
+  - name: preflight-checks
+    kind: python_module
+    path: src/aho/preflight/checks.py
+    status: active
+    owner: soc-foundry
+
+  # === RAG ===
+  - name: rag-archive
+    kind: python_module
+    path: src/aho/rag/archive.py
+    status: active
+    owner: soc-foundry
+
+  - name: rag-query
+    kind: python_module
+    path: src/aho/rag/query.py
+    status: active
+    owner: soc-foundry
+
+  - name: rag-router
+    kind: python_module
+    path: src/aho/rag/router.py
+    status: active
+    owner: soc-foundry
+
+  # === Secrets ===
+  - name: secrets-store
+    kind: python_module
+    path: src/aho/secrets/store.py
+    status: active
+    owner: soc-foundry
+
+  - name: secrets-session
+    kind: python_module
+    path: src/aho/secrets/session.py
+    status: active
+    owner: soc-foundry
+
+  - name: secrets-cli
+    kind: python_module
+    path: src/aho/secrets/cli.py
+    status: active
+    owner: soc-foundry
+
+  - name: secrets-backend-age
+    kind: python_module
+    path: src/aho/secrets/backends/age.py
+    status: active
+    owner: soc-foundry
+
+  - name: secrets-backend-base
+    kind: python_module
+    path: src/aho/secrets/backends/base.py
+    status: active
+    owner: soc-foundry
+
+  - name: secrets-backend-fernet
+    kind: python_module
+    path: src/aho/secrets/backends/fernet.py
+    status: active
+    owner: soc-foundry
+
+  - name: secrets-backend-keyring
+    kind: python_module
+    path: src/aho/secrets/backends/keyring_linux.py
+    status: active
+    owner: soc-foundry
+
+  # === Install ===
+  - name: install-migrate-config
+    kind: python_module
+    path: src/aho/install/migrate_config_fish.py
+    status: active
+    owner: soc-foundry
+
+  - name: install-secret-patterns
+    kind: python_module
+    path: src/aho/install/secret_patterns.py
+    status: active
+    owner: soc-foundry
+
+  # === Integrations ===
+  - name: brave-integration
+    kind: python_module
+    path: src/aho/integrations/brave.py
+    status: active
+    owner: soc-foundry
+
+  # === Data ===
+  - name: firestore
+    kind: python_module
+    path: src/aho/data/firestore.py
+    status: active
+    owner: soc-foundry
+
+  # === Components (self-reference) ===
+  - name: component-manifest
+    kind: python_module
+    path: src/aho/components/manifest.py
+    status: active
+    owner: soc-foundry
+    notes: "added 0.1.15 W1"

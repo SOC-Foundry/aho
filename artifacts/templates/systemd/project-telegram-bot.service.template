@@ -1,0 +1,20 @@
+[Unit]
+Description={project} IAO Telegram Bot
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=notify
+User={user}
+WorkingDirectory={project_root}
+Environment=IAO_ITERATION={iteration}
+Environment=IAO_PROJECT_NAME={project}
+# Note: bot.env should be migrated to secrets store in future iterations
+EnvironmentFile=%h/.config/{project}/bot.env
+ExecStart=/usr/bin/python3 scripts/telegram_bot.py
+Restart=always
+RestartSec=30
+WatchdogSec=600
+
+[Install]
+WantedBy=multi-user.target
