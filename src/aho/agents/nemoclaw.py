@@ -28,7 +28,9 @@ class NemoClawOrchestrator:
         else:
             roles = roles[:session_count] + ["assistant"] * max(0, session_count - len(roles))
 
-        self.sessions = [OpenClawSession(role=r) for r in roles]
+        from aho.orchestrator_config import get_openclaw_model
+        model = get_openclaw_model()
+        self.sessions = [OpenClawSession(model=model, role=r) for r in roles]
         self.roles = roles
 
     def route(self, task: str) -> str:

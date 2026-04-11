@@ -1,6 +1,6 @@
 # aho Dashboard Contract
 
-**Version:** 0.2.6
+**Version:** 0.2.7
 **Date:** 2026-04-11
 **Scope:** Heartbeat schema, health states, polling contract for localhost dashboard
 

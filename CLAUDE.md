@@ -84,4 +84,4 @@ Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. I
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.6 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 — updated during 0.2.7 W0. Next rewrite: Phase 1 boundary.*

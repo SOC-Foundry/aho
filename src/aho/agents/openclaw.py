@@ -27,10 +27,13 @@ _tracer = trace.get_tracer("aho.openclaw")
 class OpenClawSession:
     def __init__(
         self,
-        model: str = "qwen3.5:9b",
+        model: str = None,
         role: str = "assistant",
         system_prompt: Optional[str] = None,
     ):
+        if model is None:
+            from aho.orchestrator_config import get_openclaw_model
+            model = get_openclaw_model()
         self.model = model
         self.role = role
         self.system_prompt = system_prompt or f"You are a helpful {role}. Be concise."

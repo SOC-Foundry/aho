@@ -1,5 +1,21 @@
 # aho changelog
 
+## [0.2.7] — 2026-04-11
+
+**Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config
+
+- `src/aho/dashboard/` — new Python module: aggregator + HTTP server for localhost dashboard
+- `bin/aho-dashboard` rewritten to serve `/api/state` (aggregated JSON) and `/` (Flutter app)
+- `/api/state` endpoint aggregates system, component, daemon, trace, MCP, and model state with 2s cache
+- Flutter Web dashboard at `web/claw3d/` — 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
+- Trident palette (#0D9488 shaft, #161B22 background, #4ADE80 accent), monospace typography, 5s polling
+- `components-coverage.md` — 88 components audited, all mapped to install.fish steps, zero gaps
+- `~/.config/aho/orchestrator.json` — engine (reserved), search provider, openclaw/nemoclaw model config
+- `bin/aho-secrets-init --add-brave-token` — interactive prompt, fernet-encrypted storage
+- openclaw and nemoclaw read model defaults from orchestrator.json, fallback to hardcoded
+- `set_attrs_from_dict()` helper in logger.py — recursive OTEL span attribute flattening (aho-G064 final fix)
+- 158 tests passing (up from 143)
+
 ## [0.2.6] — 2026-04-11
 
 **Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor

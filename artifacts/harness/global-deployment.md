@@ -1,6 +1,6 @@
 # aho Global Deployment Architecture
 
-**Version:** 0.2.6
+**Version:** 0.2.7
 **Date:** 2026-04-11
 **Scope:** Hybrid systemd model for clone-to-deploy on Arch Linux
 

@@ -92,6 +92,23 @@ def test_otel_dict_tokens_flattened_to_scalars(tmp_path):
             pytest.fail("aho.tokens set as dict instead of flattened scalars")
 
 
+def test_set_attrs_from_dict_nested(tmp_path):
+    """set_attrs_from_dict handles nested dicts and scalars (aho-G064)."""
+    from aho.logger import set_attrs_from_dict
+    mock_span = MagicMock()
+    set_attrs_from_dict(mock_span, "test", {"a": 1, "b": {"c": "deep"}})
+    mock_span.set_attribute.assert_any_call("test.a", 1)
+    mock_span.set_attribute.assert_any_call("test.b.c", "deep")
+
+
+def test_set_attrs_from_dict_scalar(tmp_path):
+    """set_attrs_from_dict handles plain scalar values."""
+    from aho.logger import set_attrs_from_dict
+    mock_span = MagicMock()
+    set_attrs_from_dict(mock_span, "test.count", 42)
+    mock_span.set_attribute.assert_called_once_with("test.count", 42)
+
+
 def test_otel_failure_does_not_break_jsonl(tmp_path):
     """If OTEL tracer raises, JSONL must still be written."""
     log_path = tmp_path / "events.jsonl"

@@ -1,6 +1,6 @@
 [project]
 name = "aho"
-version = "0.2.6"
+version = "0.2.7"
 description = "Agentic Harness Orchestration middleware"
 requires-python = ">=3.11"
 dependencies = [

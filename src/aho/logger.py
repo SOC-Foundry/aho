@@ -86,6 +86,26 @@ except Exception as _e:
     _ITERATION = "MISSING_ENV_VAR"
 
 
+def set_attrs_from_dict(span, prefix, value):
+    """Flatten a dict (or scalar) into OTEL span attributes.
+
+    OTEL attributes must be scalar (str, int, float, bool) or sequences of
+    scalars. Dicts cause 'Invalid type dict' errors. This helper flattens
+    nested dicts into dotted-key scalars. aho-G064.
+    """
+    if isinstance(value, dict):
+        for k, v in value.items():
+            set_attrs_from_dict(span, f"{prefix}.{k}", v)
+    elif isinstance(value, (list, tuple)):
+        # OTEL accepts sequences of homogeneous scalars
+        safe = [str(item) if not isinstance(item, (str, int, float, bool)) else item for item in value]
+        span.set_attribute(prefix, safe)
+    elif isinstance(value, (str, int, float, bool)):
+        span.set_attribute(prefix, value)
+    else:
+        span.set_attribute(prefix, str(value))
+
+
 def emit_heartbeat(component_name, dashboard_port=None, interval=30):
     """Emit heartbeat spans at regular intervals. Runs in a daemon thread.
 
@@ -223,11 +243,7 @@ def log_event(event_type, source_agent, target, action,
                 span.set_attribute("aho.action", action or "")
                 span.set_attribute("aho.status", status or "")
                 if tokens is not None:
-                    if isinstance(tokens, dict):
-                        for k, v in tokens.items():
-                            span.set_attribute(f"aho.tokens.{k}", v)
-                    else:
-                        span.set_attribute("aho.tokens", tokens)
+                    set_attrs_from_dict(span, "aho.tokens", tokens)
                 if latency_ms is not None:
                     span.set_attribute("aho.latency_ms", latency_ms)
                 if error:

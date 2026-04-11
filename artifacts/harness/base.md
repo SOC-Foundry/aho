@@ -1,6 +1,6 @@
 # aho - Base Harness
 
-**Version:** 0.2.6
+**Version:** 0.2.7
 **Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
@@ -119,4 +119,4 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 ---
 
-*base.md v0.2.6 - ahomw. Inviolable. Projects extend via project-specific harnesses.*
+*base.md v0.2.7 - ahomw. Inviolable. Projects extend via project-specific harnesses.*
