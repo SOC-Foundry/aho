@@ -8,7 +8,7 @@
 
 ## Phase 0 Objective
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `bin/aho-install` on P3 produces a working aho environment with local model fleet operational.
+Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
 
 ## Your Role
 
@@ -84,4 +84,4 @@ Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. I
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.4 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 — updated during 0.2.6 W0. Next rewrite: Phase 1 boundary.*

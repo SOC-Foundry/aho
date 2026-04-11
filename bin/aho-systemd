@@ -1,0 +1,119 @@
+#!/usr/bin/env fish
+# aho-systemd — Install and manage aho user systemd services.
+# Deploys 4 daemons from templates/systemd/.
+# Subcommands: list, status, install, doctor
+
+set -g script_name "aho-systemd"
+set -g project_root (dirname (dirname (realpath (status filename))))
+set -g template_dir "$project_root/templates/systemd"
+set -g service_dir "$HOME/.config/systemd/user"
+set -g daemons openclaw nemoclaw telegram harness-watcher
+
+function _info
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
+end
+
+function _warn
+    set_color yellow; echo "[$script_name WARN] $argv"; set_color normal
+end
+
+function _error
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
+end
+
+function _gap
+    set_color red; echo "[CAPABILITY GAP] $argv"; set_color normal
+end
+
+function _cmd_list
+    for d in $daemons
+        echo "aho-$d.service"
+    end
+end
+
+function _cmd_status
+    for d in $daemons
+        set -l unit "aho-$d.service"
+        set -l state (systemctl --user is-active $unit 2>/dev/null)
+        set -l enabled (systemctl --user is-enabled $unit 2>/dev/null)
+        if test "$state" = "active"
+            set_color green
+        else if test "$enabled" = "enabled"
+            set_color yellow
+        else
+            set_color red
+        end
+        echo "  [$state/$enabled] $unit"
+        set_color normal
+    end
+end
+
+function _cmd_install
+    mkdir -p $service_dir
+
+    # Verify linger
+    set -l linger_status (loginctl show-user $USER --property=Linger 2>/dev/null | string replace 'Linger=' '')
+    if test "$linger_status" != "yes"
+        _gap "Linger not enabled. Run: sudo loginctl enable-linger $USER"
+        return 1
+    end
+
+    set -l installed 0
+    for d in $daemons
+        set -l template "$template_dir/aho-$d.service.template"
+        set -l dest "$service_dir/aho-$d.service"
+        if test -f $template
+            cp $template $dest
+            _info "Installed aho-$d.service"
+            set installed (math $installed + 1)
+        else
+            _warn "Template missing: $template"
+        end
+    end
+
+    systemctl --user daemon-reload
+    for d in $daemons
+        systemctl --user enable aho-$d.service 2>/dev/null; or true
+    end
+
+    _info "$installed services installed and enabled."
+end
+
+function _cmd_doctor
+    set -l missing
+    for d in $daemons
+        set -l unit "aho-$d.service"
+        set -l dest "$service_dir/$unit"
+        if not test -f $dest
+            set -a missing $unit
+        end
+    end
+
+    # Check linger
+    set -l linger_status (loginctl show-user $USER --property=Linger 2>/dev/null | string replace 'Linger=' '')
+    if test "$linger_status" != "yes"
+        _error "Linger not enabled for $USER"
+        return 1
+    end
+
+    if test (count $missing) -gt 0
+        _error "Missing service files: $missing"
+        return 1
+    end
+    _info "All "(count $daemons)" service files present. Linger enabled."
+    return 0
+end
+
+switch "$argv[1]"
+    case list
+        _cmd_list
+    case status
+        _cmd_status
+    case install
+        _cmd_install
+    case doctor
+        _cmd_doctor
+    case '*'
+        echo "Usage: $script_name {list|status|install|doctor}"
+        exit 1
+end

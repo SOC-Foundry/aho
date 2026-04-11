@@ -144,12 +144,36 @@ class TelegramHandler(socketserver.StreamRequestHandler):
         self.wfile.write((json.dumps(data) + "\n").encode("utf-8"))
 
 
+BOT_STATE_PATH = Path.home() / ".local/state/aho/telegram_bot.json"
+
+
+def _write_bot_state():
+    """Query getMe and cache bot info for doctor to read."""
+    try:
+        token, _ = _get_creds()
+        if not token:
+            return
+        resp = requests.get(f"https://api.telegram.org/bot{token}/getMe", timeout=5)
+        if resp.ok:
+            bot = resp.json().get("result", {})
+            BOT_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            BOT_STATE_PATH.write_text(json.dumps({
+                "username": bot.get("username"),
+                "first_name": bot.get("first_name"),
+                "id": bot.get("id"),
+            }))
+            print(f"[telegram] bot: @{bot.get('username')}", flush=True)
+    except Exception:
+        pass
+
+
 def serve():
     """Start the Telegram bridge daemon."""
     from aho.logger import emit_heartbeat
     SOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     if SOCK_PATH.exists():
         SOCK_PATH.unlink()
+    _write_bot_state()
     emit_heartbeat("telegram")
     print(f"[telegram] listening on {SOCK_PATH}", flush=True)
     server = socketserver.UnixStreamServer(str(SOCK_PATH), TelegramHandler)

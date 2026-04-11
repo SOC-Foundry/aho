@@ -1,0 +1,138 @@
+#!/usr/bin/env fish
+# aho-models — Declarative Ollama model fleet wrapper.
+# Reads from artifacts/harness/model-fleet.txt.
+# Subcommands: list, status, install, doctor
+
+set -g script_name "aho-models"
+set -g project_root (dirname (dirname (realpath (status filename))))
+set -g fleet_file "$project_root/artifacts/harness/model-fleet.txt"
+
+function _info
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
+end
+
+function _warn
+    set_color yellow; echo "[$script_name WARN] $argv"; set_color normal
+end
+
+function _error
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
+end
+
+function _gap
+    set_color red; echo "[CAPABILITY GAP] $argv"; set_color normal
+end
+
+function _parse_fleet
+    if not test -f $fleet_file
+        _error "Fleet file not found: $fleet_file"
+        return 1
+    end
+    grep -v '^\s*#' $fleet_file | grep -v '^\s*$' | string trim; or true
+end
+
+function _check_ollama
+    if not command -q ollama
+        _gap "ollama not found on PATH. Install via pacman or upstream script."
+        return 1
+    end
+    if not curl -s http://localhost:11434/api/tags >/dev/null 2>&1
+        _gap "Ollama daemon not reachable at localhost:11434. Start it: sudo systemctl start ollama"
+        return 1
+    end
+    return 0
+end
+
+function _installed_models
+    ollama list 2>/dev/null | tail -n +2 | awk '{print $1}'
+end
+
+function _cmd_list
+    set -l models (_parse_fleet)
+    for m in $models
+        echo $m
+    end
+end
+
+function _cmd_status
+    _check_ollama; or return 1
+    set -l models (_parse_fleet)
+    set -l installed (_installed_models)
+    set -l present 0
+    set -l missing_count 0
+    for m in $models
+        set -l found 0
+        for i in $installed
+            if test "$i" = "$m"
+                set found 1
+                break
+            end
+        end
+        if test $found -eq 1
+            set_color green; echo "  [pulled]  $m"; set_color normal
+            set present (math $present + 1)
+        else
+            set_color red; echo "  [missing] $m"; set_color normal
+            set missing_count (math $missing_count + 1)
+        end
+    end
+    _info "$present pulled, $missing_count missing out of "(count $models)" declared models"
+end
+
+function _cmd_install
+    _check_ollama; or return 1
+    set -l models (_parse_fleet)
+    if test (count $models) -eq 0
+        _info "No models declared."
+        return 0
+    end
+    _info "Pulling "(count $models)" models..."
+    for m in $models
+        _info "Pulling $m..."
+        ollama pull $m
+        if test $status -ne 0
+            _error "Failed to pull $m"
+            return 1
+        end
+    end
+    _info "Model fleet pull complete."
+end
+
+function _cmd_doctor
+    _check_ollama; or return 1
+    set -l models (_parse_fleet)
+    set -l installed (_installed_models)
+    set -l missing
+    for m in $models
+        set -l found 0
+        for i in $installed
+            if test "$i" = "$m"
+                set found 1
+                break
+            end
+        end
+        if test $found -eq 0
+            set -a missing $m
+        end
+    end
+    if test (count $missing) -gt 0
+        _error "Missing models: $missing"
+        return 1
+    end
+    _info "All "(count $models)" declared models present."
+    return 0
+end
+
+switch "$argv[1]"
+    case list
+        _cmd_list
+    case status
+        _cmd_status
+    case install
+        _cmd_install
+    case doctor
+        _cmd_doctor
+    case '*'
+        echo "Usage: $script_name {list|status|install|doctor}"
+        exit 1
+end

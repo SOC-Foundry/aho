@@ -300,7 +300,7 @@
     "bin/aho-cli": "313120d649384feb",
     "bin/aho-conductor": "3135df1972bd89e0",
     "bin/aho-dashboard": "91a4d3dedd592988",
-    "bin/aho-install": "73db87a6fe61e31b",
+    "bin/aho-bootstrap": "73db87a6fe61e31b",
     "bin/aho-mcp": "dfa5eaa347b47107",
     "bin/aho-models-status": "2bcc9141281ae3cc",
     "bin/aho-nemoclaw": "e282267bac085dea",

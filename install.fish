@@ -1,316 +1,144 @@
 #!/usr/bin/env fish
-# >>> aho install >>>
-# aho install script - aho 0.1.14
-# <<< aho install <<<
+# install.fish — Clone-to-deploy orchestrator for aho.
+# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# Pillar 4: wrappers are the tool surface.
 #
-# This script installs aho on a Linux system using the fish shell. It is the
-# canonical installer for aho on the development workstation (NZXT) and on
-# any Linux machine running fish (currently NZXT, P3 in aho 1.0.x).
-#
-# What this script does, in order:
-#   1. Verifies you are running it from a valid aho authoring location
-#   2. Checks Python 3.10+ and pip are available
-#   3. Detects existing legacy installations and offers cleanup
-#   4. Runs `pip install -e . --break-system-packages` to install the aho package
-#   5. Detects whether `age` (encryption tool) is installed; offers to install if missing
-#   6. Verifies `keyctl` (kernel keyring) is available
-#   7. Migrates existing plaintext secrets from config.fish to encrypted secrets store
-#   8. Removes dead pre-rename installations
-#   9. Removes stale config files
-#  10. Updates the global aho projects registry
-#  11. Writes the new "# >>> aho >>>" block to ~/.config/fish/config.fish
-#  12. Runs pre-flight checks to verify the install succeeded
-#  13. Prints a "next steps" message
-#
-# To run: cd ~/dev/projects/aho && ./install.fish
+# Usage: ./install.fish
+# Resumes from last successful step via ~/.local/state/aho/install.state
 
-# ─────────────────────────────────────────────────────────────────────────
-# Setup and helpers
-# ─────────────────────────────────────────────────────────────────────────
-
-set -l SCRIPT_DIR (dirname (realpath (status filename)))
-set -l AHO_VERSION "0.1.13"
-set -l AHO_HOME "$HOME/.config/aho"
+set -g script_name "aho-install"
+set -g project_root (dirname (realpath (status filename)))
+set -g state_dir "$HOME/.local/state/aho"
+set -g state_file "$state_dir/install.state"
+set -g log_file "$state_dir/install.log"
 
 function _info
-    set_color cyan
-    echo "[aho install] $argv"
-    set_color normal
-end
-
-function _warn
-    set_color yellow
-    echo "[aho install WARN] $argv"
-    set_color normal
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
 end
 
 function _error
-    set_color red
-    echo "[aho install ERROR] $argv"
-    set_color normal
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
 end
 
-function _success
-    set_color green
-    echo "[aho install OK] $argv"
-    set_color normal
-end
-
-function _step
+function _step_header
     echo ""
     set_color --bold magenta
     echo "═══════════════════════════════════════════════════════════════════"
-    echo "  $argv"
+    echo "  Step $argv"
     echo "═══════════════════════════════════════════════════════════════════"
     set_color normal
 end
 
-function _confirm
-    set -l prompt $argv[1]
-    set -l default $argv[2]  # "y" or "n"
-    set -l hint
-    if test "$default" = "y"
-        set hint "[Y/n]"
-    else
-        set hint "[y/N]"
+function _log
+    mkdir -p $state_dir
+    printf '%s %s\n' (date '+%Y-%m-%dT%H:%M:%S') "$argv" >> $log_file
+end
+
+function _mark_step
+    set -l step $argv[1]
+    set -l status_val $argv[2]
+    mkdir -p $state_dir
+    # Read existing state, update step, write back
+    if test -f $state_file
+        # Remove existing line for this step
+        grep -v "^$step=" $state_file > "$state_file.tmp"; or true
+        mv "$state_file.tmp" $state_file
     end
-    read -l -P "$prompt $hint " response
-    if test -z "$response"
-        set response $default
+    printf '%s=%s\n' $step $status_val >> $state_file
+end
+
+function _step_done
+    set -l step $argv[1]
+    if test -f $state_file
+        grep -q "^$step=pass" $state_file
+        return $status
     end
-    string match -qi "y" "$response"
-    return $status
+    return 1
 end
 
-# ─────────────────────────────────────────────────────────────────────────
-# Step 1: Verify we are in a valid aho authoring location
-# ─────────────────────────────────────────────────────────────────────────
+function _run_step
+    set -l step_num $argv[1]
+    set -l step_name $argv[2]
+    set -l step_cmd $argv[3..-1]
 
-_step "Step 1 of 13: Verify aho authoring location"
-
-if not test -f $SCRIPT_DIR/.aho.json
-    _error "No .aho.json found in $SCRIPT_DIR"
-    exit 1
-end
-
-if not test -f $SCRIPT_DIR/pyproject.toml
-    _error "No pyproject.toml found in $SCRIPT_DIR"
-    exit 1
-end
-
-_info "Authoring location: $SCRIPT_DIR"
-_info "Installing aho version: $AHO_VERSION"
-_success "Authoring location is valid"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 2: Verify Python 3.10+ and pip
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 2 of 13: Verify Python and pip"
-
-if not command -q python3
-    _error "python3 not found on PATH"
-    exit 1
-end
-
-set -l py_version (python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-set -l py_major (echo $py_version | cut -d. -f1)
-set -l py_minor (echo $py_version | cut -d. -f2)
-
-if test $py_major -lt 3; or begin test $py_major -eq 3; and test $py_minor -lt 10; end
-    _error "Python $py_version is too old. aho requires Python 3.10+."
-    exit 1
-end
-
-_info "Python version: $py_version"
-
-if not command -q pip
-    _error "pip not found on PATH"
-    exit 1
-end
-
-_success "Python and pip are available"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 3: Detect existing legacy installations
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 3 of 13: Detect existing legacy installations"
-
-set -l found_legacy 0
-
-if test -d $HOME/iao-middleware
-    _warn "Found legacy iao-middleware installation at $HOME/iao-middleware"
-    set found_legacy 1
-    if _confirm "Delete $HOME/iao-middleware now?" y
-        rm -rf $HOME/iao-middleware
-        _success "Deleted legacy installation"
+    if _step_done $step_name
+        _info "Step $step_num ($step_name): already complete, skipping."
+        return 0
     end
+
+    _step_header "$step_num: $step_name"
+    _log "START $step_name"
+
+    eval $step_cmd 2>&1
+    set -l result $status
+
+    if test $result -ne 0
+        _mark_step $step_name fail
+        _log "FAIL $step_name (exit $result)"
+        _error "Step $step_num ($step_name) failed. Fix the issue and re-run install.fish."
+        return 1
+    end
+
+    _mark_step $step_name pass
+    _log "PASS $step_name"
+    _info "Step $step_num ($step_name): done."
+    return 0
 end
 
-if test $found_legacy -eq 0
-    _info "No legacy installations found."
-end
-
-_success "Legacy installation cleanup complete"
-
 # ─────────────────────────────────────────────────────────────────────────
-# Step 4: pip install -e . the aho package
+# Platform check (not a resumable step — always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 4 of 13: Install aho Python package (editable mode)"
-
-cd $SCRIPT_DIR
-_info "Running: pip install -e . --break-system-packages"
-
-pip install -e . --break-system-packages
-or begin
-    _error "pip install failed"
+if not test -f /etc/arch-release
+    _error "Arch Linux required (/etc/arch-release not found). Halt."
     exit 1
 end
 
-# Install fleet dependencies
-_info "Installing fleet dependencies: chromadb, ollama, python-telegram-bot"
-pip install chromadb ollama python-telegram-bot --break-system-packages --quiet
-
-# Verify the install worked
-if not command -q aho
-    _error "aho command not found on PATH after pip install"
-    _error "Check that ~/.local/bin is on your PATH"
+if not type -q fish
+    _error "fish shell required. Halt."
     exit 1
 end
 
-_info "Installed version: "(aho --version)
-_success "aho package installed"
+if test (uname -m) != "x86_64"
+    _error "x86_64 required. Halt."
+    exit 1
+end
+
+_info "Platform: Arch Linux + fish + x86_64. OK."
+_info "Project root: $project_root"
+_log "START install.fish"
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 5: Detect age binary, install if missing
+# Steps 1–9
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 5 of 13: Verify age (encryption tool)"
+_run_step 1 pacman "$project_root/bin/aho-pacman install"; or exit 1
+_run_step 2 aur "$project_root/bin/aho-aur install"; or exit 1
+_run_step 3 python "$project_root/bin/aho-python install"; or exit 1
+_run_step 4 models "$project_root/bin/aho-models install"; or exit 1
+_run_step 5 secrets "$project_root/bin/aho-secrets-init"; or exit 1
+_run_step 6 mcp "$project_root/bin/aho-mcp install"; or exit 1
+_run_step 7 systemd "$project_root/bin/aho-systemd install"; or exit 1
 
-if command -q age
-    _info "age is installed"
-else
-    _warn "age binary not found"
-    if command -q pacman
-        if _confirm "Run 'sudo pacman -S age' to install?" y
-            sudo pacman -S --noconfirm age
+# Step 8: Symlink bin wrappers
+_run_step 8 symlinks "
+    mkdir -p $HOME/.local/bin
+    for wrapper in (command ls $project_root/bin/)
+        if test \"\$wrapper\" = aho-bootstrap; or test \"\$wrapper\" = aho-uninstall
+            continue
         end
+        ln -sf \"$project_root/bin/\$wrapper\" \"$HOME/.local/bin/\$wrapper\"
     end
-end
+"; or exit 1
 
-_success "age verified"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 6: Verify keyctl (kernel keyring) on Linux
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 6 of 13: Verify keyctl (kernel keyring)"
-
-if test (uname -s) = "Linux"
-    if not command -q keyctl
-        _warn "keyctl not found"
-        if command -q pacman
-            if _confirm "Run 'sudo pacman -S keyutils' to install?" y
-                sudo pacman -S --noconfirm keyutils
-            end
-        end
-    end
-end
-
-_success "Keyring backend verified"
+# Step 9: aho doctor
+_run_step 9 doctor "aho doctor"; or exit 1
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 7: Migrate plaintext secrets from config.fish
+# Done
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 7 of 13: Migrate plaintext secrets"
-
-set -l config_fish $HOME/.config/fish/config.fish
-if test -f $config_fish; and grep -qE 'set -x \w+(_API_KEY|_TOKEN|_SECRET)' $config_fish
-    _warn "Found plaintext secrets in $config_fish"
-    if _confirm "Run secrets migration now?" y
-        aho install migrate-config-fish
-    end
-end
-
-_success "Secrets migration step complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 8: (Cleanup)
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 8 of 13: Cleanup"
-_success "Cleanup complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 9: Remove stale active.fish
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 9 of 13: Remove stale active.fish"
-if test -f $HOME/.config/iao/active.fish
-    rm $HOME/.config/iao/active.fish
-end
-_success "Stale files removed"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 10: Update global aho projects registry
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 10 of 13: Update global projects registry"
-
-mkdir -p $AHO_HOME
-python3 -c "
-import json
-from pathlib import Path
-p = Path.home() / '.config' / 'aho' / 'projects.json'
-data = json.loads(p.read_text()) if p.exists() else {'projects': {}}
-data['projects']['aho'] = {
-    'prefix': 'AHO',
-    'project_code': 'ahomw',
-    'path': str(Path.home() / 'dev' / 'projects' / 'aho')
-}
-data['active'] = 'aho'
-p.parent.mkdir(parents=True, exist_ok=True)
-p.write_text(json.dumps(data, indent=2))
-"
-_success "Projects registry updated"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 11: Add aho block to fish config
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 11 of 13: Add aho block to fish config"
-
-set -l marker_begin "# >>> aho >>>"
-set -l marker_end "# <<< aho <<<"
-
-if not grep -q "$marker_begin" $config_fish
-    printf '\n%s\n' "$marker_begin" >> $config_fish
-    printf '%s\n' "# Managed by aho install." >> $config_fish
-    printf 'set -gx AHO_PROJECT_ROOT "%s"\n' "$PROJECT_ROOT" >> $config_fish
-    printf 'if test -d "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-    printf '    fish_add_path "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-    printf 'end\n' >> $config_fish
-    printf '%s\n' "$marker_end" >> $config_fish
-end
-
-_success "Fish config updated"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 12: Run health checks
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 12 of 13: Run health checks"
-aho doctor quick
-_success "Health checks complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 13: Install complete
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 13 of 13: Install complete"
-_info "aho $AHO_VERSION is now ready."
-_info "Documentation: artifacts/iterations/0.1.13/"
-_success "Welcome to aho"
+_log "COMPLETE install.fish"
+_info "───────────────────────────────────────────"
+_info "aho install complete. All 9 steps passed."
+_info "───────────────────────────────────────────"

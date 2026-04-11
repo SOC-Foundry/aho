@@ -223,7 +223,11 @@ def log_event(event_type, source_agent, target, action,
                 span.set_attribute("aho.action", action or "")
                 span.set_attribute("aho.status", status or "")
                 if tokens is not None:
-                    span.set_attribute("aho.tokens", tokens)
+                    if isinstance(tokens, dict):
+                        for k, v in tokens.items():
+                            span.set_attribute(f"aho.tokens.{k}", v)
+                    else:
+                        span.set_attribute("aho.tokens", tokens)
                 if latency_ms is not None:
                     span.set_attribute("aho.latency_ms", latency_ms)
                 if error:

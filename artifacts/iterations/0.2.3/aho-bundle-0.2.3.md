@@ -1,6 +1,6 @@
 # aho - Bundle 0.2.3
 
-**Generated:** 2026-04-11T17:30:09.379652Z
+**Generated:** 2026-04-11T19:42:47.365781Z
 **Iteration:** 0.2.3
 **Project code:** ahomw
 **Project root:** /home/kthompson/dev/projects/aho
@@ -801,7 +801,7 @@ Sign-off: [x] all five.
 ```markdown
 # aho - Base Harness
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
@@ -920,7 +920,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 ---
 
-*base.md v0.2.4 - ahomw. Inviolable. Projects extend via project-specific harnesses.*
+*base.md v0.2.5 - ahomw. Inviolable. Projects extend via project-specific harnesses.*
 ```
 
 ## §7. README
@@ -933,7 +933,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.4** | **Status: Global Deployment + Full Telemetry**
+**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.5** | **Status: Global Deployment + Full Telemetry**
 
 ```mermaid
 graph BT
@@ -1042,6 +1042,23 @@ License to be determined before v0.6.0 release.
 ### CHANGELOG (CHANGELOG.md)
 ```markdown
 # aho changelog
+
+## [0.2.4] — 2026-04-11
+
+**Theme:** W1 remediation — canonical MCP list correction + verification harness
+
+- MCP fleet corrected from 12 to 9 registry-verified packages
+- Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
+- Added: server-everything (reference/test server)
+- `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
+- `bin/aho-mcp doctor` gains registry verification pass via `npm view`
+- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
+- 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
+- Gotcha registry at 17 entries
+- `mcp-fleet.md` updated to 9-server catalog with removal rationale
+- 10 canonical artifacts at 0.2.4
+- 137 tests passing
 
 ## [0.2.3] — 2026-04-11
 
@@ -1212,7 +1229,7 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 ## Phase 0 Objective
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `bin/aho-install` on P3 produces a working aho environment with local model fleet operational.
+Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
 
 ## Your Role
 
@@ -1288,7 +1305,7 @@ Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. I
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.4 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 — updated during 0.2.5 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §10. GEMINI.md
@@ -1305,7 +1322,7 @@ Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. I
 
 ## Phase 0 Objective
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `bin/aho-install` on P3 produces a working aho environment with local model fleet operational.
+Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
 
 ## Your Role
 
@@ -1408,12 +1425,12 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
   "name": "aho",
   "project_code": "ahomw",
   "artifact_prefix": "aho",
-  "current_iteration": "0.2.4",
+  "current_iteration": "0.2.5",
   "phase": 0,
   "mode": "active",
   "created_at": "2026-04-08T12:00:00+00:00",
   "bundle_format": "bundle",
-  "last_completed_iteration": "0.2.3",
+  "last_completed_iteration": "0.2.4",
   "dashboard_port": 7800,
   "aho_role": "localhost",
   "port_range": [7800, 7899]
@@ -1621,6 +1638,34 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
       "context": "Surfaced in 0.2.3 W1. 2 of 12 packages 404, 2 of 12 deprecated. Fixed in 0.2.4 W1+W2.",
       "surfaced_in": "0.2.3",
       "status": "fixed in 0.2.4 W2"
+    },
+    {
+      "id": "aho-G064",
+      "title": "OTEL span attributes must be scalars; flatten dicts via prefix expansion",
+      "pattern": "OpenTelemetry span attributes only accept scalars (bool, str, bytes, int, float) or sequences of scalars. Passing a dict silently drops the attribute and emits an error to stderr.",
+      "symptoms": [
+        "Invalid type dict errors in stderr during span emission",
+        "aho.tokens attribute missing from exported spans",
+        "Token usage data lost in OTEL traces"
+      ],
+      "mitigation": "Flatten dict-shaped attributes into separate scalar attributes with dotted prefix (e.g., aho.tokens.total, aho.tokens.input). Applied in logger.py set_attribute call.",
+      "context": "Surfaced in 0.2.3. qwen-client and rag/router passed {total, input, output} dicts. Fixed in 0.2.5 W7.",
+      "surfaced_in": "0.2.3",
+      "status": "fixed in 0.2.5 W7"
+    },
+    {
+      "id": "aho-G065",
+      "title": "Workstream pass requires post-install verification on target machine",
+      "pattern": "A workstream marked 'pass' that generates code without verifying the code runs on the target machine is not actually passing. Code generation is necessary but not sufficient.",
+      "symptoms": [
+        "Conductor smoke test passes in CI but fails on target",
+        "Claimed deliverables exist as code but were never executed",
+        "Post-install verification discovers runtime failures"
+      ],
+      "mitigation": "Every workstream that produces deployable artifacts must include a verification step that runs the artifact on the target. bin/aho-conductor smoke provides the canonical pattern: dispatch + assert file + assert spans.",
+      "context": "Surfaced in 0.2.3 W4 conductor dispatch. Qwen roleplayed deliverables, GLM rubber-stamped. Fixed in 0.2.5 W9 with real verifiable smoke test.",
+      "surfaced_in": "0.2.3",
+      "status": "fixed in 0.2.5 W9"
     }
   ]
 }
@@ -1638,20 +1683,20 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
   "version": "0.2.3",
   "project_code": "ahomw",
   "files": {
-    ".aho-checkpoint.json": "4cbe1b645ad5322c",
-    ".aho.json": "d792b7a794ce85c5",
+    ".aho-checkpoint.json": "1a610761eecb1b5b",
+    ".aho.json": "7bda73e6173a4250",
     ".gitignore": "326df5de2f467b02",
     ".pytest_cache/.gitignore": "3ed731b65d06150c",
     ".pytest_cache/CACHEDIR.TAG": "37dc88ef9a0abedd",
     ".pytest_cache/README.md": "73fd6fccdd802c41",
     ".pytest_cache/v/cache/lastfailed": "b2766ce04ad8b8e3",
     ".pytest_cache/v/cache/nodeids": "766a2c2d38e86720",
-    "CHANGELOG.md": "457b2cff8f36ab69",
-    "CLAUDE.md": "d4c45663c43de093",
+    "CHANGELOG.md": "9d4cc538c6d3beb0",
+    "CLAUDE.md": "afb503c3466c974f",
     "COMPATIBILITY.md": "a64870f71b299115",
     "GEMINI.md": "253deb23cba73c95",
-    "MANIFEST.json": "8e3a031e1b98b149",
-    "README.md": "512fa1a68de6d6a4",
+    "MANIFEST.json": "8d7524624a7564ea",
+    "README.md": "1e80c74483953848",
     "VERSION": "ba57e7c7f71876d6",
     "app/.dart_tool/dartpad/web_plugin_registrant.dart": "9bf322a14adec1fc",
     "app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/.filecache": "9b5e8f80bcd71317",
@@ -1743,14 +1788,14 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "app/web/index.html": "3b3a3e559ea191e1",
     "app/web/manifest.json": "fcf7034cc7cdaac2",
     "artifacts/adrs/0001-phase-a-externalization.md": "0b48799724a3b5aa",
-    "artifacts/harness/agents-architecture.md": "d224b59bd3bd1157",
-    "artifacts/harness/base.md": "d68cade89cd2ea81",
+    "artifacts/harness/agents-architecture.md": "8138fad7899bc023",
+    "artifacts/harness/base.md": "734711eeee971da7",
     "artifacts/harness/canonical_artifacts.yaml": "9950ae6ee7001f56",
     "artifacts/harness/components.yaml": "7a8f746b72174d24",
-    "artifacts/harness/dashboard-contract.md": "58f992fc2abbaf25",
-    "artifacts/harness/global-deployment.md": "875a99ce2049f40b",
-    "artifacts/harness/mcp-fleet.md": "ac1dabdaf694dd4c",
-    "artifacts/harness/model-fleet.md": "137f5179a61419a7",
+    "artifacts/harness/dashboard-contract.md": "9558d034eb6cf512",
+    "artifacts/harness/global-deployment.md": "9e6a416842b9490b",
+    "artifacts/harness/mcp-fleet.md": "68b8bf4c63c645a2",
+    "artifacts/harness/model-fleet.md": "7cfeca3e166ee185",
     "artifacts/iterations/0.1/iteration-1-close.md": "3cc23f012d0760ea",
     "artifacts/iterations/0.1.10/aho-build-log-0.1.10.md": "5ba237241653a657",
     "artifacts/iterations/0.1.10/aho-bundle-0.1.10.md": "b44d2c86c5cfd0b7",
@@ -1866,12 +1911,12 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "artifacts/iterations/0.2.2/aho-report-0.2.2.md": "9e022e5459061cfd",
     "artifacts/iterations/0.2.2/aho-run-0.2.2.md": "063eb1c3954adbba",
     "artifacts/iterations/0.2.3/aho-build-log-0.2.3.md": "8436cc5440a5cf83",
-    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "ffabf4fb0307deee",
+    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "65e709f28ba2e1b0",
     "artifacts/iterations/0.2.3/aho-design-0.2.3.md": "e076e8e383005117",
     "artifacts/iterations/0.2.3/aho-plan-0.2.3.md": "1d6b9088e63e64f2",
     "artifacts/iterations/0.2.3/aho-report-0.2.3.md": "17e0f4798428953b",
     "artifacts/iterations/0.2.3/aho-run-0.2.3.md": "a02c50b15437dbc0",
-    "artifacts/phase-charters/aho-phase-0.md": "b56f0fabcd1cd9c2",
+    "artifacts/phase-charters/aho-phase-0.md": "c225a522c9c6066b",
     "artifacts/phase-charters/iao-phase-0-historical.md": "d568cfc3f24b962d",
     "artifacts/prompts/_shared.md.j2": "90683d0d9fbe9df5",
     "artifacts/prompts/build-log.md.j2": "1a2d0cc13ceaad47",
@@ -1905,7 +1950,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "artifacts/tests/test_config_port.py": "75d08f037bb40b1a",
     "artifacts/tests/test_density_check.py": "59c01ba409f62896",
     "artifacts/tests/test_doctor.py": "fe81e4135c70ab5c",
-    "artifacts/tests/test_doctor_new_checks.py": "dc2c598a57d7a39d",
+    "artifacts/tests/test_doctor_new_checks.py": "3df79c5be2189bae",
     "artifacts/tests/test_evaluator.py": "a15d7336e2934abd",
     "artifacts/tests/test_evaluator_dynamic_baseline.py": "7b17bef56ee7bb4e",
     "artifacts/tests/test_evaluator_reload.py": "ec8ad3fc9d977b89",
@@ -1936,8 +1981,8 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "bin/aho-cli": "313120d649384feb",
     "bin/aho-conductor": "3135df1972bd89e0",
     "bin/aho-dashboard": "91a4d3dedd592988",
-    "bin/aho-install": "73db87a6fe61e31b",
-    "bin/aho-mcp": "849be1521c27a0b4",
+    "bin/aho-bootstrap": "73db87a6fe61e31b",
+    "bin/aho-mcp": "dfa5eaa347b47107",
     "bin/aho-models-status": "2bcc9141281ae3cc",
     "bin/aho-nemoclaw": "e282267bac085dea",
     "bin/aho-openclaw": "1c6dd21161f09ad3",
@@ -1946,8 +1991,8 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "bin/aho-otel-up": "d4382e480e72bcae",
     "bin/aho-telegram": "d872d764ca0b749d",
     "bin/aho-uninstall": "e1c8e9fdf1a2cbbd",
-    "data/aho_event_log.jsonl": "49329ef98ec762e5",
-    "data/gotcha_archive.json": "08ae56e777144774",
+    "data/aho_event_log.jsonl": "8a0e066f7a9057ff",
+    "data/gotcha_archive.json": "b76aa7182b8160d9",
     "data/known_hallucinations.json": "6a4068256fb249aa",
     "docker-compose.otel.yml": "975c9a9af93e317a",
     "install-old.fish": "6d167911b77d9cb2",
@@ -1955,7 +2000,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "install.fish.v10.66.backup": "6d167911b77d9cb2",
     "pipeline/README.md": "8f99ee2521029748",
     "projects.json": "7796763f9bfa2b29",
-    "pyproject.toml": "7f04ecc1c5b166be",
+    "pyproject.toml": "bc8d3d40988ec899",
     "src/aho/__init__.py": "637d8511f6afc13b",
     "src/aho/agents/__init__.py": "8a144891e1c2ba17",
     "src/aho/agents/conductor.py": "f4efb6ae2b4fe1f2",
@@ -1989,7 +2034,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
     "src/aho/data/__init__.py": "e3b0c44298fc1c14",
     "src/aho/data/firestore.py": "4d3f80bca83735a2",
     "src/aho/docs/harness/local-global-model.md": "31a99debbd7d7a9a",
-    "src/aho/doctor.py": "1f06745dd061a01d",
+    "src/aho/doctor.py": "96c945b3e64e99a4",
     "src/aho/feedback/__init__.py": "d539b1369e6cd7ef",
     "src/aho/feedback/aho_json.py": "ec0819181fa28ab5",
     "src/aho/feedback/build_log_stub.py": "49008d7bb3eab858",
@@ -2063,321 +2108,149 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 ### install.fish (install.fish)
 ```fish
 #!/usr/bin/env fish
-# >>> aho install >>>
-# aho install script - aho 0.1.14
-# <<< aho install <<<
+# install.fish — Clone-to-deploy orchestrator for aho.
+# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# Pillar 4: wrappers are the tool surface.
 #
-# This script installs aho on a Linux system using the fish shell. It is the
-# canonical installer for aho on the development workstation (NZXT) and on
-# any Linux machine running fish (currently NZXT, P3 in aho 1.0.x).
-#
-# What this script does, in order:
-#   1. Verifies you are running it from a valid aho authoring location
-#   2. Checks Python 3.10+ and pip are available
-#   3. Detects existing legacy installations and offers cleanup
-#   4. Runs `pip install -e . --break-system-packages` to install the aho package
-#   5. Detects whether `age` (encryption tool) is installed; offers to install if missing
-#   6. Verifies `keyctl` (kernel keyring) is available
-#   7. Migrates existing plaintext secrets from config.fish to encrypted secrets store
-#   8. Removes dead pre-rename installations
-#   9. Removes stale config files
-#  10. Updates the global aho projects registry
-#  11. Writes the new "# >>> aho >>>" block to ~/.config/fish/config.fish
-#  12. Runs pre-flight checks to verify the install succeeded
-#  13. Prints a "next steps" message
-#
-# To run: cd ~/dev/projects/aho && ./install.fish
+# Usage: ./install.fish
+# Resumes from last successful step via ~/.local/state/aho/install.state
 
-# ─────────────────────────────────────────────────────────────────────────
-# Setup and helpers
-# ─────────────────────────────────────────────────────────────────────────
-
-set -l SCRIPT_DIR (dirname (realpath (status filename)))
-set -l AHO_VERSION "0.1.13"
-set -l AHO_HOME "$HOME/.config/aho"
+set -g script_name "aho-install"
+set -g project_root (dirname (realpath (status filename)))
+set -g state_dir "$HOME/.local/state/aho"
+set -g state_file "$state_dir/install.state"
+set -g log_file "$state_dir/install.log"
 
 function _info
-    set_color cyan
-    echo "[aho install] $argv"
-    set_color normal
-end
-
-function _warn
-    set_color yellow
-    echo "[aho install WARN] $argv"
-    set_color normal
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
 end
 
 function _error
-    set_color red
-    echo "[aho install ERROR] $argv"
-    set_color normal
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
 end
 
-function _success
-    set_color green
-    echo "[aho install OK] $argv"
-    set_color normal
-end
-
-function _step
+function _step_header
     echo ""
     set_color --bold magenta
     echo "═══════════════════════════════════════════════════════════════════"
-    echo "  $argv"
+    echo "  Step $argv"
     echo "═══════════════════════════════════════════════════════════════════"
     set_color normal
 end
 
-function _confirm
-    set -l prompt $argv[1]
-    set -l default $argv[2]  # "y" or "n"
-    set -l hint
-    if test "$default" = "y"
-        set hint "[Y/n]"
-    else
-        set hint "[y/N]"
+function _log
+    mkdir -p $state_dir
+    printf '%s %s\n' (date '+%Y-%m-%dT%H:%M:%S') "$argv" >> $log_file
+end
+
+function _mark_step
+    set -l step $argv[1]
+    set -l status_val $argv[2]
+    mkdir -p $state_dir
+    # Read existing state, update step, write back
+    if test -f $state_file
+        # Remove existing line for this step
+        grep -v "^$step=" $state_file > "$state_file.tmp"; or true
+        mv "$state_file.tmp" $state_file
     end
-    read -l -P "$prompt $hint " response
-    if test -z "$response"
-        set response $default
+    printf '%s=%s\n' $step $status_val >> $state_file
+end
+
+function _step_done
+    set -l step $argv[1]
+    if test -f $state_file
+        grep -q "^$step=pass" $state_file
+        return $status
     end
-    string match -qi "y" "$response"
-    return $status
+    return 1
 end
 
-# ─────────────────────────────────────────────────────────────────────────
-# Step 1: Verify we are in a valid aho authoring location
-# ─────────────────────────────────────────────────────────────────────────
+function _run_step
+    set -l step_num $argv[1]
+    set -l step_name $argv[2]
+    set -l step_cmd $argv[3..-1]
 
-_step "Step 1 of 13: Verify aho authoring location"
-
-if not test -f $SCRIPT_DIR/.aho.json
-    _error "No .aho.json found in $SCRIPT_DIR"
-    exit 1
-end
-
-if not test -f $SCRIPT_DIR/pyproject.toml
-    _error "No pyproject.toml found in $SCRIPT_DIR"
-    exit 1
-end
-
-_info "Authoring location: $SCRIPT_DIR"
-_info "Installing aho version: $AHO_VERSION"
-_success "Authoring location is valid"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 2: Verify Python 3.10+ and pip
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 2 of 13: Verify Python and pip"
-
-if not command -q python3
-    _error "python3 not found on PATH"
-    exit 1
-end
-
-set -l py_version (python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-set -l py_major (echo $py_version | cut -d. -f1)
-set -l py_minor (echo $py_version | cut -d. -f2)
-
-if test $py_major -lt 3; or begin test $py_major -eq 3; and test $py_minor -lt 10; end
-    _error "Python $py_version is too old. aho requires Python 3.10+."
-    exit 1
-end
-
-_info "Python version: $py_version"
-
-if not command -q pip
-    _error "pip not found on PATH"
-    exit 1
-end
-
-_success "Python and pip are available"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 3: Detect existing legacy installations
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 3 of 13: Detect existing legacy installations"
-
-set -l found_legacy 0
-
-if test -d $HOME/iao-middleware
-    _warn "Found legacy iao-middleware installation at $HOME/iao-middleware"
-    set found_legacy 1
-    if _confirm "Delete $HOME/iao-middleware now?" y
-        rm -rf $HOME/iao-middleware
-        _success "Deleted legacy installation"
+    if _step_done $step_name
+        _info "Step $step_num ($step_name): already complete, skipping."
+        return 0
     end
+
+    _step_header "$step_num: $step_name"
+    _log "START $step_name"
+
+    eval $step_cmd 2>&1
+    set -l result $status
+
+    if test $result -ne 0
+        _mark_step $step_name fail
+        _log "FAIL $step_name (exit $result)"
+        _error "Step $step_num ($step_name) failed. Fix the issue and re-run install.fish."
+        return 1
+    end
+
+    _mark_step $step_name pass
+    _log "PASS $step_name"
+    _info "Step $step_num ($step_name): done."
+    return 0
 end
 
-if test $found_legacy -eq 0
-    _info "No legacy installations found."
-end
-
-_success "Legacy installation cleanup complete"
-
 # ─────────────────────────────────────────────────────────────────────────
-# Step 4: pip install -e . the aho package
+# Platform check (not a resumable step — always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 4 of 13: Install aho Python package (editable mode)"
-
-cd $SCRIPT_DIR
-_info "Running: pip install -e . --break-system-packages"
-
-pip install -e . --break-system-packages
-or begin
-    _error "pip install failed"
+if not test -f /etc/arch-release
+    _error "Arch Linux required (/etc/arch-release not found). Halt."
     exit 1
 end
 
-# Install fleet dependencies
-_info "Installing fleet dependencies: chromadb, ollama, python-telegram-bot"
-pip install chromadb ollama python-telegram-bot --break-system-packages --quiet
-
-# Verify the install worked
-if not command -q aho
-    _error "aho command not found on PATH after pip install"
-    _error "Check that ~/.local/bin is on your PATH"
+if not type -q fish
+    _error "fish shell required. Halt."
     exit 1
 end
 
-_info "Installed version: "(aho --version)
-_success "aho package installed"
+if test (uname -m) != "x86_64"
+    _error "x86_64 required. Halt."
+    exit 1
+end
+
+_info "Platform: Arch Linux + fish + x86_64. OK."
+_info "Project root: $project_root"
+_log "START install.fish"
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 5: Detect age binary, install if missing
+# Steps 1–9
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 5 of 13: Verify age (encryption tool)"
+_run_step 1 pacman "$project_root/bin/aho-pacman install"; or exit 1
+_run_step 2 aur "$project_root/bin/aho-aur install"; or exit 1
+_run_step 3 python "$project_root/bin/aho-python install"; or exit 1
+_run_step 4 models "$project_root/bin/aho-models install"; or exit 1
+_run_step 5 secrets "$project_root/bin/aho-secrets-init"; or exit 1
+_run_step 6 mcp "$project_root/bin/aho-mcp install"; or exit 1
+_run_step 7 systemd "$project_root/bin/aho-systemd install"; or exit 1
 
-if command -q age
-    _info "age is installed"
-else
-    _warn "age binary not found"
-    if command -q pacman
-        if _confirm "Run 'sudo pacman -S age' to install?" y
-            sudo pacman -S --noconfirm age
+# Step 8: Symlink bin wrappers
+_run_step 8 symlinks "
+    mkdir -p $HOME/.local/bin
+    for wrapper in (command ls $project_root/bin/)
+        if test \"\$wrapper\" = aho-bootstrap; or test \"\$wrapper\" = aho-uninstall
+            continue
         end
+        ln -sf \"$project_root/bin/\$wrapper\" \"$HOME/.local/bin/\$wrapper\"
     end
-end
+"; or exit 1
 
-_success "age verified"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 6: Verify keyctl (kernel keyring) on Linux
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 6 of 13: Verify keyctl (kernel keyring)"
-
-if test (uname -s) = "Linux"
-    if not command -q keyctl
-        _warn "keyctl not found"
-        if command -q pacman
-            if _confirm "Run 'sudo pacman -S keyutils' to install?" y
-                sudo pacman -S --noconfirm keyutils
-            end
-        end
-    end
-end
-
-_success "Keyring backend verified"
+# Step 9: aho doctor
+_run_step 9 doctor "aho doctor"; or exit 1
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 7: Migrate plaintext secrets from config.fish
+# Done
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 7 of 13: Migrate plaintext secrets"
-
-set -l config_fish $HOME/.config/fish/config.fish
-if test -f $config_fish; and grep -qE 'set -x \w+(_API_KEY|_TOKEN|_SECRET)' $config_fish
-    _warn "Found plaintext secrets in $config_fish"
-    if _confirm "Run secrets migration now?" y
-        aho install migrate-config-fish
-    end
-end
-
-_success "Secrets migration step complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 8: (Cleanup)
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 8 of 13: Cleanup"
-_success "Cleanup complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 9: Remove stale active.fish
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 9 of 13: Remove stale active.fish"
-if test -f $HOME/.config/iao/active.fish
-    rm $HOME/.config/iao/active.fish
-end
-_success "Stale files removed"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 10: Update global aho projects registry
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 10 of 13: Update global projects registry"
-
-mkdir -p $AHO_HOME
-python3 -c "
-import json
-from pathlib import Path
-p = Path.home() / '.config' / 'aho' / 'projects.json'
-data = json.loads(p.read_text()) if p.exists() else {'projects': {}}
-data['projects']['aho'] = {
-    'prefix': 'AHO',
-    'project_code': 'ahomw',
-    'path': str(Path.home() / 'dev' / 'projects' / 'aho')
-}
-data['active'] = 'aho'
-p.parent.mkdir(parents=True, exist_ok=True)
-p.write_text(json.dumps(data, indent=2))
-"
-_success "Projects registry updated"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 11: Add aho block to fish config
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 11 of 13: Add aho block to fish config"
-
-set -l marker_begin "# >>> aho >>>"
-set -l marker_end "# <<< aho <<<"
-
-if not grep -q "$marker_begin" $config_fish
-    printf '\n%s\n' "$marker_begin" >> $config_fish
-    printf '%s\n' "# Managed by aho install." >> $config_fish
-    printf 'set -gx AHO_PROJECT_ROOT "%s"\n' "$PROJECT_ROOT" >> $config_fish
-    printf 'if test -d "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-    printf '    fish_add_path "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-    printf 'end\n' >> $config_fish
-    printf '%s\n' "$marker_end" >> $config_fish
-end
-
-_success "Fish config updated"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 12: Run health checks
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 12 of 13: Run health checks"
-aho doctor quick
-_success "Health checks complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 13: Install complete
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 13 of 13: Install complete"
-_info "aho $AHO_VERSION is now ready."
-_info "Documentation: artifacts/iterations/0.1.13/"
-_success "Welcome to aho"
+_log "COMPLETE install.fish"
+_info "───────────────────────────────────────────"
+_info "aho install complete. All 9 steps passed."
+_info "───────────────────────────────────────────"
 ```
 
 ## §17. COMPATIBILITY
@@ -2434,91 +2307,6 @@ _success "Welcome to aho"
 ## §19. Event Log (tail 500)
 
 ```jsonl
-{"timestamp": "2026-04-11T16:32:36.959664+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:36.959971+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:36.960140+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:36.960410+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "report", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.107119+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.231332+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.231680+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.231857+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.232106+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "report", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.386503+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.538846+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.539035+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.539126+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.539258+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "report", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.695102+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.829716+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.830051+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.830217+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.830478+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "report", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:37.980181+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.109800+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=1", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.110798+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=1", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.111585+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.112427+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "test message", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.113145+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "hello world", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.113851+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "alert!", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.114325+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.114920+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "*[CAPABILITY GAP]* secrets session locked", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.115444+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "[OK] aho 0.2.2 closed", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.116127+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "retry test", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:32:38.117110+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "connection refused", "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:34:05.523690+00:00", "iteration": "0.2.2", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "secret unlock", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.376328+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.391656+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.396445+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.398486+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.404588+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=08c70ee7 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.404695+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=667a1dab role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.404765+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=192d35d3 role=reviewer", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.404840+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "nemotron", "action": "route", "input_summary": "write a python script to sort a list", "output_summary": "role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.405405+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=948fe7fd role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.405493+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=421028a3 role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.405572+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "nemotron", "action": "route", "input_summary": "explain the eleven pillars", "output_summary": "role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.405639+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "assistant", "action": "dispatch", "input_summary": "explain the eleven pillars", "output_summary": "classified_role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.405696+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "explain the eleven pillars", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.406262+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=cdf28a78 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.406350+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=0c48fafa role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.406417+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "code_runner", "action": "dispatch", "input_summary": "run this code", "output_summary": "classified_role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.406477+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "run this code", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407047+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=995dd2e6 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407142+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "nemotron", "action": "route", "input_summary": "first question", "output_summary": "role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407215+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "assistant", "action": "dispatch", "input_summary": "first question", "output_summary": "classified_role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407274+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "first question", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407358+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "nemotron", "action": "route", "input_summary": "second question", "output_summary": "role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407415+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "assistant", "action": "dispatch", "input_summary": "second question", "output_summary": "classified_role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.407467+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "second question", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.408027+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=983b6f39 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.408113+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=82c26a4f role=reviewer", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.408178+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "assistant", "action": "dispatch", "input_summary": "test", "output_summary": "classified_role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.408235+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "test", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.510137+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=c24e950f role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.510858+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=cb9d1087 role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.511327+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=bfa6869f role=reviewer", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.514322+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=814881d0 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.516742+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=874c5899 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.517158+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "say hello", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.517866+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=2a196637 role=code_runner", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.517951+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "command", "source_agent": "openclaw", "target": "python", "action": "execute_code", "input_summary": "print('hello')", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.525982+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=0ec406ae role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:36:59.526107+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "command", "source_agent": "openclaw", "target": "python", "action": "execute_code", "input_summary": "import time; time.sleep(10)", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.534069+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=18bbf3ad role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.743026+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=56000c64 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.744003+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "test", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.749517+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.752234+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.753061+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "glm-client", "target": "haervwe/GLM-4.6V-Flash-9B:latest", "action": "generate", "input_summary": "describe this image", "output_summary": "test output", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.753752+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=494452e6 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.753825+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "hello", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.753986+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.754467+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=6e817e4f role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.754538+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "command", "source_agent": "openclaw", "target": "python", "action": "execute_code", "input_summary": "print('hello')", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.793517+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=f18f4eb0 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.793877+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "assistant", "action": "dispatch", "input_summary": "test task", "output_summary": "classified_role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.794126+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "test task", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-11T16:37:00.797224+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
 {"timestamp": "2026-04-11T16:37:00.801595+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
 {"timestamp": "2026-04-11T16:37:00.812958+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
 {"timestamp": "2026-04-11T16:37:00.814563+00:00", "iteration": "0.2.3", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
@@ -2934,14 +2722,99 @@ _success "Welcome to aho"
 {"timestamp": "2026-04-11T17:29:46.486035+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=1", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
 {"timestamp": "2026-04-11T17:29:46.486730+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=1", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
 {"timestamp": "2026-04-11T17:29:46.487309+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:11.165521+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:11.181825+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:11.186397+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:11.188507+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.546134+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.550857+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.554982+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.570280+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.574647+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.575508+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.576416+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.676460+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:12.676674+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:15.251959+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:15.811816+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:15.812046+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:18.319651+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:18.852898+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:18.853087+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:21.567262+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:22.098810+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:22.099030+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:24.480344+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:25.046033+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:25.046242+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:27.516976+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:28.099871+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:28.100055+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:30.806140+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:31.296576+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G631", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:31.312739+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=1", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:31.313300+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=1", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:31.313844+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:39.882229+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:39.882485+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:30:42.232813+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:32:33.699765+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:32:33.700004+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:32:33.700111+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:32:36.300388+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:03.398924+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:03.399201+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:03.399306+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:06.016482+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:19.047641+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:19.047904+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:19.048011+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:19.048163+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "report", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:21.581511+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:39.104543+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=9 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:39.104919+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:39.105113+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "build-log", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:39.105368+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "report", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T17:33:41.662703+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:06.872837+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=d0d5c4e4 role=workstream", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:06.873032+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=8cda6107 role=evaluator", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:06.873151+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=03bd9331 role=assistant", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:06.873222+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "conductor", "target": "nemoclaw", "action": "dispatch", "input_summary": "smoke test 7-span trace", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:08.197128+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "smoke test 7-span trace", "output_summary": "AI", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:08.197613+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "nemoclaw", "target": "nemotron", "action": "route", "input_summary": "smoke test 7-span trace", "output_summary": "role=reviewer", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:08.197886+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "workstream-agent", "target": "qwen", "action": "execute", "input_summary": "ws_id=dispatch", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:08.198111+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "chat", "input_summary": "Execute workstream dispatch.\n\nPlan:\nsmoke test 7-span trace\n\nReport completion as JSON: {status, deliverables, events}.", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:50.543586+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: Execute workstream dispatch.\n\nPlan:\nsmoke test 7-span trace\n\nReport completion as JSON: {status, deliverables, events}.\n\nASSISTANT:", "output_summary": "{\n  \"status\": \"completed\",\n  \"deliverables\": [\n    \"trace_data_7span.log\",\n    \"smoke_test_report.pdf\"\n  ],\n  \"events\": [\n    \"initiated_smoke_test\",\n    \"collected_7span_traces\",\n    \"validated_trace", "tokens": {"total": 56}, "latency_ms": 42000, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:50.544028+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "workstream-agent", "target": "qwen", "action": "execute_complete", "input_summary": "", "output_summary": "ws_id=dispatch status=completed", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:08:50.544116+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review", "input_summary": "ws_id=dispatch", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:10:34.703486+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "glm-client", "target": "haervwe/GLM-4.6V-Flash-9B:latest", "action": "generate", "input_summary": "Review workstream output against design and plan.\n\nDesign:\n\n\nPlan:\n\n\nOutput:\n{\"workstream\": \"dispatch\", \"status\": \"completed\", \"raw\": \"{\\n  \\\"status\\\": \\\"completed\\\",\\n  \\\"deliverables\\\": [\\n    \\\"tra", "output_summary": "```json\n{\n  \"score\": 1.0,\n  \"issues\": [],\n  \"recommendation\": \"The dispatch workstream output aligns with the design and plan; all deliverables are present, events are logged as expected, and status i", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:10:34.703752+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review_complete", "input_summary": "", "output_summary": "score=8 rec=ship", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:10:34.705273+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "Session locked. Run 'aho secret unlock' first.", "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:14:32.680943+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "iteration close", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:25:51.177288+00:00", "iteration": "0.2.4", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "iteration close", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.839859+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=df66739a role=evaluator", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.840159+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review", "input_summary": "ws_id=W1", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.840274+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review_complete", "input_summary": "", "output_summary": "score=8 rec=The output meets all requirements.", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.843646+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=04e5cc95 role=evaluator", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.843853+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review", "input_summary": "ws_id=W2", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.843949+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review_complete", "input_summary": "", "output_summary": "score=7 rec=ship with notes", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.844710+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=e82f7c20 role=evaluator", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.844907+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review", "input_summary": "ws_id=W3", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.845006+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review_complete", "input_summary": "", "output_summary": "score=10 rec=perfect", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.845699+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=97a951af role=evaluator", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.845864+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review", "input_summary": "ws_id=W4", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.845956+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review_complete", "input_summary": "", "output_summary": "score=8 rec=ship", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.846640+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "session_start", "source_agent": "openclaw", "target": "qwen3.5:9b", "action": "init", "input_summary": "", "output_summary": "session=0c9314c3 role=evaluator", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.846831+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review", "input_summary": "ws_id=W5", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-11T19:41:30.846920+00:00", "iteration": "0.2.5", "workstream_id": null, "event_type": "agent_msg", "source_agent": "evaluator-agent", "target": "glm", "action": "review_complete", "input_summary": "", "output_summary": "score=6 rec=The workstream needs additional test coverage before shipping.", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
 ```
 
 ## §20. File Inventory (sha256_16)
 
 ```
-26be618b868157c5  .aho-checkpoint.json
-042331908e08ccb0  .aho.json
-8233f63c1b66d224  .git/COMMIT_EDITMSG
+6803429f057781bc  .aho-checkpoint.json
+90041ebf337b9f26  .aho.json
+a32f8e79f21603cf  .git/COMMIT_EDITMSG
 28d25bf82af4c0e2  .git/HEAD
 d48a759563bf8481  .git/config
 85ab6c163d43a17e  .git/description
@@ -2959,16 +2832,17 @@ e9ddcaa4189fddd2  .git/hooks/prepare-commit-msg.sample
 a53d0741798b287c  .git/hooks/push-to-checkout.sample
 44ebfc923dc5466b  .git/hooks/sendemail-validate.sample
 8d5f2fa83e103cf0  .git/hooks/update.sample
-00760048e6b6b244  .git/index
+c50fc3ea1c3ab56f  .git/index
 6671fe83b7a07c89  .git/info/exclude
-15f512a8f05bdac2  .git/logs/HEAD
-15f512a8f05bdac2  .git/logs/refs/heads/main
-e8c050a60dbad671  .git/logs/refs/remotes/origin/main
+2a6fd963f99d53df  .git/logs/HEAD
+2a6fd963f99d53df  .git/logs/refs/heads/main
+6be1a83174d4fd1a  .git/logs/refs/remotes/origin/main
 7dbcb015871ea8ba  .git/objects/02/0cbe75c1e128993f75030b04411919346d3173
 ee541202d8cbf489  .git/objects/02/43df8c08a5c0c9d9a60b6d08bf0f1b7ec905cd
 d83b913e7b600613  .git/objects/02/7b8e62409d9b004fa924ebf030639d6d787c4c
 6b60a4888a5ecc30  .git/objects/02/911c4afbcc351d6cf5936a13f2b78b2086ecd9
 784990fc35467c52  .git/objects/03/0ff0c7d13ce7a6d607c340ef9751f666668129
+4c4116bfba52a078  .git/objects/03/ba3415b9e697e34afc93c180f3835b3ae5f85e
 c270879261ef4157  .git/objects/04/4519118eb5ac966970c6c5a81bbabda14270d2
 3cd5f6c8e552b893  .git/objects/04/8e8e32a1a3742023dba2912d97b8a26147e9b2
 5d9032fffdd2e028  .git/objects/05/a1ed1e971e1971f0250631992a4f0fe1009f8b
@@ -2978,6 +2852,7 @@ c270879261ef4157  .git/objects/04/4519118eb5ac966970c6c5a81bbabda14270d2
 9b93cdc7ebe17a8f  .git/objects/07/45edefab6a9c5946c236af2d879439e6fd488c
 5f445459ba5517ae  .git/objects/07/5348090dd39691d647025876a86a4fcca19b15
 899640d1a8eafa62  .git/objects/08/19d8485d331a34279d176c8418cc297841c9da
+d915bce00f18bc85  .git/objects/0a/a8d434de08a9fd2f9e17a18b5456980106e47c
 6ade34ae28507839  .git/objects/0a/e7543dffff60cf563f37d69b463b35b956f096
 854f7bf41b19eb68  .git/objects/0b/1c13183bae803c1fdb6991c6dbf5e07ea792ce
 060599d4b9b38677  .git/objects/0b/77e6484344bc099b53cba725d4d2a32fbe2f84
@@ -2989,6 +2864,7 @@ cfaff21861a1139e  .git/objects/0c/78af4b14610ebd6fb3f41b68e0f0f01006f994
 0bc1317369a3988a  .git/objects/0c/db45ba8402b24b353fd0bffc88789db9d63ee5
 0531ff3db869b113  .git/objects/0d/16aa353ecbb0c350eb15937fbb5d8cecd6aecc
 24c86d56db8ed455  .git/objects/0d/2902135caece481a035652d88970c80e29cc7e
+a92ccfa88c6ef9bb  .git/objects/0d/9581738dddde40917e01fe1450cfad7bc33882
 ea6c036731565ae2  .git/objects/0d/e23672c6427b857874d57690307764b318949f
 e077e0b3a450dafb  .git/objects/0e/72d87c72e56e1ff4f17b9b5a655accecf68f39
 ae4511013af0e8f2  .git/objects/0e/c9acc14c91b47059ccfcf3996df95acb19ff9a
@@ -3003,10 +2879,12 @@ d7436d33bb9f92fb  .git/objects/11/808190d4b90b20fe074a2dad43af6c0c1427ee
 a371419808b7940a  .git/objects/11/ca70235b7535506afeef3deac3f8f659a768e3
 9fede7c0c5db08d8  .git/objects/11/cad81220482fa47d7611c02300d466594b0654
 b8e0c63688c3c514  .git/objects/12/d07c281276038221cc28ce55bc9a70ee4d2be1
+6f0bfecdb361efbc  .git/objects/12/e4527d0a1658c9da817db912aabb2814a718b2
 a4a9255032aa2488  .git/objects/13/7c88128600d08ee00afe8727c10b14877f13aa
 181d1be9bdc9e2ae  .git/objects/13/e0a24217d228f9391d20894dc8b1e661257cf5
 7f7b23602351acd6  .git/objects/14/41e9080a69682a93cfe6135b2af6ae1dc37229
 79ff89c8f09dd195  .git/objects/14/5d44ef965ee0336d86494384e631688b9b184e
+10c2273f715a1305  .git/objects/14/bd0eac33037b60607f077bec46d7a7d61545c4
 03ed0ac2f5c9a9d3  .git/objects/14/d7731c3133bc4b4b2ceac34b7a7343c7e5a154
 cba3a09f3c49c99a  .git/objects/15/460745a2dc92bd0901c813d0ab5579f79466cd
 7ea2552dc3fba550  .git/objects/16/7fa25644e333e8bd3ef8484c7371ea4c42b274
@@ -3026,9 +2904,11 @@ e27d02bb5adc5ec6  .git/objects/1d/618c4333de2f74ef0d51021c4da61a24970b4d
 19471aa9dca843d8  .git/objects/1e/f7011ed78b60282f60f4c0589c61a62a80e4dc
 898d1dfac6e11986  .git/objects/20/cca0b3e030ce7f571622843f60a6729a93f961
 6d341d5f2daaa6a3  .git/objects/21/3b61087e4a1739b116bb2cfcea6ce0251da43d
+1414bb7399b253ff  .git/objects/21/51aab9621b6397a03cb5961502d4482714540a
 05a6f224798c3d4b  .git/objects/21/6ae7d8d440e27d9103663c19074a9c8809038b
 f74e8074812af01d  .git/objects/22/b2b5d90658037689b6db5fbbb16025c6ee27f3
 fcdcba00f5d05e76  .git/objects/22/cc995dd99723333e041def318e894d04fe10b7
+2a962af814ea207a  .git/objects/23/75e113e14312db7e7149e5bc37de99d7dfec20
 dcd42328bf5a50cb  .git/objects/23/b0c9229da00d079c85933d894161a50a91aab9
 c358e1c5742dc4a1  .git/objects/24/627253b5c5fd17bbfdfc830fc042385953a4c0
 18e058cb4158f605  .git/objects/24/ec2bb7ad765989ef18de08fcd05d6f6a5c4f56
@@ -3051,10 +2931,12 @@ b3455f38a92080b9  .git/objects/2e/332f0b84de94e9616eec219609fe887b48a102
 eedf544dbeb641cd  .git/objects/2f/84a28560f8bf1fecd61ef5fd3d185ad4eb5f25
 4ad097fdfa6c3413  .git/objects/2f/9fed1d6900c46c121cfddb13e7d74fbaf6c324
 c9890ac30885b3ea  .git/objects/30/5757022eed4241949a8b58737f4fc6c4565881
+a651b815acc15438  .git/objects/30/58b2e61aa18a0abc49d17fdf2993f415b365b6
 437921f893886078  .git/objects/31/35360755d553fc27bee68fa3719a763c12869e
 6e511f810a7020a6  .git/objects/31/6d6789787c5d5f762065158d6cc379accb92ff
 e33b95a19eafb8b8  .git/objects/31/b854b17d2a0ca516d7241fc97899930ac2a5fc
 46aa795694d95100  .git/objects/31/dcb4088673786aad8fa85fabd52ed6c99b299f
+42c7962de201fe6d  .git/objects/31/fd13979cae8e8aea92eafee208835d8689819d
 417f8a0abb932f08  .git/objects/31/fe450a62e1901de86b63a3d5b6fed34fd7f9b6
 fe431db52348687d  .git/objects/32/e8d83ad55e9f0e2372f678890561475463e27a
 d1bf1327bdbeb78f  .git/objects/33/7c499040db35cf7a2c5aa0bd598ffe27bb96d0
@@ -3117,6 +2999,7 @@ ba4c738b838525fb  .git/objects/4f/7fda1ef89b7e59a0c4c9ad7558e08e0fa59257
 69b070ecb6c07e27  .git/objects/4f/892c013157670ea0a716f506153598180a3e7a
 8edbed4af5c18d5a  .git/objects/4f/9cd356bf34d5c980a2243903f86cfca66c84f0
 1dc40172cb9c0b63  .git/objects/4f/f791380824235c9c68e2f79329dd56b5a61337
+6e5b511cd7122516  .git/objects/51/75790e74d4b8a3eaff31ab03959b18136cf0d4
 ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
 1336a414598dac5f  .git/objects/53/0d9038a4c130e29a47f0fdce1e7c7e4df372b0
 b03c476aa423944d  .git/objects/54/2afc2127f60678c74d2adcf81b23837929590f
@@ -3133,6 +3016,9 @@ f53594b4091fe82b  .git/objects/58/ea9075cc3bee02fd79d783e3b1459ee668af4f
 0d301e6f4e06d4e3  .git/objects/5a/ffa8fd58ad5b4b8f1aed59571a2c91b30f5c9f
 2f1f8e82c3309a57  .git/objects/5b/4e0d7152cee11a09443842d28dae3caf256489
 ebb3d3cb8f8d2b5e  .git/objects/5b/f9247cfab3051d82fdad458ea0219f82429543
+af1f83fc935bfd5b  .git/objects/5c/874d3fbe6b6094a2ded3ad3c8cfd550d6c631d
+f06a9f2d3cc4415c  .git/objects/5c/9bcb6eb15cea710ec20999087ece52b27a6763
+79c54c3bd7358a70  .git/objects/5c/abf0fe8f642e0eb62a7c8b219f0aa7ea6d12ff
 4f309b647ef5d359  .git/objects/5c/ec070ea85ebff483aebd898cb35f9b8536395c
 cb433de1cfa50730  .git/objects/5d/33d7baf22405cb0eed0fe6de914179d6ff532d
 94e0c5258edd555a  .git/objects/5d/67e6a1306d98a0fdc4a3833620d94e9b749c12
@@ -3142,6 +3028,7 @@ d3c624cc327182a0  .git/objects/5e/2becd998e3c8a120a861fdc2e96bc66dae161c
 d85bf104e405511e  .git/objects/5e/58c8bd9458cc41f05fc5536a84f06bd0f81e8d
 11e191ed059c59a2  .git/objects/5e/7d77f27a4345399dec48f9bd166aeaa0c6be41
 56677e987224a2f6  .git/objects/5f/03b50758f0bdcd53bf61c5633b70e9cf5d14c6
+f4708f9838643dca  .git/objects/60/0f423065b5038291b8ade2008fc469dd26db58
 5d910e81ed9e12e3  .git/objects/60/9041906e1fc786a3d9d5ec9905a8b7a185603c
 dc51adac27d286e9  .git/objects/61/0775721469caa691b6b9e581aebbd1803211f0
 edf0c24c28c9f1bb  .git/objects/61/18120c32af8d18e92453fa31af0884f32d582e
@@ -3156,10 +3043,12 @@ edf0c24c28c9f1bb  .git/objects/61/18120c32af8d18e92453fa31af0884f32d582e
 23863cb7f2d66bf4  .git/objects/64/767c1c0bc3154f4d3009c6ad24bd38fd7fe96a
 3a6aaf2abe144412  .git/objects/65/411bc306ee86febbc02f64f3dd6988a86e69dd
 2afd6aaeab6acac2  .git/objects/65/75ac57a830f3965eba6fe889602cbb88b7c0e5
+2c25bd0191fb6abe  .git/objects/65/928825c95181467ea363943ef76f0aa5a945e8
 37af4f826907f0f3  .git/objects/66/1abb2567f7849ed59ff77b50dc6b470a8946d4
 7704c83450d3921d  .git/objects/66/f2ef3380d1d364038a3b36a3dc4c68b82ce321
 3301fa951115a62b  .git/objects/67/6c055820c147be95e5d6aa956771176c23a320
 793e721c17e1cfd6  .git/objects/68/6faf7e887f39908af20024bc5f64b7cc2953e4
+7f11fc97fa1be463  .git/objects/68/796a1111cbd939f0a4ed4f43e5f0305f8d489b
 3dc1ae7794778073  .git/objects/68/c620a986b1048431cd4a0cb866d1a5ea86e8fe
 7b7958196b867323  .git/objects/69/4806a82c79cc7bbf122f7b4d21da779d33fad0
 196c973091e8d98f  .git/objects/69/526ddc22e140aba7913b0390ed3198a5c98c3b
@@ -3179,6 +3068,7 @@ bfa7a6d12a2eb87d  .git/objects/6c/a98ac888e697b0b933d5110a70a07be820b458
 c1ef748d69cdc1d0  .git/objects/6d/3f16853a08052b1e7b28bb3fd525f384f87c73
 dcd8847a3c8291a2  .git/objects/6d/97fab7e596ea537adba77b04cf09be1c872958
 c6be4f981e5e4787  .git/objects/6d/b02483a6eb88267de30af1b605e5504f080b24
+b39219b1bcc8f05c  .git/objects/6d/d57f45dae6f0e89ac156da9c723c9604b880a9
 a77566a5247af7c7  .git/objects/6f/07f7139bcb38a524cee1c6cef893cad6428d22
 24bbbd35bb1f8542  .git/objects/6f/d8518735e1c8f8e13374a5e8f0f1f11c1cbb7e
 21c1b3e9431069ac  .git/objects/6f/f4f468374aa278f2ebdaa17a271d704e6ac5a0
@@ -3197,6 +3087,7 @@ fe5fa4fc3c97dc92  .git/objects/74/4276d0290e88c7c262308ec5015f7f2f9f8b12
 7f847630059c39ed  .git/objects/74/5cb2933cd7ac7318b1308f31ba5f82883790dc
 af86707c6293ab1d  .git/objects/75/77b2f2c485fe6781c468c559df86a368fd5396
 32c6930646802724  .git/objects/75/ac6f09af4df4a8bad75868e5ae1a6a384c079a
+79fa8cc886d09be1  .git/objects/75/d0cc69b3a03820d55f53e65894e431e124ff8d
 dfca250504d7d389  .git/objects/76/027fb4d1c1c2d63009cfea94a2e65611fd2ee6
 f5058f3630cb0f40  .git/objects/76/bdf71ad2f30bea9da49684e5799ecaca683490
 a59603d1662d3555  .git/objects/76/c66e3eb2b3a10988a3e99fc79de94afefd4da0
@@ -3246,7 +3137,9 @@ df1c39d377885681  .git/objects/8b/31fc2ad652467f7fad69d5f59abab45d4e294a
 1bc2aacff0190cd6  .git/objects/8b/8629a9e19addd4a1a9a5511d3af1f8e934a4f8
 7ec1cebe7c36f22c  .git/objects/8b/f55e54f95bbdc30f8ceacba1845ce299bde256
 342fc83e84ac98c2  .git/objects/8c/53b932901e2e902fb0fc5685137c373f484069
+afb1f3feb3f3a93b  .git/objects/8c/ef208458c6a6630628fd5e7eb8b5d05ec8a29b
 8915e3989fcbdc28  .git/objects/8c/ef66174b54b03498ab4692498d78e644955524
+c1d6b2c12158b1e1  .git/objects/8d/b7b15fe13df101496693272c39b393056c4387
 670115161fc0bd29  .git/objects/8e/35142c623fd3a6afc2c916b5bf5395474a56ab
 e973f1cd23b3374e  .git/objects/8e/43d5e482f5bfa22256e6adb0bb8a7e16acaa6d
 ee4bea2113524ecd  .git/objects/8e/509c2aa88d407db0203f33bb57631142c5fec2
@@ -3263,6 +3156,7 @@ b220c2248dcd066e  .git/objects/91/10e99ec4ba10cbfaf7b0919c86dec59392eda7
 64732be6988dcd8b  .git/objects/91/c5b3f5da718a9e6a2eb9e435b76996b901c5af
 0181c6208e78f166  .git/objects/91/c755958610996a8d6f119cb1b24f54a8fcbbee
 e99498d377b71e1d  .git/objects/91/dbbef2b3f77b871dd54e0a5c8749b81fb2fd4d
+f17614962b78c580  .git/objects/92/29e1a8cd68ba778425daa23bb1533a4e181526
 021344068a9cbbb4  .git/objects/92/55c199fb9775c5e77909314ef23dc023bc4544
 e6dff7a791fdcc2b  .git/objects/92/cc9b4c5c40e89ece581fa03c97b10e0da22f26
 bfa9692925342d1c  .git/objects/92/cf8bddd3cf91f1e62661a9ad7ca09604287718
@@ -3270,6 +3164,7 @@ bfa9692925342d1c  .git/objects/92/cf8bddd3cf91f1e62661a9ad7ca09604287718
 0eb724f44057edb9  .git/objects/94/2d68af1bdbefdf586944fd2fe359c57fc4e5a1
 7cb50fc5e93e7714  .git/objects/95/1fb3dfc57544b7ef83157148df7941bba5fb6d
 07cfd23c04af5ef1  .git/objects/95/a1b7a1b93eb79b43458aaf2c610b6c1c8d44fe
+e411548170a7dc2d  .git/objects/95/c84b41c68dba07298c5cb615e2356d568f8dfd
 e7791484630c3e32  .git/objects/95/c88fc8b91d5e0fa6e1792b7d44fdbee1d2e141
 8005db0002aaf4a5  .git/objects/96/35d5bdebe25ae4c065091407d0281ac05b8de7
 0a9d8977181fa85a  .git/objects/97/3c2a8ed593121b552f1e1aaab9bacbef3cb634
@@ -3285,6 +3180,7 @@ ee40334abc769667  .git/objects/9a/aed7fb5ee7e51a2ee94e2f92487b7629bff8c2
 837dcfb495c03563  .git/objects/9b/50401050e494c388f22959c762593397225ce1
 99cec47ff7d52057  .git/objects/9b/f708fa66e39da5e911fc6d7bb7d45a46bacf2c
 1ce8b53a7ef0f08e  .git/objects/9b/fc79feaafd4dd488551f3f8cfd25a84780931f
+5eb4747d3dcb763e  .git/objects/9c/c0fad70dacd51e411362340fe86377e3941a15
 8f4954757ee7a320  .git/objects/9d/227da27c89a2c1ff56c57afbc091ae93b9211e
 bddc5e1619c9f348  .git/objects/9d/ec1729df0a89885b16195643901e4ee4b27bd9
 7b92b7ed1330afac  .git/objects/9d/ee13e0fb2bb3fc78da3a0b30f4932295be4fd5
@@ -3292,6 +3188,7 @@ ffa863760831e072  .git/objects/9e/72d3defdf0b99772796cb4f6ddfe2f0feb431c
 8d690dd701143943  .git/objects/9f/07352285362e5f8cabdbddf5a81c05fb759dd1
 2083e0d5f6f0f440  .git/objects/9f/2f140e1ff820b33a12d186f83d2bc3cb5d4435
 c99257845bcd4f5c  .git/objects/9f/388982af3e84f791d558356aacfdb82d9a2f4d
+2e08add04fcbaa95  .git/objects/9f/c36dc0dabdc3bd559b1c5e526749edc4dc432d
 eb12be5ceaa2da35  .git/objects/a0/3ef50bed139b3da443e2e07e3424ab5ad498d2
 0d67184c9ac84673  .git/objects/a0/d4b6f25e31f8b5e09b1f1d34abef69734aa6f7
 1e55ce03e1aa3453  .git/objects/a0/e083c5e93880277c8c7ce85df74f87fdf28ae8
@@ -3315,30 +3212,6 @@ d717d3fd2c8297d9  .git/objects/a4/92c2c9afa27a7209e87e77f69657e141c6031d
 8eb12379f7d4d747  .git/objects/aa/7202ff89d196f9462841ac008a8877949c1ab5
 389b649b41725d03  .git/objects/aa/9f2157a55650e56e31c10ee896e0f4e27f4dca
 bcc28f5839c1dfd6  .git/objects/ab/78a614f643766a8de6365d130056575d96e594
-982a180d03dfa8fc  .git/objects/ab/8db0835624cd3f4926b5cb9a956632eefe0adb
-a43c72be8f8bb7f5  .git/objects/ab/9817e2b4af4c06f5a5e891d3b54e983978d41a
-b4879437d1e56ebb  .git/objects/ab/b43a3643eec3b7bcbe29915817f225030ad8c3
-c313c8cc8645c95d  .git/objects/ab/dc12f7890f8917f16d3848c31e0cde794856b2
-a721c3d57c9d7416  .git/objects/ab/ea0ddc2febbf567f12191b4b6e770c5d150ea5
-47f8ee04b8dca636  .git/objects/ac/0f66bd7baa4dc4c9db75c19a12a3b78fca0d5c
-dc53d4ab4b12ef86  .git/objects/ac/e2d5e7f521f0da4790214c055f1e76dbf076bf
-e7ad78ba731a4d68  .git/objects/ac/f4593db363802ca6e52e825baa1eb178359f99
-41cce3db407bd52b  .git/objects/ac/f96f0b2233beba93351347933f581da0da10a7
-a8b7686fb9648f92  .git/objects/ad/dd64322cf75e440a44efcb6c7aa0508dd6d8b1
-5adfaccf0c7dae40  .git/objects/ae/4b3abc3de9fb755c72011b449d1f6240575969
-b05d458ddefbd7ab  .git/objects/b0/90bc4dc5e44805bbef354c44a9e24c98f72716
-db51f95a1a7984d6  .git/objects/b0/94c142229f6c177ff77e7a7072e3b31de2f923
-a0d51cd4d48407d9  .git/objects/b0/d441956d8013a2430e0f30475b7bbf56f41730
-a7336f21dcc84499  .git/objects/b1/bc0bafc2ee67741ede8feb0283d1f65787375c
-6f2583bee6d3e78c  .git/objects/b1/e716258400f2f3fbc49fe7aadd6c73e3f8bca8
-9f5efe6184deb11a  .git/objects/b2/d05404788583b8ea2155d8028bad1bddd2f700
-3a30ade6f4c81709  .git/objects/b3/2b5114a57bd83341cc8198a916b3553a086956
-426dafc5b7b0cfb3  .git/objects/b3/f7925b1bd87d50e1f54583893d188f9f6ce766
-2099e43bb1dbda67  .git/objects/b4/15074cfd59fcab9a54583bd468609cc7fec2c4
-ee79645a2be208be  .git/objects/b4/22370d2ce02d8bc0f1d94bd20e1fda52d621ef
-80a59a901e44aaa2  .git/objects/b4/3f9a88d2c4baf1a974a10c1fbf63ba2f7d092e
-b2e9c69ff690ba18  .git/objects/b4/a2322894d4dc54079d9859461bed9f555e3272
-f8cea1a4f511c354  .git/objects/b4/f5962c5832770e18cee7eb82f58bb289f01185
 ... (truncated)
 ```
 
@@ -3486,12 +3359,12 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
   "name": "aho",
   "project_code": "ahomw",
   "artifact_prefix": "aho",
-  "current_iteration": "0.2.4",
+  "current_iteration": "0.2.5",
   "phase": 0,
   "mode": "active",
   "created_at": "2026-04-08T12:00:00+00:00",
   "bundle_format": "bundle",
-  "last_completed_iteration": "0.2.3",
+  "last_completed_iteration": "0.2.4",
   "dashboard_port": 7800,
   "aho_role": "localhost",
   "port_range": [7800, 7899]
@@ -3501,20 +3374,26 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 ### .aho-checkpoint.json
 ```json
 {
-  "iteration": "0.2.4",
+  "iteration": "0.2.5",
   "phase": 0,
   "run_type": "single-agent",
   "current_workstream": "W0",
   "workstreams": {
-    "W0": "pass",
-    "W1": "active",
+    "W0": "active",
+    "W1": "pending",
     "W2": "pending",
     "W3": "pending",
-    "W4": "pending"
+    "W4": "pending",
+    "W5": "pending",
+    "W6": "pending",
+    "W7": "pending",
+    "W8": "pending",
+    "W9": "pending",
+    "W10": "pending"
   },
   "executor": "claude-code",
-  "started_at": "2026-04-11T19:00:00Z",
-  "last_event": "w0_canonical_bumps_complete",
+  "started_at": "2026-04-11T20:00:00Z",
+  "last_event": "w0_bumps_complete",
   "status": "active"
 }
 ```
@@ -3525,20 +3404,20 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
   "version": "0.2.3",
   "project_code": "ahomw",
   "files": {
-    ".aho-checkpoint.json": "4cbe1b645ad5322c",
-    ".aho.json": "d792b7a794ce85c5",
+    ".aho-checkpoint.json": "1a610761eecb1b5b",
+    ".aho.json": "7bda73e6173a4250",
     ".gitignore": "326df5de2f467b02",
     ".pytest_cache/.gitignore": "3ed731b65d06150c",
     ".pytest_cache/CACHEDIR.TAG": "37dc88ef9a0abedd",
     ".pytest_cache/README.md": "73fd6fccdd802c41",
     ".pytest_cache/v/cache/lastfailed": "b2766ce04ad8b8e3",
     ".pytest_cache/v/cache/nodeids": "766a2c2d38e86720",
-    "CHANGELOG.md": "457b2cff8f36ab69",
-    "CLAUDE.md": "d4c45663c43de093",
+    "CHANGELOG.md": "9d4cc538c6d3beb0",
+    "CLAUDE.md": "afb503c3466c974f",
     "COMPATIBILITY.md": "a64870f71b299115",
     "GEMINI.md": "253deb23cba73c95",
-    "MANIFEST.json": "8e3a031e1b98b149",
-    "README.md": "512fa1a68de6d6a4",
+    "MANIFEST.json": "8d7524624a7564ea",
+    "README.md": "1e80c74483953848",
     "VERSION": "ba57e7c7f71876d6",
     "app/.dart_tool/dartpad/web_plugin_registrant.dart": "9bf322a14adec1fc",
     "app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/.filecache": "9b5e8f80bcd71317",
@@ -3630,14 +3509,14 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "app/web/index.html": "3b3a3e559ea191e1",
     "app/web/manifest.json": "fcf7034cc7cdaac2",
     "artifacts/adrs/0001-phase-a-externalization.md": "0b48799724a3b5aa",
-    "artifacts/harness/agents-architecture.md": "d224b59bd3bd1157",
-    "artifacts/harness/base.md": "d68cade89cd2ea81",
+    "artifacts/harness/agents-architecture.md": "8138fad7899bc023",
+    "artifacts/harness/base.md": "734711eeee971da7",
     "artifacts/harness/canonical_artifacts.yaml": "9950ae6ee7001f56",
     "artifacts/harness/components.yaml": "7a8f746b72174d24",
-    "artifacts/harness/dashboard-contract.md": "58f992fc2abbaf25",
-    "artifacts/harness/global-deployment.md": "875a99ce2049f40b",
-    "artifacts/harness/mcp-fleet.md": "ac1dabdaf694dd4c",
-    "artifacts/harness/model-fleet.md": "137f5179a61419a7",
+    "artifacts/harness/dashboard-contract.md": "9558d034eb6cf512",
+    "artifacts/harness/global-deployment.md": "9e6a416842b9490b",
+    "artifacts/harness/mcp-fleet.md": "68b8bf4c63c645a2",
+    "artifacts/harness/model-fleet.md": "7cfeca3e166ee185",
     "artifacts/iterations/0.1/iteration-1-close.md": "3cc23f012d0760ea",
     "artifacts/iterations/0.1.10/aho-build-log-0.1.10.md": "5ba237241653a657",
     "artifacts/iterations/0.1.10/aho-bundle-0.1.10.md": "b44d2c86c5cfd0b7",
@@ -3753,12 +3632,12 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "artifacts/iterations/0.2.2/aho-report-0.2.2.md": "9e022e5459061cfd",
     "artifacts/iterations/0.2.2/aho-run-0.2.2.md": "063eb1c3954adbba",
     "artifacts/iterations/0.2.3/aho-build-log-0.2.3.md": "8436cc5440a5cf83",
-    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "ffabf4fb0307deee",
+    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "65e709f28ba2e1b0",
     "artifacts/iterations/0.2.3/aho-design-0.2.3.md": "e076e8e383005117",
     "artifacts/iterations/0.2.3/aho-plan-0.2.3.md": "1d6b9088e63e64f2",
     "artifacts/iterations/0.2.3/aho-report-0.2.3.md": "17e0f4798428953b",
     "artifacts/iterations/0.2.3/aho-run-0.2.3.md": "a02c50b15437dbc0",
-    "artifacts/phase-charters/aho-phase-0.md": "b56f0fabcd1cd9c2",
+    "artifacts/phase-charters/aho-phase-0.md": "c225a522c9c6066b",
     "artifacts/phase-charters/iao-phase-0-historical.md": "d568cfc3f24b962d",
     "artifacts/prompts/_shared.md.j2": "90683d0d9fbe9df5",
     "artifacts/prompts/build-log.md.j2": "1a2d0cc13ceaad47",
@@ -3792,7 +3671,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "artifacts/tests/test_config_port.py": "75d08f037bb40b1a",
     "artifacts/tests/test_density_check.py": "59c01ba409f62896",
     "artifacts/tests/test_doctor.py": "fe81e4135c70ab5c",
-    "artifacts/tests/test_doctor_new_checks.py": "dc2c598a57d7a39d",
+    "artifacts/tests/test_doctor_new_checks.py": "3df79c5be2189bae",
     "artifacts/tests/test_evaluator.py": "a15d7336e2934abd",
     "artifacts/tests/test_evaluator_dynamic_baseline.py": "7b17bef56ee7bb4e",
     "artifacts/tests/test_evaluator_reload.py": "ec8ad3fc9d977b89",
@@ -3823,8 +3702,8 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "bin/aho-cli": "313120d649384feb",
     "bin/aho-conductor": "3135df1972bd89e0",
     "bin/aho-dashboard": "91a4d3dedd592988",
-    "bin/aho-install": "73db87a6fe61e31b",
-    "bin/aho-mcp": "849be1521c27a0b4",
+    "bin/aho-bootstrap": "73db87a6fe61e31b",
+    "bin/aho-mcp": "dfa5eaa347b47107",
     "bin/aho-models-status": "2bcc9141281ae3cc",
     "bin/aho-nemoclaw": "e282267bac085dea",
     "bin/aho-openclaw": "1c6dd21161f09ad3",
@@ -3833,8 +3712,8 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "bin/aho-otel-up": "d4382e480e72bcae",
     "bin/aho-telegram": "d872d764ca0b749d",
     "bin/aho-uninstall": "e1c8e9fdf1a2cbbd",
-    "data/aho_event_log.jsonl": "49329ef98ec762e5",
-    "data/gotcha_archive.json": "08ae56e777144774",
+    "data/aho_event_log.jsonl": "8a0e066f7a9057ff",
+    "data/gotcha_archive.json": "b76aa7182b8160d9",
     "data/known_hallucinations.json": "6a4068256fb249aa",
     "docker-compose.otel.yml": "975c9a9af93e317a",
     "install-old.fish": "6d167911b77d9cb2",
@@ -3842,7 +3721,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "install.fish.v10.66.backup": "6d167911b77d9cb2",
     "pipeline/README.md": "8f99ee2521029748",
     "projects.json": "7796763f9bfa2b29",
-    "pyproject.toml": "7f04ecc1c5b166be",
+    "pyproject.toml": "bc8d3d40988ec899",
     "src/aho/__init__.py": "637d8511f6afc13b",
     "src/aho/agents/__init__.py": "8a144891e1c2ba17",
     "src/aho/agents/conductor.py": "f4efb6ae2b4fe1f2",
@@ -3876,7 +3755,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
     "src/aho/data/__init__.py": "e3b0c44298fc1c14",
     "src/aho/data/firestore.py": "4d3f80bca83735a2",
     "src/aho/docs/harness/local-global-model.md": "31a99debbd7d7a9a",
-    "src/aho/doctor.py": "1f06745dd061a01d",
+    "src/aho/doctor.py": "96c945b3e64e99a4",
     "src/aho/feedback/__init__.py": "d539b1369e6cd7ef",
     "src/aho/feedback/aho_json.py": "ec0819181fa28ab5",
     "src/aho/feedback/build_log_stub.py": "49008d7bb3eab858",
@@ -3948,6 +3827,23 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 ### CHANGELOG.md
 ```markdown
 # aho changelog
+
+## [0.2.4] — 2026-04-11
+
+**Theme:** W1 remediation — canonical MCP list correction + verification harness
+
+- MCP fleet corrected from 12 to 9 registry-verified packages
+- Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
+- Added: server-everything (reference/test server)
+- `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
+- `bin/aho-mcp doctor` gains registry verification pass via `npm view`
+- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
+- 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
+- Gotcha registry at 17 entries
+- `mcp-fleet.md` updated to 9-server catalog with removal rationale
+- 10 canonical artifacts at 0.2.4
+- 137 tests passing
 
 ## [0.2.3] — 2026-04-11
 
@@ -4112,7 +4008,7 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.4** | **Status: Global Deployment + Full Telemetry**
+**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.5** | **Status: Global Deployment + Full Telemetry**
 
 ```mermaid
 graph BT
@@ -4228,7 +4124,7 @@ License to be determined before v0.6.0 release.
 
 ## Phase 0 Objective
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `bin/aho-install` on P3 produces a working aho environment with local model fleet operational.
+Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
 
 ## Your Role
 
@@ -4304,7 +4200,7 @@ Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. I
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.4 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 — updated during 0.2.5 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ### GEMINI.md
@@ -4319,7 +4215,7 @@ Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. I
 
 ## Phase 0 Objective
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `bin/aho-install` on P3 produces a working aho environment with local model fleet operational.
+Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
 
 ## Your Role
 
@@ -4416,321 +4312,149 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 ### install.fish
 ```fish
 #!/usr/bin/env fish
-# >>> aho install >>>
-# aho install script - aho 0.1.14
-# <<< aho install <<<
+# install.fish — Clone-to-deploy orchestrator for aho.
+# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# Pillar 4: wrappers are the tool surface.
 #
-# This script installs aho on a Linux system using the fish shell. It is the
-# canonical installer for aho on the development workstation (NZXT) and on
-# any Linux machine running fish (currently NZXT, P3 in aho 1.0.x).
-#
-# What this script does, in order:
-#   1. Verifies you are running it from a valid aho authoring location
-#   2. Checks Python 3.10+ and pip are available
-#   3. Detects existing legacy installations and offers cleanup
-#   4. Runs `pip install -e . --break-system-packages` to install the aho package
-#   5. Detects whether `age` (encryption tool) is installed; offers to install if missing
-#   6. Verifies `keyctl` (kernel keyring) is available
-#   7. Migrates existing plaintext secrets from config.fish to encrypted secrets store
-#   8. Removes dead pre-rename installations
-#   9. Removes stale config files
-#  10. Updates the global aho projects registry
-#  11. Writes the new "# >>> aho >>>" block to ~/.config/fish/config.fish
-#  12. Runs pre-flight checks to verify the install succeeded
-#  13. Prints a "next steps" message
-#
-# To run: cd ~/dev/projects/aho && ./install.fish
+# Usage: ./install.fish
+# Resumes from last successful step via ~/.local/state/aho/install.state
 
-# ─────────────────────────────────────────────────────────────────────────
-# Setup and helpers
-# ─────────────────────────────────────────────────────────────────────────
-
-set -l SCRIPT_DIR (dirname (realpath (status filename)))
-set -l AHO_VERSION "0.1.13"
-set -l AHO_HOME "$HOME/.config/aho"
+set -g script_name "aho-install"
+set -g project_root (dirname (realpath (status filename)))
+set -g state_dir "$HOME/.local/state/aho"
+set -g state_file "$state_dir/install.state"
+set -g log_file "$state_dir/install.log"
 
 function _info
-    set_color cyan
-    echo "[aho install] $argv"
-    set_color normal
-end
-
-function _warn
-    set_color yellow
-    echo "[aho install WARN] $argv"
-    set_color normal
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
 end
 
 function _error
-    set_color red
-    echo "[aho install ERROR] $argv"
-    set_color normal
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
 end
 
-function _success
-    set_color green
-    echo "[aho install OK] $argv"
-    set_color normal
-end
-
-function _step
+function _step_header
     echo ""
     set_color --bold magenta
     echo "═══════════════════════════════════════════════════════════════════"
-    echo "  $argv"
+    echo "  Step $argv"
     echo "═══════════════════════════════════════════════════════════════════"
     set_color normal
 end
 
-function _confirm
-    set -l prompt $argv[1]
-    set -l default $argv[2]  # "y" or "n"
-    set -l hint
-    if test "$default" = "y"
-        set hint "[Y/n]"
-    else
-        set hint "[y/N]"
+function _log
+    mkdir -p $state_dir
+    printf '%s %s\n' (date '+%Y-%m-%dT%H:%M:%S') "$argv" >> $log_file
+end
+
+function _mark_step
+    set -l step $argv[1]
+    set -l status_val $argv[2]
+    mkdir -p $state_dir
+    # Read existing state, update step, write back
+    if test -f $state_file
+        # Remove existing line for this step
+        grep -v "^$step=" $state_file > "$state_file.tmp"; or true
+        mv "$state_file.tmp" $state_file
     end
-    read -l -P "$prompt $hint " response
-    if test -z "$response"
-        set response $default
+    printf '%s=%s\n' $step $status_val >> $state_file
+end
+
+function _step_done
+    set -l step $argv[1]
+    if test -f $state_file
+        grep -q "^$step=pass" $state_file
+        return $status
     end
-    string match -qi "y" "$response"
-    return $status
+    return 1
 end
 
-# ─────────────────────────────────────────────────────────────────────────
-# Step 1: Verify we are in a valid aho authoring location
-# ─────────────────────────────────────────────────────────────────────────
+function _run_step
+    set -l step_num $argv[1]
+    set -l step_name $argv[2]
+    set -l step_cmd $argv[3..-1]
 
-_step "Step 1 of 13: Verify aho authoring location"
-
-if not test -f $SCRIPT_DIR/.aho.json
-    _error "No .aho.json found in $SCRIPT_DIR"
-    exit 1
-end
-
-if not test -f $SCRIPT_DIR/pyproject.toml
-    _error "No pyproject.toml found in $SCRIPT_DIR"
-    exit 1
-end
-
-_info "Authoring location: $SCRIPT_DIR"
-_info "Installing aho version: $AHO_VERSION"
-_success "Authoring location is valid"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 2: Verify Python 3.10+ and pip
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 2 of 13: Verify Python and pip"
-
-if not command -q python3
-    _error "python3 not found on PATH"
-    exit 1
-end
-
-set -l py_version (python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-set -l py_major (echo $py_version | cut -d. -f1)
-set -l py_minor (echo $py_version | cut -d. -f2)
-
-if test $py_major -lt 3; or begin test $py_major -eq 3; and test $py_minor -lt 10; end
-    _error "Python $py_version is too old. aho requires Python 3.10+."
-    exit 1
-end
-
-_info "Python version: $py_version"
-
-if not command -q pip
-    _error "pip not found on PATH"
-    exit 1
-end
-
-_success "Python and pip are available"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 3: Detect existing legacy installations
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 3 of 13: Detect existing legacy installations"
-
-set -l found_legacy 0
-
-if test -d $HOME/iao-middleware
-    _warn "Found legacy iao-middleware installation at $HOME/iao-middleware"
-    set found_legacy 1
-    if _confirm "Delete $HOME/iao-middleware now?" y
-        rm -rf $HOME/iao-middleware
-        _success "Deleted legacy installation"
+    if _step_done $step_name
+        _info "Step $step_num ($step_name): already complete, skipping."
+        return 0
     end
+
+    _step_header "$step_num: $step_name"
+    _log "START $step_name"
+
+    eval $step_cmd 2>&1
+    set -l result $status
+
+    if test $result -ne 0
+        _mark_step $step_name fail
+        _log "FAIL $step_name (exit $result)"
+        _error "Step $step_num ($step_name) failed. Fix the issue and re-run install.fish."
+        return 1
+    end
+
+    _mark_step $step_name pass
+    _log "PASS $step_name"
+    _info "Step $step_num ($step_name): done."
+    return 0
 end
 
-if test $found_legacy -eq 0
-    _info "No legacy installations found."
-end
-
-_success "Legacy installation cleanup complete"
-
 # ─────────────────────────────────────────────────────────────────────────
-# Step 4: pip install -e . the aho package
+# Platform check (not a resumable step — always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 4 of 13: Install aho Python package (editable mode)"
-
-cd $SCRIPT_DIR
-_info "Running: pip install -e . --break-system-packages"
-
-pip install -e . --break-system-packages
-or begin
-    _error "pip install failed"
+if not test -f /etc/arch-release
+    _error "Arch Linux required (/etc/arch-release not found). Halt."
     exit 1
 end
 
-# Install fleet dependencies
-_info "Installing fleet dependencies: chromadb, ollama, python-telegram-bot"
-pip install chromadb ollama python-telegram-bot --break-system-packages --quiet
-
-# Verify the install worked
-if not command -q aho
-    _error "aho command not found on PATH after pip install"
-    _error "Check that ~/.local/bin is on your PATH"
+if not type -q fish
+    _error "fish shell required. Halt."
     exit 1
 end
 
-_info "Installed version: "(aho --version)
-_success "aho package installed"
+if test (uname -m) != "x86_64"
+    _error "x86_64 required. Halt."
+    exit 1
+end
+
+_info "Platform: Arch Linux + fish + x86_64. OK."
+_info "Project root: $project_root"
+_log "START install.fish"
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 5: Detect age binary, install if missing
+# Steps 1–9
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 5 of 13: Verify age (encryption tool)"
+_run_step 1 pacman "$project_root/bin/aho-pacman install"; or exit 1
+_run_step 2 aur "$project_root/bin/aho-aur install"; or exit 1
+_run_step 3 python "$project_root/bin/aho-python install"; or exit 1
+_run_step 4 models "$project_root/bin/aho-models install"; or exit 1
+_run_step 5 secrets "$project_root/bin/aho-secrets-init"; or exit 1
+_run_step 6 mcp "$project_root/bin/aho-mcp install"; or exit 1
+_run_step 7 systemd "$project_root/bin/aho-systemd install"; or exit 1
 
-if command -q age
-    _info "age is installed"
-else
-    _warn "age binary not found"
-    if command -q pacman
-        if _confirm "Run 'sudo pacman -S age' to install?" y
-            sudo pacman -S --noconfirm age
+# Step 8: Symlink bin wrappers
+_run_step 8 symlinks "
+    mkdir -p $HOME/.local/bin
+    for wrapper in (command ls $project_root/bin/)
+        if test \"\$wrapper\" = aho-bootstrap; or test \"\$wrapper\" = aho-uninstall
+            continue
         end
+        ln -sf \"$project_root/bin/\$wrapper\" \"$HOME/.local/bin/\$wrapper\"
     end
-end
+"; or exit 1
 
-_success "age verified"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 6: Verify keyctl (kernel keyring) on Linux
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 6 of 13: Verify keyctl (kernel keyring)"
-
-if test (uname -s) = "Linux"
-    if not command -q keyctl
-        _warn "keyctl not found"
-        if command -q pacman
-            if _confirm "Run 'sudo pacman -S keyutils' to install?" y
-                sudo pacman -S --noconfirm keyutils
-            end
-        end
-    end
-end
-
-_success "Keyring backend verified"
+# Step 9: aho doctor
+_run_step 9 doctor "aho doctor"; or exit 1
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 7: Migrate plaintext secrets from config.fish
+# Done
 # ─────────────────────────────────────────────────────────────────────────
 
-_step "Step 7 of 13: Migrate plaintext secrets"
-
-set -l config_fish $HOME/.config/fish/config.fish
-if test -f $config_fish; and grep -qE 'set -x \w+(_API_KEY|_TOKEN|_SECRET)' $config_fish
-    _warn "Found plaintext secrets in $config_fish"
-    if _confirm "Run secrets migration now?" y
-        aho install migrate-config-fish
-    end
-end
-
-_success "Secrets migration step complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 8: (Cleanup)
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 8 of 13: Cleanup"
-_success "Cleanup complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 9: Remove stale active.fish
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 9 of 13: Remove stale active.fish"
-if test -f $HOME/.config/iao/active.fish
-    rm $HOME/.config/iao/active.fish
-end
-_success "Stale files removed"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 10: Update global aho projects registry
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 10 of 13: Update global projects registry"
-
-mkdir -p $AHO_HOME
-python3 -c "
-import json
-from pathlib import Path
-p = Path.home() / '.config' / 'aho' / 'projects.json'
-data = json.loads(p.read_text()) if p.exists() else {'projects': {}}
-data['projects']['aho'] = {
-    'prefix': 'AHO',
-    'project_code': 'ahomw',
-    'path': str(Path.home() / 'dev' / 'projects' / 'aho')
-}
-data['active'] = 'aho'
-p.parent.mkdir(parents=True, exist_ok=True)
-p.write_text(json.dumps(data, indent=2))
-"
-_success "Projects registry updated"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 11: Add aho block to fish config
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 11 of 13: Add aho block to fish config"
-
-set -l marker_begin "# >>> aho >>>"
-set -l marker_end "# <<< aho <<<"
-
-if not grep -q "$marker_begin" $config_fish
-    printf '\n%s\n' "$marker_begin" >> $config_fish
-    printf '%s\n' "# Managed by aho install." >> $config_fish
-    printf 'set -gx AHO_PROJECT_ROOT "%s"\n' "$PROJECT_ROOT" >> $config_fish
-    printf 'if test -d "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-    printf '    fish_add_path "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-    printf 'end\n' >> $config_fish
-    printf '%s\n' "$marker_end" >> $config_fish
-end
-
-_success "Fish config updated"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 12: Run health checks
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 12 of 13: Run health checks"
-aho doctor quick
-_success "Health checks complete"
-
-# ─────────────────────────────────────────────────────────────────────────
-# Step 13: Install complete
-# ─────────────────────────────────────────────────────────────────────────
-
-_step "Step 13 of 13: Install complete"
-_info "aho $AHO_VERSION is now ready."
-_info "Documentation: artifacts/iterations/0.1.13/"
-_success "Welcome to aho"
+_log "COMPLETE install.fish"
+_info "───────────────────────────────────────────"
+_info "aho install complete. All 9 steps passed."
+_info "───────────────────────────────────────────"
 ```
 
 ## §25. Harnesses
@@ -4739,7 +4463,7 @@ _success "Welcome to aho"
 ```markdown
 # Agents Architecture — aho 0.2.1
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Status:** Canonical
 **Theme:** Global deployment + full telemetry
 
@@ -4802,7 +4526,7 @@ This data feeds the **BUNDLE_SPEC §22 Component Checklist**, providing Kyle wit
 ```markdown
 # aho - Base Harness
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
@@ -4921,14 +4645,14 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 ---
 
-*base.md v0.2.4 - ahomw. Inviolable. Projects extend via project-specific harnesses.*
+*base.md v0.2.5 - ahomw. Inviolable. Projects extend via project-specific harnesses.*
 ```
 
 ### dashboard-contract.md
 ```markdown
 # aho Dashboard Contract
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Date:** 2026-04-11
 **Scope:** Heartbeat schema, health states, polling contract for localhost dashboard
 
@@ -5001,7 +4725,7 @@ Deferred. In Phase 1, clones will push heartbeat summaries to aho.run for centra
 ```markdown
 # aho Global Deployment Architecture
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Date:** 2026-04-11
 **Scope:** Hybrid systemd model for clone-to-deploy on Arch Linux
 
@@ -5014,7 +4738,7 @@ aho uses a **hybrid** systemd deployment:
 - **System services** (require sudo): Ollama (`ollama.service`). Installed via upstream installer, managed by systemd system scope.
 - **User services** (no sudo): All aho daemons (`aho-otel-collector.service`, future `aho-telegram.service`, etc.). Managed by `systemctl --user`, enabled via `loginctl enable-linger`.
 
-This split means `bin/aho-install` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
+This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
 
 ## 2. Install Paths
 
@@ -5033,7 +4757,7 @@ Every managed component supports all 7 lifecycle operations:
 
 | Operation | Command Pattern | Notes |
 |---|---|---|
-| **install** | `bin/aho-install` | Idempotent. Creates dirs, pip install, unit files. |
+| **install** | `bin/aho-bootstrap` | Idempotent. Creates dirs, pip install, unit files. |
 | **enable** | `systemctl --user enable aho-<component>` | Survives reboot via linger. |
 | **start** | `systemctl --user start aho-<component>` | Or `enable --now` during install. |
 | **status** | `systemctl --user status aho-<component>` | Also: `bin/aho-otel-status`, `bin/aho-models-status`. |
@@ -5068,7 +4792,7 @@ All capability gaps halt the agent with `[CAPABILITY GAP]` prefix. Kyle resolves
 - Ollama itself or pulled models
 - `~/.local/share/aho/traces/` (trace archive)
 
-Uninstall is non-destructive to user data. Re-running `bin/aho-install` after uninstall restores full state.
+Uninstall is non-destructive to user data. Re-running `bin/aho-bootstrap` after uninstall restores full state.
 
 ## 6. Idempotency Contract
 
@@ -5081,11 +4805,11 @@ Every install operation is safe to re-run:
 - `systemctl --user enable --now` — no-op if already running
 - Model pulls — skipped if `ollama list` shows model present
 
-Second run of `bin/aho-install` produces identical state to first run. No side effects, no error output.
+Second run of `bin/aho-bootstrap` produces identical state to first run. No side effects, no error output.
 
 ## 7. P3 Prerequisites
 
-Before `git clone` + `bin/aho-install` on ThinkStation P3:
+Before `git clone` + `install.fish` on ThinkStation P3:
 
 1. Arch Linux installed with fish shell as default
 2. Python 3.11+ with pip
@@ -5099,7 +4823,7 @@ After prerequisites, the flow is:
 ```fish
 git clone git@github.com:soc-foundry/aho.git ~/dev/projects/aho
 cd ~/dev/projects/aho
-bin/aho-install
+./install.fish
 aho doctor
 ```
 
@@ -5112,7 +4836,7 @@ aho doctor
 ```markdown
 # aho MCP Fleet — Architectural Specification
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Date:** 2026-04-11
 **Scope:** Global MCP server fleet for aho agent orchestration
 
@@ -5192,7 +4916,7 @@ Replacement servers for github/slack/google-drive/fetch are tracked under a sepa
 ```markdown
 # aho Model Fleet — Architectural Specification
 
-**Version:** 0.2.4
+**Version:** 0.2.5
 **Date:** 2026-04-11
 **Scope:** Universal aho fleet integration (Qwen, Nemotron, GLM, ChromaDB)
 
@@ -6522,7 +6246,7 @@ artifacts:
 ```toml
 [project]
 name = "aho"
-version = "0.2.4"
+version = "0.2.5"
 description = "Agentic Harness Orchestration middleware"
 requires-python = ">=3.11"
 dependencies = [

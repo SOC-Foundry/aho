@@ -62,6 +62,36 @@ def test_otel_span_emitted_when_enabled(tmp_path):
     mock_span.set_attribute.assert_any_call("aho.latency_ms", 50)
 
 
+def test_otel_dict_tokens_flattened_to_scalars(tmp_path):
+    """Dict tokens must be flattened to scalar attributes (aho-G064)."""
+    log_path = tmp_path / "events.jsonl"
+
+    mock_tracer = MagicMock()
+    mock_span = MagicMock()
+    mock_tracer.start_as_current_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+    mock_tracer.start_as_current_span.return_value.__exit__ = MagicMock(return_value=False)
+
+    with patch("aho.logger.LOG_PATH", str(log_path)), \
+         patch("aho.logger._otel_tracer", mock_tracer):
+        from aho.logger import log_event
+        log_event(
+            event_type="dict_tokens_test",
+            source_agent="test",
+            target="target",
+            action="verify",
+            tokens={"total": 56, "input": 30, "output": 26},
+        )
+
+    # Should set individual scalar attributes, not a single dict
+    mock_span.set_attribute.assert_any_call("aho.tokens.total", 56)
+    mock_span.set_attribute.assert_any_call("aho.tokens.input", 30)
+    mock_span.set_attribute.assert_any_call("aho.tokens.output", 26)
+    # Must NOT have set the raw dict
+    for call in mock_span.set_attribute.call_args_list:
+        if call[0][0] == "aho.tokens":
+            pytest.fail("aho.tokens set as dict instead of flattened scalars")
+
+
 def test_otel_failure_does_not_break_jsonl(tmp_path):
     """If OTEL tracer raises, JSONL must still be written."""
     log_path = tmp_path / "events.jsonl"

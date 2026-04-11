@@ -1,6 +1,6 @@
 # aho Global Deployment Architecture
 
-**Version:** 0.2.4
+**Version:** 0.2.6
 **Date:** 2026-04-11
 **Scope:** Hybrid systemd model for clone-to-deploy on Arch Linux
 
@@ -13,7 +13,7 @@ aho uses a **hybrid** systemd deployment:
 - **System services** (require sudo): Ollama (`ollama.service`). Installed via upstream installer, managed by systemd system scope.
 - **User services** (no sudo): All aho daemons (`aho-otel-collector.service`, future `aho-telegram.service`, etc.). Managed by `systemctl --user`, enabled via `loginctl enable-linger`.
 
-This split means `bin/aho-install` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
+This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
 
 ## 2. Install Paths
 
@@ -32,7 +32,7 @@ Every managed component supports all 7 lifecycle operations:
 
 | Operation | Command Pattern | Notes |
 |---|---|---|
-| **install** | `bin/aho-install` | Idempotent. Creates dirs, pip install, unit files. |
+| **install** | `bin/aho-bootstrap` | Idempotent. Creates dirs, pip install, unit files. |
 | **enable** | `systemctl --user enable aho-<component>` | Survives reboot via linger. |
 | **start** | `systemctl --user start aho-<component>` | Or `enable --now` during install. |
 | **status** | `systemctl --user status aho-<component>` | Also: `bin/aho-otel-status`, `bin/aho-models-status`. |
@@ -67,7 +67,7 @@ All capability gaps halt the agent with `[CAPABILITY GAP]` prefix. Kyle resolves
 - Ollama itself or pulled models
 - `~/.local/share/aho/traces/` (trace archive)
 
-Uninstall is non-destructive to user data. Re-running `bin/aho-install` after uninstall restores full state.
+Uninstall is non-destructive to user data. Re-running `bin/aho-bootstrap` after uninstall restores full state.
 
 ## 6. Idempotency Contract
 
@@ -80,11 +80,11 @@ Every install operation is safe to re-run:
 - `systemctl --user enable --now` — no-op if already running
 - Model pulls — skipped if `ollama list` shows model present
 
-Second run of `bin/aho-install` produces identical state to first run. No side effects, no error output.
+Second run of `bin/aho-bootstrap` produces identical state to first run. No side effects, no error output.
 
 ## 7. P3 Prerequisites
 
-Before `git clone` + `bin/aho-install` on ThinkStation P3:
+Before `git clone` + `install.fish` on ThinkStation P3:
 
 1. Arch Linux installed with fish shell as default
 2. Python 3.11+ with pip
@@ -98,7 +98,7 @@ After prerequisites, the flow is:
 ```fish
 git clone git@github.com:soc-foundry/aho.git ~/dev/projects/aho
 cd ~/dev/projects/aho
-bin/aho-install
+./install.fish
 aho doctor
 ```
 

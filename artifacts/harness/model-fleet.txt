@@ -1,0 +1,8 @@
+# aho model fleet — declarative list for clone-to-deploy
+# Read by bin/aho-models. One model tag per line. Comments and blank lines ignored.
+# Locked during 0.2.5 W0. Must match model-fleet.md architectural spec.
+
+qwen3.5:9b
+nemotron-mini:4b
+haervwe/GLM-4.6V-Flash-9B:latest
+nomic-embed-text:latest

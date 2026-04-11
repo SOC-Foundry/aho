@@ -1,7 +1,7 @@
 # Phase 0 Charter — aho
 
 **Phase:** 0 — NZXT-only authoring → clone-to-deploy on P3
-**Charter version:** 0.2.4
+**Charter version:** 0.2.6
 **Charter date:** 2026-04-11
 **Status:** active
 
@@ -9,7 +9,7 @@
 
 ## Why This Phase Exists
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `bin/aho-install` on P3 produces a working aho environment with local model fleet operational.
+Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
 
 ## Iteration Boundaries
 

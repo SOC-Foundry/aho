@@ -105,19 +105,19 @@ def _check_secrets_backend():
     return ("ok", "ready")
 
 def _check_install():
-    """Verify bin/aho-install and bin/aho-uninstall exist and are executable."""
+    """Verify bin/aho-bootstrap and bin/aho-uninstall exist and are executable."""
     try:
         root = find_project_root()
-        install = root / "bin" / "aho-install"
+        install = root / "bin" / "aho-bootstrap"
         uninstall = root / "bin" / "aho-uninstall"
         missing = []
         if not install.exists() or not os.access(install, os.X_OK):
-            missing.append("aho-install")
+            missing.append("aho-bootstrap")
         if not uninstall.exists() or not os.access(uninstall, os.X_OK):
             missing.append("aho-uninstall")
         if missing:
             return ("fail", f"missing or not executable: {', '.join(missing)}")
-        return ("ok", "install + uninstall present")
+        return ("ok", "bootstrap + uninstall present")
     except Exception as e:
         return ("warn", f"install check error: {e}")
 
@@ -217,7 +217,7 @@ def _check_age_key():
     """Verify per-clone age key exists with correct permissions."""
     key_path = Path.home() / ".config" / "aho" / "age.key"
     if not key_path.exists():
-        return ("warn", "age key missing (~/.config/aho/age.key). Run bin/aho-install.")
+        return ("warn", "age key missing (~/.config/aho/age.key). Run bin/aho-secrets-init.")
     mode = oct(key_path.stat().st_mode)[-3:]
     if mode != "600":
         return ("warn", f"age key permissions {mode}, expected 600")
@@ -296,12 +296,31 @@ def _check_aho_daemons():
                 capture_output=True, text=True, timeout=5
             )
             if r.stdout.strip() == "active":
-                results[svc] = ("ok", f"{svc} running")
+                if svc == "aho-telegram":
+                    bot_name = _get_telegram_bot_name()
+                    if bot_name:
+                        results[svc] = ("ok", f"{svc} running — @{bot_name}")
+                    else:
+                        results[svc] = ("ok", f"{svc} running")
+                else:
+                    results[svc] = ("ok", f"{svc} running")
             else:
                 results[svc] = ("warn", f"{svc}: {r.stdout.strip()}")
         except Exception:
             results[svc] = ("warn", f"{svc} check failed")
     return results
+
+
+def _get_telegram_bot_name():
+    """Read cached bot username written by telegram daemon on startup."""
+    try:
+        state_file = Path.home() / ".local/state/aho/telegram_bot.json"
+        if state_file.exists():
+            data = json.loads(state_file.read_text())
+            return data.get("username")
+    except Exception:
+        pass
+    return None
 
 
 def _preflight_checks():

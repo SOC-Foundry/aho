@@ -1,0 +1,8 @@
+# aho AUR packages
+#
+# Intentionally empty as of 0.2.5. aho proper has no AUR dependencies.
+# Consumer projects (kjtcom, etc.) layer their own AUR needs on top
+# via their own bootstrap (e.g., flutter-bin, google-cloud-cli).
+#
+# bin/aho-aur exists as a wrapper for future use and to keep yay
+# bootstrap logic available to consumer projects.

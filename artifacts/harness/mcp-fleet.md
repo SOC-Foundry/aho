@@ -1,6 +1,6 @@
 # aho MCP Fleet — Architectural Specification
 
-**Version:** 0.2.4
+**Version:** 0.2.6
 **Date:** 2026-04-11
 **Scope:** Global MCP server fleet for aho agent orchestration
 

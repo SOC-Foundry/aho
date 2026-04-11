@@ -1,0 +1,35 @@
+# aho pacman packages — declarative subset for clone-to-deploy
+# Read by bin/aho-pacman. One package per line. Comments and blank lines ignored.
+# Locked during 0.2.5 W0 from Kyle's decision.
+
+# Base toolchain
+fish
+tmux
+git
+base-devel
+python
+python-pip
+
+# Crypto / secrets
+age
+
+# Node ecosystem
+nodejs
+npm
+
+# CLI tooling used by harness scripts
+jq
+ripgrep
+fd
+
+# Observability / system inspection
+htop
+
+# Ollama runtime for the model fleet
+# NOTE: ollama removed from pacman list — installed via upstream script
+# (curl -fsSL https://ollama.com/install.sh | sh) because CachyOS pacman
+# package conflicts with upstream /usr/share/ollama. bin/aho-models doctor
+# checks ollama availability separately.
+
+# OS keyring backend for bin/aho-secrets-init
+libsecret

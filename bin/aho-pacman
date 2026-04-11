@@ -1,0 +1,113 @@
+#!/usr/bin/env fish
+# aho-pacman — Declarative native package manager wrapper.
+# Reads from artifacts/harness/pacman-packages.txt.
+# Subcommands: list, status, install, doctor
+
+set -g script_name "aho-pacman"
+set -g project_root (dirname (dirname (realpath (status filename))))
+set -g pkg_file "$project_root/artifacts/harness/pacman-packages.txt"
+
+function _info
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
+end
+
+function _warn
+    set_color yellow; echo "[$script_name WARN] $argv"; set_color normal
+end
+
+function _error
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
+end
+
+function _gap
+    set_color red; echo "[CAPABILITY GAP] $argv"; set_color normal
+end
+
+function _parse_packages
+    if not test -f $pkg_file
+        _error "Package list not found: $pkg_file"
+        return 1
+    end
+    grep -v '^\s*#' $pkg_file | grep -v '^\s*$' | string trim; or true
+end
+
+function _cmd_list
+    set -l pkgs (_parse_packages); or return 1
+    for pkg in $pkgs
+        echo $pkg
+    end
+end
+
+function _pkg_present
+    # Check pacman first, then fall back to command availability
+    # (handles upstream-installed packages like ollama)
+    if pacman -Qi $argv[1] >/dev/null 2>&1
+        return 0
+    end
+    if command -q $argv[1]
+        return 0
+    end
+    return 1
+end
+
+function _cmd_status
+    set -l pkgs (_parse_packages); or return 1
+    set -l installed 0
+    set -l missing 0
+    for pkg in $pkgs
+        if _pkg_present $pkg
+            set_color green; echo "  [installed] $pkg"; set_color normal
+            set installed (math $installed + 1)
+        else
+            set_color red; echo "  [missing]   $pkg"; set_color normal
+            set missing (math $missing + 1)
+        end
+    end
+    _info "$installed installed, $missing missing out of "(count $pkgs)" declared packages"
+end
+
+function _cmd_install
+    set -l pkgs (_parse_packages); or return 1
+    if test (count $pkgs) -eq 0
+        _info "No packages declared."
+        return 0
+    end
+    _info "Installing "(count $pkgs)" packages via pacman --needed..."
+    sudo pacman -S --needed $pkgs
+    if test $status -ne 0
+        _gap "pacman install failed. Check sudo access or network."
+        return 1
+    end
+    _info "Package installation complete."
+end
+
+function _cmd_doctor
+    set -l pkgs (_parse_packages); or return 1
+    set -l missing
+    for pkg in $pkgs
+        if not _pkg_present $pkg
+            set -a missing $pkg
+        end
+    end
+    if test (count $missing) -gt 0
+        _error "Missing packages: $missing"
+        return 1
+    end
+    _info "All "(count $pkgs)" declared packages present."
+    return 0
+end
+
+# Subcommand dispatch
+switch "$argv[1]"
+    case list
+        _cmd_list
+    case status
+        _cmd_status
+    case install
+        _cmd_install
+    case doctor
+        _cmd_doctor
+    case '*'
+        echo "Usage: $script_name {list|status|install|doctor}"
+        exit 1
+end

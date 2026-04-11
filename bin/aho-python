@@ -1,0 +1,64 @@
+#!/usr/bin/env fish
+# aho-python — Python package installer wrapper.
+# Wraps pip install -e . and verifies aho CLI on PATH.
+# Subcommands: install, doctor
+
+set -g script_name "aho-python"
+set -g project_root (dirname (dirname (realpath (status filename))))
+
+function _info
+    set_color cyan; echo "[$script_name] $argv"; set_color normal
+end
+
+function _error
+    set_color red; echo "[$script_name ERROR] $argv"; set_color normal
+end
+
+function _gap
+    set_color red; echo "[CAPABILITY GAP] $argv"; set_color normal
+end
+
+function _cmd_install
+    if not command -q python3
+        _gap "python3 not found on PATH."
+        return 1
+    end
+
+    if not command -q pip
+        _gap "pip not found on PATH."
+        return 1
+    end
+
+    _info "Installing aho Python package (editable)..."
+    pip install -e $project_root --break-system-packages --quiet 2>&1
+    if test $status -ne 0
+        _error "pip install failed."
+        return 1
+    end
+
+    if not command -q aho
+        _error "aho CLI not found on PATH after install. Check ~/.local/bin is in PATH."
+        return 1
+    end
+
+    _info "Python package installed. aho CLI on PATH."
+end
+
+function _cmd_doctor
+    if not command -q aho
+        _error "aho CLI not found on PATH."
+        return 1
+    end
+    _info "aho CLI present on PATH."
+    return 0
+end
+
+switch "$argv[1]"
+    case install
+        _cmd_install
+    case doctor
+        _cmd_doctor
+    case '*'
+        echo "Usage: $script_name {install|doctor}"
+        exit 1
+end

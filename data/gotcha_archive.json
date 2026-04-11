@@ -191,6 +191,34 @@
       "context": "Surfaced in 0.2.3 W1. 2 of 12 packages 404, 2 of 12 deprecated. Fixed in 0.2.4 W1+W2.",
       "surfaced_in": "0.2.3",
       "status": "fixed in 0.2.4 W2"
+    },
+    {
+      "id": "aho-G064",
+      "title": "OTEL span attributes must be scalars; flatten dicts via prefix expansion",
+      "pattern": "OpenTelemetry span attributes only accept scalars (bool, str, bytes, int, float) or sequences of scalars. Passing a dict silently drops the attribute and emits an error to stderr.",
+      "symptoms": [
+        "Invalid type dict errors in stderr during span emission",
+        "aho.tokens attribute missing from exported spans",
+        "Token usage data lost in OTEL traces"
+      ],
+      "mitigation": "Flatten dict-shaped attributes into separate scalar attributes with dotted prefix (e.g., aho.tokens.total, aho.tokens.input). Applied in logger.py set_attribute call.",
+      "context": "Surfaced in 0.2.3. qwen-client and rag/router passed {total, input, output} dicts. Fixed in 0.2.5 W7.",
+      "surfaced_in": "0.2.3",
+      "status": "fixed in 0.2.5 W7"
+    },
+    {
+      "id": "aho-G065",
+      "title": "Workstream pass requires post-install verification on target machine",
+      "pattern": "A workstream marked 'pass' that generates code without verifying the code runs on the target machine is not actually passing. Code generation is necessary but not sufficient.",
+      "symptoms": [
+        "Conductor smoke test passes in CI but fails on target",
+        "Claimed deliverables exist as code but were never executed",
+        "Post-install verification discovers runtime failures"
+      ],
+      "mitigation": "Every workstream that produces deployable artifacts must include a verification step that runs the artifact on the target. bin/aho-conductor smoke provides the canonical pattern: dispatch + assert file + assert spans.",
+      "context": "Surfaced in 0.2.3 W4 conductor dispatch. Qwen roleplayed deliverables, GLM rubber-stamped. Fixed in 0.2.5 W9 with real verifiable smoke test.",
+      "surfaced_in": "0.2.3",
+      "status": "fixed in 0.2.5 W9"
     }
   ]
 }

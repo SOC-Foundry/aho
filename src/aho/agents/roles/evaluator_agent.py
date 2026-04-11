@@ -40,16 +40,25 @@ class EvaluatorAgent:
                 "issues": [],
                 "recommendation": "ship",
                 "raw": response,
+                "raw_score": None,
+                "raw_recommendation": None,
             }
 
             try:
                 parsed = json.loads(response)
+                result["raw_score"] = parsed.get("score")
+                result["raw_recommendation"] = parsed.get("recommendation")
                 result.update(parsed)
             except (json.JSONDecodeError, TypeError):
                 pass
 
+            # Scale detection: if score <= 1.0, assume 0-1 scale and multiply by 10
+            score = result.get("score", 0)
+            if isinstance(score, (int, float)) and score <= 1.0:
+                result["score"] = round(score * 10)
+
             span.set_attribute("score", result.get("score", 0))
-            span.set_attribute("recommendation", result.get("recommendation", "unknown"))
+            span.set_attribute("recommendation", str(result.get("recommendation", "unknown")))
             log_event("agent_msg", "evaluator-agent", "glm", "review_complete",
                       output_summary=f"score={result['score']} rec={result['recommendation']}")
             return result

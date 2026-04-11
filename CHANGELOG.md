@@ -1,5 +1,32 @@
 # aho changelog
 
+## [0.2.6] — 2026-04-11
+
+**Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor
+
+- Removed ollama from `pacman-packages.txt` — installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
+- `bin/aho-pacman`: added `_pkg_present` fallback that checks `command -q` for upstream-installed packages
+- `bin/aho-secrets-init`: rewritten to check fernet secrets store + telegram daemon instead of bogus `.age` file scaffold
+- `aho doctor preflight`: telegram check now shows `@aho_run_bot` via cached `getMe` API response
+- Telegram daemon writes bot identity to `~/.local/state/aho/telegram_bot.json` on startup
+- install.fish completes all 9 steps clean on NZXTcos, second run fully idempotent
+
+## [0.2.5] — 2026-04-11
+
+**Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
+
+- `install.fish` rewritten as thin 9-step orchestrator with resume support via `install.state`
+- 6 new bin wrappers: `aho-pacman`, `aho-aur`, `aho-models`, `aho-secrets-init`, `aho-systemd`, `aho-python`
+- 3 declarative lists: `pacman-packages.txt` (15 packages), `aur-packages.txt` (empty), `model-fleet.txt` (4 models)
+- `bin/aho-install` renamed to `bin/aho-bootstrap` — install.fish is now the top-level entry point
+- `bin/aho-secrets-init`: age keygen + keyring bootstrap + telegram scaffold with capability gap halt
+- `bin/aho-systemd install` deploys all 4 user daemons including `aho-harness-watcher.service` (0.2.3 W3 fix)
+- OTEL `aho.tokens` dict→scalar flatten — no more `Invalid type dict` errors (aho-G064)
+- Evaluator score parser: scale detection (0-1 → 0-10), preserves `raw_score` and `raw_recommendation`
+- `bin/aho-conductor smoke`: verifiable smoke test with file marker + event log span assertion (aho-G065)
+- 2 new gotchas: aho-G064, aho-G065. Registry at 19 entries
+- 143 tests pass (was 137)
+
 ## [0.2.4] — 2026-04-11
 
 **Theme:** W1 remediation — canonical MCP list correction + verification harness
