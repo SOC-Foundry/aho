@@ -3,12 +3,25 @@
 Uses GLM-4.6V-Flash-9B via Ollama.
 """
 import requests
+from opentelemetry import trace
 from aho.logger import log_event
+
+_tracer = trace.get_tracer("aho.glm_client")
 
 
 def generate(prompt: str, images: list[str] = None) -> str:
     """Generate text from prompt and optional base64 images."""
     model = "haervwe/GLM-4.6V-Flash-9B:latest"
+    with _tracer.start_as_current_span("glm.generate") as span:
+        span.set_attribute("model", model)
+        span.set_attribute("prompt_length", len(prompt))
+        span.set_attribute("image_count", len(images) if images else 0)
+        result = _generate_impl(prompt, images, model)
+        span.set_attribute("status", "ok" if not result.startswith("Error:") else "error")
+        return result
+
+
+def _generate_impl(prompt: str, images: list[str] = None, model: str = "haervwe/GLM-4.6V-Flash-9B:latest") -> str:
     payload = {
         "model": model,
         "prompt": prompt,

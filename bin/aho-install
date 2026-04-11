@@ -1,26 +1,8 @@
 #!/usr/bin/env fish
-# aho-install - Idempotent environment installer for AHO.
-# Implementation for 0.1.14.
+# aho-install - Idempotent environment installer for aho.
+# 0.2.1 — replaces 0.1.14 skeleton.
 
-set -l script_version "0.1.14"
-set -l target_home $HOME
-set -l dry_run 0
-
-# Parse arguments
-set -l i 1
-while test $i -le (count $argv)
-    switch $argv[$i]
-        case "--dry-run"
-            set dry_run 1
-        case "--target"
-            set i (math $i + 1)
-            set target_home $argv[$i]
-        case "*"
-            echo "Unknown argument: $argv[$i]"
-            exit 1
-    end
-    set i (math $i + 1)
-end
+set -l script_version "0.2.1"
 
 function _info
     set_color cyan; echo "[aho-install] $argv"; set_color normal
@@ -34,87 +16,98 @@ function _error
     set_color red; echo "[aho-install ERROR] $argv"; set_color normal
 end
 
-_info "Starting aho $script_version installation..."
-if test $dry_run -eq 1
-    _info "MODE: DRY RUN"
-end
-_info "Target HOME: $target_home"
-
-# 1. Create XDG directories
-set -l bin_dir "$target_home/.local/bin"
-set -l config_dir "$target_home/.config/aho"
-set -l share_dir "$target_home/.local/share/aho"
-
-for d in $bin_dir $config_dir $share_dir
-    if not test -d $d
-        _info "Creating directory: $d"
-        if test $dry_run -eq 0
-            mkdir -p $d
-        end
-    end
+function _gap
+    set_color red; echo "[CAPABILITY GAP] $argv"; set_color normal
 end
 
-# 2. Symlink wrappers
+# 1. Platform check
+if not test -f /etc/arch-release
+    _gap "Arch Linux required (/etc/arch-release not found). Halt."
+    exit 1
+end
+
+if not type -q fish
+    _gap "fish shell required. Halt."
+    exit 1
+end
+
+_info "Platform: Arch Linux + fish. OK."
+
+# 2. Resolve project root
 set -l project_root (dirname (dirname (realpath (status filename))))
 _info "Project root: $project_root"
 
+# 3. Create XDG directories (idempotent)
+set -l dirs \
+    $HOME/.local/bin \
+    $HOME/.config/aho \
+    $HOME/.config/systemd/user \
+    $HOME/.local/share/aho \
+    $HOME/.local/share/aho/traces
+
+for d in $dirs
+    mkdir -p $d
+end
+_info "XDG directories ready."
+
+# 4. pip install (idempotent)
+_info "Installing aho Python package..."
+cd $project_root
+pip install -e . --break-system-packages --quiet 2>&1
+if test $status -ne 0
+    _error "pip install failed."
+    exit 1
+end
+_info "Python package installed."
+
+# 5. Symlink bin wrappers (idempotent)
 for wrapper in (command ls $project_root/bin/)
-    set -l src "$project_root/bin/$wrapper"
-    set -l dest "$bin_dir/$wrapper"
-    
-    if test "$wrapper" = "aho-install"
+    if test "$wrapper" = "aho-install"; or test "$wrapper" = "aho-uninstall"
         continue
     end
-    
-    if not test -L $dest
-        _info "Linking $wrapper -> $bin_dir/"
-        if test $dry_run -eq 0
-            ln -sf $src $dest
-        end
-    else
-        _info "$wrapper already linked"
-    end
+    set -l src "$project_root/bin/$wrapper"
+    set -l dest "$HOME/.local/bin/$wrapper"
+    ln -sf $src $dest
 end
+_info "Bin wrappers linked."
 
-# 3. Update config.fish
-set -l config_fish "$target_home/.config/fish/config.fish"
+# 6. Generate systemd unit directory scaffolding
+# Unit files are created by component-specific install steps (W3 for OTEL collector).
+_info "Systemd user directory ready at ~/.config/systemd/user/"
+
+# 7. Verify linger
+set -l linger_status (loginctl show-user $USER --property=Linger 2>/dev/null | string replace 'Linger=' '')
+if test "$linger_status" != "yes"
+    _gap "Linger not enabled. Run: sudo loginctl enable-linger $USER"
+    exit 1
+end
+_info "Linger enabled for $USER."
+
+# 8. Fish config marker (idempotent)
+set -l config_fish "$HOME/.config/fish/config.fish"
 set -l marker_begin "# >>> aho >>>"
-set -l marker_end "# <<< aho <<<"
-
 if test -f $config_fish
     if not grep -q "$marker_begin" $config_fish
-        _info "Adding aho block to $config_fish"
-        if test $dry_run -eq 0
-            printf '\n%s\n' "$marker_begin" >> $config_fish
-            printf '%s\n' "# Managed by aho install." >> $config_fish
-            printf 'set -gx AHO_PROJECT_ROOT "%s"\n' "$project_root" >> $config_fish
-            printf 'if test -d "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-            printf '    fish_add_path "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
-            printf 'end\n' >> $config_fish
-            printf '%s\n' "$marker_end" >> $config_fish
-        end
+        _info "Adding aho block to config.fish"
+        printf '\n%s\n' "$marker_begin" >> $config_fish
+        printf '%s\n' "# Managed by aho install." >> $config_fish
+        printf 'set -gx AHO_PROJECT_ROOT "%s"\n' "$project_root" >> $config_fish
+        printf 'if test -d "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
+        printf '    fish_add_path "$AHO_PROJECT_ROOT/bin"\n' >> $config_fish
+        printf 'end\n' >> $config_fish
+        printf '%s\n' "# <<< aho <<<" >> $config_fish
     else
-        _info "aho block already present in $config_fish"
+        _info "Fish config marker already present."
     end
-else
-    _warn "$config_fish not found, skipping shell config update"
 end
 
-# 4. Install python package
-_info "Ensuring aho package installed..."
-if test $dry_run -eq 0
-    cd $project_root
-    pip install -e . --break-system-packages --quiet
-else
-    _info "(dry-run) pip install -e ."
-end
-
-# 5. Run doctor
-_info "Running aho doctor..."
-if test $dry_run -eq 0
-    $project_root/bin/aho doctor quick
-else
-    _info "(dry-run) aho doctor quick"
-end
-
-_info "Installation complete."
+# 9. Summary
+_info "---"
+_info "aho $script_version install complete."
+_info "  Python package: editable install"
+_info "  XDG dirs: created"
+_info "  Bin wrappers: linked to ~/.local/bin/"
+_info "  Linger: enabled"
+_info "  Systemd user dir: ready"
+_info "---"
+_info "Next: run 'aho doctor' to verify environment."

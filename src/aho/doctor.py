@@ -104,6 +104,36 @@ def _check_secrets_backend():
         return ("warn", f"missing dependencies (need: {', '.join(missing)})")
     return ("ok", "ready")
 
+def _check_install():
+    """Verify bin/aho-install and bin/aho-uninstall exist and are executable."""
+    try:
+        root = find_project_root()
+        install = root / "bin" / "aho-install"
+        uninstall = root / "bin" / "aho-uninstall"
+        missing = []
+        if not install.exists() or not os.access(install, os.X_OK):
+            missing.append("aho-install")
+        if not uninstall.exists() or not os.access(uninstall, os.X_OK):
+            missing.append("aho-uninstall")
+        if missing:
+            return ("fail", f"missing or not executable: {', '.join(missing)}")
+        return ("ok", "install + uninstall present")
+    except Exception as e:
+        return ("warn", f"install check error: {e}")
+
+def _check_linger():
+    """Verify loginctl linger is enabled for current user."""
+    try:
+        r = subprocess.run(
+            ["loginctl", "show-user", os.environ.get("USER", ""), "--property=Linger"],
+            capture_output=True, text=True, timeout=5
+        )
+        if "Linger=yes" in r.stdout:
+            return ("ok", "linger enabled")
+        return ("warn", "linger not enabled (sudo loginctl enable-linger $USER)")
+    except Exception:
+        return ("warn", "linger check skipped")
+
 def _quick_checks():
     return {
         "project_root": _check_project_root(),
@@ -111,6 +141,8 @@ def _quick_checks():
         "path": _check_path(),
         "fish_marker": _check_fish_marker(),
         "secrets_backend": _check_secrets_backend(),
+        "install_scripts": _check_install(),
+        "linger": _check_linger(),
     }
 
 def _check_ollama():
@@ -125,14 +157,18 @@ def _check_ollama():
     except Exception as e:
         return ("fail", f"ollama unreachable: {e}")
 
-def _check_qwen():
+def _check_model_fleet():
+    """Verify all 4 required Ollama models are present."""
+    required = ["qwen3.5", "nemotron-mini", "GLM-4", "nomic-embed-text"]
     try:
         r = subprocess.run(["ollama", "list"], capture_output=True, text=True, timeout=5)
-        if "qwen" in r.stdout.lower():
-            return ("ok", "qwen loaded")
-        return ("fail", "qwen not pulled")
+        output = r.stdout
+        missing = [m for m in required if m.lower() not in output.lower()]
+        if missing:
+            return ("fail", f"missing models: {', '.join(missing)}")
+        return ("ok", f"all {len(required)} fleet models present")
     except Exception:
-        return ("warn", "qwen check failed")
+        return ("warn", "model fleet check failed")
 
 def _check_python_deps():
     deps = ["litellm", "jsonschema", "chromadb"]
@@ -161,10 +197,24 @@ def _check_disk():
     except Exception:
         return ("warn", "disk check failed")
 
+def _check_otel_collector():
+    """Verify aho-otel-collector systemd user service is running."""
+    try:
+        r = subprocess.run(
+            ["systemctl", "--user", "is-active", "aho-otel-collector"],
+            capture_output=True, text=True, timeout=5
+        )
+        if r.stdout.strip() == "active":
+            return ("ok", "aho-otel-collector running")
+        return ("warn", f"aho-otel-collector: {r.stdout.strip()}")
+    except Exception:
+        return ("warn", "otel collector check failed")
+
 def _preflight_checks():
     return {
         "ollama": _check_ollama(),
-        "qwen": _check_qwen(),
+        "model_fleet": _check_model_fleet(),
+        "otel_collector": _check_otel_collector(),
         "python_deps": _check_python_deps(),
         "disk": _check_disk(),
     }

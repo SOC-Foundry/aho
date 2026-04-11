@@ -11,9 +11,12 @@ import time
 from typing import Optional
 
 import requests
+from opentelemetry import trace
 
 from aho.artifacts.repetition_detector import RepetitionDetector, DegenerateGenerationError
 from aho.logger import log_event
+
+_tracer = trace.get_tracer("aho.qwen_client")
 
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -51,6 +54,27 @@ class QwenClient:
         if repetition detector fires. Raises requests.Timeout if the whole generation
         exceeds self.timeout.
         """
+        with _tracer.start_as_current_span("qwen.generate") as span:
+            span.set_attribute("model", self.model)
+            span.set_attribute("prompt_length", len(prompt))
+            span.set_attribute("temperature", self.temperature)
+            span.set_attribute("streaming", True)
+            try:
+                result = self._do_generate(prompt, system, max_tokens, json_format)
+                span.set_attribute("status", "ok")
+                return result
+            except Exception as e:
+                span.set_attribute("status", "error")
+                span.record_exception(e)
+                raise
+
+    def _do_generate(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        json_format: bool = False,
+    ) -> str:
         payload = {
             "model": self.model,
             "prompt": prompt,

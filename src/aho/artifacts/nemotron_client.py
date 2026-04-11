@@ -4,7 +4,10 @@ Uses nemotron-mini:4b via Ollama.
 """
 import json
 import requests
+from opentelemetry import trace
 from aho.logger import log_event
+
+_tracer = trace.get_tracer("aho.nemotron_client")
 
 
 def classify(text: str, categories: list[str], bias: str = None) -> str:
@@ -12,6 +15,17 @@ def classify(text: str, categories: list[str], bias: str = None) -> str:
 
     Optional bias string (e.g. 'prefer UNIVERSAL') is added to the system prompt.
     """
+    with _tracer.start_as_current_span("nemotron.classify") as span:
+        span.set_attribute("model", "nemotron-mini:4b")
+        span.set_attribute("input_length", len(text))
+        span.set_attribute("category_count", len(categories))
+        result = _classify_impl(text, categories, bias)
+        span.set_attribute("result", result)
+        span.set_attribute("status", "ok")
+        return result
+
+
+def _classify_impl(text: str, categories: list[str], bias: str = None) -> str:
     system_prompt = (
         "You are a precise classifier. Categorize the input text into EXACTLY ONE "
         f"of these categories: {', '.join(categories)}. "

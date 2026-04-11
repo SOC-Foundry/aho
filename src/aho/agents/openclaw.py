@@ -12,8 +12,12 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+from opentelemetry import trace
+
 from aho.artifacts.qwen_client import QwenClient
 from aho.logger import log_event
+
+_tracer = trace.get_tracer("aho.openclaw")
 
 
 class OpenClawSession:
@@ -35,44 +39,57 @@ class OpenClawSession:
                   output_summary=f"session={self.session_id} role={role}")
 
     def chat(self, message: str) -> str:
-        log_event("llm_call", "openclaw", self.model, "chat",
-                  input_summary=message[:200])
-        self.history.append({"role": "user", "content": message})
-        conversation = "\n\n".join(
-            f"{turn['role'].upper()}: {turn['content']}" for turn in self.history
-        )
-        prompt = f"{conversation}\n\nASSISTANT:"
-        response = self.client.generate(prompt, system=self.system_prompt)
-        self.history.append({"role": "assistant", "content": response})
-        return response
+        with _tracer.start_as_current_span("openclaw.chat") as span:
+            span.set_attribute("model", self.model)
+            span.set_attribute("role", self.role)
+            span.set_attribute("message_length", len(message))
+            log_event("llm_call", "openclaw", self.model, "chat",
+                      input_summary=message[:200])
+            self.history.append({"role": "user", "content": message})
+            conversation = "\n\n".join(
+                f"{turn['role'].upper()}: {turn['content']}" for turn in self.history
+            )
+            prompt = f"{conversation}\n\nASSISTANT:"
+            response = self.client.generate(prompt, system=self.system_prompt)
+            self.history.append({"role": "assistant", "content": response})
+            span.set_attribute("response_length", len(response))
+            span.set_attribute("status", "ok")
+            return response
 
     def execute_code(self, code: str, language: str = "python", timeout: int = 30) -> dict:
-        log_event("command", "openclaw", language, "execute_code",
-                  input_summary=code[:200])
-        if language == "python":
-            cmd = ["python3", "-c", code]
-        elif language == "bash":
-            cmd = ["bash", "-c", code]
-        else:
-            return {"stdout": "", "stderr": f"unsupported language: {language}", "exit_code": -1, "timed_out": False}
+        with _tracer.start_as_current_span("openclaw.execute_code") as span:
+            span.set_attribute("language", language)
+            span.set_attribute("code_length", len(code))
+            log_event("command", "openclaw", language, "execute_code",
+                      input_summary=code[:200])
+            if language == "python":
+                cmd = ["python3", "-c", code]
+            elif language == "bash":
+                cmd = ["bash", "-c", code]
+            else:
+                span.set_attribute("status", "error")
+                return {"stdout": "", "stderr": f"unsupported language: {language}", "exit_code": -1, "timed_out": False}
 
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=str(self.workdir),
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                env={"PATH": "/usr/bin:/bin", "HOME": str(self.workdir)},
-            )
-            return {
-                "stdout": result.stdout,
-                "stderr": result.stderr,
-                "exit_code": result.returncode,
-                "timed_out": False,
-            }
-        except subprocess.TimeoutExpired:
-            return {"stdout": "", "stderr": f"timeout after {timeout}s", "exit_code": -1, "timed_out": True}
+            try:
+                result = subprocess.run(
+                    cmd,
+                    cwd=str(self.workdir),
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    env={"PATH": "/usr/bin:/bin", "HOME": str(self.workdir)},
+                )
+                span.set_attribute("exit_code", result.returncode)
+                span.set_attribute("status", "ok" if result.returncode == 0 else "error")
+                return {
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "exit_code": result.returncode,
+                    "timed_out": False,
+                }
+            except subprocess.TimeoutExpired:
+                span.set_attribute("status", "timeout")
+                return {"stdout": "", "stderr": f"timeout after {timeout}s", "exit_code": -1, "timed_out": True}
 
     def close(self):
         # Clean up workdir

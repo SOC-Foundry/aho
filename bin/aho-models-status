@@ -1,0 +1,25 @@
+#!/usr/bin/env fish
+# aho-models-status - Show Ollama model fleet status.
+
+set -l endpoint "http://localhost:11434/api/tags"
+set -l response (curl -s $endpoint 2>/dev/null)
+
+if test -z "$response"
+    echo "[ERROR] Ollama not reachable at $endpoint"
+    exit 1
+end
+
+echo "$response" | python -c "
+import json, sys
+data = json.loads(sys.stdin.read())
+models = data.get('models', [])
+if not models:
+    print('No models found.')
+    sys.exit(0)
+print(f'{\"NAME\":<45} {\"SIZE\":<10} {\"MODIFIED\"}')
+print('-' * 75)
+for m in models:
+    size_gb = m['size'] / (1024**3)
+    print(f'{m[\"name\"]:<45} {size_gb:>6.2f}GB  {m[\"modified_at\"][:19]}')
+print(f'\nTotal: {len(models)} models')
+"

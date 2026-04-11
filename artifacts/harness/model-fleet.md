@@ -1,6 +1,6 @@
 # aho Model Fleet — Architectural Specification
 
-**Version:** 0.1.16
+**Version:** 0.2.1
 **Date:** 2026-04-11
 **Scope:** Universal aho fleet integration (Qwen, Nemotron, GLM, ChromaDB)
 
@@ -77,4 +77,4 @@ Areas under consideration for future iterations:
 - **Vision-First Auditing:** Integrating GLM directly into the post-flight loop for screenshot verification.
 
 ---
-*Document updated for aho 0.1.16 W0.*
+*Document updated for aho 0.2.1 W0.*

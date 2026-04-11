@@ -12,11 +12,12 @@ from pathlib import Path
 
 from aho.paths import find_project_root, get_iterations_dir, get_data_dir
 
-# OTEL dual emitter — additive, never load-bearing. JSONL stays authoritative.
+# OTEL dual emitter — always-on by default (0.2.1). Opt-out via AHO_OTEL_DISABLED=1.
+# JSONL stays authoritative. OTEL is additive.
 _otel_tracer = None
-_otel_enabled = os.environ.get("AHO_OTEL_ENABLED") == "1"
+_otel_disabled = os.environ.get("AHO_OTEL_DISABLED") == "1"
 
-if _otel_enabled:
+if not _otel_disabled:
     try:
         from opentelemetry import trace
         from opentelemetry.sdk.trace import TracerProvider
@@ -24,12 +25,12 @@ if _otel_enabled:
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
         provider = TracerProvider()
-        exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
+        exporter = OTLPSpanExporter(endpoint="http://127.0.0.1:4317", insecure=True)
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)
-        _otel_tracer = trace.get_tracer("aho", "0.1.15")
+        _otel_tracer = trace.get_tracer("aho", "0.2.1")
     except Exception as _otel_err:
-        print(f"[aho_logger] OTEL init failed (non-fatal): {_otel_err}", file=sys.stderr)
+        # Silently fall back — collector may not be running
         _otel_tracer = None
 
 try:

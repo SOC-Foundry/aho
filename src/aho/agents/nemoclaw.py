@@ -5,9 +5,13 @@ Nemotron classification. Replaces the 0.1.4 stub that raised NotImplementedError
 """
 from typing import Optional
 
+from opentelemetry import trace
+
 from aho.agents.openclaw import OpenClawSession
 from aho.artifacts.nemotron_client import classify
 from aho.logger import log_event
+
+_tracer = trace.get_tracer("aho.nemoclaw")
 
 
 DEFAULT_ROLES = ["assistant", "code_runner", "reviewer"]
@@ -25,15 +29,19 @@ class NemoClawOrchestrator:
 
     def dispatch(self, task: str, role: Optional[str] = None) -> str:
         if role is None:
-            # Classify the task
             role = classify(task, DEFAULT_ROLES, bias="Prefer 'assistant' for general tasks. Use 'code_runner' only if the task requires executing code. Use 'reviewer' only if the task is about evaluating an artifact.")
 
-        log_event("agent_msg", "nemoclaw", role, "dispatch",
-                  input_summary=task[:200], output_summary=f"classified_role={role}")
+        with _tracer.start_as_current_span(f"nemoclaw.dispatch.{role}") as span:
+            span.set_attribute("role", role)
+            span.set_attribute("task_length", len(task))
+            log_event("agent_msg", "nemoclaw", role, "dispatch",
+                      input_summary=task[:200], output_summary=f"classified_role={role}")
 
-        # Find first session with this role
-        matching_session = next((s for s in self.sessions if s.role == role), self.sessions[0])
-        return matching_session.chat(task)
+            matching_session = next((s for s in self.sessions if s.role == role), self.sessions[0])
+            result = matching_session.chat(task)
+            span.set_attribute("response_length", len(result))
+            span.set_attribute("status", "ok")
+            return result
 
     def collect(self) -> dict:
         return {s.role: s.history for s in self.sessions}

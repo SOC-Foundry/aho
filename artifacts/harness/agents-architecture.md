@@ -1,12 +1,12 @@
-# Agents Architecture — aho 0.1.16
+# Agents Architecture — aho 0.2.1
 
-**Version:** 0.1.16
+**Version:** 0.2.1
 **Status:** Canonical
-**Theme:** Terminology sweep and postflight gate repair
+**Theme:** Global deployment + full telemetry
 
 ## Overview
 
-Iteration 0.1.13 marks the final realignment of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet — including LLMs, MCPs, and tool wrappers — can be deployed as a unified package with zero manual configuration.
+Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet — including LLMs, MCPs, and tool wrappers — can be deployed as a unified package with zero manual configuration.
 
 The current architecture (ADR-040) prioritizes **Ollama-native primitives**. By leveraging the streaming `QwenClient` and the proven classification capabilities of `nemotron-mini:4b`, aho provides a functional agentic layer with zero external library dependencies beyond `requests` and the standard library.
 
@@ -56,4 +56,4 @@ This data feeds the **BUNDLE_SPEC §22 Component Checklist**, providing Kyle wit
 - **Streaming Heartbeat:** Inherits heartbeat and repetition detection, ensuring agents don't hang or loop during long tasks.
 
 ---
-*Updated during aho 0.1.16 W0. Original architecture authored by Gemini CLI during aho 0.1.7 W8.*
+*Updated during aho 0.2.1 W0. Original architecture authored by Gemini CLI during aho 0.1.7 W8.*

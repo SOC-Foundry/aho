@@ -1,7 +1,10 @@
 """Telegram notification logic for aho."""
 import os
 import requests
+from opentelemetry import trace
 from aho.secrets import session as secrets_session
+
+_tracer = trace.get_tracer("aho.telegram")
 
 
 def _get_creds(project_code: str):
@@ -29,19 +32,27 @@ def _get_creds(project_code: str):
 
 def send_message(project_code: str, text: str) -> bool:
     """Send a plain text message to a Telegram chat."""
-    token, chat_id = _get_creds(project_code)
-    if not token or not chat_id:
-        return False
-    
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": text}
-    
-    try:
-        r = requests.post(url, json=payload, timeout=10)
-        r.raise_for_status()
-        return True
-    except Exception:
-        return False
+    with _tracer.start_as_current_span("telegram.send") as span:
+        span.set_attribute("message_length", len(text))
+        span.set_attribute("project_code", project_code)
+        token, chat_id = _get_creds(project_code)
+        if not token or not chat_id:
+            span.set_attribute("status", "no_creds")
+            return False
+
+        span.set_attribute("chat_id", str(chat_id))
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {"chat_id": chat_id, "text": text}
+
+        try:
+            r = requests.post(url, json=payload, timeout=10)
+            r.raise_for_status()
+            span.set_attribute("status", "ok")
+            return True
+        except Exception as e:
+            span.set_attribute("status", "error")
+            span.record_exception(e)
+            return False
 
 
 def send_iteration_complete(project_code: str, iteration: str, bundle_path: str, run_path: str) -> bool:

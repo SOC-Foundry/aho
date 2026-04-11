@@ -1,0 +1,54 @@
+#!/usr/bin/env fish
+# aho-uninstall - Clean removal of aho installed components.
+# Safety contract: never touches data/, artifacts/, or git state.
+
+function _info
+    set_color cyan; echo "[aho-uninstall] $argv"; set_color normal
+end
+
+function _warn
+    set_color yellow; echo "[aho-uninstall WARN] $argv"; set_color normal
+end
+
+# 1. Stop and disable aho user services (best effort)
+_info "Stopping aho user services..."
+systemctl --user stop 'aho-*' 2>/dev/null; or true
+systemctl --user disable 'aho-*' 2>/dev/null; or true
+
+# 2. Remove systemd unit files
+_info "Removing aho systemd unit files..."
+for f in (command ls $HOME/.config/systemd/user/aho-*.service 2>/dev/null)
+    rm -f $f
+    _info "  Removed: $f"
+end
+systemctl --user daemon-reload 2>/dev/null; or true
+
+# 3. Remove OTEL collector binary (not pip wrappers)
+if test -f $HOME/.local/bin/aho-otel-collector
+    rm -f $HOME/.local/bin/aho-otel-collector
+    _info "Removed aho-otel-collector binary."
+end
+
+# 4. Remove aho config directory
+if test -d $HOME/.config/aho
+    rm -rf $HOME/.config/aho
+    _info "Removed ~/.config/aho/"
+end
+
+# 5. Remove symlinked wrappers from ~/.local/bin
+for f in (command ls $HOME/.local/bin/aho* 2>/dev/null)
+    if test -L $f
+        rm -f $f
+        _info "  Removed symlink: $f"
+    end
+end
+
+# 6. Summary
+_info "---"
+_info "Uninstall complete."
+_info "  data/ and artifacts/ untouched."
+_info "  Ollama and pulled models untouched."
+_info "  ~/.local/share/aho/traces/ untouched."
+_info "  Git state untouched."
+_info "---"
+_info "To reinstall: bin/aho-install"

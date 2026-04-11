@@ -1,0 +1,24 @@
+#!/usr/bin/env fish
+# aho-otel-status - Show OTEL collector service status and trace info.
+
+echo "=== OTEL Collector Service ==="
+systemctl --user status aho-otel-collector --no-pager 2>&1; or true
+
+echo ""
+echo "=== Endpoint ==="
+set -l grpc_ok (curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4317 2>/dev/null)
+if test "$grpc_ok" != "000"
+    echo "gRPC (4317): reachable"
+else
+    echo "gRPC (4317): unreachable"
+end
+
+echo ""
+echo "=== Traces ==="
+set -l trace_file "$HOME/.local/share/aho/traces/traces.jsonl"
+if test -s $trace_file
+    echo "Last modified: "(stat -c %y $trace_file)
+    echo "Line count: "(wc -l < $trace_file)
+else
+    echo "No traces yet."
+end

@@ -30,22 +30,11 @@ def check(iteration=None):
         # Fallback to root docs for legacy or phase-level checks
         iter_dir = root / "docs"
 
-    # 1. Resolve design path
-    design_path = None
-    planning_iter = f"{parts[0]}.{parts[1]}.0" if len(parts) >= 3 else iteration
-    
-    # Try current iteration dir first, then parent docs
-    search_paths = [
-        iter_dir / f"{prefix}-design-{iteration}.md",
-        iter_dir / f"{prefix}-design-{planning_iter}.md",
-        root / "docs" / f"{prefix}-design-{iteration}.md",
-        root / "docs" / f"{prefix}-design-{planning_iter}.md",
-    ]
-    
-    for p in search_paths:
-        if p.exists():
-            design_path = p
-            break
+    # 1. Resolve design path (simplified per 0.2.1 W0)
+    from aho.paths import get_artifacts_root
+    design_path = get_artifacts_root() / "iterations" / iteration / f"{prefix}-design-{iteration}.md"
+    if not design_path.exists():
+        design_path = None
 
     if not design_path:
         return ("warn", "design doc not found, skipping completeness check")

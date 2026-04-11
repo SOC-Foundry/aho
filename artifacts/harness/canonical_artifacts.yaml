@@ -28,3 +28,7 @@ artifacts:
   - path: CLAUDE.md
     pattern: 'updated during (\S+)'
     description: CLAUDE.md iteration reference
+
+  - path: artifacts/harness/global-deployment.md
+    pattern: '\*\*Version:\*\* (\S+)'
+    description: Global deployment architecture

@@ -1,5 +1,22 @@
 # aho changelog
 
+## [0.2.1] — 2026-04-11
+
+**Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
+
+- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
+- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
+- `bin/aho-models-status` — Ollama fleet status wrapper
+- `bin/aho-otel-status` — collector service + trace status
+- Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
+- `build_log_complete.py` design path fix using `get_artifacts_root()`
+- 8 canonical artifacts (added global-deployment.md)
+- 87 tests passing (7 new OTEL instrumentation tests)
+
 ## [0.1.16] — 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation

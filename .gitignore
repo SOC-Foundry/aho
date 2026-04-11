@@ -39,3 +39,7 @@ active.fish
 venv/
 ENV/
 *.pre-*
+
+# aho runtime data
+data/chroma/
+app/build/
