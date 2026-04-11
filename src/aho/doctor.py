@@ -143,6 +143,9 @@ def _quick_checks():
         "secrets_backend": _check_secrets_backend(),
         "install_scripts": _check_install(),
         "linger": _check_linger(),
+        "age_key": _check_age_key(),
+        "dashboard_port": _check_dashboard_port(),
+        "role_agents": _check_role_agents(),
     }
 
 def _check_ollama():
@@ -210,9 +213,84 @@ def _check_otel_collector():
     except Exception:
         return ("warn", "otel collector check failed")
 
+def _check_age_key():
+    """Verify per-clone age key exists with correct permissions."""
+    key_path = Path.home() / ".config" / "aho" / "age.key"
+    if not key_path.exists():
+        return ("warn", "age key missing (~/.config/aho/age.key). Run bin/aho-install.")
+    mode = oct(key_path.stat().st_mode)[-3:]
+    if mode != "600":
+        return ("warn", f"age key permissions {mode}, expected 600")
+    return ("ok", "age key present (mode 600)")
+
+
+def _check_dashboard_port():
+    """Verify .aho.json has dashboard_port and the port is bindable."""
+    try:
+        root = find_project_root()
+        p = root / ".aho.json"
+        if not p.exists():
+            return ("warn", ".aho.json missing")
+        data = json.loads(p.read_text())
+        port = data.get("dashboard_port")
+        if port is None:
+            return ("warn", "dashboard_port not set in .aho.json")
+        from aho.config import check_port_available
+        if check_port_available(int(port)):
+            return ("ok", f"port {port} available")
+        return ("warn", f"port {port} in use")
+    except Exception as e:
+        return ("warn", f"dashboard port check error: {e}")
+
+
+def _check_role_agents():
+    """Verify workstream/evaluator/harness agent modules are importable."""
+    missing = []
+    for mod_name in [
+        "aho.agents.roles.workstream_agent",
+        "aho.agents.roles.evaluator_agent",
+        "aho.agents.roles.harness_agent",
+        "aho.agents.conductor",
+    ]:
+        try:
+            __import__(mod_name)
+        except ImportError:
+            missing.append(mod_name.split(".")[-1])
+    if missing:
+        return ("fail", f"missing role agents: {', '.join(missing)}")
+    return ("ok", "all role agents importable")
+
+
+def _check_mcp_fleet():
+    """Verify all 12 MCP server packages are installed globally."""
+    mcp_packages = [
+        "firebase-tools", "@upstash/context7-mcp", "firecrawl-mcp",
+        "@playwright/mcp", "flutter-mcp",
+        "@modelcontextprotocol/server-filesystem",
+        "@modelcontextprotocol/server-github",
+        "@modelcontextprotocol/server-google-drive",
+        "@modelcontextprotocol/server-slack",
+        "@modelcontextprotocol/server-fetch",
+        "@modelcontextprotocol/server-memory",
+        "@modelcontextprotocol/server-sequential-thinking",
+    ]
+    try:
+        r = subprocess.run(
+            ["npm", "list", "-g", "--depth=0"],
+            capture_output=True, text=True, timeout=10
+        )
+        output = r.stdout
+        missing = [p for p in mcp_packages if p not in output]
+        if missing:
+            return ("warn", f"missing MCP servers: {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''} ({len(missing)}/{len(mcp_packages)})")
+        return ("ok", f"all {len(mcp_packages)} MCP servers present")
+    except Exception as e:
+        return ("warn", f"MCP fleet check failed: {e}")
+
+
 def _check_aho_daemons():
     """Verify aho agent daemons are running as systemd user services."""
-    services = ["aho-openclaw", "aho-nemoclaw", "aho-telegram"]
+    services = ["aho-openclaw", "aho-nemoclaw", "aho-telegram", "aho-harness-watcher"]
     results = {}
     for svc in services:
         try:
@@ -234,6 +312,7 @@ def _preflight_checks():
     return {
         "ollama": _check_ollama(),
         "model_fleet": _check_model_fleet(),
+        "mcp_fleet": _check_mcp_fleet(),
         "otel_collector": _check_otel_collector(),
         **daemon_checks,
         "python_deps": _check_python_deps(),

@@ -1,6 +1,6 @@
 # aho Global Deployment Architecture
 
-**Version:** 0.2.2
+**Version:** 0.2.3
 **Date:** 2026-04-11
 **Scope:** Hybrid systemd model for clone-to-deploy on Arch Linux
 
@@ -49,6 +49,7 @@ Every managed component supports all 7 lifecycle operations:
 | Linger enablement | `loginctl show-user $USER` shows `Linger=no` | `sudo loginctl enable-linger $USER` | Yes |
 | GitHub auth | `gh auth status` fails | `gh auth login` (manual, Pillar 11) | Yes |
 | Model pulls | `ollama list` missing models | `ollama pull <model>` (network + disk) | Per model |
+| Secrets session locked | Daemon startup fails with `[CAPABILITY GAP] secrets session locked` | `aho secret unlock` | Per shell session |
 
 All capability gaps halt the agent with `[CAPABILITY GAP]` prefix. Kyle resolves manually, agent resumes from checkpoint.
 

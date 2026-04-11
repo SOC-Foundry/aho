@@ -32,3 +32,11 @@ artifacts:
   - path: artifacts/harness/global-deployment.md
     pattern: '\*\*Version:\*\* (\S+)'
     description: Global deployment architecture
+
+  - path: artifacts/harness/mcp-fleet.md
+    pattern: '\*\*Version:\*\* (\S+)'
+    description: MCP fleet spec
+
+  - path: artifacts/harness/dashboard-contract.md
+    pattern: '\*\*Version:\*\* (\S+)'
+    description: Dashboard contract

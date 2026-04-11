@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html><head><title>aho claw3d</title></head><body>
+<h1>claw3d coming in 0.2.6</h1>
+<p>Components detected: <span id="count">loading...</span></p>
+<pre id="list"></pre>
+<script>
+fetch('/components.yaml').then(r => r.text()).then(t => {
+  const matches = t.match(/^\s*-\s+name:\s+(.+)$/gm) || [];
+  document.getElementById('count').textContent = matches.length;
+  document.getElementById('list').textContent = matches.join('\n');
+});
+</script>
+</body></html>

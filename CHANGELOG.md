@@ -1,5 +1,26 @@
 # aho changelog
 
+## [0.2.3] — 2026-04-11
+
+**Theme:** Three-agent role split + MCP fleet + dashboard plumbing
+
+- Three-agent role split: WorkstreamAgent (Qwen), EvaluatorAgent (GLM), HarnessAgent (Nemotron) at `src/aho/agents/roles/`
+- Conductor orchestrator: dispatch → nemoclaw.route → workstream → evaluator → telegram
+- 12 MCP servers as global npm components with `bin/aho-mcp` manager (list/status/doctor/install)
+- `aho-harness-watcher.service` — 4th systemd user daemon, long-lived event log watcher
+- Localhost dashboard plumbing: dashboard_port=7800, aho_role field, heartbeat emission (30s intervals)
+- `artifacts/harness/dashboard-contract.md` — canonical artifact #9 (heartbeat schema, health states)
+- `artifacts/harness/mcp-fleet.md` — canonical artifact #10 (12-server fleet spec)
+- `web/claw3d/index.html` placeholder (real implementation in 0.2.6)
+- `bin/aho-dashboard` skeleton (127.0.0.1:7800, traces.jsonl tail as JSON)
+- Bundle expanded with §24 Infrastructure, §25 Harnesses, §26 Configuration
+- Per-clone age keygen in `bin/aho-install` with [CAPABILITY GAP] halt
+- Doctor: `_check_age_key()`, `_check_dashboard_port()`, `_check_role_agents()`, `_check_mcp_fleet()`
+- `src/aho/config.py`: get_dashboard_port(), get_aho_role(), check_port_available()
+- 88 components (12 MCP servers, 4 new agents), 0 stubs
+- 10 canonical artifacts at 0.2.3
+- 137 tests passing (29 new)
+
 ## [0.2.2] — 2026-04-11
 
 **Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active

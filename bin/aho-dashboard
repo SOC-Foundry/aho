@@ -1,0 +1,56 @@
+#!/usr/bin/env fish
+# aho-dashboard - Localhost dashboard skeleton.
+# 0.2.3 W3 — serves traces.jsonl tail as JSON on 127.0.0.1:$dashboard_port.
+
+set -l project_root (dirname (dirname (realpath (status filename))))
+
+# Read dashboard_port from .aho.json
+set -l port 7800
+if test -f "$project_root/.aho.json"
+    set -l p (python3 -c "import json; print(json.load(open('$project_root/.aho.json')).get('dashboard_port', 7800))" 2>/dev/null)
+    if test -n "$p"
+        set port $p
+    end
+end
+
+echo "[aho-dashboard] Starting on 127.0.0.1:$port"
+echo "[aho-dashboard] Serving traces.jsonl tail as JSON"
+
+python3 -c "
+import http.server
+import json
+import os
+from pathlib import Path
+
+PORT = $port
+TRACES = Path.home() / '.local/share/aho/traces/traces.jsonl'
+COMPONENTS = Path('$project_root/artifacts/harness/components.yaml')
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory='$project_root/web/claw3d', **kwargs)
+
+    def do_GET(self):
+        if self.path == '/api/health':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            lines = []
+            if TRACES.exists():
+                lines = TRACES.read_text().splitlines()[-30:]
+            self.wfile.write(json.dumps({'traces': lines, 'count': len(lines)}).encode())
+        elif self.path == '/components.yaml':
+            if COMPONENTS.exists():
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.end_headers()
+                self.wfile.write(COMPONENTS.read_bytes())
+            else:
+                self.send_error(404)
+        else:
+            super().do_GET()
+
+server = http.server.HTTPServer(('127.0.0.1', PORT), Handler)
+print(f'[aho-dashboard] Listening on 127.0.0.1:{PORT}')
+server.serve_forever()
+"

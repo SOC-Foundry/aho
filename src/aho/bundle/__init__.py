@@ -58,6 +58,9 @@ BUNDLE_SPEC = [
     BundleSection(21, "Environment", 500),
     BundleSection(22, "Component Checklist", 500),
     BundleSection(23, "Component Manifest", 500),
+    BundleSection(24, "Infrastructure", 500),
+    BundleSection(25, "Harnesses", 500),
+    BundleSection(26, "Configuration", 500),
 ]
 
 
@@ -300,6 +303,65 @@ def build_bundle(iteration):
     except Exception as e:
         lines.append(f"*(component manifest unavailable: {e})*")
     lines.append("")
+
+    # §24 Infrastructure
+    lines += ["## §24. Infrastructure", ""]
+    infra_files = [
+        (".aho.json", "json"),
+        (".aho-checkpoint.json", "json"),
+        ("MANIFEST.json", "json"),
+        ("CHANGELOG.md", "markdown"),
+        ("README.md", "markdown"),
+        ("CLAUDE.md", "markdown"),
+        ("GEMINI.md", "markdown"),
+        ("install.fish", "fish"),
+    ]
+    for fname, lang in infra_files:
+        fpath = PROJECT_DIR / fname
+        if fpath.exists() and fpath not in EXCLUSIONS:
+            content = _read_file(fpath)
+            if len(content) > 50000:
+                content = content[:50000] + "\n[truncated, see file]"
+            lines += [f"### {fname}", f"```{lang}", content, "```", ""]
+        else:
+            lines += [f"### {fname}", "(missing)", ""]
+
+    # §25 Harnesses
+    lines += ["## §25. Harnesses", ""]
+    harness_dir = ARTIFACTS_DIR / "harness"
+    if harness_dir.exists():
+        for md in sorted(harness_dir.glob("*.md")):
+            content = _read_file(md)
+            if len(content) > 50000:
+                content = content[:50000] + "\n[truncated, see file]"
+            lines += [f"### {md.name}", "```markdown", content, "```", ""]
+        for yml in sorted(harness_dir.glob("*.yaml")):
+            content = _read_file(yml)
+            if len(content) > 50000:
+                content = content[:50000] + "\n[truncated, see file]"
+            lines += [f"### {yml.name}", "```yaml", content, "```", ""]
+    else:
+        lines.append("(no harness directory)")
+        lines.append("")
+
+    # §26 Configuration
+    lines += ["## §26. Configuration", ""]
+    config_files = [
+        ("artifacts/harness/components.yaml", "yaml"),
+        ("artifacts/harness/canonical_artifacts.yaml", "yaml"),
+        ("pyproject.toml", "toml"),
+        (".gitignore", ""),
+        ("projects.json", "json"),
+    ]
+    for rel_path, lang in config_files:
+        fpath = PROJECT_DIR / rel_path
+        if fpath.exists():
+            content = _read_file(fpath)
+            if len(content) > 50000:
+                content = content[:50000] + "\n[truncated, see file]"
+            lines += [f"### {rel_path}", f"```{lang}", content, "```", ""]
+        else:
+            lines += [f"### {rel_path}", "(missing)", ""]
 
     iter_dir = DOCS_DIR / "iterations" / version
     iter_dir.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,13 @@
+[Unit]
+Description=aho Harness Agent Watcher
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python -m aho.agents.roles.harness_agent --watch %h/dev/projects/aho/data/aho_event_log.jsonl
+Restart=on-failure
+RestartSec=5
+Environment=AHO_OTEL_DISABLED=0
+
+[Install]
+WantedBy=default.target

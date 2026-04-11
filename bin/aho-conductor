@@ -1,0 +1,12 @@
+#!/usr/bin/env fish
+# aho-conductor - Dispatch tasks through the three-agent role split.
+# 0.2.3 W2
+
+if test (count $argv) -lt 2; or test "$argv[1]" != "dispatch"
+    echo "Usage: aho-conductor dispatch <task>"
+    echo "  Dispatches a task through: conductor → nemoclaw → workstream → evaluator → telegram"
+    exit 1
+end
+
+set -l task (string join ' ' $argv[2..])
+python -m aho.agents.conductor dispatch $task

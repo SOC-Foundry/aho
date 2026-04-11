@@ -146,9 +146,11 @@ class TelegramHandler(socketserver.StreamRequestHandler):
 
 def serve():
     """Start the Telegram bridge daemon."""
+    from aho.logger import emit_heartbeat
     SOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     if SOCK_PATH.exists():
         SOCK_PATH.unlink()
+    emit_heartbeat("telegram")
     print(f"[telegram] listening on {SOCK_PATH}", flush=True)
     server = socketserver.UnixStreamServer(str(SOCK_PATH), TelegramHandler)
     try:

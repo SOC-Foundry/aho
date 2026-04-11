@@ -449,6 +449,120 @@ components:
     status: active
     owner: soc-foundry
 
+  # === Role-split agents (0.2.3 W2) ===
+  - name: workstream-agent
+    kind: agent
+    path: src/aho/agents/roles/workstream_agent.py
+    status: active
+    owner: soc-foundry
+    notes: "Qwen-bound, conductor-dispatched, activated 0.2.3 W2"
+
+  - name: evaluator-agent
+    kind: agent
+    path: src/aho/agents/roles/evaluator_agent.py
+    status: active
+    owner: soc-foundry
+    notes: "GLM-bound, review role, activated 0.2.3 W2"
+
+  - name: harness-agent
+    kind: agent
+    path: src/aho/agents/roles/harness_agent.py
+    status: active
+    owner: soc-foundry
+    notes: "Nemotron-bound, watcher daemon, activated 0.2.3 W2"
+
+  - name: conductor
+    kind: agent
+    path: src/aho/agents/conductor.py
+    status: active
+    owner: soc-foundry
+    notes: "orchestrator pattern, dispatches to role-split agents, activated 0.2.3 W2"
+
+  # === MCP servers ===
+  - name: mcp-firebase-tools
+    kind: mcp_server
+    path: firebase-tools
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-context7
+    kind: mcp_server
+    path: "@upstash/context7-mcp"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-firecrawl
+    kind: mcp_server
+    path: firecrawl-mcp
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-playwright
+    kind: mcp_server
+    path: "@playwright/mcp"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-flutter
+    kind: mcp_server
+    path: flutter-mcp
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-filesystem
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-filesystem"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-github
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-github"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-google-drive
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-google-drive"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-slack
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-slack"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-fetch
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-fetch"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-memory
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-memory"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-sequential-thinking
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-sequential-thinking"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, activated 0.2.3 W1"
+
   # === Components (self-reference) ===
   - name: component-manifest
     kind: python_module

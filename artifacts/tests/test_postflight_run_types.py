@@ -61,6 +61,9 @@ def setup_mock_project(tmp_path, iteration="0.1.99", run_type="mixed", component
         "## §21. Environment", "ENV" * 1000,
         "## §22. Component Checklist", "CC" * 1000,
         "## §23. Component Manifest", "CM" * 1000,
+        "## §24. Infrastructure", "IF" * 1000,
+        "## §25. Harnesses", "HA" * 1000,
+        "## §26. Configuration", "CF" * 1000,
     ]
     bundle_path.write_text("\n".join(content))
     

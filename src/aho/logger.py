@@ -86,6 +86,42 @@ except Exception as _e:
     _ITERATION = "MISSING_ENV_VAR"
 
 
+def emit_heartbeat(component_name, dashboard_port=None, interval=30):
+    """Emit heartbeat spans at regular intervals. Runs in a daemon thread.
+
+    Call once at daemon startup in --serve mode. Thread exits when main exits.
+    """
+    import time
+    import threading
+
+    if dashboard_port is None:
+        try:
+            from aho.config import get_dashboard_port
+            dashboard_port = get_dashboard_port()
+        except Exception:
+            dashboard_port = 7800
+
+    def _loop():
+        start = time.time()
+        while True:
+            try:
+                uptime = int(time.time() - start)
+                log_event(
+                    "heartbeat",
+                    source_agent=component_name,
+                    target="self",
+                    action="heartbeat",
+                    output_summary=f"uptime={uptime}s port={dashboard_port}",
+                )
+            except Exception:
+                pass
+            time.sleep(interval)
+
+    t = threading.Thread(target=_loop, daemon=True, name=f"heartbeat-{component_name}")
+    t.start()
+    return t
+
+
 def log_workstream_complete(workstream_id, status, summary):
     """ADR-022: Append a structured workstream completion entry to the build log. (10.69 W3)"""
     from datetime import datetime

@@ -184,9 +184,11 @@ class OpenClawHandler(socketserver.StreamRequestHandler):
 
 def serve():
     """Start the OpenClaw daemon listening on a Unix socket."""
+    from aho.logger import emit_heartbeat
     SOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     if SOCK_PATH.exists():
         SOCK_PATH.unlink()
+    emit_heartbeat("openclaw")
     print(f"[openclaw] listening on {SOCK_PATH}", flush=True)
     server = socketserver.UnixStreamServer(str(SOCK_PATH), OpenClawHandler)
     try:

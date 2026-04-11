@@ -141,9 +141,11 @@ class NemoClawHandler(socketserver.StreamRequestHandler):
 
 def serve():
     """Start the NemoClaw daemon listening on a Unix socket."""
+    from aho.logger import emit_heartbeat
     SOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     if SOCK_PATH.exists():
         SOCK_PATH.unlink()
+    emit_heartbeat("nemoclaw")
     print(f"[nemoclaw] listening on {SOCK_PATH}", flush=True)
     server = socketserver.UnixStreamServer(str(SOCK_PATH), NemoClawHandler)
     try:
