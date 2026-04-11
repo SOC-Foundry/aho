@@ -262,17 +262,14 @@ def _check_role_agents():
 
 
 def _check_mcp_fleet():
-    """Verify all 12 MCP server packages are installed globally."""
+    """Verify all 9 MCP server packages are installed globally."""
     mcp_packages = [
         "firebase-tools", "@upstash/context7-mcp", "firecrawl-mcp",
         "@playwright/mcp", "flutter-mcp",
         "@modelcontextprotocol/server-filesystem",
-        "@modelcontextprotocol/server-github",
-        "@modelcontextprotocol/server-google-drive",
-        "@modelcontextprotocol/server-slack",
-        "@modelcontextprotocol/server-fetch",
         "@modelcontextprotocol/server-memory",
         "@modelcontextprotocol/server-sequential-thinking",
+        "@modelcontextprotocol/server-everything",
     ]
     try:
         r = subprocess.run(

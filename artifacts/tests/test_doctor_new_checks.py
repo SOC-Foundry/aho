@@ -49,12 +49,9 @@ def test_check_mcp_fleet_all_present(mock_run):
         "firebase-tools", "@upstash/context7-mcp", "firecrawl-mcp",
         "@playwright/mcp", "flutter-mcp",
         "@modelcontextprotocol/server-filesystem",
-        "@modelcontextprotocol/server-github",
-        "@modelcontextprotocol/server-google-drive",
-        "@modelcontextprotocol/server-slack",
-        "@modelcontextprotocol/server-fetch",
         "@modelcontextprotocol/server-memory",
         "@modelcontextprotocol/server-sequential-thinking",
+        "@modelcontextprotocol/server-everything",
     ]
     mock_run.return_value = MagicMock(stdout="\n".join(packages))
     from aho.doctor import _check_mcp_fleet

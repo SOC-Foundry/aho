@@ -1,5 +1,22 @@
 # aho changelog
 
+## [0.2.4] — 2026-04-11
+
+**Theme:** W1 remediation — canonical MCP list correction + verification harness
+
+- MCP fleet corrected from 12 to 9 registry-verified packages
+- Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
+- Added: server-everything (reference/test server)
+- `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
+- `bin/aho-mcp doctor` gains registry verification pass via `npm view`
+- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
+- 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
+- Gotcha registry at 17 entries
+- `mcp-fleet.md` updated to 9-server catalog with removal rationale
+- 10 canonical artifacts at 0.2.4
+- 137 tests passing
+
 ## [0.2.3] — 2026-04-11
 
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing

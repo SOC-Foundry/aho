@@ -163,6 +163,34 @@
       "fix": "Scripts that emit events must read iteration from .aho-checkpoint.json at script start.",
       "status": "fixed in 0.1.12 W2",
       "id": "aho-G061"
+    },
+    {
+      "id": "aho-G062",
+      "title": "Fish set -l is invisible inside functions in the same script",
+      "pattern": "Fish functions do not inherit local variables from enclosing script scope. set -l at script level is invisible inside functions defined in the same file.",
+      "symptoms": [
+        "Function reads a script-level variable and gets empty string",
+        "Loops over the variable iterate zero times with no error",
+        "CLI wrapper produces empty output despite correct logic"
+      ],
+      "mitigation": "Use set -g (global) for all script-level constants consumed by functions in the same file. Never set -l for cross-function constants.",
+      "context": "Surfaced in 0.2.3 W1. bin/aho-mcp used set -l for script_version and mcp_packages. Both were invisible to mcp_list, mcp_doctor, etc. Fixed in 0.2.4 W1.",
+      "surfaced_in": "0.2.3",
+      "status": "fixed in 0.2.4 W1"
+    },
+    {
+      "id": "aho-G063",
+      "title": "Canonical package lists must be registry-verified, not written from memory",
+      "pattern": "Any deliverable containing a canonical list of external packages must include a registry verification step. Lists written from agent memory are stale on arrival.",
+      "symptoms": [
+        "npm install emits 404 errors for packages that moved or were archived",
+        "npm install emits deprecation warnings for superseded packages",
+        "Clone-to-deploy fails on first npm install"
+      ],
+      "mitigation": "Postflight runs npm view against every entry in the canonical list. Any 404 or deprecation flips the check from OK to FAIL. See src/aho/postflight/mcp_canonical_registry_verify.py.",
+      "context": "Surfaced in 0.2.3 W1. 2 of 12 packages 404, 2 of 12 deprecated. Fixed in 0.2.4 W1+W2.",
+      "surfaced_in": "0.2.3",
+      "status": "fixed in 0.2.4 W2"
     }
   ]
 }

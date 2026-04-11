@@ -1,8 +1,8 @@
 #!/usr/bin/env fish
 # aho-mcp - Global MCP server fleet manager for aho.
-# 0.2.3 W1 — full implementation replacing 0.1.14 skeleton.
+# 0.2.4 W1 — 9-package canonical list, registry-verified.
 
-set -g script_version "0.2.3"
+set -g script_version "0.2.4"
 
 set -g mcp_packages \
     firebase-tools \
@@ -11,12 +11,9 @@ set -g mcp_packages \
     @playwright/mcp \
     flutter-mcp \
     @modelcontextprotocol/server-filesystem \
-    @modelcontextprotocol/server-github \
-    @modelcontextprotocol/server-google-drive \
-    @modelcontextprotocol/server-slack \
-    @modelcontextprotocol/server-fetch \
     @modelcontextprotocol/server-memory \
-    @modelcontextprotocol/server-sequential-thinking
+    @modelcontextprotocol/server-sequential-thinking \
+    @modelcontextprotocol/server-everything
 
 function _info
     set_color cyan; echo "[aho-mcp] $argv"; set_color normal
@@ -84,6 +81,25 @@ function mcp_doctor
     else
         _error "Some MCP servers missing. Run: bin/aho-mcp install"
     end
+
+    # Registry verification pass (G-mcp-canonical-drift defense)
+    _info "Registry verification..."
+    set -l reg_ok 1
+    for pkg in $mcp_packages
+        set -l npm_out (npm view $pkg version 2>&1)
+        if test $status -ne 0
+            _error "REGISTRY 404: $pkg"
+            set reg_ok 0
+        else if string match -q '*deprecated*' -- $npm_out
+            _error "DEPRECATED: $pkg"
+            set reg_ok 0
+        end
+    end
+    if test $reg_ok -eq 1
+        _info "All "(count $mcp_packages)" packages registry-verified. OK."
+    else
+        _error "Registry verification failed. Review canonical list."
+    end
 end
 
 function mcp_install
@@ -113,6 +129,6 @@ switch $argv[1]
         _info "Usage: aho-mcp {list|status|doctor|install}"
         _info "  list    - Show all MCP servers and their install status"
         _info "  status  - Summary of installed vs missing"
-        _info "  doctor  - Verify all 12 servers present"
+        _info "  doctor  - Verify all 9 servers present + registry check"
         _info "  install - Install missing servers globally via npm"
 end

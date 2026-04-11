@@ -1,6 +1,6 @@
 # aho MCP Fleet — Architectural Specification
 
-**Version:** 0.2.3
+**Version:** 0.2.4
 **Date:** 2026-04-11
 **Scope:** Global MCP server fleet for aho agent orchestration
 
@@ -20,12 +20,9 @@ The MCP (Model Context Protocol) fleet provides standardized tool access for aho
 | 4 | @playwright/mcp | mcp-playwright | Browser automation and testing |
 | 5 | flutter-mcp | mcp-flutter | Flutter app development tooling |
 | 6 | @modelcontextprotocol/server-filesystem | mcp-server-filesystem | Local filesystem operations |
-| 7 | @modelcontextprotocol/server-github | mcp-server-github | GitHub API operations |
-| 8 | @modelcontextprotocol/server-google-drive | mcp-server-google-drive | Google Drive file access |
-| 9 | @modelcontextprotocol/server-slack | mcp-server-slack | Slack messaging integration |
-| 10 | @modelcontextprotocol/server-fetch | mcp-server-fetch | HTTP fetch operations |
-| 11 | @modelcontextprotocol/server-memory | mcp-server-memory | Persistent memory store |
-| 12 | @modelcontextprotocol/server-sequential-thinking | mcp-server-sequential-thinking | Chain-of-thought reasoning |
+| 7 | @modelcontextprotocol/server-memory | mcp-server-memory | Persistent memory store |
+| 8 | @modelcontextprotocol/server-sequential-thinking | mcp-server-sequential-thinking | Chain-of-thought reasoning |
+| 9 | @modelcontextprotocol/server-everything | mcp-server-everything | Reference/test server |
 
 ## 3. Installation
 
@@ -47,16 +44,13 @@ All packages install globally via `sudo npm install -g`. This is a one-time capa
 - **playwright**: End-to-end browser testing for app/ builds.
 - **flutter**: Flutter widget scaffolding and build tooling.
 - **server-filesystem**: Safe, sandboxed file I/O for agent workdirs.
-- **server-github**: PR creation, issue management, repo queries.
-- **server-google-drive**: Document retrieval from shared drives.
-- **server-slack**: Notification delivery to team channels.
-- **server-fetch**: Generic HTTP client for API integrations.
 - **server-memory**: Cross-session persistent key-value store.
 - **server-sequential-thinking**: Structured reasoning for complex multi-step tasks.
+- **server-everything**: Reference/test MCP server — useful as conductor smoke target and integration test fixture.
 
 ## 5. Doctor Checks
 
-`aho doctor` includes `_check_mcp_fleet()` which verifies all 12 packages are present via `npm list -g --depth=0`. Missing packages are reported individually.
+`aho doctor` includes `_check_mcp_fleet()` which verifies all 9 packages are present via `npm list -g --depth=0`. Missing packages are reported individually. `bin/aho-mcp doctor` adds a registry verification pass via `npm view` to catch 404s and deprecations.
 
 `bin/aho-mcp doctor` provides the same check as a standalone command.
 
@@ -69,4 +63,14 @@ All packages install globally via `sudo npm install -g`. This is a one-time capa
 
 ---
 
-*MCP fleet specification for aho Phase 0 — authored during 0.2.3 W1.*
+**Removed in 0.2.4 (registry-verified as 404/deprecated/non-npm):**
+- `@modelcontextprotocol/server-github` — moved to `github/github-mcp-server` (Go binary, not npm)
+- `@modelcontextprotocol/server-google-drive` — archived, no first-party replacement
+- `@modelcontextprotocol/server-slack` — deprecated, no current replacement
+- `@modelcontextprotocol/server-fetch` — Python-only (`uvx mcp-server-fetch`), not an npm package
+
+Replacement servers for github/slack/google-drive/fetch are tracked under a separate ADR (not Phase 0 scope).
+
+---
+
+*MCP fleet specification for aho Phase 0 — updated during 0.2.4 W0.*
