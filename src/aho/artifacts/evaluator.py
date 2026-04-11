@@ -138,6 +138,9 @@ def validate_references(refs: dict, project_root: Path, seed: dict = None) -> di
 
 def evaluate_text(text: str, project_root: Path = None, seed: dict = None, artifact_type: str = None) -> dict:
     """Full evaluation: extract references, validate, return severity."""
+    import os, sys
+    if os.environ.get("AHO_EVAL_DEBUG"):
+        print(f"[eval] evaluate_text called: artifact_type={artifact_type} text_len={len(text)}", file=sys.stderr)
     if project_root is None:
         try:
             project_root = find_project_root()
@@ -170,6 +173,8 @@ def evaluate_text(text: str, project_root: Path = None, seed: dict = None, artif
         validation["severity"] = "reject"
     validation["message"] = f"{n} issues found, severity: {validation['severity']}"
     validation["references"] = refs
+    if os.environ.get("AHO_EVAL_DEBUG"):
+        print(f"[eval] result: severity={validation['severity']} errors={n} errors_list={validation['errors'][:5]}", file=sys.stderr)
     try:
         _log_event("evaluator_run", "evaluator", artifact_type or "unknown", "evaluate",
                    output_summary=f"severity={validation['severity']} errors={n}",

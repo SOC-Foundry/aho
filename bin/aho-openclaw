@@ -1,0 +1,42 @@
+#!/usr/bin/env fish
+# aho-openclaw — wrapper for the OpenClaw global daemon.
+# Connects to the Unix socket and dispatches commands.
+
+set sock $HOME/.local/share/aho/openclaw.sock
+
+if not test -S $sock
+    echo "openclaw daemon not running (no socket at $sock)"
+    exit 1
+end
+
+function _send
+    python3 -c "
+import socket, sys, json
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect('$sock')
+s.sendall((sys.argv[1] + '\n').encode())
+data = b''
+while True:
+    chunk = s.recv(4096)
+    if not chunk: break
+    data += chunk
+s.close()
+print(data.decode().strip())
+" "$argv[1]"
+end
+
+switch $argv[1]
+    case chat
+        set msg (string join " " $argv[2..])
+        set escaped (string replace -a '"' '\\"' -- "$msg")
+        _send "{\"cmd\":\"chat\",\"message\":\"$escaped\"}"
+    case execute
+        set code (string join " " $argv[2..])
+        set escaped (string replace -a '"' '\\"' -- "$code")
+        _send "{\"cmd\":\"execute\",\"code\":\"$escaped\"}"
+    case status
+        _send '{"cmd":"status"}'
+    case '*'
+        echo "Usage: aho-openclaw {chat|execute|status} [args...]"
+        exit 1
+end

@@ -14,7 +14,7 @@ def test_load_components_from_project():
 
 
 def test_named_stubs_present():
-    """openclaw, nemoclaw, telegram must be present as stubs."""
+    """openclaw, nemoclaw, telegram must be present and active (graduated 0.2.2)."""
     from aho.paths import get_harness_dir
     yaml_path = get_harness_dir() / "components.yaml"
     components = load_components(yaml_path)
@@ -23,10 +23,10 @@ def test_named_stubs_present():
     assert "nemoclaw" in names
     assert "telegram" in names
 
-    stubs = {c.name: c for c in components if c.status == "stub"}
-    assert "openclaw" in stubs
-    assert "nemoclaw" in stubs
-    assert "telegram" in stubs
+    active = {c.name: c for c in components if c.status == "active"}
+    assert "openclaw" in active
+    assert "nemoclaw" in active
+    assert "telegram" in active
 
 
 def test_attribute_workload_sums_to_one():

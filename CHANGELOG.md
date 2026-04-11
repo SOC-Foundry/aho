@@ -1,5 +1,21 @@
 # aho changelog
 
+## [0.2.2] — 2026-04-11
+
+**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+
+- OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
+- NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
+- Telegram bridge: real send-only implementation with project-scoped age-encrypted secrets, 429 retry, capability gap/close-complete notifications, systemd user service `aho-telegram.service`, `bin/aho-telegram` wrapper
+- Doctor: 3 new daemon health checks (aho-openclaw, aho-nemoclaw, aho-telegram)
+- `bin/aho-install`: auto-installs systemd unit files from templates/systemd/
+- End-to-end trace: nemoclaw.dispatch → nemoclaw.route → openclaw.chat → qwen.generate → telegram.send
+- 0 stubs remaining in components.yaml (was 3). Deferral debt cleared since iao 0.1.4.
+- `report_builder.py`: wall clock per-workstream from event log timestamps
+- `build_log_complete.py`: multi-candidate design path resolution
+- `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
+- 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
+
 ## [0.2.1] — 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull

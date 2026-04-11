@@ -4,26 +4,23 @@ components:
   - name: openclaw
     kind: agent
     path: src/aho/agents/openclaw.py
-    status: stub
+    status: active
     owner: soc-foundry
-    next_iteration: "0.1.16"
-    notes: "ephemeral Python only; global wrapper + install pending 0.1.16"
+    notes: "global daemon, systemd user service, Unix socket; activated 0.2.2 W1"
 
   - name: nemoclaw
     kind: agent
     path: src/aho/agents/nemoclaw.py
-    status: stub
+    status: active
     owner: soc-foundry
-    next_iteration: "0.1.16"
-    notes: "orchestration layer; routing logic stubbed; global wrapper pending 0.1.16"
+    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2"
 
   - name: telegram
     kind: external_service
     path: src/aho/telegram/notifications.py
-    status: stub
+    status: active
     owner: soc-foundry
-    next_iteration: "0.1.16"
-    notes: "deferred since 0.1.4 charter; bridge real implementation pending 0.1.16"
+    notes: "send-only bridge, systemd user service, age-encrypted secrets; activated 0.2.2 W3"
 
   # === LLM clients ===
   - name: qwen-client

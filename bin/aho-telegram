@@ -1,0 +1,18 @@
+#!/usr/bin/env fish
+# aho-telegram — wrapper for the Telegram bridge daemon.
+
+switch $argv[1]
+    case send
+        set msg (string join " " $argv[2..])
+        python3 -c "from aho.telegram.notifications import send; r=send('$msg'); print('OK' if r else 'FAIL')"
+    case test
+        python3 -c "from aho.telegram.notifications import send; r=send('aho 0.2.2 W3 telegram smoke test'); print('OK' if r else 'FAIL')"
+    case status
+        systemctl --user status aho-telegram --no-pager
+    case gap
+        set msg (string join " " $argv[2..])
+        python3 -c "from aho.telegram.notifications import send_capability_gap; r=send_capability_gap('$msg'); print('OK' if r else 'FAIL')"
+    case '*'
+        echo "Usage: aho-telegram {send|test|status|gap} [args...]"
+        exit 1
+end

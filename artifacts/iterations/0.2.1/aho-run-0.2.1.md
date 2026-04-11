@@ -1,152 +1,78 @@
 # Run File — aho 0.2.1
 
-**Generated:** 2026-04-11T14:34:28Z
-**Iteration:** 0.2.1
+**Generated:** 2026-04-11
+**Iteration:** 0.2.1 (Iteration 2, Run 1)
 **Phase:** 0
-
-## About this Report
-
-This run file is a canonical iteration artifact produced during the `iteration close` sequence. It serves as the primary feedback interface between the autonomous agent and the human supervisor. Unlike the Qwen-generated synthesis report, this document is mechanically assembled from the iteration's ground truth: the execution checkpoint and the extracted agent questions.
-
-The report includes a workstream summary, a collection of technical or procedural questions surfaced by the agent during execution, and a sign-off section for the reviewer.
-
----
+**Status:** Graduated
 
 ## Workstream Summary
 
-| Workstream | Status | Agent | Wall Clock |
+| WS | Status | Agent | Deliverable |
 |---|---|---|---|
-| W0 | pass | claude-code | - |
-| W1 | pass | claude-code | - |
-| W2 | pass | claude-code | - |
-| W3 | pass | claude-code | - |
-| W4 | pass | claude-code | - |
-| W5 | pass | claude-code | - |
-| W6 | pass | claude-code | - |
+| W0 | pass | claude-code | 8 canonical artifacts at 0.2.1, build_log_complete fix, MANIFEST refresh, .gitignore initial pass |
+| W1 | pass | claude-code | global-deployment.md (7 sections, hybrid systemd model, 8th canonical artifact) |
+| W2 | pass | claude-code | Real bin/aho-install + bin/aho-uninstall, doctor wiring |
+| W3 | pass | claude-code | otelcol-contrib v0.149.0 as aho-otel-collector.service, always-on OTEL (opt-out via AHO_OTEL_DISABLED) |
+| W4 | pass | claude-code | 4 Ollama models verified (qwen3.5:9b, nemotron-mini:4b, GLM-4.6V-Flash-9B, nomic-embed-text), bin/aho-models-status |
+| W5 | pass | claude-code | OTEL spans wired into 6 components (qwen, nemotron, glm, openclaw, nemoclaw, telegram), 7 instrumentation tests |
+| W6 | pass | claude-code | 87 tests, bundle 322KB, all postflight gates green |
+
+Wall clock: 14m 22s. Components: 72 (69 active, 3 stub). Bundle: 322KB.
+
+**Soc-foundry/aho second commit pushed:** `9635d5b` — 50 files, +5125/-324, ChromaDB binaries scrubbed from HEAD, 0.2.1 artifacts uploaded.
 
 ---
 
-## Component Activity
+## Agent Questions — Answered
 
-| Component | Kind | Status | Owner | Notes |
-|---|---|---|---|---|
-| openclaw | agent | stub | soc-foundry | next: 0.1.16; ephemeral Python only; global wrapper + install pending 0.1.16 |
-| nemoclaw | agent | stub | soc-foundry | next: 0.1.16; orchestration layer; routing logic stubbed; global wrapper pending 0.1.16 |
-| telegram | external_service | stub | soc-foundry | next: 0.1.16; deferred since 0.1.4 charter; bridge real implementation pending 0.1.16 |
-| qwen-client | llm | active | soc-foundry |  |
-| nemotron-client | llm | active | soc-foundry |  |
-| glm-client | llm | active | soc-foundry |  |
-| chromadb | external_service | active | soc-foundry |  |
-| ollama | external_service | active | soc-foundry |  |
-| opentelemetry | external_service | active | soc-foundry | dual emitter alongside JSONL; activated 0.1.15 W2 |
-| assistant-role | agent | active | soc-foundry |  |
-| base-role | agent | active | soc-foundry |  |
-| code-runner-role | agent | active | soc-foundry |  |
-| reviewer-role | agent | active | soc-foundry |  |
-| cli | python_module | active | soc-foundry |  |
-| config | python_module | active | soc-foundry |  |
-| doctor | python_module | active | soc-foundry |  |
-| logger | python_module | active | soc-foundry |  |
-| paths | python_module | active | soc-foundry |  |
-| harness | python_module | active | soc-foundry |  |
-| compatibility | python_module | active | soc-foundry |  |
-| push | python_module | active | soc-foundry |  |
-| registry | python_module | active | soc-foundry |  |
-| ollama-config | python_module | active | soc-foundry |  |
-| artifact-loop | python_module | active | soc-foundry |  |
-| artifact-context | python_module | active | soc-foundry |  |
-| artifact-evaluator | python_module | active | soc-foundry |  |
-| artifact-schemas | python_module | active | soc-foundry |  |
-| artifact-templates | python_module | active | soc-foundry |  |
-| repetition-detector | python_module | active | soc-foundry |  |
-| bundle | python_module | active | soc-foundry |  |
-| components-section | python_module | active | soc-foundry |  |
-| report-builder | python_module | active | soc-foundry | mechanical report builder, added 0.1.15 W0 |
-| feedback-run | python_module | active | soc-foundry |  |
-| feedback-prompt | python_module | active | soc-foundry |  |
-| feedback-questions | python_module | active | soc-foundry |  |
-| feedback-summary | python_module | active | soc-foundry |  |
-| feedback-seed | python_module | active | soc-foundry |  |
-| build-log-stub | python_module | active | soc-foundry |  |
-| pipeline-scaffold | python_module | active | soc-foundry |  |
-| pipeline-validate | python_module | active | soc-foundry |  |
-| pipeline-registry | python_module | active | soc-foundry |  |
-| pipeline-pattern | python_module | active | soc-foundry |  |
-| pf-artifacts-present | python_module | active | soc-foundry |  |
-| pf-build-log-complete | python_module | active | soc-foundry |  |
-| pf-bundle-quality | python_module | active | soc-foundry |  |
-| pf-gemini-compat | python_module | active | soc-foundry |  |
-| pf-iteration-complete | python_module | active | soc-foundry |  |
-| pf-layout | python_module | active | soc-foundry |  |
-| pf-manifest-current | python_module | active | soc-foundry | added 0.1.15 W0 |
-| pf-changelog-current | python_module | active | soc-foundry | added 0.1.15 W0 |
-| pf-pillars-present | python_module | active | soc-foundry |  |
-| pf-pipeline-present | python_module | active | soc-foundry |  |
-| pf-readme-current | python_module | active | soc-foundry |  |
-| pf-run-complete | python_module | active | soc-foundry |  |
-| pf-run-quality | python_module | active | soc-foundry |  |
-| pf-structural-gates | python_module | active | soc-foundry |  |
-| preflight-checks | python_module | active | soc-foundry |  |
-| rag-archive | python_module | active | soc-foundry |  |
-| rag-query | python_module | active | soc-foundry |  |
-| rag-router | python_module | active | soc-foundry |  |
-| secrets-store | python_module | active | soc-foundry |  |
-| secrets-session | python_module | active | soc-foundry |  |
-| secrets-cli | python_module | active | soc-foundry |  |
-| secrets-backend-age | python_module | active | soc-foundry |  |
-| secrets-backend-base | python_module | active | soc-foundry |  |
-| secrets-backend-fernet | python_module | active | soc-foundry |  |
-| secrets-backend-keyring | python_module | active | soc-foundry |  |
-| install-migrate-config | python_module | active | soc-foundry |  |
-| install-secret-patterns | python_module | active | soc-foundry |  |
-| brave-integration | python_module | active | soc-foundry |  |
-| firestore | python_module | active | soc-foundry |  |
-| component-manifest | python_module | active | soc-foundry | added 0.1.15 W1 |
+No questions surfaced. Three carryover items identified for 0.2.2 W0 hygiene:
 
-**Total components:** 72
-**Status breakdown:** 69 active, 3 stub
+1. **`build_log_complete` still WARN** ("design doc not found, skipping completeness check"). The W0 fix in 0.2.1 didn't fully resolve it. Needs another look at the path resolution in `build_log_complete.py`.
+2. **Risk Register shows 20+ evaluator warns/rejects** during 0.2.1 close — all from `build_log_synthesis` evaluator firing repeatedly. Likely the Qwen synthesis loop hitting the rejection threshold but the mechanical builder catching it gracefully. Worth a one-line investigation to confirm it's noise, not a real signal.
+3. **Wall clock per-workstream still shows `-`** in run file. Agent attribution landed (`claude-code`), component section embedded, but wall clock from checkpoint timestamps isn't being computed. Small fix in `report_builder.py` workstream parser.
 
 ---
 
-## Agent Questions for Kyle
+## Kyle's Notes
 
-(none — no questions surfaced during execution)
+**Iteration 2 has its spine.** 0.2.1 landed everything that needed to land for the global deployment story to be real:
 
----
+- Hybrid systemd model documented and operational
+- Native OTEL collector (otelcol-contrib v0.149.0) running as systemd user service
+- Always-on OTEL (no more opt-in gating)
+- Real `bin/aho-install` and `bin/aho-uninstall` with idempotency contract
+- All 4 Ollama models pre-pulled and verified
+- 6 components emitting OTEL spans (qwen, nemotron, glm, openclaw, nemoclaw, telegram)
+- 8 canonical artifacts now version-tracked
+- soc-foundry/aho second commit live
 
-## Kyle's Notes for Next Iteration
+**The deferral debt is still in components.yaml.** openclaw, nemoclaw, telegram are still `stub` with `next_iteration: 0.1.16` (stale — should have been bumped to 0.2.2 in 0.2.1 but missed). 0.2.2 is the run where they actually graduate from stub to active. The instrumentation pass in 0.2.1 W5 wired spans into them — now 0.2.2 makes them functional.
 
-<!-- Fill in after reviewing the bundle -->
+**Today's status:** ~7:35am PST. Three runs shipped this morning (0.1.15, 0.1.16 iteration 1 graduation, 0.2.1). Family time mid-afternoon. 6-11pm evening block available. P3 ship deadline = end of today. Alex ship deadline = Sunday. Fly Sunday.
 
+**Phase 0 exit roadmap update (3 iterations + ship gauntlet):**
+- **0.2.2** — openclaw/nemoclaw global daemons + telegram bridge real implementation + 3 stubs flip to active (today, ~2-3 hours)
+- **0.2.3** — MCP server fleet (firebase-tools, context7, firecrawl, playwright, flutter, modelcontextprotocol/server-*) (today evening or tomorrow morning)
+- **0.2.4** — P3 clone attempt + smoke test + capability gap capture (tomorrow)
+- **0.2.5+** — Whatever P3 surfaces, fix in tight runs
+- **Iteration 2 graduates** when P3 runs an aho iteration end-to-end
+- **0.3.x** — Alex demo prep, claw3d, novice operability validation (Sunday SF prep)
+- **Phase 0 graduates** when iteration 3 closes clean
 
----
+**Event log audit clean.** The W6 smoke spans contain only `test prompt`, `hello`, `test task`, `print('hello')` — no credentials, no secrets, no API keys. Telemetry design records `input_summary` (truncated/shape) not full prompts, which is the right pattern. Confirmed safe.
 
-## Reference: The Eleven Pillars
-
-1. **Delegate everything delegable.** The paid orchestrator is the most expensive resource in the system. Any task that can run on a free local model must run on a free local model. Drafting, classification, retrieval, validation, grading, and routing all belong to the local fleet. The orchestrator's minutes are spent on judgment, scope, and novelty.
-2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
-4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
-5. **Three octets, three meanings: phase, iteration, run.** Phase is strategic scope. Iteration is tactical scope. Run is execution instance. Every artifact carries the full phase.iteration.run label.
-6. **Transitions are durable.** Moving between phases, iterations, or runs writes state to a durable artifact before the transition is considered complete. Every gate is a write point. No implicit state.
-7. **Generation and evaluation are separate roles.** The model that produced an artifact is never the model that grades it. Drafter and reviewer are different agents behind different wrappers with different prompts and ideally different underlying weights.
-8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
-11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
-
----
+**First commit history note.** `data/chroma/` and `data/aho_event_log.jsonl` exist in commit `ac0f66b` history but are gone from HEAD. ChromaDB binaries are noise. Event log is shape-only smoke data. No security action required. Future `git filter-repo` cleanup is a Phase 1 housekeeping item, not a Phase 0 blocker.
 
 ---
 
 ## Sign-off
 
-- [ ] I have reviewed the bundle
-- [ ] I have reviewed the build log
-- [ ] I have reviewed the report
-- [ ] I have answered all agent questions above
-- [ ] I am satisfied with this iteration's output
+- [x] I have reviewed the bundle
+- [x] I have reviewed the build log
+- [x] I have reviewed the report
+- [x] I have answered all agent questions above
+- [x] I am satisfied with this iteration's output
 
 ---
 
-*Run report generated 2026-04-11T14:34:28Z*
+*Closed 2026-04-11, W6 by claude-code. Iteration 2 active.*

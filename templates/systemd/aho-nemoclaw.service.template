@@ -1,0 +1,13 @@
+[Unit]
+Description=aho NemoClaw Orchestrator Daemon
+After=network.target ollama.service aho-openclaw.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python -m aho.agents.nemoclaw --serve
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

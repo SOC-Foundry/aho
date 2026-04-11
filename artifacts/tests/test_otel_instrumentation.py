@@ -162,7 +162,7 @@ class TestNemoClawInstrumentation:
             orch.close_all()
 
         span_names = [s.name for s in spans]
-        assert "nemoclaw.dispatch.assistant" in span_names
+        assert "nemoclaw.dispatch" in span_names
 
 
 class TestTelegramInstrumentation:

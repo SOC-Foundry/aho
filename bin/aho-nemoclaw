@@ -1,0 +1,41 @@
+#!/usr/bin/env fish
+# aho-nemoclaw — wrapper for the NemoClaw orchestrator daemon.
+
+set sock $HOME/.local/share/aho/nemoclaw.sock
+
+if not test -S $sock
+    echo "nemoclaw daemon not running (no socket at $sock)"
+    exit 1
+end
+
+function _send
+    python3 -c "
+import socket, sys
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+s.connect('$sock')
+s.sendall((sys.argv[1] + '\n').encode())
+data = b''
+while True:
+    chunk = s.recv(4096)
+    if not chunk: break
+    data += chunk
+s.close()
+print(data.decode().strip())
+" "$argv[1]"
+end
+
+switch $argv[1]
+    case dispatch
+        set task (string join " " $argv[2..])
+        set escaped (string replace -a '"' '\\"' -- "$task")
+        _send "{\"cmd\":\"dispatch\",\"task\":\"$escaped\"}"
+    case route
+        set task (string join " " $argv[2..])
+        set escaped (string replace -a '"' '\\"' -- "$task")
+        _send "{\"cmd\":\"route\",\"task\":\"$escaped\"}"
+    case status
+        _send '{"cmd":"status"}'
+    case '*'
+        echo "Usage: aho-nemoclaw {dispatch|route|status} [args...]"
+        exit 1
+end

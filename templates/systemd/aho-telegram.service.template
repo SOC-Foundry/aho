@@ -1,0 +1,13 @@
+[Unit]
+Description=aho Telegram Bridge Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python -m aho.telegram.notifications --serve
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

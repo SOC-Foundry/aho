@@ -1,6 +1,6 @@
 # Agents Architecture — aho 0.2.1
 
-**Version:** 0.2.1
+**Version:** 0.2.2
 **Status:** Canonical
 **Theme:** Global deployment + full telemetry
 

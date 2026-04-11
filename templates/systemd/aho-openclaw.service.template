@@ -1,0 +1,13 @@
+[Unit]
+Description=aho OpenClaw Agent Daemon
+After=network.target ollama.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python -m aho.agents.openclaw --serve
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

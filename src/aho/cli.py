@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "aho 0.1.16"
+VERSION = "aho 0.2.2"
 CONFIG_DIR = Path.home() / ".config" / "aho"
 PROJECTS_FILE = CONFIG_DIR / "projects.json"
 ACTIVE_FILE = CONFIG_DIR / "active.fish"

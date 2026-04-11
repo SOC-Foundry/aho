@@ -210,11 +210,32 @@ def _check_otel_collector():
     except Exception:
         return ("warn", "otel collector check failed")
 
+def _check_aho_daemons():
+    """Verify aho agent daemons are running as systemd user services."""
+    services = ["aho-openclaw", "aho-nemoclaw", "aho-telegram"]
+    results = {}
+    for svc in services:
+        try:
+            r = subprocess.run(
+                ["systemctl", "--user", "is-active", svc],
+                capture_output=True, text=True, timeout=5
+            )
+            if r.stdout.strip() == "active":
+                results[svc] = ("ok", f"{svc} running")
+            else:
+                results[svc] = ("warn", f"{svc}: {r.stdout.strip()}")
+        except Exception:
+            results[svc] = ("warn", f"{svc} check failed")
+    return results
+
+
 def _preflight_checks():
+    daemon_checks = _check_aho_daemons()
     return {
         "ollama": _check_ollama(),
         "model_fleet": _check_model_fleet(),
         "otel_collector": _check_otel_collector(),
+        **daemon_checks,
         "python_deps": _check_python_deps(),
         "disk": _check_disk(),
     }

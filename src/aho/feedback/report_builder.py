@@ -80,6 +80,27 @@ def _section_executive_summary(checkpoint: dict, events: list[dict], postflight:
     return "\n".join(lines)
 
 
+def _wall_clock_for_ws(events: list[dict], workstream_id: str) -> str:
+    """Compute wall clock duration from first/last event timestamps for a workstream."""
+    ws_events = [e for e in events if e.get("workstream_id") == workstream_id]
+    if not ws_events:
+        return "-"
+    timestamps = []
+    for e in ws_events:
+        ts = e.get("timestamp")
+        if ts:
+            try:
+                timestamps.append(datetime.fromisoformat(ts.replace("Z", "+00:00")))
+            except (ValueError, TypeError):
+                continue
+    if len(timestamps) < 2:
+        return "-"
+    first = min(timestamps)
+    last = max(timestamps)
+    delta_seconds = (last - first).total_seconds()
+    return f"{int(delta_seconds // 60)}m {int(delta_seconds % 60)}s"
+
+
 def _section_workstream_detail(checkpoint: dict, events: list[dict]) -> str:
     ws = checkpoint.get("workstreams", {})
     from collections import Counter
@@ -87,8 +108,8 @@ def _section_workstream_detail(checkpoint: dict, events: list[dict]) -> str:
 
     lines = [
         "## Workstream Detail\n",
-        "| Workstream | Status | Agent | Events |",
-        "|---|---|---|---|",
+        "| Workstream | Status | Agent | Events | Wall Clock |",
+        "|---|---|---|---|---|",
     ]
     executor = checkpoint.get("executor", "unknown")
     for ws_id in sorted(ws.keys()):
@@ -100,7 +121,8 @@ def _section_workstream_detail(checkpoint: dict, events: list[dict]) -> str:
             status = ws_val.get("status", "unknown")
             agent = ws_val.get("agent", ws_val.get("executor", executor))
         count = ws_event_counts.get(ws_id, 0)
-        lines.append(f"| {ws_id} | {status} | {agent} | {count} |")
+        wall = _wall_clock_for_ws(events, ws_id)
+        lines.append(f"| {ws_id} | {status} | {agent} | {count} | {wall} |")
     lines.append("")
     return "\n".join(lines)
 

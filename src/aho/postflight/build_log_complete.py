@@ -8,7 +8,15 @@ from pathlib import Path
 def check(iteration=None):
     """ADR-042: Verify manual build log contains all workstreams from design."""
     if not iteration:
-        iteration = os.environ.get("AHO_ITERATION", os.environ.get("IAO_ITERATION", "unknown"))
+        iteration = os.environ.get("AHO_ITERATION", os.environ.get("IAO_ITERATION", ""))
+    if not iteration:
+        try:
+            from aho.paths import find_project_root as _fpr
+            _aho_json = _fpr() / ".aho.json"
+            if _aho_json.exists():
+                iteration = json.loads(_aho_json.read_text()).get("current_iteration", "unknown")
+        except Exception:
+            iteration = "unknown"
         
     from aho.paths import find_project_root
     try:
@@ -30,14 +38,17 @@ def check(iteration=None):
         # Fallback to root docs for legacy or phase-level checks
         iter_dir = root / "docs"
 
-    # 1. Resolve design path (simplified per 0.2.1 W0)
+    # 1. Resolve design path (multi-candidate per 0.2.2 W0)
     from aho.paths import get_artifacts_root
-    design_path = get_artifacts_root() / "iterations" / iteration / f"{prefix}-design-{iteration}.md"
-    if not design_path.exists():
-        design_path = None
+    candidates = [
+        get_artifacts_root() / "iterations" / iteration / f"{prefix}-design-{iteration}.md",
+        get_artifacts_root() / "iterations" / iteration / "design.md",
+        iter_dir / f"{prefix}-design-{iteration}.md",
+    ]
+    design_path = next((c for c in candidates if c.exists()), None)
 
     if not design_path:
-        return ("warn", "design doc not found, skipping completeness check")
+        return ("warn", f"design doc not found in any of: {[str(c) for c in candidates]}")
 
     # 2. Extract workstream IDs from design
     design_text = design_path.read_text()

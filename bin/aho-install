@@ -2,7 +2,7 @@
 # aho-install - Idempotent environment installer for aho.
 # 0.2.1 — replaces 0.1.14 skeleton.
 
-set -l script_version "0.2.1"
+set -l script_version "0.2.2"
 
 function _info
     set_color cyan; echo "[aho-install] $argv"; set_color normal
@@ -71,9 +71,21 @@ for wrapper in (command ls $project_root/bin/)
 end
 _info "Bin wrappers linked."
 
-# 6. Generate systemd unit directory scaffolding
-# Unit files are created by component-specific install steps (W3 for OTEL collector).
-_info "Systemd user directory ready at ~/.config/systemd/user/"
+# 6. Install systemd user services for aho daemons
+_info "Installing systemd user services..."
+for daemon in openclaw nemoclaw telegram
+    set -l template "$project_root/templates/systemd/aho-$daemon.service.template"
+    set -l dest "$HOME/.config/systemd/user/aho-$daemon.service"
+    if test -f $template
+        cp $template $dest
+        _info "  Installed aho-$daemon.service"
+    else
+        _warn "  Template missing: $template"
+    end
+end
+systemctl --user daemon-reload
+systemctl --user enable --now aho-openclaw aho-nemoclaw aho-telegram 2>/dev/null; or true
+_info "Systemd user services installed and enabled."
 
 # 7. Verify linger
 set -l linger_status (loginctl show-user $USER --property=Linger 2>/dev/null | string replace 'Linger=' '')
