@@ -4,7 +4,7 @@
 
 aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.8** | **Status: Global Deployment + Full Telemetry**
+**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.9** | **Status: Remote Operability + Install Surface Architecture**
 
 ```mermaid
 graph BT
@@ -43,6 +43,8 @@ aho provides the complete infrastructure for running bounded, sequential LLM-dri
 - **Secrets Architecture** — age encryption + OS keyring backend, session management.
 - **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
 - **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **`/ws` Streaming** — Telegram commands (`/ws status`, `/ws pause`, `/ws proceed`, `/ws last`) for real-time workstream monitoring and agent pause/proceed control from phone. Auto-push notifications on workstream completion.
+- **Install Surface Architecture** — Three-persona model (pipeline builder, framework host, impromptu assistant). `aho-run` spec'd as the persona 3 entry point for pwd-scoped one-shot work against arbitrary files. Persona 3 discovery in 0.2.9 confirmed the gap exists; install-surface-architecture.md is the scope contract for 0.2.10–0.2.13 implementation.
 
 ---
 

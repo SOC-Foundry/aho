@@ -337,6 +337,30 @@ def cmd_iteration(args, parser):
         path = write_seed(iteration, seed)
         print(f"Seed written to: {path}")
         return
+    if sub == "workstream":
+        from aho.workstream_events import emit_workstream_start, emit_workstream_complete
+        from aho.workstream_gate import wait_if_paused
+        ws_cmd = args.ws_cmd
+        if ws_cmd == "start":
+            # Check pause gate before starting workstream
+            ok = wait_if_paused(timeout_seconds=None)
+            if not ok:
+                print(f"Timed out waiting for /ws proceed. {args.ws_id} not started.")
+                sys.exit(1)
+            result = emit_workstream_start(args.ws_id, summary=args.summary)
+            if result:
+                print(f"workstream_start emitted for {args.ws_id}")
+            else:
+                print(f"{args.ws_id} already started (idempotent skip)")
+        elif ws_cmd == "complete":
+            result = emit_workstream_complete(args.ws_id, status=args.status, summary=args.summary)
+            if result:
+                print(f"workstream_complete emitted for {args.ws_id} (status={args.status})")
+            else:
+                print(f"{args.ws_id} already completed (idempotent skip)")
+        else:
+            print("Usage: aho iteration workstream {start|complete} <ws_id>")
+        return
     if sub == "graduate":
         from aho.artifacts.loop import run_graduation_analysis
         if args.analyze:
@@ -509,6 +533,16 @@ def main():
     pit_seed = pits.add_parser("seed", help="Extract seed from run report for next iteration")
     pit_seed.add_argument("--edit", action="store_true", help="Edit the seed before writing")
     
+    pit_ws = pits.add_parser("workstream", help="Workstream event management")
+    pit_ws_sub = pit_ws.add_subparsers(dest="ws_cmd")
+    pit_ws_start = pit_ws_sub.add_parser("start", help="Emit workstream_start event")
+    pit_ws_start.add_argument("ws_id", help="Workstream ID (e.g. W0, W1)")
+    pit_ws_start.add_argument("--summary", default="", help="One-line summary")
+    pit_ws_complete = pit_ws_sub.add_parser("complete", help="Emit workstream_complete event")
+    pit_ws_complete.add_argument("ws_id", help="Workstream ID (e.g. W0, W1)")
+    pit_ws_complete.add_argument("--status", default="pass", choices=["pass", "partial", "fail", "deferred"], help="Outcome status")
+    pit_ws_complete.add_argument("--summary", default="", help="One-line summary")
+
     pit_grad = pits.add_parser("graduate", help="Analyze iteration for phase graduation")
     pit_grad.add_argument("iteration")
     pit_grad.add_argument("--analyze", action="store_true", help="Run Qwen graduation analysis")

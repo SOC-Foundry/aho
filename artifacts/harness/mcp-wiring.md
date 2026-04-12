@@ -23,7 +23,7 @@ Without `.mcp.json`, npm-global MCP packages are installed on the system but inv
 | firecrawl | firecrawl-mcp | `firecrawl-mcp` | — | `FIRECRAWL_API_KEY` required |
 | playwright | @playwright/mcp | `playwright-mcp` | — | — |
 | dart | Dart SDK (bundled) | `dart mcp-server` | — | — |
-| filesystem | @modelcontextprotocol/server-filesystem | `mcp-server-filesystem` | `/home/kthompson/dev/projects/aho` | — |
+| filesystem | @modelcontextprotocol/server-filesystem | `mcp-server-filesystem` | `{{PROJECT_ROOT}}` (resolved by aho-bootstrap) | — |
 | memory | @modelcontextprotocol/server-memory | `mcp-server-memory` | — | — |
 | sequential-thinking | @modelcontextprotocol/server-sequential-thinking | `mcp-server-sequential-thinking` | — | — |
 | everything | @modelcontextprotocol/server-everything | `mcp-server-everything` | — | — |

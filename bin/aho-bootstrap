@@ -2,7 +2,7 @@
 # aho-bootstrap - Idempotent environment installer for aho.
 # 0.2.1 — replaces 0.1.14 skeleton.
 
-set -l script_version "0.2.3"
+set -l script_version "0.2.9"
 
 function _info
     set_color cyan; echo "[aho-bootstrap] $argv"; set_color normal
@@ -50,7 +50,21 @@ for d in $dirs
 end
 _info "XDG directories ready."
 
-# 4. Per-clone age key (idempotent)
+# 4. Generate .mcp.json from template (idempotent)
+set -l mcp_template "$project_root/.mcp.json.tpl"
+set -l mcp_target "$project_root/.mcp.json"
+if test -f $mcp_template
+    if test -f $mcp_target; and not contains -- --force $argv
+        _info ".mcp.json already exists (use --force to regenerate)."
+    else
+        string replace -a '{{PROJECT_ROOT}}' $project_root < $mcp_template > $mcp_target
+        _info ".mcp.json generated from template."
+    end
+else
+    _warn ".mcp.json.tpl not found at $mcp_template — skipping MCP config generation."
+end
+
+# 5. Per-clone age key (idempotent)
 if not test -f $HOME/.config/aho/age.key
     if command -q age-keygen
         age-keygen -o $HOME/.config/aho/age.key
@@ -66,7 +80,7 @@ else
     _info "Age key present."
 end
 
-# 5. pip install (idempotent)
+# 6. pip install (idempotent)
 _info "Installing aho Python package..."
 cd $project_root
 pip install -e . --break-system-packages --quiet 2>&1
@@ -76,7 +90,7 @@ if test $status -ne 0
 end
 _info "Python package installed."
 
-# 6. Symlink bin wrappers (idempotent)
+# 7. Symlink bin wrappers (idempotent)
 for wrapper in (command ls $project_root/bin/)
     if test "$wrapper" = "aho-bootstrap"; or test "$wrapper" = "aho-uninstall"
         continue
@@ -87,7 +101,7 @@ for wrapper in (command ls $project_root/bin/)
 end
 _info "Bin wrappers linked."
 
-# 7. Install MCP server fleet (global npm packages)
+# 8. Install MCP server fleet (global npm packages, 9 servers per 0.2.4 registry)
 _info "Checking MCP server fleet..."
 set -l mcp_packages \
     firebase-tools \
@@ -95,12 +109,9 @@ set -l mcp_packages \
     firecrawl-mcp \
     @playwright/mcp \
     @modelcontextprotocol/server-filesystem \
-    @modelcontextprotocol/server-github \
-    @modelcontextprotocol/server-google-drive \
-    @modelcontextprotocol/server-slack \
-    @modelcontextprotocol/server-fetch \
     @modelcontextprotocol/server-memory \
-    @modelcontextprotocol/server-sequential-thinking
+    @modelcontextprotocol/server-sequential-thinking \
+    @modelcontextprotocol/server-everything
 
 for pkg in $mcp_packages
     if not npm list -g $pkg 2>/dev/null | grep -q $pkg
@@ -110,7 +121,7 @@ for pkg in $mcp_packages
 end
 _info "MCP fleet checked."
 
-# 8. Install systemd user services for aho daemons
+# 9. Install systemd user services for aho daemons
 _info "Installing systemd user services..."
 for daemon in openclaw nemoclaw telegram harness-watcher
     set -l template "$project_root/templates/systemd/aho-$daemon.service.template"
@@ -126,7 +137,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now aho-openclaw aho-nemoclaw aho-telegram aho-harness-watcher 2>/dev/null; or true
 _info "Systemd user services installed and enabled."
 
-# 9. Verify linger
+# 10. Verify linger
 set -l linger_status (loginctl show-user $USER --property=Linger 2>/dev/null | string replace 'Linger=' '')
 if test "$linger_status" != "yes"
     _gap "Linger not enabled. Run: sudo loginctl enable-linger $USER"
@@ -134,7 +145,7 @@ if test "$linger_status" != "yes"
 end
 _info "Linger enabled for $USER."
 
-# 10. Fish config marker (idempotent)
+# 11. Fish config marker (idempotent)
 set -l config_fish "$HOME/.config/fish/config.fish"
 set -l marker_begin "# >>> aho >>>"
 if test -f $config_fish
@@ -152,7 +163,7 @@ if test -f $config_fish
     end
 end
 
-# 11. Summary
+# 12. Summary
 _info "---"
 _info "aho $script_version install complete."
 _info "  Python package: editable install"

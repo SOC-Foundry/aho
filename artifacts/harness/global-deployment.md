@@ -1,6 +1,6 @@
 # aho Global Deployment Architecture
 
-**Version:** 0.2.8
+**Version:** 0.2.9
 **Date:** 2026-04-11
 **Scope:** Hybrid systemd model for clone-to-deploy on Arch Linux
 
@@ -88,7 +88,7 @@ Before `git clone` + `install.fish` on ThinkStation P3:
 
 1. Arch Linux installed with fish shell as default
 2. Python 3.11+ with pip
-3. `sudo loginctl enable-linger kthompson`
+3. `sudo loginctl enable-linger $USER`
 4. Ollama installed: `curl -fsSL https://ollama.com/install.sh | sh`
 5. `sudo systemctl enable --now ollama`
 6. Network access for model pulls (~15GB total)

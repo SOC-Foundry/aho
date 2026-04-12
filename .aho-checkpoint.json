@@ -1,28 +1,25 @@
 {
-  "iteration": "0.2.8",
+  "iteration": "0.2.9",
   "phase": 0,
   "run_type": "single-agent",
-  "current_workstream": "W13",
+  "current_workstream": "W9",
   "workstreams": {
     "W0": "pass",
     "W1": "pass",
     "W2": "pass",
-    "W2.5": "pass",
     "W3": "pass",
     "W4": "pass",
     "W5": "pass",
     "W6": "pass",
     "W7": "pass",
     "W8": "pass",
-    "W9": "pass",
-    "W10": "pass",
-    "W11": "pass",
-    "W12": "pass",
-    "W13": "pass"
+    "W8.5": "pass",
+    "W9": "pass"
   },
   "executor": "claude-code",
-  "started_at": "2026-04-11T23:00:00Z",
+  "started_at": "2026-04-12T05:00:00Z",
   "last_event": "close_complete",
   "status": "closed",
-  "closed_at": "2026-04-12T00:10:00Z"
+  "closed_at": "2026-04-12T06:40:00Z",
+  "proceed_awaited": false
 }

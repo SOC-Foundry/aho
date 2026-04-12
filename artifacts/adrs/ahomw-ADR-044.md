@@ -138,6 +138,7 @@ The dashboard does not replace human Phase 2 review. It accelerates it by making
 - Pillars 6, 7, 9, 10 — `artifacts/harness/base.md`
 - aho-G065 (claimed-vs-installed verification) — `data/gotcha_archive.json`, captured 0.2.5 W10
 - 0.2.3 W1 forensic example — `artifacts/iterations/0.2.3/aho-run-0_2_3-amended.md`
+- ADR-045 (Discovery Iteration Formalization) — refines Phase 4 scope contract semantics by iteration type
 - README "IAO as harness engineering" section — pending rewrite to incorporate this cadence as the human-side loop companion to the harness components
 
 ---

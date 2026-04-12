@@ -1,6 +1,6 @@
 # aho Model Fleet — Architectural Specification
 
-**Version:** 0.2.8
+**Version:** 0.2.9
 **Date:** 2026-04-11
 **Scope:** Universal aho fleet integration (Qwen, Nemotron, GLM, ChromaDB)
 

@@ -43,3 +43,6 @@ ENV/
 # aho runtime data
 data/chroma/
 app/build/
+
+# Machine-local MCP config (generated from .mcp.json.tpl by aho-bootstrap)
+.mcp.json

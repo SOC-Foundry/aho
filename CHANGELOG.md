@@ -1,5 +1,25 @@
 # aho changelog
 
+## [0.2.9] — 2026-04-11
+
+**Theme:** Remote operability plumbing + persona 3 discovery + install surface architecture
+
+- `.mcp.json.tpl` template with `{{PROJECT_ROOT}}` placeholder; `bin/aho-bootstrap` generates per-machine `.mcp.json` at step 4
+- `.mcp.json` gitignored (machine-specific generated artifact)
+- Bootstrap npm list corrected from stale 11-package to current 8-package (9th is dart SDK-bundled)
+- Portability audit: 3 hardcoded paths fixed (smoke script, mcp-wiring.md, global-deployment.md), zero hardcodes remain in executable code
+- `src/aho/workstream_events.py` — `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
+- CLI: `aho iteration workstream {start,complete}` subcommands
+- Telegram `/ws` command family: `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`
+- Auto-push subscriber: tails event log, sends Telegram notification on `workstream_complete`
+- `src/aho/workstream_gate.py` — `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
+- `artifacts/harness/secrets-architecture.md` — three-layer model (age + keyring + fernet), junior-dev-readable
+- ADR-045: Discovery iteration formalization — three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
+- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed — structural gap documented
+- `artifacts/iterations/0.2.9/install-surface-architecture.md` — three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
+- Updated roadmap: 0.2.10 install surface → 0.2.11 persona 3 validation → 0.2.12 persona 2 → 0.2.13 P3 clone graduation
+- 227 tests (up from 182), 10 workstreams (W8.5 inserted per ADR-045 discovery pattern)
+
 ## [0.2.8] — 2026-04-11
 
 **Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge

@@ -1,6 +1,6 @@
 # Orchestrator Configuration
 
-**Version:** 0.2.7
+**Version:** 0.2.9
 **Date:** 2026-04-11
 **Scope:** Configuration schema for openclaw and nemoclaw orchestrators
 

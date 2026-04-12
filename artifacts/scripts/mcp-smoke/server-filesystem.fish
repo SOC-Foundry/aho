@@ -6,7 +6,8 @@ set -l server_name "server-filesystem"
 echo "[mcp-smoke] testing $server_name CLI invocation"
 
 set -l msg '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"smoke","version":"1.0"}}}'
-set -l response (printf '%s\n' $msg | timeout 5 mcp-server-filesystem /home/kthompson/dev/projects/aho 2>/dev/null)
+set -l project_root (dirname (dirname (dirname (dirname (realpath (status filename))))))
+set -l response (printf '%s\n' $msg | timeout 5 mcp-server-filesystem $project_root 2>/dev/null)
 # stdio servers stay alive; timeout exit 124 is expected
 if string match -q '*"protocolVersion"*' "$response"
     echo "[mcp-smoke] $server_name OK"
