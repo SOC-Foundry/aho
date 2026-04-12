@@ -166,7 +166,8 @@ def cmd_preflight(args):
     print("─────────────")
     results = run_all(level="preflight")
     has_fail = False
-    for name, (status, msg) in results.items():
+    for name, result_tuple in results.items():
+        status, msg = result_tuple[0], result_tuple[1]
         tag = "[ok]" if status == "ok" else "[FAIL]"
         print(f"{tag:8} {name:20}: {msg}")
         if status == "fail":
@@ -183,7 +184,8 @@ def cmd_postflight(args):
     print("──────────────")
     results = run_all(level="postflight")
     has_fail = False
-    for name, (status, msg) in results.items():
+    for name, result_tuple in results.items():
+        status, msg = result_tuple[0], result_tuple[1]
         tag = {"ok": "[ok]", "warn": "[WARN]", "fail": "[FAIL]", "deferred": "[DEFR]"}.get(status, f"[{status}]")
         print(f"{tag:8} {name:20}: {msg}")
         if status == "fail":
@@ -654,6 +656,13 @@ def main():
     pit_grad.add_argument("iteration")
     pit_grad.add_argument("--analyze", action="store_true", help="Run Qwen graduation analysis")
 
+    pcouncil = sub.add_parser("council", help="Council visibility and status")
+    pcouncil_subs = pcouncil.add_subparsers(dest="council_cmd")
+    pc_status = pcouncil_subs.add_parser("status", help="Show operational state of council components")
+    pc_status.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+    pc_status.add_argument("--member", help="Detail on one member")
+    pc_status.add_argument("--verbose", action="store_true", help="Include G083 scan summary and routing activity")
+
     args = p.parse_args()
     if args.cmd:
         try:
@@ -730,7 +739,8 @@ def main():
             from aho.doctor import run_all
             results = run_all(level="quick")
             has_fail = False
-            for name, (status, msg) in results.items():
+            for name, result_tuple in results.items():
+                status, msg = result_tuple[0], result_tuple[1]
                 if status == "fail": has_fail = True
             if has_fail: sys.exit(1)
         elif args.check_cmd == "harness":
@@ -885,6 +895,16 @@ def main():
             potel.print_help()
     elif args.cmd == "bootstrap":
         _dispatch_wrapper("aho-bootstrap", args.bootstrap_args or [])
+    elif args.cmd == "council":
+        if args.council_cmd == "status":
+            from aho.council.status import collect_status, format_human, format_json
+            status = collect_status()
+            if args.json or args.member:
+                print(format_json(status, member=args.member))
+            else:
+                print(format_human(status, verbose=args.verbose))
+        else:
+            pcouncil.print_help()
     elif args.cmd in ("eval", "registry"):
         cmd_stub(args)
     else:

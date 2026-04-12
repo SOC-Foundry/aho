@@ -1,0 +1,58 @@
+[
+  {
+    "name": "test_baseline_registered_substantively",
+    "command": "python -c \"import json; b = json.load(open('artifacts/harness/test-baseline.json')); failures = b.get('baseline_failures', []); assert len(failures) >= 10; assert all(f.get('failure_reason', 'unknown') != 'unknown' for f in failures), 'some failures lack substantive reasons'; print('ok')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok",
+    "matched": true
+  },
+  {
+    "name": "baseline_helper_works",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('passed=' + str(r.passed))\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "passed=True",
+    "matched": true
+  },
+  {
+    "name": "prompt_conventions_doc_exists",
+    "command": "test -f artifacts/harness/prompt-conventions.md && grep -cE \"^## \" artifacts/harness/prompt-conventions.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "operating_stance_in_agent_instructions",
+    "command": "grep -l \"objective and skeptical\" GEMINI-iteration.md CLAUDE-iteration.md | wc -l",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "2",
+    "matched": true
+  },
+  {
+    "name": "three_gotchas_registered",
+    "command": "jq -r \".gotchas[] | select(.id | test(\\\"G07[9]|G080|G081\\\")) | .id\" data/gotcha_archive.json | sort | tr '\\n' ' '",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G079 aho-G080 aho-G081",
+    "matched": true
+  },
+  {
+    "name": "baseline_helper_tests_pass",
+    "command": "pytest tests/test_baseline_regression.py -v 2>&1 | tail -1",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================== 6 passed in 0.18s ===============================",
+    "matched": true
+  },
+  {
+    "name": "no_new_regressions_beyond_baseline",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print(r.actual_output if not r.passed else 'baseline-stable')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  }
+]

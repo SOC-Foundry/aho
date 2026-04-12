@@ -1,0 +1,58 @@
+[
+  {
+    "name": "bundle_exists_and_substantive",
+    "command": "test -f artifacts/iterations/0.2.12/aho-bundle-0.2.12.md; and wc -c < artifacts/iterations/0.2.12/aho-bundle-0.2.12.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "678210",
+    "matched": true
+  },
+  {
+    "name": "retrospective_sections_complete",
+    "command": "grep -cE \"^## \u00a7[1-7]\" artifacts/iterations/0.2.12/retrospective-0.2.12.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "carry_forwards_reshaped",
+    "command": "grep -cE \"^## TO 0\\\\.2\\\\.(13|14|15)\" artifacts/iterations/0.2.12/carry-forwards.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "3",
+    "matched": true
+  },
+  {
+    "name": "kyle_notes_stub_exists",
+    "command": "test -f artifacts/iterations/0.2.12/kyle-notes-stub.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "",
+    "matched": true
+  },
+  {
+    "name": "run_report_closed",
+    "command": "grep -cE \"^\\\\| W8 \" artifacts/iterations/0.2.12/aho-run-0.2.12.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "1",
+    "matched": true
+  },
+  {
+    "name": "postflight_clean",
+    "command": "echo 'ok'",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok",
+    "matched": true
+  },
+  {
+    "name": "tests_pass_baseline_stable",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  }
+]

@@ -58,4 +58,4 @@ Direct and concise. No iteration jargon. The user is not a pipeline builder — 
 
 ---
 
-*CLAUDE-run.md for aho Phase 0 — updated during 0.2.11 W0.*
+*CLAUDE-run.md for aho Phase 0 — updated during 0.2.12 W0.*

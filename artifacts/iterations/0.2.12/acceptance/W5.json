@@ -1,0 +1,50 @@
+[
+  {
+    "name": "mcp_audit_sections_complete",
+    "command": "test -f artifacts/iterations/0.2.12/mcp-workflow-audit.md; and grep -cE \"^## \u00a7[1-7]\" artifacts/iterations/0.2.12/mcp-workflow-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "mcp_workflow_invocations_attempted",
+    "command": "grep -cE \"context7|sequential.?thinking|playwright|filesystem\" artifacts/iterations/0.2.12/mcp-workflow-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "g083_scan_produced",
+    "command": "test -f artifacts/iterations/0.2.12/g083-scan-report.md; and grep -cE \"Safe|G083-class|Ambiguous\" artifacts/iterations/0.2.12/g083-scan-report.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "g083_hits_characterized",
+    "command": "grep -cE \"src/aho/.+\\.py:[0-9]+\" artifacts/iterations/0.2.12/g083-scan-report.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "5",
+    "matched": true
+  },
+  {
+    "name": "inventory_mcps_updated",
+    "command": "python -c \"from aho.council.inventory import inventory; m = inventory(); mcps = [x for x in m if 'mcp' in x.kind.lower() or 'mcp' in x.name.lower()]; not_unknown = [x for x in mcps if x.status != 'unknown']; print(len(not_unknown))\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "4",
+    "matched": true
+  },
+  {
+    "name": "no_new_baseline_regressions",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  }
+]

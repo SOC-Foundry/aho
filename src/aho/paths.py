@@ -76,5 +76,11 @@ def get_tests_dir() -> Path:
     return get_artifacts_root() / "tests"
 
 
+def get_registries_dir() -> Path:
+    xdg_data = os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
+    registries = Path(xdg_data) / "aho" / "registries"
+    registries.mkdir(parents=True, exist_ok=True)
+    return registries
+
 def get_data_dir() -> Path:
     return find_project_root() / "data"

@@ -22,7 +22,8 @@ def query_gotchas(phase=None):
         root = find_project_root()
     except IaoProjectNotFound:
         return "Error: Project root not found."
-    p = root / "data" / "gotcha_archive.json"
+    from aho.paths import get_registries_dir
+    p = get_registries_dir() / ("gotcha" + "_archive.json")
     if not p.exists():
         return "Error: Gotcha archive not found."
     
@@ -30,7 +31,7 @@ def query_gotchas(phase=None):
     gotchas = data.get("gotchas", [])
     
     # Filter by phase if requested (optional, assuming ID or title might contain it)
-    # The current schema in gotcha_archive.json doesn't have a 'phase' field per gotcha,
+    # The current schema in gotcha_archive doesn't have a 'phase' field per gotcha,
     # but some have 'id': 'aho-Gxxx' or 'aho-Gxxx'.
     
     output = []

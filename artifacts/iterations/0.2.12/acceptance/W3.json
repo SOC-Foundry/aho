@@ -1,0 +1,34 @@
+[
+  {
+    "name": "glm_audit_sections_complete",
+    "command": "test -f artifacts/iterations/0.2.12/glm-evaluator-audit.md && grep -cE \"^## \u00a7[1-7]\" artifacts/iterations/0.2.12/glm-evaluator-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "inventory_glm_updated",
+    "command": "python -c \"from aho.council.inventory import inventory; m = inventory(); glm = next((x for x in m if 'glm' in x.name.lower() or 'evaluator' in x.name.lower()), None); print(f'glm={glm.status if glm else None}')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "glm=gap: parsing logic converts real reviews to rubber stamps",
+    "matched": true
+  },
+  {
+    "name": "w14_readiness_documented",
+    "command": "grep -cE \"^## \u00a77\" artifacts/iterations/0.2.12/glm-evaluator-audit.md; grep -cE \"W14|ready|not ready|feasible|deferred|gap\" artifacts/iterations/0.2.12/glm-evaluator-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "1\n9",
+    "matched": true
+  },
+  {
+    "name": "no_new_baseline_regressions",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  }
+]

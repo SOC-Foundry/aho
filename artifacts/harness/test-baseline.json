@@ -1,0 +1,67 @@
+{
+  "baseline_failures": [
+    {
+      "test_id": "artifacts/tests/test_build_log_stub.py::test_generate_stub",
+      "failure_reason": "Test reads actual global event log (~/.local/share/aho/events/aho_event_log.jsonl) instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_postflight_residuals.py::test_readme_current_utc_comparison",
+      "failure_reason": "Test appears to read real README.md or actual iteration timestamps instead of fully isolated mocked environment.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_postflight_run_types.py::test_run_type_mixed_pass",
+      "failure_reason": "Component floor not met (2 < 3). Test likely reading global or unmocked components.yaml state.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_postflight_run_types.py::test_run_type_mixed_fail",
+      "failure_reason": "Component floor not met (2 < 3). Test likely reading global or unmocked components.yaml state.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_report_builder.py::test_report_filters_events_by_iteration",
+      "failure_reason": "Test reads actual global event log instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_report_builder.py::test_report_risk_register_captures_warnings",
+      "failure_reason": "Test reads actual global event log instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_reads_last_complete_event",
+      "failure_reason": "Test reads actual global event log instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_no_events",
+      "failure_reason": "Test reads actual global event log instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_no_log_file",
+      "failure_reason": "Test reads actual global event log instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    },
+    {
+      "test_id": "artifacts/tests/test_telegram_ws_commands.py::TestAutoPush::test_auto_push_detects_new_complete",
+      "failure_reason": "Test reads actual global event log instead of mocked local one due to W7 path relocation breaking test isolation.",
+      "origin_iteration": "0.2.11",
+      "target_fix_iteration": "0.2.13"
+    }
+  ],
+  "updated_at": "2026-04-12T19:45:00Z",
+  "baseline_established_by": "W1.5",
+  "changelog": "Removed test_trace_state_returns_last_20 (fixed via W3/W4 execution flow clearing pycache/reloading context, 10 remaining)"
+}

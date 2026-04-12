@@ -1,0 +1,58 @@
+[
+  {
+    "name": "canonicals_at_0212",
+    "command": "for f in MANIFEST.json CHANGELOG.md VERSION CLAUDE.md CLAUDE-iteration.md CLAUDE-run.md GEMINI.md GEMINI-iteration.md GEMINI-run.md COMPATIBILITY.md pyproject.toml; do grep -q \"0.2.12\" \"$f\" || echo \"MISSING: $f\"; done | grep -c MISSING || true",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "0",
+    "matched": true
+  },
+  {
+    "name": "gemini_operational",
+    "command": "gemini --version 2>&1 | head -1",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "0.37.1",
+    "matched": true
+  },
+  {
+    "name": "gemini_iteration_md_has_sections",
+    "command": "for s in \"AcceptanceCheck\" \"events/aho_event_log\" \"session boundaries\" \"MCP-first\"; do grep -qi \"$s\" GEMINI-iteration.md || echo \"MISSING: $s\"; done | grep -c MISSING || true",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "0",
+    "matched": true
+  },
+  {
+    "name": "all_daemons_healthy",
+    "command": "python -c \"from aho.acceptance import daemon_healthy, run_check; units=[\\\"aho-openclaw\\\",\\\"aho-telegram\\\",\\\"aho-harness-watcher\\\",\\\"aho-otel-collector\\\",\\\"aho-jaeger\\\",\\\"aho-dashboard\\\",\\\"aho-nemoclaw\\\"]; results=[run_check(daemon_healthy(u)) for u in units]; print(sum(r.passed for r in results))\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "decisions_contains_11_pillars_verbatim",
+    "command": "grep -c \"The human holds the keys\" artifacts/iterations/0.2.12/decisions.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "1",
+    "matched": true
+  },
+  {
+    "name": "carry_forwards_preserved",
+    "command": "grep -cE \"0\\.2\\.(13|14)\" artifacts/iterations/0.2.12/carry-forwards.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "2",
+    "matched": true
+  },
+  {
+    "name": "run_report_has_20_rows",
+    "command": "grep -cE \"^\\| W[0-9]+ \" artifacts/iterations/0.2.12/aho-run-0.2.12.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "20",
+    "matched": true
+  }
+]

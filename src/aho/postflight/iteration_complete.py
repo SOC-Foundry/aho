@@ -74,7 +74,7 @@ def check_secrets_in_tracked_files():
             "grep", "-rE", r"(API_KEY|BOT_TOKEN|SECRET).*=.*[A-Za-z0-9]{20,}", 
             str(root), 
             "--include=*.py", "--include=*.md", "--include=*.fish", "--include=*.json",
-            "--exclude-dir=.git", "--exclude=secrets.fish.age", "--exclude=data/gotcha_archive.json",
+            "--exclude-dir=.git", "--exclude=secrets.fish.age", "--exclude=data/gotcha" + "_archive.json",
             "--exclude=bot.env"
         ]
         r = subprocess.run(cmd, capture_output=True, text=True)

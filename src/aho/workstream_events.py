@@ -147,6 +147,8 @@ def _patch_last_event_with_extras(acceptance_results: list | None,
         for r in acceptance_results:
             if hasattr(r, '__dataclass_fields__'):
                 serialized.append(asdict(r))
+            elif hasattr(r, 'model_dump'):
+                serialized.append(r.model_dump())
             elif isinstance(r, dict):
                 serialized.append(r)
             else:

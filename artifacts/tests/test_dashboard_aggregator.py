@@ -82,12 +82,16 @@ def test_component_state(project_root):
     assert comps[0]["kind"] == "python_module"
 
 
-def test_trace_state_returns_last_20(project_root):
+def test_trace_state_returns_last_20(project_root, monkeypatch):
+    import aho.logger
+    def mock_event_log_path():
+        return project_root / "data" / "aho_event_log.jsonl"
+    monkeypatch.setattr(aho.logger, "event_log_path", mock_event_log_path)
+    
     from aho.dashboard.aggregator import _trace_state, _cache
     _cache["data"] = None
     traces = _trace_state()
     assert len(traces) == 20
-    # newest first
     assert "24" in traces[0]["timestamp"]
 
 

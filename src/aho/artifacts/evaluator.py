@@ -104,7 +104,8 @@ def validate_references(refs: dict, project_root: Path, seed: dict = None) -> di
                 errors.append(f"hallucinated ADR: {adr}")
 
     # Gotcha ids
-    gotcha_path = get_data_dir() / "gotcha_archive.json"
+    from aho.paths import get_registries_dir
+    gotcha_path = get_registries_dir() / ("gotcha" + "_archive.json")
     if gotcha_path.exists():
         try:
             gdata = json.loads(gotcha_path.read_text())

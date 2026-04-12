@@ -1,0 +1,58 @@
+[
+  {
+    "name": "nemotron_audit_sections_complete",
+    "command": "test -f artifacts/iterations/0.2.12/nemotron-audit.md; and grep -cE \"^## \u00a7[1-7]\" artifacts/iterations/0.2.12/nemotron-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "inventory_nemotron_updated",
+    "command": "python -c \"from aho.council.inventory import inventory; m = inventory(); n = next((x for x in m if 'nemotron' in x.name.lower()), None); print(f'nemotron={n.status if n else None}')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "nemotron=gap: classification logic silences errors and defaults to reviewer",
+    "matched": true
+  },
+  {
+    "name": "g083_registered",
+    "command": "jq -r '.gotchas[] | select(.id == \"aho-G083\") | .id' ~/.local/share/aho/registries/gotcha_archive.json",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G083",
+    "matched": true
+  },
+  {
+    "name": "baseline_updated_to_10",
+    "command": "python -c \"import json; b = json.load(open('artifacts/harness/test-baseline.json')); print(len(b['baseline_failures']))\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "10",
+    "matched": true
+  },
+  {
+    "name": "removed_test_not_in_baseline",
+    "command": "python -c \"import json; b = json.load(open('artifacts/harness/test-baseline.json')); ids = [f['test_id'] for f in b['baseline_failures']]; assert 'test_trace_state_returns_last_20' not in ' '.join(ids); print('ok')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok",
+    "matched": true
+  },
+  {
+    "name": "no_new_baseline_regressions",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  },
+  {
+    "name": "silent_fallback_audit_documented",
+    "command": "grep -cE \"silent.?fallback|hardcode|rubber.?stamp|G083\" artifacts/iterations/0.2.12/nemotron-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "6",
+    "matched": true
+  }
+]

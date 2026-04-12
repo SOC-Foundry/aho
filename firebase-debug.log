@@ -271,3 +271,18 @@ For CI servers and headless environments, generate a new token with firebase log
 [error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
 
 For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T19:48:00.593Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T19:48:00.594Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T19:48:00.626Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T19:48:00.626Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T19:48:00.626Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T19:48:00.627Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T19:48:00.627Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T19:48:00.750Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T19:48:00.750Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci

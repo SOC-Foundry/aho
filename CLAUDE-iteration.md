@@ -29,7 +29,7 @@ If you are instead handling a one-shot `aho run "task"` invocation, read CLAUDE-
 
 ## AcceptanceCheck Schema (landing W1-W2)
 
-Starting 0.2.11, prose acceptance claims are no longer valid from W3 onward. The AcceptanceCheck framework replaces them with executable assertions.
+Starting 0.2.12, prose acceptance claims are no longer valid from W3 onward. The AcceptanceCheck framework replaces them with executable assertions.
 
 **Dataclass contract:** `AcceptanceCheck(name: str, command: str, expected_exit: int, expected_pattern: str | None)` — a single verifiable assertion. `run()` executes the command via subprocess and returns `AcceptanceResult(passed: bool, actual_exit: int, actual_output: str, matched: bool)`.
 
@@ -45,7 +45,7 @@ If you are resuming mid-iteration before W7 completes, the old `data/aho_event_l
 
 ## Three-Session Boundaries + Hard Gate
 
-0.2.11 executes across three sessions per ADR-045 hybrid iteration shape:
+0.2.12 executes across three sessions per ADR-045 hybrid iteration shape:
 
 - **Session 1 (W0-W8):** Infrastructure backstop — AcceptanceCheck framework, gate fixes, event log relocation.
 - **Session 2 (W9-W14):** Persona 3 validation — 4 fixture tasks exercising `aho run` end-to-end.
@@ -59,10 +59,14 @@ Every workstream declares `mcp_used` in the run report with justification. The v
 
 See CLAUDE.md MCP Toolchain section for MUST-use rules and [INSTALLED-NOT-WIRED] protocol.
 
+## Operating Stance
+
+Be objective and skeptical by nature. Do not inflate metrics. Do not frame findings with rosy outlook when reality is neutral or mixed. Articulate problems precisely rather than paper over them. We aim to improve 1% per day, which is impossible without vigilant problem-surfacing.
+
 ## Communication
 
 Terse and direct. No preamble, no hedging. State blocks as capability gaps.
 
 ---
 
-*CLAUDE-iteration.md for aho Phase 0 — updated during 0.2.11 W0.*
+*CLAUDE-iteration.md for aho Phase 0 — updated during 0.2.12 W0.*

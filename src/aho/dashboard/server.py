@@ -14,6 +14,8 @@ from pathlib import Path
 from aho.paths import find_project_root
 from aho.config import get_dashboard_port
 from aho.dashboard.aggregator import get_state
+from aho.council.status import collect_status
+from aho.dashboard.lego.renderer import render_council_svg
 
 
 def create_handler(project_root: Path):
@@ -37,6 +39,28 @@ def create_handler(project_root: Path):
                     "traces": state.get("traces", []),
                     "count": len(state.get("traces", [])),
                 })
+            elif self.path == "/api/council":
+                # Convert the pydantic model to a dict so _json_response can dump it
+                # Or just return its model_dump()
+                self._json_response(collect_status().model_dump())
+            elif self.path == "/api/lego":
+                # Returning the exact data shape that generates the SVG
+                # It's essentially the council status or a mapped version
+                status = collect_status()
+                # Expose 'figures' as required by acceptance check
+                data = status.model_dump()
+                data['figures'] = data['members']
+                self._json_response(data)
+            elif self.path == "/lego/":
+                # Render SVG directly
+                svg = render_council_svg(collect_status())
+                self.send_response(200)
+                self.send_header("Content-Type", "image/svg+xml")
+                self.send_header("Access-Control-Allow-Origin", "http://127.0.0.1")
+                body = svg.encode("utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
             elif self.path == "/components.yaml":
                 comp_path = project_root / "artifacts" / "harness" / "components.yaml"
                 if comp_path.exists():

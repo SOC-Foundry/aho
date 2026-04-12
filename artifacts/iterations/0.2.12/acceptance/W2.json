@@ -1,0 +1,50 @@
+[
+  {
+    "name": "qwen_audit_sections_complete",
+    "command": "test -f artifacts/iterations/0.2.12/qwen-dispatch-audit.md && grep -cE \"^## \u00a7[1-7]\" artifacts/iterations/0.2.12/qwen-dispatch-audit.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "7",
+    "matched": true
+  },
+  {
+    "name": "inventory_qwen_and_nemoclaw_updated",
+    "command": "python -c \"from aho.council.inventory import inventory; m = inventory(); qwen = next((x for x in m if 'qwen' in x.name.lower()), None); nemo = next((x for x in m if 'nemoclaw' in x.name.lower()), None); print(f'qwen={qwen.status if qwen else None}; nemo={nemo.status if nemo else None}')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "qwen=operational; nemo=operational",
+    "matched": true
+  },
+  {
+    "name": "registry_sync_complete",
+    "command": "diff <(jq -r '.gotchas[].id' ~/.local/share/aho/registries/gotcha_archive.json | sort) <(jq -r '.gotchas[].id' data/gotcha_archive.json | sort); echo \"exit=$?\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "exit=0",
+    "matched": true
+  },
+  {
+    "name": "g082_or_next_registered",
+    "command": "jq -r '.gotchas[] | select(.title | test(\"dual-path|registry.*stale\")) | .id' ~/.local/share/aho/registries/gotcha_archive.json",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G082",
+    "matched": true
+  },
+  {
+    "name": "no_new_baseline_regressions",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  },
+  {
+    "name": "registry_write_path_uses_canonical",
+    "command": "grep -rE \"gotcha_archive\\\\.json\" src/aho/ --include=\"*.py\" | grep -v \"test\" | grep -vE \"registries/gotcha_archive\\\\.json\" | wc -l",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "0",
+    "matched": true
+  }
+]

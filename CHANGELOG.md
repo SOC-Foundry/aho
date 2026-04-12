@@ -1,5 +1,18 @@
 # aho changelog
 
+## [0.2.12] — 2026-04-12
+
+**Theme:** Council activation — discovery, visibility, design, measurement (gemini-cli primary executor)
+
+- Primary executor shift: gemini-cli takes the lead for all 20 workstreams (Pillar 1/8 focus)
+- Council inventory: structured audit of Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, and MCP fleet (W1-W5)
+- Visibility: `aho council status` CLI + lego office visualization foundation (W6-W9)
+- Design: Workstream-level delegation pattern + dispatch contract (W10-W11)
+- Pattern framework: 5 seeds authored (planner-discipline, age-fernet-keyring, install-surface, daemon-lifecycle, council-dispatch)
+- Implementation: At least 3 real council dispatches measured via schema v3 efficacy
+- Tech-legacy-audit: audit of shims, unused modules, and stale harness
+- 20 workstreams, per-workstream review ON
+
 ## [0.2.11] — 2026-04-12
 
 **Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams — executor-bias recognized mid-iteration, G077)

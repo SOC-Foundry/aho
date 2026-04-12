@@ -131,4 +131,4 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — updated during 0.2.11 W0. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 — updated during 0.2.12 W0. Next rewrite: Phase 1 boundary.*

@@ -1,0 +1,58 @@
+[
+  {
+    "name": "inventory_module_importable",
+    "command": "python -c \"from aho.council.inventory import CouncilMember, inventory; m = inventory(); assert len(m) >= 7; print(len(m))\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "17",
+    "matched": true
+  },
+  {
+    "name": "inventory_md_exists",
+    "command": "test -f artifacts/iterations/0.2.12/council-inventory.md && grep -c \"^| \" artifacts/iterations/0.2.12/council-inventory.md",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "18",
+    "matched": true
+  },
+  {
+    "name": "all_members_status_unknown",
+    "command": "python -c \"from aho.council.inventory import inventory; m = inventory(); statuses = set(x.status for x in m); assert statuses == {\\\"unknown\\\"}; print(\\\"ok\\\")\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok",
+    "matched": true
+  },
+  {
+    "name": "g078_registered",
+    "command": "jq -r \".gotchas[] | select(.id == \\\"aho-G078\\\") | .id\" data/gotcha_archive.json",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G078",
+    "matched": true
+  },
+  {
+    "name": "acceptance_schema_strict",
+    "command": "python -c \"from aho.acceptance import AcceptanceResult; r = AcceptanceResult(check_name=\\\"t\\\", passed=True, actual_exit=0, actual_output=\\\"\\\", matched=None, duration_seconds=0.1, error=None); print(\\\"ok\\\")\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok",
+    "matched": true
+  },
+  {
+    "name": "tests_pass",
+    "command": "pytest tests/test_council_inventory.py -v 2>&1 | tail -1",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================== 4 passed in 0.01s ===============================",
+    "matched": true
+  },
+  {
+    "name": "no_regression",
+    "command": "pytest tests/ -v 2>&1 | tail -1",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================== 74 passed in 0.03s ==============================",
+    "matched": true
+  }
+]

@@ -4,7 +4,7 @@
 
 aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.11** | **Status: Verifiable Acceptance + Persona 3 Validation**
+**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.12** | **Status: Council Activation**
 
 ```mermaid
 graph BT
@@ -107,6 +107,6 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.11 — aho.run — Phase 0 — April 2026*
+*aho v0.2.12 — aho.run — Phase 0 — April 2026*
 
-*README last reviewed: 2026-04-12 by W8 append-only pass*
+*README last reviewed: 2026-04-12 by 0.2.12 W0 pass*

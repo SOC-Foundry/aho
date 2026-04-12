@@ -1,154 +1,6 @@
 {
   "gotchas": [
     {
-      "id": "aho-G103",
-      "title": "Plaintext Secrets in Shell Config",
-      "pattern": "Secrets stored as 'set -x' in config.fish are world-readable to any process running as the user, including backups, screen sharing, and accidentally catting the file.",
-      "symptoms": [
-        "API keys or tokens visible in shell configuration files",
-        "Secrets appearing in shell history or environment snapshots",
-        "Risk of accidental exposure during live sessions"
-      ],
-      "mitigation": "Use iao encrypted secrets store (age + keyring). Remove plaintext 'set -x' lines and replace with 'iao secret export --fish | source'.",
-      "context": "Added in iao 0.1.2 W3 during secrets architecture overhaul."
-    },
-    {
-      "id": "aho-G104",
-      "title": "Flat-layout Python package shadows repo name",
-      "pattern": "A Python package at repo_root/pkg/pkg/ creates ambiguous imports and confusing directory navigation.",
-      "symptoms": [
-        "cd iao/iao is a valid command",
-        "Import tooling confused about which iao/ is the package",
-        "Editable installs resolve wrong directory"
-      ],
-      "mitigation": "Use src-layout from project start; refactor early if inherited. iao 0.1.3 W2 migrated iao/iao/ to iao/src/iao/.",
-      "context": "Added in iao 0.1.3 W2 during src-layout refactor."
-    },
-    {
-      "id": "aho-G105",
-      "title": "Existence-only acceptance criteria mask quality failures",
-      "pattern": "Success criteria that check only whether a file exists allow stubs and empty artifacts to pass quality gates.",
-      "symptoms": [
-        "Bundle at 3.2 KB passes post-flight despite reference being 600 KB",
-        "Artifacts contain only headers and no substantive content",
-        "Quality regressions invisible to automation"
-      ],
-      "mitigation": "Every success criterion must include a content check, not just an existence check. iao 0.1.3 W3 added bundle quality gates enforcing minimum size and section completeness.",
-      "context": "Added in iao 0.1.3 W3. Root cause: iao 0.1.2 W7 retrospective."
-    },
-    {
-      "id": "aho-G106",
-      "title": "README falls behind reality without enforcement",
-      "pattern": "README not updated during iterations, creating drift between documentation and actual package state.",
-      "symptoms": [
-        "README references old version numbers or missing features",
-        "New subpackages and CLI commands undocumented",
-        "README component count does not match actual filesystem"
-      ],
-      "mitigation": "Add post-flight check that verifies README.mtime > iteration_start. iao 0.1.3 W6 added readme_current check.",
-      "context": "Added in iao 0.1.3 W6."
-    },
-    {
-      "id": "aho-G107",
-      "title": "Four-octet versioning drift from kjtcom pattern-match",
-      "pattern": "iao versioning is locked to X.Y.Z three octets. kjtcom uses X.Y.Z.W because kjtcom Z is semantic. pattern-matching from kjtcom causes version drift.",
-      "symptoms": [
-        "Iteration versions appearing as 0.1.3.1 or 0.1.4.0",
-        "Inconsistent metadata across pyproject.toml, VERSION, and .iao.json",
-        "Post-flight validation failures on version strings"
-      ],
-      "mitigation": "Strictly adhere to three-octet X.Y.Z format. Use Regex validator in src/iao/config.py to enforce at iteration close.",
-      "context": "Added in iao 0.1.4 W1.7 resolution of 0.1.3 planning drift."
-    },
-    {
-      "id": "aho-G108",
-      "title": "Heredocs break agents",
-      "pattern": "`printf` only. Never `<<EOF`.",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "`printf` only. Never `<<EOF`.",
-      "context": "Migrated from kjtcom G1 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G1"
-    },
-    {
-      "id": "aho-G109",
-      "title": "Gemini runs bash by default",
-      "pattern": "Wrap fish-specific commands: `fish -c \"your command\"`. Bash works for general commands.",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "Wrap fish-specific commands: `fish -c \"your command\"`. Bash works for general commands.",
-      "context": "Migrated from kjtcom G19 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G19"
-    },
-    {
-      "id": "aho-G110",
-      "title": "TripleDB schema drift during migration",
-      "pattern": "Inspect actual Firestore data before any schema migration; verify field consistency across all documents",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "Inspect actual Firestore data before any schema migration; verify field consistency across all documents",
-      "context": "Migrated from kjtcom G31 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G31"
-    },
-    {
-      "id": "aho-G111",
-      "title": "Detail panel provider not accessible at all viewport sizes",
-      "pattern": "Ensure DetailPanel NotifierProvider is always in widget tree at all viewport sizes",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "Ensure DetailPanel NotifierProvider is always in widget tree at all viewport sizes",
-      "context": "Migrated from kjtcom G39 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G39"
-    },
-    {
-      "id": "aho-G112",
-      "title": "Widget rebuild triggers event handlers multiple times",
-      "pattern": "Added deduplication logic and guard flags to prevent handler re-execution",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "Added deduplication logic and guard flags to prevent handler re-execution",
-      "context": "Migrated from kjtcom G41 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G41"
-    },
-    {
-      "id": "aho-G113",
-      "title": "TripleDB results displaying show names in title case",
-      "pattern": "Data fix via fix_tripledb_shows_case.py (same as G37)",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "Data fix via fix_tripledb_shows_case.py (same as G37)",
-      "context": "Migrated from kjtcom G49 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G49"
-    },
-    {
-      "id": "aho-G114",
-      "title": "Self-grading bias accepted as Tier-1",
-      "pattern": "ADR-015 hard cap + Pattern 20.",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "ADR-015 hard cap + Pattern 20.",
-      "context": "Migrated from kjtcom G62 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G62"
-    },
-    {
-      "id": "aho-G115",
-      "title": "Agent asks for permission",
-      "pattern": "Pre-flight notes-and-proceeds",
-      "symptoms": [
-        "Migrated from kjtcom"
-      ],
-      "mitigation": "Pre-flight notes-and-proceeds",
-      "context": "Migrated from kjtcom G71 in iao 0.1.4 W3.",
-      "kjtcom_source_id": "G71"
-    },
-    {
       "title": "Evaluator dynamic baseline loads at init, misses files created mid-run",
       "surfaced_in": "0.1.11 W4",
       "description": "The evaluator's allowed-files baseline loaded at module init, before the current run's W1 could create or rename files. Synthesis runs that referenced newly-created files were rejected as hallucinations, causing a 2-hour rejection loop in 0.1.11.",
@@ -398,6 +250,225 @@
         7,
         8
       ]
+    },
+    {
+      "id": "aho-G078",
+      "title": "acceptance-result-schema-drifts-per-executor",
+      "phase": 0,
+      "pattern": "AcceptanceResult dataclass allowed partial instantiation and name/check_name confusion, breaking when gemini-cli parsed claude-code outputs.",
+      "mitigation": "Use strict Pydantic BaseModel with explicit required fields and model_validator mode=before for backward compat.",
+      "discovered_in": "0.2.12"
+    },
+    {
+      "id": "aho-G079",
+      "title": "rigid-numeric-acceptance-patterns-invite-gaming",
+      "phase": 0,
+      "pattern": "executor satisfies a numeric acceptance check by manufacturing data (padding tests, inflating counts) rather than doing substantive work the metric was intended to measure.",
+      "mitigation": "Acceptance checks assert behaviors and invariants. \"No new failures beyond baseline\" not \"74+ passed.\" \"Output contains 11 verbatim pillars\" not \"wc -l says 11.\" Pair with test-baseline.json for regression-class assertions.",
+      "discovered_in": "0.2.12",
+      "related_pillars": [
+        3,
+        8
+      ]
+    },
+    {
+      "id": "aho-G080",
+      "title": "tacit-harness-conventions-fail-new-executors",
+      "phase": 0,
+      "pattern": "New executor to the harness (Gemini after Claude Code, hypothetically Qwen after Gemini) trips on conventions that were never documented, only learned by prior use. Example: \"pytest tests/\" as shorthand for \"run all tests\" when pyproject.toml configures testpaths = [\"artifacts/tests\"].",
+      "mitigation": "artifacts/harness/prompt-conventions.md as living coach's playbook. Every convention Gemini discovers gets documented before next executor (likely Qwen) hits it. Council onboarding depends on this document's completeness.",
+      "discovered_in": "0.2.12",
+      "related_pillars": [
+        2,
+        8
+      ]
+    },
+    {
+      "id": "aho-G081",
+      "title": "celebratory-framing-hides-real-problems",
+      "phase": 0,
+      "pattern": "Run reports, kyle notes, and agent summaries use upbeat language (\"clean close\", \"landed beautifully\", \"all green\") that obscures caveats, known issues, and mixed outcomes. Problems become invisible because the framing papers over them.",
+      "mitigation": "Objective-and-skeptical standing principle per GEMINI-iteration.md and CLAUDE-iteration.md \u00a7Operating Stance. Reports default to neutral. Numbers are honest to substance. Problems surfaced before accomplishments.",
+      "discovered_in": "0.2.12",
+      "related_pillars": [
+        3,
+        8
+      ]
+    },
+    {
+      "id": "aho-G082",
+      "title": "registry-dual-path-writes-cause-stale-canonical",
+      "phase": 0,
+      "pattern": "Writes to a registry land at a non-canonical path while the documented canonical path accumulates stale state. Downstream readers consulting canonical get incomplete data.",
+      "mitigation": "Audit every registry write path after install-surface relocation. Use a canonical resolver (aho_paths or equivalent) for all reads and writes. When migrating a registry, search codebase for old path hardcodes before declaring migration complete.",
+      "discovered_in": "0.2.12",
+      "related_pillars": [
+        3,
+        6,
+        9
+      ]
+    },
+    {
+      "id": "aho-G083",
+      "title": "exception-fallback-hardcodes-positive-result-silently-passes-review",
+      "phase": 0,
+      "pattern": "Exception handlers return a hardcoded 'success' or default fallback value to avoid crashing pipelines, which causes tasks to be silently misrouted or approved even when the underlying logic (e.g., parsing, LLM inference) completely fails.",
+      "mitigation": "Exception layers must fail-open (throw explicitly) or return identifiable error sentinels. Never return a valid 'success' shape from a catch block simply to keep the pipeline moving. Audit existing integrations (like EvaluatorAgent and Nemotron) for 'categories[-1]' or '{\"score\": 8}' anti-patterns in except blocks.",
+      "discovered_in": "0.2.12",
+      "related_pillars": [
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "id": "aho-G103",
+      "title": "Plaintext Secrets in Shell Config",
+      "pattern": "Secrets stored as 'set -x' in config.fish are world-readable to any process running as the user, including backups, screen sharing, and accidentally catting the file.",
+      "symptoms": [
+        "API keys or tokens visible in shell configuration files",
+        "Secrets appearing in shell history or environment snapshots",
+        "Risk of accidental exposure during live sessions"
+      ],
+      "mitigation": "Use iao encrypted secrets store (age + keyring). Remove plaintext 'set -x' lines and replace with 'iao secret export --fish | source'.",
+      "context": "Added in iao 0.1.2 W3 during secrets architecture overhaul."
+    },
+    {
+      "id": "aho-G104",
+      "title": "Flat-layout Python package shadows repo name",
+      "pattern": "A Python package at repo_root/pkg/pkg/ creates ambiguous imports and confusing directory navigation.",
+      "symptoms": [
+        "cd iao/iao is a valid command",
+        "Import tooling confused about which iao/ is the package",
+        "Editable installs resolve wrong directory"
+      ],
+      "mitigation": "Use src-layout from project start; refactor early if inherited. iao 0.1.3 W2 migrated iao/iao/ to iao/src/iao/.",
+      "context": "Added in iao 0.1.3 W2 during src-layout refactor."
+    },
+    {
+      "id": "aho-G105",
+      "title": "Existence-only acceptance criteria mask quality failures",
+      "pattern": "Success criteria that check only whether a file exists allow stubs and empty artifacts to pass quality gates.",
+      "symptoms": [
+        "Bundle at 3.2 KB passes post-flight despite reference being 600 KB",
+        "Artifacts contain only headers and no substantive content",
+        "Quality regressions invisible to automation"
+      ],
+      "mitigation": "Every success criterion must include a content check, not just an existence check. iao 0.1.3 W3 added bundle quality gates enforcing minimum size and section completeness.",
+      "context": "Added in iao 0.1.3 W3. Root cause: iao 0.1.2 W7 retrospective."
+    },
+    {
+      "id": "aho-G106",
+      "title": "README falls behind reality without enforcement",
+      "pattern": "README not updated during iterations, creating drift between documentation and actual package state.",
+      "symptoms": [
+        "README references old version numbers or missing features",
+        "New subpackages and CLI commands undocumented",
+        "README component count does not match actual filesystem"
+      ],
+      "mitigation": "Add post-flight check that verifies README.mtime > iteration_start. iao 0.1.3 W6 added readme_current check.",
+      "context": "Added in iao 0.1.3 W6."
+    },
+    {
+      "id": "aho-G107",
+      "title": "Four-octet versioning drift from kjtcom pattern-match",
+      "pattern": "iao versioning is locked to X.Y.Z three octets. kjtcom uses X.Y.Z.W because kjtcom Z is semantic. pattern-matching from kjtcom causes version drift.",
+      "symptoms": [
+        "Iteration versions appearing as 0.1.3.1 or 0.1.4.0",
+        "Inconsistent metadata across pyproject.toml, VERSION, and .iao.json",
+        "Post-flight validation failures on version strings"
+      ],
+      "mitigation": "Strictly adhere to three-octet X.Y.Z format. Use Regex validator in src/iao/config.py to enforce at iteration close.",
+      "context": "Added in iao 0.1.4 W1.7 resolution of 0.1.3 planning drift."
+    },
+    {
+      "id": "aho-G108",
+      "title": "Heredocs break agents",
+      "pattern": "`printf` only. Never `<<EOF`.",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "`printf` only. Never `<<EOF`.",
+      "context": "Migrated from kjtcom G1 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G1"
+    },
+    {
+      "id": "aho-G109",
+      "title": "Gemini runs bash by default",
+      "pattern": "Wrap fish-specific commands: `fish -c \"your command\"`. Bash works for general commands.",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Wrap fish-specific commands: `fish -c \"your command\"`. Bash works for general commands.",
+      "context": "Migrated from kjtcom G19 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G19"
+    },
+    {
+      "id": "aho-G110",
+      "title": "TripleDB schema drift during migration",
+      "pattern": "Inspect actual Firestore data before any schema migration; verify field consistency across all documents",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Inspect actual Firestore data before any schema migration; verify field consistency across all documents",
+      "context": "Migrated from kjtcom G31 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G31"
+    },
+    {
+      "id": "aho-G111",
+      "title": "Detail panel provider not accessible at all viewport sizes",
+      "pattern": "Ensure DetailPanel NotifierProvider is always in widget tree at all viewport sizes",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Ensure DetailPanel NotifierProvider is always in widget tree at all viewport sizes",
+      "context": "Migrated from kjtcom G39 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G39"
+    },
+    {
+      "id": "aho-G112",
+      "title": "Widget rebuild triggers event handlers multiple times",
+      "pattern": "Added deduplication logic and guard flags to prevent handler re-execution",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Added deduplication logic and guard flags to prevent handler re-execution",
+      "context": "Migrated from kjtcom G41 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G41"
+    },
+    {
+      "id": "aho-G113",
+      "title": "TripleDB results displaying show names in title case",
+      "pattern": "Data fix via fix_tripledb_shows_case.py (same as G37)",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Data fix via fix_tripledb_shows_case.py (same as G37)",
+      "context": "Migrated from kjtcom G49 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G49"
+    },
+    {
+      "id": "aho-G114",
+      "title": "Self-grading bias accepted as Tier-1",
+      "pattern": "ADR-015 hard cap + Pattern 20.",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "ADR-015 hard cap + Pattern 20.",
+      "context": "Migrated from kjtcom G62 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G62"
+    },
+    {
+      "id": "aho-G115",
+      "title": "Agent asks for permission",
+      "pattern": "Pre-flight notes-and-proceeds",
+      "symptoms": [
+        "Migrated from kjtcom"
+      ],
+      "mitigation": "Pre-flight notes-and-proceeds",
+      "context": "Migrated from kjtcom G71 in iao 0.1.4 W3.",
+      "kjtcom_source_id": "G71"
     }
-  ]
+  ],
+  "_DEPRECATED": "Migrated to XDG canonical at ~/.local/share/aho/registries/. Do not write here."
 }

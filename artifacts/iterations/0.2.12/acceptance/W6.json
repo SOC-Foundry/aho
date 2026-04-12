@@ -1,0 +1,66 @@
+[
+  {
+    "name": "cli_subcommand_registered",
+    "command": "aho council status --help 2>&1 | head -5",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "usage: aho council status [-h] [--json] [--member MEMBER] [--verbose]\n\noptions:\n  -h, --help       show this help message and exit\n  --json           Output machine-readable JSON",
+    "matched": true
+  },
+  {
+    "name": "status_human_output",
+    "command": "aho council status 2>&1 | head -20",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "Council Health Score: 35.3/100\nNemoclaw Socket: /home/kthompson/.local/share/aho/nemoclaw.sock\nOllama Models: nomic-embed-text:latest, haervwe/GLM-4.6V-Flash-9B:latest, nemotron-mini:4b, qwen3.5:9b\n\n--- Members ---\nName                                | Kind         | Status                                  \n------------------------------------------------------------------------------------------\nQwen-3.5:9B                         | llm          | operational                             \nNemotron-mini:4B                    | llm          | gap: classification logic silences error\nGLM-4.6V-Flash-9B                   | llm          | gap: parsing logic converts real reviews\nChromaDB                            | daemon       | unknown                                 \nNomic-Embed-Text                    | daemon       | unknown                                 \nOpenClaw                            | daemon       | unknown                                 \nNemoClaw                            | daemon       | operational                             \nmcp-firebase-tools                  | mcp_server   | unknown                                 \nmcp-context7                        | mcp_server   | operational                             \nmcp-firecrawl                       | mcp_server   | unknown                                 \nmcp-playwright                      | mcp_server   | operational                             \nmcp-dart                            | mcp_server   | unknown                                 \nmcp-server-filesystem               | mcp_server   | operational",
+    "matched": true
+  },
+  {
+    "name": "status_json_output",
+    "command": "aho council status --json | jq '.members | length'",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "17",
+    "matched": true
+  },
+  {
+    "name": "member_filter_works",
+    "command": "aho council status --member qwen --json | jq -r '.name'",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "Qwen-3.5:9B",
+    "matched": true
+  },
+  {
+    "name": "verbose_includes_g083",
+    "command": "aho council status --verbose 2>&1 | grep -cE \"G083|anti.?pattern|silent\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "2",
+    "matched": true
+  },
+  {
+    "name": "dashboard_api_responds",
+    "command": "curl -s http://127.0.0.1:7800/api/council | jq -r '.members | length'",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "17",
+    "matched": true
+  },
+  {
+    "name": "tests_pass",
+    "command": "pytest tests/test_council_status.py -v 2>&1 | tail -1",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================== 7 passed in 1.56s ===============================",
+    "matched": true
+  },
+  {
+    "name": "no_new_baseline_regressions",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  }
+]

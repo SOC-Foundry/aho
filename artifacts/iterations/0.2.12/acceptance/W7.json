@@ -1,0 +1,66 @@
+[
+  {
+    "name": "renderer_module_importable",
+    "command": "python -c \"from aho.dashboard.lego.renderer import render_council_svg; from aho.council.status import collect_status; svg = render_council_svg(collect_status()); assert svg.startswith('<svg'); assert 'qwen' in svg.lower() or 'Qwen' in svg; print('ok')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok",
+    "matched": true
+  },
+  {
+    "name": "svg_artifact_written",
+    "command": "test -f artifacts/visualizations/lego-office-0.2.12.svg; and wc -c < artifacts/visualizations/lego-office-0.2.12.svg",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "6778",
+    "matched": true
+  },
+  {
+    "name": "svg_contains_all_members",
+    "command": "python -c \"svg = open('artifacts/visualizations/lego-office-0.2.12.svg').read(); members = ['Qwen', 'Nemotron', 'GLM', 'NemoClaw', 'context7']; missing = [m for m in members if m not in svg]; print('missing:', missing if missing else 'none')\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "missing: none",
+    "matched": true
+  },
+  {
+    "name": "color_encoding_present",
+    "command": "python -c \"svg = open('artifacts/visualizations/lego-office-0.2.12.svg').read(); has_green = '#' in svg and ('4ade80' in svg.lower() or '22c55e' in svg.lower() or 'green' in svg.lower()); has_red = 'ef4444' in svg.lower() or 'dc2626' in svg.lower() or 'red' in svg.lower(); print('green=' + str(has_green) + ' red=' + str(has_red))\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "green=True red=True",
+    "matched": true
+  },
+  {
+    "name": "dashboard_lego_route_responds",
+    "command": "curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:7800/lego/",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "200",
+    "matched": true
+  },
+  {
+    "name": "api_lego_returns_data",
+    "command": "curl -s http://127.0.0.1:7800/api/lego | jq -r '.figures | length'",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "17",
+    "matched": true
+  },
+  {
+    "name": "tests_pass",
+    "command": "pytest tests/test_lego_renderer.py -v 2>&1 | tail -1",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================== 5 passed in 0.33s ===============================",
+    "matched": true
+  },
+  {
+    "name": "no_new_baseline_regressions",
+    "command": "python -c \"from aho.acceptance import baseline_regression_check, run_check; r = run_check(baseline_regression_check()); print('baseline-stable' if r.passed else r.actual_output)\"",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "baseline-stable",
+    "matched": true
+  }
+]

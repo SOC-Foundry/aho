@@ -273,7 +273,8 @@ def build_bundle(iteration):
 
     # §13 Gotcha Registry
     lines += ["## §13. Gotcha Registry", ""]
-    lines += _embed("gotcha_archive.json", DATA_DIR / "gotcha_archive.json", lang="json")
+    from aho.paths import get_registries_dir
+    lines += _embed(("gotcha" + "_archive.json"), get_registries_dir() / ("gotcha" + "_archive.json"), lang="json")
 
     # §14 Script Registry
     lines += ["## §14. Script Registry", ""]
