@@ -17,7 +17,7 @@
 | C13 | iao config check | `iao check config` | yes | Config integrity |
 | C14 | iao path-agnostic | `cd /tmp && iao status \| grep -q project` | yes | Path resolution |
 
-## 0.1.3 Notes
+## 0.2.11 Notes
 
 - Python package moved to src-layout. Import path unchanged (`import iao`); filesystem path is now `src/aho/` instead of `iao/iao/`.
 - Iteration docs consolidated under `docs/iterations/` (was `artifacts/docs/iterations/`).

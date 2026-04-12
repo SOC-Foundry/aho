@@ -1,0 +1,47 @@
+[
+  {
+    "check_name": "v2_schema_emit",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "",
+    "matched": null,
+    "duration_seconds": 1.182,
+    "error": null
+  },
+  {
+    "check_name": "cli_acceptance_file_flag",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "workstream_complete emitted for W_TEST2 (status=pass) with 3 acceptance results\n",
+    "matched": null,
+    "duration_seconds": 1.766,
+    "error": null
+  },
+  {
+    "check_name": "tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 8 items\n\nartifacts/tests/test_workstream_events_v2.py::test_v2_emit_with_acceptance_results PASSED [ 12%]\nartifacts/tests/test_workstream_events_v2.py::test_v1_emit_no_acceptance_results PASSED [ 25%]\nartifacts/tests/test_workstream_events_v2.py::test_v2_event_acceptance_results_parseable PASSED [ 37%]\nartifacts/tests/test_workstream_events_v2.py::test_v1_event_missing_acceptance_defaults_empty PASSED [ 50%]\nartifacts/tests/test_workstream_events_v2.py::test_acceptance_file_loads_json PASSED [ 62%]\nartifacts/tests/test_workstream_events_v2.py::test_acceptance_file_invalid_json_raises PASSED [ 75%]\nartifacts/tests/test_workstream_events_v2.py::test_cli_acceptance_file_invalid_json_exits_1 PASSED [ 87%]\nartifacts/tests/test_workstream_events_v2.py::test_report_builder_acceptance_column PASSED [100%]\n\n============================== 8 passed in 0.21s ===============================\n",
+    "matched": true,
+    "duration_seconds": 0.462,
+    "error": null
+  },
+  {
+    "check_name": "report_renders_acceptance_column",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "| WS | Title | Status | MCP Used | Acceptance | Notes |\n| W1 | AcceptanceCheck primitive | pass | none \u2014 Python primitive | 3 checks, all pass (see acceptance/W1.json) | 12 tests |\n- [ ] AcceptanceCheck results verified (W3-W19)\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "w1_retroactive_patch",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "",
+    "matched": null,
+    "duration_seconds": 1.542,
+    "error": null
+  }
+]

@@ -31,13 +31,14 @@ def check():
 
         # §22 floor check (Agentic Components)
         # We check the event log directly since §22 is derived from it
-        event_log_path = root / "data" / "aho_event_log.jsonl"
+        from aho.logger import event_log_path as _event_log_path
+        log_path = _event_log_path()
         unique_components = 0
-        if event_log_path.exists():
+        if log_path.exists():
             try:
                 from collections import defaultdict
                 events = []
-                for line in event_log_path.read_text().splitlines():
+                for line in log_path.read_text().splitlines():
                     if not line.strip(): continue
                     ev = json.loads(line)
                     if ev.get("iteration") == iteration:

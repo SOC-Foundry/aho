@@ -2,11 +2,16 @@
 """Structured event logger for AHO P3 Diligence.
 
 Logs all agent communications (LLM calls, MCP calls, API calls, commands)
-to data/aho_event_log.jsonl in append-only JSONL format.
+to ~/.local/share/aho/events/aho_event_log.jsonl in append-only JSONL format.
+
+0.2.11 W7: relocated from data/aho_event_log.jsonl to XDG install surface.
+Size-based rotation: 100MB rotate, keep 3 generations.
 """
 import json
 import os
+import shutil
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -28,17 +33,118 @@ if not _otel_disabled:
         exporter = OTLPSpanExporter(endpoint="http://127.0.0.1:4317", insecure=True)
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)
-        _otel_tracer = trace.get_tracer("aho", "0.2.1")
+        _otel_tracer = trace.get_tracer("aho", "0.2.11")
     except Exception as _otel_err:
         # Silently fall back — collector may not be running
         _otel_tracer = None
 
+
+# --- Event log path resolution ---
+
+_EVENTS_DIR = Path.home() / ".local" / "share" / "aho" / "events"
+_EVENT_LOG_FILENAME = "aho_event_log.jsonl"
+_ROTATION_MAX_BYTES = 100 * 1024 * 1024  # 100MB
+_ROTATION_KEEP = 3
+_last_rotation_check = 0.0
+_ROTATION_CHECK_INTERVAL = 60  # seconds
+
+
+def event_log_path() -> Path:
+    """Return the canonical event log path."""
+    return _EVENTS_DIR / _EVENT_LOG_FILENAME
+
+
+def _old_event_log_path() -> Path | None:
+    """Return old data/ event log path if it exists."""
+    try:
+        root = find_project_root()
+        old = root / "data" / _EVENT_LOG_FILENAME
+        if old.exists():
+            return old
+    except Exception:
+        pass
+    return None
+
+
+def migrate_event_log() -> bool:
+    """Migrate event log from data/ to ~/.local/share/aho/events/.
+
+    Copy-verify-delete: copies, verifies line count + last line match,
+    deletes original only on success. Returns True if migration happened.
+    """
+    old = _old_event_log_path()
+    new = event_log_path()
+
+    if old is None:
+        return False  # nothing to migrate
+    if new.exists():
+        return False  # already migrated
+
+    _EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Snapshot old file size before copy (file may grow from heartbeats)
+    old_size = old.stat().st_size
+
+    # Copy exact bytes
+    shutil.copy2(str(old), str(new))
+
+    # Verify: new file size matches snapshot (copy is atomic)
+    new_size = new.stat().st_size
+    if new_size != old_size:
+        new.unlink(missing_ok=True)
+        print(f"[aho.logger] Migration ABORTED: size mismatch "
+              f"(old={old_size}, new={new_size})", file=sys.stderr)
+        return False
+
+    # Delete original
+    old.unlink()
+    print(f"[aho.logger] Migrated {old_size} bytes to {new}", file=sys.stderr)
+    return True
+
+
+def _rotate_if_needed():
+    """Size-based rotation, debounced to once per minute."""
+    global _last_rotation_check
+    now = time.monotonic()
+    if now - _last_rotation_check < _ROTATION_CHECK_INTERVAL:
+        return
+    _last_rotation_check = now
+
+    log = event_log_path()
+    if not log.exists():
+        return
+    try:
+        size = log.stat().st_size
+    except OSError:
+        return
+    if size < _ROTATION_MAX_BYTES:
+        return
+
+    # Rotate: .3 deleted, .2→.3, .1→.2, current→.1
+    for i in range(_ROTATION_KEEP, 0, -1):
+        src = _EVENTS_DIR / f"{_EVENT_LOG_FILENAME}.{i}"
+        if i == _ROTATION_KEEP:
+            src.unlink(missing_ok=True)
+        else:
+            dst = _EVENTS_DIR / f"{_EVENT_LOG_FILENAME}.{i + 1}"
+            if src.exists():
+                src.rename(dst)
+    # current → .1
+    dst1 = _EVENTS_DIR / f"{_EVENT_LOG_FILENAME}.1"
+    log.rename(dst1)
+
+
+# --- Path initialization ---
+
+# Ensure events dir exists and migrate if needed
 try:
-    root = find_project_root()
-    LOG_PATH = str(get_data_dir() / "aho_event_log.jsonl")
+    _EVENTS_DIR.mkdir(parents=True, exist_ok=True)
+    migrate_event_log()
 except Exception:
-    # Fallback to local data dir if project root not found
-    LOG_PATH = "data/aho_event_log.jsonl"
+    pass
+
+LOG_PATH = str(event_log_path())
+
 
 class AhoLoggerMisconfigured(RuntimeError):
     """Raised when iteration cannot be resolved from env or .aho.json."""
@@ -146,20 +252,20 @@ def log_workstream_complete(workstream_id, status, summary):
     """ADR-022: Append a structured workstream completion entry to the build log. (10.69 W3)"""
     from datetime import datetime
     import json
-    
+
     try:
         root = find_project_root()
         aho_json = root / ".aho.json"
-        
+
         prefix = "aho"
         if aho_json.exists():
             config = json.loads(aho_json.read_text())
             prefix = config.get("artifact_prefix") or config.get("name") or config.get("project_code") or "aho"
-        
+
         # aho 0.1.13: build logs live in artifacts/iterations/<version>/
         iter_dir = get_iterations_dir() / _ITERATION
         build_log_path = iter_dir / f"{prefix}-build-log-{_ITERATION}.md"
-        
+
         if not build_log_path.exists():
             # Fallback to simple name
             alt_path = iter_dir / "build-log.md"
@@ -185,7 +291,7 @@ def log_workstream_complete(workstream_id, status, summary):
         ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         status_tag = status.upper()
         entry = f"\n### {workstream_id} — {status_tag}\n\n- {summary}\n- Completed: {ts}\n"
-        
+
         if build_log_path.exists():
             with open(build_log_path, 'a') as f:
                 f.write(entry)
@@ -198,19 +304,22 @@ def log_workstream_complete(workstream_id, status, summary):
                     f.write(entry)
             except Exception:
                 pass
-            
+
     except Exception as e:
         print(f"[aho.log] ERROR: {e}")
 
 
-def log_event(event_type, source_agent, target, action,
+def log_event(event_type, source_agent="", target="", action="",
               input_summary="", output_summary="",
               tokens=None, latency_ms=None,
               status="success", error=None, gotcha_triggered=None,
               workstream_id=None):
     """Log a structured event to the JSONL event stream."""
+    # Rotation check (debounced)
+    _rotate_if_needed()
+
     ws_id = workstream_id or os.environ.get("AHO_WORKSTREAM_ID", os.environ.get("IAO_WORKSTREAM_ID"))
-    
+
     event = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "iteration": _ITERATION,

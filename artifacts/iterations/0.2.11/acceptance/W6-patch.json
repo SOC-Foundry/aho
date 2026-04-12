@@ -1,0 +1,56 @@
+[
+  {
+    "check_name": "design_doc_has_11_pillars",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "16\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "design_doc_contains_canonical_pillars",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "1\n",
+    "matched": true,
+    "duration_seconds": 0.001,
+    "error": null
+  },
+  {
+    "check_name": "plan_doc_references_eleven",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "gate_requires_exactly_11",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.024,
+    "error": null
+  },
+  {
+    "check_name": "gotcha_g073_registered",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G073\n",
+    "matched": true,
+    "duration_seconds": 0.017,
+    "error": null
+  },
+  {
+    "check_name": "no_regression",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "======================== 45 passed, 1 warning in 1.83s =========================\n",
+    "matched": true,
+    "duration_seconds": 2.288,
+    "error": null
+  }
+]

@@ -55,3 +55,7 @@
 ## Communication
 
 Direct and concise. No iteration jargon. The user is not a pipeline builder — they want a quick answer or action on their files.
+
+---
+
+*CLAUDE-run.md for aho Phase 0 — updated during 0.2.11 W0.*

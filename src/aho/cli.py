@@ -367,9 +367,33 @@ def cmd_iteration(args, parser):
             else:
                 print(f"{args.ws_id} already started (idempotent skip)")
         elif ws_cmd == "complete":
-            result = emit_workstream_complete(args.ws_id, status=args.status, summary=args.summary)
+            acceptance = None
+            acceptance_file = getattr(args, 'acceptance_file', None)
+            if acceptance_file:
+                try:
+                    from aho.workstream_events import load_acceptance_file
+                    acceptance = load_acceptance_file(acceptance_file)
+                except (json.JSONDecodeError, ValueError) as e:
+                    print(f"ERROR: Invalid acceptance file: {e}")
+                    sys.exit(1)
+                except FileNotFoundError:
+                    print(f"ERROR: Acceptance file not found: {acceptance_file}")
+                    sys.exit(1)
+            agents = args.agents.split(",") if args.agents else None
+            harness = args.harness_contributions.split(",") if args.harness_contributions else None
+            result = emit_workstream_complete(
+                args.ws_id, status=args.status, summary=args.summary,
+                acceptance_results=acceptance,
+                agents_involved=agents,
+                token_count=args.token_count,
+                harness_contributions=harness,
+                ad_hoc_forensics_minutes=args.forensics_minutes,
+            )
             if result:
-                print(f"workstream_complete emitted for {args.ws_id} (status={args.status})")
+                msg = f"workstream_complete emitted for {args.ws_id} (status={args.status})"
+                if acceptance is not None:
+                    msg += f" with {len(acceptance)} acceptance results"
+                print(msg)
             else:
                 print(f"{args.ws_id} already completed (idempotent skip)")
         else:
@@ -620,6 +644,11 @@ def main():
     pit_ws_complete.add_argument("ws_id", help="Workstream ID (e.g. W0, W1)")
     pit_ws_complete.add_argument("--status", default="pass", choices=["pass", "partial", "fail", "deferred"], help="Outcome status")
     pit_ws_complete.add_argument("--summary", default="", help="One-line summary")
+    pit_ws_complete.add_argument("--acceptance-file", default=None, help="Path to AcceptanceResult JSON file")
+    pit_ws_complete.add_argument("--agents", default=None, help="Comma-separated agent names")
+    pit_ws_complete.add_argument("--token-count", type=int, default=None, help="Rough total tokens")
+    pit_ws_complete.add_argument("--harness-contributions", default=None, help="Comma-separated harness contributions")
+    pit_ws_complete.add_argument("--forensics-minutes", type=int, default=None, help="Minutes spent on ad-hoc forensics")
 
     pit_grad = pits.add_parser("graduate", help="Analyze iteration for phase graduation")
     pit_grad.add_argument("iteration")
@@ -648,7 +677,8 @@ def main():
         has_fail = False
         print(f"aho doctor {level}")
         print("─" * (11 + len(level)))
-        for name, (status, msg) in results.items():
+        for name, result_tuple in results.items():
+            status, msg = result_tuple[0], result_tuple[1]
             tag = {"ok": "[ok]", "pass": "[ok]", "warn": "[WARN]", "fail": "[FAIL]", "deferred": "[DEFERRED]"}.get(status, f"[{status}]")
             print(f"{tag:10} {name:20}: {msg}")
             if status == "fail":
@@ -758,9 +788,9 @@ def main():
                     print(f"{c.name:<30} {c.kind:<20} {c.status:<10} {c.path}")
                 print(f"\nTotal: {len(components)}")
         elif args.components_cmd == "attribution":
-            from aho.paths import get_data_dir
+            from aho.logger import event_log_path as _event_log_path
             import json as _json
-            log_path = get_data_dir() / "aho_event_log.jsonl"
+            log_path = _event_log_path()
             if not log_path.exists():
                 print("(no event log)")
             else:

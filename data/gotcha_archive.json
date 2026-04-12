@@ -230,7 +230,7 @@
         "Component coverage reports 'ok' based on installation, not usage"
       ],
       "mitigation": "Smoke tests per tool (bin/aho-mcp smoke). MCP-first mandate in CLAUDE.md/GEMINI.md. Run report 'MCP Tools Invoked' section per workstream.",
-      "context": "Surfaced in 0.2.8 W1. MCP fleet installed since 0.2.3, zero invocations across 0.2.3–0.2.7. Fixed in 0.2.8 W2–W5.",
+      "context": "Surfaced in 0.2.8 W1. MCP fleet installed since 0.2.3, zero invocations across 0.2.3\u20130.2.7. Fixed in 0.2.8 W2\u2013W5.",
       "surfaced_in": "0.2.8",
       "status": "fixed in 0.2.8 W2-W5"
     },
@@ -275,6 +275,129 @@
       "context": "Surfaced in 0.2.8 W8. harness-watcher was enabled in 0.2.5 W5 but never started. Fixed in 0.2.8 W8.",
       "surfaced_in": "0.2.8",
       "status": "fixed in 0.2.8 W8"
+    },
+    {
+      "id": "aho-G070",
+      "title": "Stale __pycache__ causes silent daemon failure",
+      "pattern": "Daemon starts, reports active, memory/tasks suggest it's not actually running new code. /status, /ws commands silently drop or behave unexpectedly.",
+      "symptoms": [
+        "Daemon reports active but serves stale behavior",
+        "__pycache__/*.pyc compiled against older .py files loaded on import",
+        "Code changes appear to have no effect after daemon restart"
+      ],
+      "mitigation": "find src/aho -type d -name __pycache__ -exec rm -rf {} + before daemon restart after any src/aho/**/*.py change.",
+      "context": "Surfaced in 0.2.11 W2 forensic. Telegram daemon served stale workstream_events.py after W2 code changes.",
+      "surfaced_in": "0.2.11",
+      "status": "mitigation documented, no code fix (purge is manual)"
+    },
+    {
+      "id": "aho-G071",
+      "title": "Daemon code change requires restart contract",
+      "pattern": "Code changes to daemon-referenced modules don't take effect until daemons are restarted. aho-openclaw and aho-telegram load code at start, do not reload dynamically.",
+      "symptoms": [
+        "Modified function behavior not observed after pip install -e .",
+        "Daemon continues to serve old logic until systemctl --user restart",
+        "Test suite passes but live daemon uses stale code"
+      ],
+      "mitigation": "Any workstream touching src/aho/agents/openclaw.py, src/aho/telegram/*.py, src/aho/workstream_events.py, src/aho/cli.py, or imports thereof MUST restart both daemons. Verify via daemon_healthy() AcceptanceCheck.",
+      "context": "Surfaced in 0.2.11 W2 forensic. Formalized as contract for all future workstreams.",
+      "surfaced_in": "0.2.11",
+      "status": "contract documented"
+    },
+    {
+      "id": "aho-G072",
+      "title": "Session-locked kills inbound thread silently",
+      "pattern": "aho-telegram reports active, /status (notifications socket) works, but /ws commands and free-text messages get no response.",
+      "symptoms": [
+        "Telegram bot responds to nothing despite systemd showing active",
+        "Outbound notifications (workstream_complete) still delivered",
+        "Inbound polling thread dead, listener socket unaffected"
+      ],
+      "mitigation": "Fix candidates (not executed in 0.2.11): (a) auto-unlock via kernel keyring cache, (b) emit health event on thread death for harness-watcher, (c) retry-with-backoff on get_secret(). Tracked for 0.2.12 inbound-thread-resilience workstream.",
+      "context": "Surfaced in 0.2.11 W2 forensic. Secret session locked at daemon startup kills inbound polling thread via RuntimeError.",
+      "surfaced_in": "0.2.11",
+      "status": "tracked for 0.2.12"
+    },
+    {
+      "id": "aho-G073",
+      "title": "Agent guidance can introduce canonical drift",
+      "pattern": "Planner-produced artifacts reference fabricated canonical content (counts, names, lists). Drift propagates across iteration artifacts.",
+      "symptoms": [
+        "Design doc \u00a75 lists 10 pillars when canonical is 11",
+        "Pillar names/descriptions differ from README source of truth",
+        "Downstream artifacts (plan, bundle) inherit fabricated content"
+      ],
+      "mitigation": "Planner MUST read canonical source (README, ADR, pattern doc) before producing artifacts that reference canonical content. Quote verbatim into decisions.md in W0 so downstream artifacts pull from verified source, not planner memory. Count-based gates (pillars_present, component count) catch drift after artifacts are written \u2014 prevention is at W0, detection is at postflight.",
+      "context": "0.2.11 W6 \u2014 planner (Claude chat) produced design doc \u00a75 with fabricated 10-pillar list when canonical is 11. Gate caught drift at W6. Resolved via W6-patch.",
+      "surfaced_in": "0.2.11",
+      "status": "mitigation documented",
+      "registered_at": "2026-04-12"
+    },
+    {
+      "id": "aho-G074",
+      "title": "Orphan process survives service restart",
+      "pattern": "systemd service restart completes, daemon_healthy() returns true, but stale terminal-launched process continues writing to old paths/sockets with stale code.",
+      "symptoms": [
+        "Old event log path recreated after migration",
+        "Duplicate events from two processes writing same event type",
+        "fuser on migrated paths returns non-systemd PIDs"
+      ],
+      "mitigation": "Pre-migration process census: ps aux | grep -E 'aho|telegram|openclaw|nemoclaw' | grep -v grep. Any non-systemd aho process must be killed before migration. Verification: fuser on migrated paths returns empty.",
+      "context": "Surfaced in 0.2.11 W7. Terminal-launched telegram process (PID from 06:55) survived systemctl restart, wrote heartbeats to old data/ path.",
+      "surfaced_in": "0.2.11",
+      "status": "mitigation documented",
+      "registered_at": "2026-04-12"
+    },
+    {
+      "id": "aho-G075",
+      "title": "Service unit files hardcode paths that bypass code resolution",
+      "pattern": "Code-level path resolution is correct but service continues using old path because systemd unit ExecStart passes path as CLI argument.",
+      "symptoms": [
+        "Daemon writes to correct path when tested manually but wrong path under systemd",
+        "harness-watcher --watch argument points to old data/ path",
+        "daemon-reload required after unit file edit"
+      ],
+      "mitigation": "Service unit files MUST NOT pass paths as args when code can resolve via XDG helpers. If path must be in unit file (e.g., --watch), regenerate unit at install time from event_log_path(). Lint candidate for W18.",
+      "context": "Surfaced in 0.2.11 W7. aho-harness-watcher.service had hardcoded data/aho_event_log.jsonl path.",
+      "surfaced_in": "0.2.11",
+      "status": "mitigation documented",
+      "registered_at": "2026-04-12"
+    },
+    {
+      "id": "aho-G076",
+      "title": "Daemon restart is not migration verification",
+      "pattern": "daemon_healthy() returns true, services restarted, but old paths still accessed. Positive assertion (services healthy) does not cover negative assertion (no stray processes on old paths).",
+      "symptoms": [
+        "All daemon_healthy() checks pass but old file recreated within 30s",
+        "Process census reveals non-systemd orphan processes",
+        "Migration considered complete when it is not"
+      ],
+      "mitigation": "Add migration-verify step combining process census + fuser on old paths + lsof on old sockets. Track as aho migration verify CLI for 0.2.12.",
+      "context": "Surfaced in 0.2.11 W7. Three separate rounds of restart needed because each round revealed a new orphan source.",
+      "surfaced_in": "0.2.11",
+      "status": "tracked for 0.2.12",
+      "registered_at": "2026-04-12"
+    },
+    {
+      "id": "aho-G077",
+      "title": "Planner-executor bias consumes council capacity",
+      "pattern": "Planner defaults prompts to 'you are claude-code executing X' without querying council state. Executor carries work intended for local free fleet. Pillar 1 (delegate everything delegable) becomes aspirational rather than operational. Pillar 8 (delegate ratio) cannot be measured because nothing is delegated.",
+      "symptoms": [
+        "All workstreams executed by claude-code, zero by council agents",
+        "Schema v3 agents_involved always shows single executor",
+        "ad_hoc_forensics_minutes high on work local models could handle",
+        "Pillar 8 cost delta unmeasurable \u2014 no baseline for comparison"
+      ],
+      "mitigation": "Before drafting workstream prompts, planner must query aho council status (0.2.12 deliverable) to see operational agents + dispatch surfaces. Route tasks to council members by capability, not convenience. Schema v3 efficacy tracking measures delegate ratio per workstream; iteration retrospective checks trend against Pillar 8.",
+      "context": "Surfaced in 0.2.11 W9 close. 11 workstreams executed entirely by claude-code. Persona 3 validation (W9-W14) would have validated persona 3 for claude-code, not for the council architecture aho claims to be. Triggered strategic rescope: 0.2.12 becomes council-activation iteration.",
+      "surfaced_in": "0.2.11",
+      "status": "structural fix in 0.2.12",
+      "registered_at": "2026-04-12",
+      "related_pillars": [
+        1,
+        7,
+        8
+      ]
     }
   ]
 }

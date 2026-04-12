@@ -1,0 +1,47 @@
+[
+  {
+    "check_name": "pillars_present_passes_0211",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok: Trident + pillars present in design and README\n  ok       trident_heading: \u00a73 Trident heading present\n  ok       trident_mermaid_fence: mermaid code fence present\n  ok       trident_graph_bt: graph BT direction present\n  ok       trident_classdef_shaft: classDef shaft present\n  ok       trident_classdef_prong: classDef prong present\n  ok       trident_edges: 3 edge arrows found\n  ok       design_pillars: 10 pillars enumerated in design doc\n  ok       readme_pillars: All 11 pillars present in README\n",
+    "matched": true,
+    "duration_seconds": 0.035,
+    "error": null
+  },
+  {
+    "check_name": "pillars_present_fails_on_stub",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "Trident missing detected correctly\n",
+    "matched": true,
+    "duration_seconds": 0.025,
+    "error": null
+  },
+  {
+    "check_name": "template_file_exists",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 8 items\n\nartifacts/tests/test_pillars_trident.py::test_valid_trident_passes_all_checks PASSED [ 12%]\nartifacts/tests/test_pillars_trident.py::test_missing_heading_fails PASSED [ 25%]\nartifacts/tests/test_pillars_trident.py::test_missing_mermaid_fence_fails PASSED [ 37%]\nartifacts/tests/test_pillars_trident.py::test_missing_graph_bt_fails PASSED [ 50%]\nartifacts/tests/test_pillars_trident.py::test_missing_classdef_shaft_fails PASSED [ 62%]\nartifacts/tests/test_pillars_trident.py::test_missing_edges_fails PASSED [ 75%]\nartifacts/tests/test_pillars_trident.py::test_gate_returns_gate_result_dict PASSED [ 87%]\nartifacts/tests/test_pillars_trident.py::test_real_design_doc_passes PASSED [100%]\n\n============================== 8 passed in 0.01s ===============================\n",
+    "matched": true,
+    "duration_seconds": 0.232,
+    "error": null
+  },
+  {
+    "check_name": "no_regression",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "======================== 37 passed, 1 warning in 1.86s =========================\n",
+    "matched": true,
+    "duration_seconds": 2.308,
+    "error": null
+  }
+]

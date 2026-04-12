@@ -42,6 +42,8 @@ ENV/
 
 # aho runtime data
 data/chroma/
+data/aho_event_log.jsonl
+data/aho_event_log.jsonl.*
 app/build/
 
 # Machine-local MCP config (generated from .mcp.json.tpl by aho-bootstrap)

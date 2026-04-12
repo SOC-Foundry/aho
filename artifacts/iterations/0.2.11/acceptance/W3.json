@@ -1,0 +1,56 @@
+[
+  {
+    "check_name": "gates_reconciled",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "artifacts_present: OK: all 3 artifacts present (aho)\niteration_complete: OK: All Qwen-generated artifacts present\nbundle_completeness: OK: bundle includes all iteration artifacts\nALL GATES OK\n",
+    "matched": true,
+    "duration_seconds": 0.023,
+    "error": null
+  },
+  {
+    "check_name": "daemon_healthy_helper_available",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "passed=True\n",
+    "matched": true,
+    "duration_seconds": 0.052,
+    "error": null
+  },
+  {
+    "check_name": "gotchas_registered",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G070 aho-G071 aho-G072\nALL GOTCHAS OK\n",
+    "matched": true,
+    "duration_seconds": 0.019,
+    "error": null
+  },
+  {
+    "check_name": "daemon_tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 4 items\n\nartifacts/tests/test_daemon_healthy.py::test_healthy_unit_passes PASSED  [ 25%]\nartifacts/tests/test_daemon_healthy.py::test_tasks_below_threshold_fails PASSED [ 50%]\nartifacts/tests/test_daemon_healthy.py::test_memory_below_threshold_fails PASSED [ 75%]\nartifacts/tests/test_daemon_healthy.py::test_missing_unit_fails PASSED   [100%]\n\n============================== 4 passed in 0.12s ===============================\n",
+    "matched": true,
+    "duration_seconds": 0.342,
+    "error": null
+  },
+  {
+    "check_name": "acceptance_tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 12 items\n\nartifacts/tests/test_acceptance.py::test_happy_path_exit_zero_no_pattern PASSED [  8%]\nartifacts/tests/test_acceptance.py::test_exit_code_mismatch PASSED       [ 16%]\nartifacts/tests/test_acceptance.py::test_pattern_miss PASSED             [ 25%]\nartifacts/tests/test_acceptance.py::test_command_not_found PASSED        [ 33%]\nartifacts/tests/test_acceptance.py::test_timeout_exceeded PASSED         [ 41%]\nartifacts/tests/test_acceptance.py::test_shell_escape_safety PASSED      [ 50%]\nartifacts/tests/test_acceptance.py::test_exit_and_pattern_combo_both_match PASSED [ 58%]\nartifacts/tests/test_acceptance.py::test_exit_ok_but_pattern_fails PASSED [ 66%]\nartifacts/tests/test_acceptance.py::test_pattern_ok_but_exit_fails PASSED [ 75%]\nartifacts/tests/test_acceptance.py::test_expected_nonzero_exit PASSED    [ 83%]\nartifacts/tests/test_acceptance.py::test_output_truncation PASSED        [ 91%]\nartifacts/tests/test_acceptance.py::test_serialize_results PASSED        [100%]\n\n============================== 12 passed in 1.04s ==============================\n",
+    "matched": true,
+    "duration_seconds": 1.252,
+    "error": null
+  },
+  {
+    "check_name": "v2_tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 8 items\n\nartifacts/tests/test_workstream_events_v2.py::test_v2_emit_with_acceptance_results PASSED [ 12%]\nartifacts/tests/test_workstream_events_v2.py::test_v1_emit_no_acceptance_results PASSED [ 25%]\nartifacts/tests/test_workstream_events_v2.py::test_v2_event_acceptance_results_parseable PASSED [ 37%]\nartifacts/tests/test_workstream_events_v2.py::test_v1_event_missing_acceptance_defaults_empty PASSED [ 50%]\nartifacts/tests/test_workstream_events_v2.py::test_acceptance_file_loads_json PASSED [ 62%]\nartifacts/tests/test_workstream_events_v2.py::test_acceptance_file_invalid_json_raises PASSED [ 75%]\nartifacts/tests/test_workstream_events_v2.py::test_cli_acceptance_file_invalid_json_exits_1 PASSED [ 87%]\nartifacts/tests/test_workstream_events_v2.py::test_report_builder_acceptance_column PASSED [100%]\n\n============================== 8 passed in 0.21s ===============================\n",
+    "matched": true,
+    "duration_seconds": 0.465,
+    "error": null
+  }
+]

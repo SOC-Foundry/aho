@@ -18,7 +18,12 @@ def _load_checkpoint(root: Path) -> dict:
 
 
 def _load_events(data_dir: Path, iteration: str) -> list[dict]:
-    log = data_dir / "aho_event_log.jsonl"
+    # Primary: XDG events path (0.2.11 W7+)
+    from aho.logger import event_log_path
+    log = event_log_path()
+    if not log.exists():
+        # Fallback to legacy data/ path
+        log = data_dir / "aho_event_log.jsonl"
     if not log.exists():
         return []
     events = []
@@ -67,8 +72,8 @@ def _section_executive_summary(checkpoint: dict, events: list[dict], postflight:
     pending = total - passed - failed
 
     pf_total = len(postflight)
-    pf_ok = sum(1 for s, _ in postflight.values() if s == "ok")
-    pf_fail = sum(1 for s, _ in postflight.values() if s == "fail")
+    pf_ok = sum(1 for t in postflight.values() if t[0] == "ok")
+    pf_fail = sum(1 for t in postflight.values() if t[0] == "fail")
 
     lines = [
         "## Executive Summary\n",
@@ -101,6 +106,20 @@ def _wall_clock_for_ws(events: list[dict], workstream_id: str) -> str:
     return f"{int(delta_seconds // 60)}m {int(delta_seconds % 60)}s"
 
 
+def _acceptance_summary_for_ws(events: list[dict], workstream_id: str) -> str:
+    """Extract acceptance results summary from workstream_complete event."""
+    for ev in reversed(events):
+        if (ev.get("workstream_id") == workstream_id
+                and ev.get("event_type") == "workstream_complete"
+                and ev.get("schema_version") == 2):
+            results = ev.get("acceptance_results", [])
+            if not results:
+                return "0/0"
+            passed = sum(1 for r in results if r.get("passed"))
+            return f"{passed}/{len(results)} checks"
+    return "prose (bootstrap)"
+
+
 def _section_workstream_detail(checkpoint: dict, events: list[dict]) -> str:
     ws = checkpoint.get("workstreams", {})
     from collections import Counter
@@ -108,8 +127,8 @@ def _section_workstream_detail(checkpoint: dict, events: list[dict]) -> str:
 
     lines = [
         "## Workstream Detail\n",
-        "| Workstream | Status | Agent | Events | Wall Clock |",
-        "|---|---|---|---|---|",
+        "| Workstream | Status | Agent | Acceptance | Events | Wall Clock |",
+        "|---|---|---|---|---|---|",
     ]
     executor = checkpoint.get("executor", "unknown")
     for ws_id in sorted(ws.keys()):
@@ -122,7 +141,8 @@ def _section_workstream_detail(checkpoint: dict, events: list[dict]) -> str:
             agent = ws_val.get("agent", ws_val.get("executor", executor))
         count = ws_event_counts.get(ws_id, 0)
         wall = _wall_clock_for_ws(events, ws_id)
-        lines.append(f"| {ws_id} | {status} | {agent} | {count} | {wall} |")
+        acceptance = _acceptance_summary_for_ws(events, ws_id)
+        lines.append(f"| {ws_id} | {status} | {agent} | {acceptance} | {count} | {wall} |")
     lines.append("")
     return "\n".join(lines)
 
@@ -148,8 +168,20 @@ def _section_postflight(postflight: dict) -> str:
         "| Gate | Status | Message |",
         "|---|---|---|",
     ]
-    for name, (status, msg) in sorted(postflight.items()):
+    for name, result_tuple in sorted(postflight.items()):
+        # Backward compat: result_tuple is (status, msg) or (status, msg, checks)
+        if len(result_tuple) >= 3:
+            status, msg, checks = result_tuple[0], result_tuple[1], result_tuple[2]
+        else:
+            status, msg = result_tuple[0], result_tuple[1]
+            checks = None
         lines.append(f"| {name} | {status} | {msg} |")
+        if checks:
+            for c in checks:
+                c_name = c.get("name", c.get("check_name", "?")) if isinstance(c, dict) else getattr(c, "name", "?")
+                c_status = c.get("status", "?") if isinstance(c, dict) else getattr(c, "status", "?")
+                c_msg = c.get("message", "") if isinstance(c, dict) else getattr(c, "message", "")
+                lines.append(f"|   - {c_name} | {c_status} | {c_msg} |")
     lines.append("")
     return "\n".join(lines)
 
@@ -199,7 +231,7 @@ def _section_carryovers(root: Path, iteration: str) -> str:
 def _section_next_recommendation(checkpoint: dict, postflight: dict) -> str:
     ws = checkpoint.get("workstreams", {})
     failed_ws = [k for k, v in ws.items() if (v if isinstance(v, str) else v.get("status", "")) == "fail"]
-    failed_gates = [k for k, (s, _) in postflight.items() if s == "fail"]
+    failed_gates = [k for k, t in postflight.items() if t[0] == "fail"]
 
     lines = ["## Next Iteration Recommendation\n"]
     if failed_ws:

@@ -1,0 +1,101 @@
+[
+  {
+    "check_name": "ws_status_denominator_fixed",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.196,
+    "error": null
+  },
+  {
+    "check_name": "workstream_start_sets_in_progress",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.119,
+    "error": null
+  },
+  {
+    "check_name": "ws_last_caption_routing",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.011,
+    "error": null
+  },
+  {
+    "check_name": "mcp_smoke_cli_works",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "\u001b[36m[aho-mcp] MCP Smoke Test Suite (0.2.8)\n\u001b[m\u001b[36m[aho-mcp] Running 9 server smoke tests...\n\u001b[m\u001b[36m[aho-mcp] ---\n\u001b[m\u001b[32m  [pass] context7\n\u001b[m\u001b[32m  [pass] dart\n",
+    "matched": true,
+    "duration_seconds": 9.239,
+    "error": null
+  },
+  {
+    "check_name": "mcp_readiness_has_protocol_column",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "gotchas_g074_g076_registered",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G074 aho-G075 aho-G076\n",
+    "matched": true,
+    "duration_seconds": 0.014,
+    "error": null
+  },
+  {
+    "check_name": "schema_v3_emit_with_efficacy_fields",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.127,
+    "error": null
+  },
+  {
+    "check_name": "changelog_has_0210_and_0211_entries",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "2\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "readme_has_review_timestamp",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "tests_pass_all_new",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================== 13 passed in 0.14s ==============================\n",
+    "matched": true,
+    "duration_seconds": 0.445,
+    "error": null
+  },
+  {
+    "check_name": "no_regression",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "======================== 51 passed, 1 warning in 1.85s =========================\n",
+    "matched": true,
+    "duration_seconds": 2.277,
+    "error": null
+  }
+]

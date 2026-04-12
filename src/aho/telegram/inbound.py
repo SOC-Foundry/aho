@@ -137,6 +137,26 @@ def _handle_status_info() -> str:
         return f"❌ doctor failed: {e}"
 
 
+def _get_planned_ws_count() -> int:
+    """Read plan doc to determine total planned workstream count."""
+    import re
+    try:
+        root = find_project_root()
+        config = json.loads((root / ".aho.json").read_text())
+        iteration = config.get("current_iteration", "")
+        prefix = config.get("artifact_prefix", "aho")
+        plan_path = root / "artifacts" / "iterations" / iteration / f"{prefix}-plan-{iteration}.md"
+        if plan_path.exists():
+            content = plan_path.read_text()
+            # Count ### W<N> headers in plan doc
+            ws_headers = re.findall(r"###?\s+W\d+", content)
+            if ws_headers:
+                return len(ws_headers)
+    except Exception:
+        pass
+    return 0
+
+
 def _handle_ws_status() -> str:
     """Read .aho.json + .aho-checkpoint.json, format current WS + proceed_awaited state."""
     root = find_project_root()
@@ -153,8 +173,9 @@ def _handle_ws_status() -> str:
         parts.append(f"*Status:* {data.get('status', '?')}")
         parts.append(f"*Current WS:* {data.get('current_workstream', '?')}")
         ws = data.get("workstreams", {})
-        passed = sum(1 for v in ws.values() if v == "pass")
-        parts.append(f"*Progress:* {passed}/{len(ws)} pass")
+        completed = sum(1 for v in ws.values() if v in ("pass", "fail", "partial"))
+        planned = _get_planned_ws_count() or len(ws)
+        parts.append(f"*Progress:* {completed}/{planned} → {completed}/{planned}")
         parts.append(f"*Executor:* {data.get('executor', '?')}")
         paused = data.get("proceed_awaited", False)
         parts.append(f"*Paused:* {'yes' if paused else 'no'}")
@@ -190,8 +211,8 @@ def _handle_ws_proceed() -> str:
 
 def _handle_ws_last() -> str:
     """Read last workstream_complete event from event log."""
-    from aho.paths import get_data_dir
-    log_path = get_data_dir() / "aho_event_log.jsonl"
+    from aho.logger import event_log_path
+    log_path = event_log_path()
     if not log_path.exists():
         return "_(no event log)_"
 
@@ -329,7 +350,8 @@ def poll_loop(stop_event: threading.Event = None):
 
                 msg = update.get("message", {})
                 msg_chat_id = msg.get("chat", {}).get("id")
-                text = msg.get("text", "")
+                # Text from message body, or caption from document/photo attachment
+                text = msg.get("text", "") or msg.get("caption", "")
 
                 if not text or msg_chat_id not in allowed_chat_ids:
                     continue
@@ -352,8 +374,8 @@ def _auto_push_loop(token: str, chat_id: int, stop_event: threading.Event):
     Tails the file by tracking position. Checks every 5 seconds.
     Only fires once per event (position advances past it).
     """
-    from aho.paths import get_data_dir
-    log_path = get_data_dir() / "aho_event_log.jsonl"
+    from aho.logger import event_log_path
+    log_path = event_log_path()
 
     # Start at end of file to avoid replaying history
     pos = log_path.stat().st_size if log_path.exists() else 0

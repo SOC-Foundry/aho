@@ -43,10 +43,12 @@ def check(iteration=None):
     iter_dir = get_iterations_dir() / version
 
     for atype in ["build", "report", bundle_kind]:
-        # Handle build vs build-log naming
+        # Handle naming variants: build/build-log, report/run
         atypes = [atype]
         if atype == "build":
             atypes.append("build-log")
+        elif atype == "report":
+            atypes.append("run")
             
         found = False
         for a in atypes:

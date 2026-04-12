@@ -1,0 +1,56 @@
+[
+  {
+    "check_name": "run_quality_emits_checks",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "run_quality: 5 checks\nstructural_gates: 4 checks\nrollup: worst([ok,ok,fail]) == fail\nVERBOSE GATES OK\n",
+    "matched": true,
+    "duration_seconds": 0.534,
+    "error": null
+  },
+  {
+    "check_name": "structural_gates_emits_checks",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "OK\n",
+    "matched": true,
+    "duration_seconds": 0.506,
+    "error": null
+  },
+  {
+    "check_name": "rollup_status_worst_of_children",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.026,
+    "error": null
+  },
+  {
+    "check_name": "report_renders_nested_checks",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "REPORT NESTED OK (1 sub-check rows)\n",
+    "matched": true,
+    "duration_seconds": 0.021,
+    "error": null
+  },
+  {
+    "check_name": "tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 6 items\n\nartifacts/tests/test_gate_verbosity.py::test_run_quality_emits_checks PASSED [ 16%]\nartifacts/tests/test_gate_verbosity.py::test_structural_gates_emits_checks PASSED [ 33%]\nartifacts/tests/test_gate_verbosity.py::test_rollup_status_worst_of_children PASSED [ 50%]\nartifacts/tests/test_gate_verbosity.py::test_gate_result_without_checks_backward_compat PASSED [ 66%]\nartifacts/tests/test_gate_verbosity.py::test_gate_result_with_checks_to_dict PASSED [ 83%]\nartifacts/tests/test_gate_verbosity.py::test_report_builder_renders_nested_checks PASSED [100%]\n\n=============================== warnings summary ===============================\nartifacts/tests/test_gate_verbosity.py::test_structural_gates_emits_checks\n  /home/kthompson/.local/lib/python3.14/site-packages/chromadb/telemetry/opentelemetry/__init__.py:128: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead\n    if asyncio.iscoroutinefunction(f):\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n========================= 6 passed, 1 warning in 0.42s =========================\n",
+    "matched": true,
+    "duration_seconds": 0.824,
+    "error": null
+  },
+  {
+    "check_name": "no_regression_w1_w3_tests",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 24 items\n\nartifacts/tests/test_acceptance.py::test_happy_path_exit_zero_no_pattern PASSED [  4%]\nartifacts/tests/test_acceptance.py::test_exit_code_mismatch PASSED       [  8%]\nartifacts/tests/test_acceptance.py::test_pattern_miss PASSED             [ 12%]\nartifacts/tests/test_acceptance.py::test_command_not_found PASSED        [ 16%]\nartifacts/tests/test_acceptance.py::test_timeout_exceeded PASSED         [ 20%]\nartifacts/tests/test_acceptance.py::test_shell_escape_safety PASSED      [ 25%]\nartifacts/tests/test_acceptance.py::test_exit_and_pattern_combo_both_match PASSED [ 29%]\nartifacts/tests/test_acceptance.py::test_exit_ok_but_pattern_fails PASSED [ 33%]\nartifacts/tests/test_acceptance.py::test_pattern_ok_but_exit_fails PASSED [ 37%]\nartifacts/tests/test_acceptance.py::test_expected_nonzero_exit PASSED    [ 41%]\nartifacts/tests/test_acceptance.py::test_output_truncation PASSED        [ 45%]\nartifacts/tests/test_acceptance.py::test_serialize_results PASSED        [ 50%]\nartifacts/tests/test_workstream_events_v2.py::test_v2_emit_with_acceptance_results PASSED [ 54%]\nartifacts/tests/test_workstream_events_v2.py::test_v1_emit_no_acceptance_results PASSED [ 58%]\nartifacts/tests/test_workstream_events_v2.py::test_v2_event_acceptance_results_parseable PASSED [ 62%]\nartifacts/tests/test_workstream_events_v2.py::test_v1_event_missing_acceptance_defaults_empty PASSED [ 66%]\nartifacts/tests/test_workstream_events_v2.py::test_acceptance_file_loads_json PASSED [ 70%]\nartifacts/tests/test_workstream_events_v2.py::test_acceptance_file_invalid_json_raises PASSED [ 75%]\nartifacts/tests/test_workstream_events_v2.py::test_cli_acceptance_file_invalid_json_exits_1 PASSED [ 79%]\nartifacts/tests/test_workstream_events_v2.py::test_report_builder_acceptance_column PASSED [ 83%]\nartifacts/tests/test_daemon_healthy.py::test_healthy_unit_passes PASSED  [ 87%]\nartifacts/tests/test_daemon_healthy.py::test_tasks_below_threshold_fails PASSED [ 91%]\nartifacts/tests/test_daemon_healthy.py::test_memory_below_threshold_fails PASSED [ 95%]\nartifacts/tests/test_daemon_healthy.py::test_missing_unit_fails PASSED   [100%]\n\n============================== 24 passed in 1.33s ==============================\n",
+    "matched": true,
+    "duration_seconds": 1.569,
+    "error": null
+  }
+]

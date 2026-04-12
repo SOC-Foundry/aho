@@ -111,9 +111,17 @@ def check_qwen_artifacts_present():
         
         missing = []
         # build-log is now manual (ADR-042), we check for -synthesis as optional
+        # report/run are alternates — either satisfies the report requirement
+        _ARTIFACT_ALTERNATES = {
+            "report": ["report", "run"],
+        }
         for kind in ["design", "plan", "report", "bundle"]:
-            path = log_dir / f"{prefix}-{kind}-{version}.md"
-            if not path.exists():
+            variants = _ARTIFACT_ALTERNATES.get(kind, [kind])
+            found = any(
+                (log_dir / f"{prefix}-{v}-{version}.md").exists()
+                for v in variants
+            )
+            if not found:
                 missing.append(f"{kind}.md")
         
         if missing:

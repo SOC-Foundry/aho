@@ -303,7 +303,11 @@ def build_bundle(iteration):
     # §19 Event Log
     lines += ["## §19. Event Log (tail 500)", ""]
     lines.append("```jsonl")
-    lines.append(_tail(DATA_DIR / "aho_event_log.jsonl", 500))
+    from aho.logger import event_log_path as _elp
+    _event_log = _elp()
+    if not _event_log.exists():
+        _event_log = DATA_DIR / "aho_event_log.jsonl"
+    lines.append(_tail(_event_log, 500))
     lines.append("```")
     lines.append("")
 

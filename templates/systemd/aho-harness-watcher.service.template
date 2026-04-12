@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python -m aho.agents.roles.harness_agent --watch %h/dev/projects/aho/data/aho_event_log.jsonl
+ExecStart=/usr/bin/python -m aho.agents.roles.harness_agent --watch %h/.local/share/aho/events/aho_event_log.jsonl
 Restart=on-failure
 RestartSec=5
 Environment=AHO_OTEL_DISABLED=0

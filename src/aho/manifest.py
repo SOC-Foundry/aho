@@ -38,8 +38,13 @@ def regenerate_manifest(root: Path = None) -> Path:
             fpath = Path(dirpath) / fname
             rel = fpath.relative_to(root)
             rel_str = str(rel)
-            # Skip binary files and large files
+            # Skip binary files, large files, and self-referential MANIFEST.json
             if fpath.suffix in {".pyc", ".pyo", ".so", ".dll", ".exe", ".png", ".jpg", ".ico"}:
+                continue
+            if fname == "MANIFEST.json" and Path(dirpath) == root:
+                continue
+            # Skip event log files (runtime data, relocated to XDG in 0.2.11 W7)
+            if fname.startswith("aho_event_log"):
                 continue
             try:
                 if fpath.stat().st_size > 1_000_000:  # 1MB cap

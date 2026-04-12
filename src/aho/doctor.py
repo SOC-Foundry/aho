@@ -396,7 +396,11 @@ def _postflight_checks():
                     status = "ok" if status else "fail"
                 results[name] = (status, msg)
             elif isinstance(res, dict):
-                results[name] = (res.get("status", "unknown").lower(), res.get("message", str(res)))
+                checks = res.get("checks")
+                if checks:
+                    results[name] = (res.get("status", "unknown").lower(), res.get("message", str(res)), checks)
+                else:
+                    results[name] = (res.get("status", "unknown").lower(), res.get("message", str(res)))
             else:
                 results[name] = ("ok" if res else "fail", str(res))
         except Exception as e:

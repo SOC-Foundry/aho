@@ -1,5 +1,22 @@
 # aho changelog
 
+## [0.2.11] — 2026-04-12
+
+**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams — executor-bias recognized mid-iteration, G077)
+
+- AcceptanceCheck primitive: executable assertions replace prose acceptance claims (W1-W2)
+- Workstream events schema v2 (acceptance_results) + v3 (agents_involved, token_count, harness_contributions, ad_hoc_forensics_minutes)
+- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present — all resolved
+- Gate verbosity: run_quality and structural_gates emit per-check CheckResult detail
+- 0.2.9 residual debt closed: readme_current timezone, bundle_quality §22, manifest_current self-ref exclusion
+- Event log relocated to ~/.local/share/aho/events/ with 100MB rotation (keep 3); 14 downstream path updates
+- §3 Trident template + pillars_present gate rewrite; canonical 11-pillar enforcement (G073 caught planner drift)
+- /ws status denominator fix, workstream_start in_progress checkpoint, caption routing for document messages
+- MCP readiness doc with protocol_smoke column; mcp-readiness.md in harness
+- 8 new gotchas (G070-G077): stale pycache, daemon restart contract, session-locked thread, canonical drift, orphan process, hardcoded service paths, migration verification gap, planner-executor bias
+- Rescoped at W9: persona 3 → 0.2.13, AUR + tech debt → 0.2.14, council activation → 0.2.12
+- 9 workstreams executed (W0-W8 + W9 close), 64 new tests, per-workstream review ON throughout
+
 ## [0.2.10] — 2026-04-12
 
 **Theme:** Install surface implementation + CLI unification + observability deployment

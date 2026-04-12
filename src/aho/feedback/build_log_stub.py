@@ -12,7 +12,8 @@ def generate_stub(iteration: str, project_root: pathlib.Path = None) -> pathlib.
             project_root = pathlib.Path.cwd()
     
     checkpoint_path = project_root / ".aho-checkpoint.json"
-    event_log_path = project_root / "data" / "aho_event_log.jsonl"
+    from aho.logger import event_log_path as _event_log_path
+    event_log_path = _event_log_path()
     iterations_dir = project_root / "artifacts" / "iterations" / iteration
     output_path = iterations_dir / f"aho-build-log-{iteration}.md"
     

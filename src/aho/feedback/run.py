@@ -91,8 +91,8 @@ def generate_run(iteration: str, workstreams: list[dict] = None, agent_questions
 
     if agent_questions is None:
         build_log_path = iter_dir / f"{prefix}-build-log-{iteration}.md"
-        from aho.paths import get_data_dir
-        event_log_path = get_data_dir() / "aho_event_log.jsonl"
+        from aho.logger import event_log_path as _event_log_path
+        event_log_path = _event_log_path()
         agent_questions = collect_all_questions(iteration, build_log_path, event_log_path)
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -1,0 +1,74 @@
+[
+  {
+    "check_name": "carry_forwards_rescoped",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "4\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "council_activation_objective_captured",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "g077_registered",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "aho-G077\n",
+    "matched": true,
+    "duration_seconds": 0.016,
+    "error": null
+  },
+  {
+    "check_name": "bundle_generated",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "640779\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "kyles_notes_stub_present",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "1\n",
+    "matched": true,
+    "duration_seconds": 0.002,
+    "error": null
+  },
+  {
+    "check_name": "postflight_green",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "33\n",
+    "matched": true,
+    "duration_seconds": 4.904,
+    "error": null
+  },
+  {
+    "check_name": "no_regression_64_plus",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "======================== 64 passed, 1 warning in 1.89s =========================\n",
+    "matched": true,
+    "duration_seconds": 2.319,
+    "error": null
+  },
+  {
+    "check_name": "rescoped_rows_marked",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "9\n",
+    "matched": true,
+    "duration_seconds": 0.003,
+    "error": null
+  }
+]

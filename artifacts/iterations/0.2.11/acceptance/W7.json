@@ -1,0 +1,74 @@
+[
+  {
+    "check_name": "new_path_resolves",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.127,
+    "error": null
+  },
+  {
+    "check_name": "events_dir_exists",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.001,
+    "error": null
+  },
+  {
+    "check_name": "migration_complete",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 2.002,
+    "error": null
+  },
+  {
+    "check_name": "line_count_preserved",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "397837\n",
+    "matched": true,
+    "duration_seconds": 0.266,
+    "error": null
+  },
+  {
+    "check_name": "log_event_writes_to_new_path",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.113,
+    "error": null
+  },
+  {
+    "check_name": "daemons_restarted_and_healthy",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "ok\n",
+    "matched": true,
+    "duration_seconds": 0.081,
+    "error": null
+  },
+  {
+    "check_name": "tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 6 items\n\nartifacts/tests/test_event_log_relocation.py::test_new_path_resolves_to_xdg PASSED [ 16%]\nartifacts/tests/test_event_log_relocation.py::test_migration_copies_and_deletes PASSED [ 33%]\nartifacts/tests/test_event_log_relocation.py::test_migration_aborts_on_size_mismatch PASSED [ 50%]\nartifacts/tests/test_event_log_relocation.py::test_rotation_triggers_at_threshold PASSED [ 66%]\nartifacts/tests/test_event_log_relocation.py::test_rotation_deletes_oldest PASSED [ 83%]\nartifacts/tests/test_event_log_relocation.py::test_components_section_reads_new_path PASSED [100%]\n\n============================== 6 passed in 0.08s ===============================\n",
+    "matched": true,
+    "duration_seconds": 0.329,
+    "error": null
+  },
+  {
+    "check_name": "no_regression",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "======================== 45 passed, 1 warning in 1.89s =========================\n",
+    "matched": true,
+    "duration_seconds": 2.302,
+    "error": null
+  }
+]

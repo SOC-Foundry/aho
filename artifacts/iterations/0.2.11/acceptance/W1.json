@@ -1,0 +1,29 @@
+[
+  {
+    "check_name": "module_importable",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "",
+    "matched": null,
+    "duration_seconds": 0.024,
+    "error": null
+  },
+  {
+    "check_name": "tests_pass",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "============================= test session starts ==============================\nplatform linux -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /usr/bin/python\ncachedir: .pytest_cache\nrootdir: /home/kthompson/dev/projects/aho\nconfigfile: pyproject.toml\nplugins: anyio-4.12.1\ncollecting ... collected 12 items\n\nartifacts/tests/test_acceptance.py::test_happy_path_exit_zero_no_pattern PASSED [  8%]\nartifacts/tests/test_acceptance.py::test_exit_code_mismatch PASSED       [ 16%]\nartifacts/tests/test_acceptance.py::test_pattern_miss PASSED             [ 25%]\nartifacts/tests/test_acceptance.py::test_command_not_found PASSED        [ 33%]\nartifacts/tests/test_acceptance.py::test_timeout_exceeded PASSED         [ 41%]\nartifacts/tests/test_acceptance.py::test_shell_escape_safety PASSED      [ 50%]\nartifacts/tests/test_acceptance.py::test_exit_and_pattern_combo_both_match PASSED [ 58%]\nartifacts/tests/test_acceptance.py::test_exit_ok_but_pattern_fails PASSED [ 66%]\nartifacts/tests/test_acceptance.py::test_pattern_ok_but_exit_fails PASSED [ 75%]\nartifacts/tests/test_acceptance.py::test_expected_nonzero_exit PASSED    [ 83%]\nartifacts/tests/test_acceptance.py::test_output_truncation PASSED        [ 91%]\nartifacts/tests/test_acceptance.py::test_serialize_results PASSED        [100%]\n\n============================== 12 passed in 1.04s ==============================\n",
+    "matched": true,
+    "duration_seconds": 1.254,
+    "error": null
+  },
+  {
+    "check_name": "test_count_minimum",
+    "passed": true,
+    "actual_exit": 0,
+    "actual_output": "12 tests collected in 0.01s\n",
+    "matched": true,
+    "duration_seconds": 0.223,
+    "error": null
+  }
+]

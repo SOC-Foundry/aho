@@ -2,6 +2,7 @@
 
 Validates that generated artifacts contain all required section headers.
 Added in aho 0.1.7 W2. Updated in 0.1.14 W4 to support W-based layouts.
+Refactored 0.2.11 W4: emits per-check CheckResult detail.
 """
 import json
 import re
@@ -10,6 +11,7 @@ from pathlib import Path
 from aho.artifacts.schemas import SCHEMAS
 from aho.logger import log_event
 from aho.paths import get_iterations_dir
+from aho.postflight import CheckResult, GateResult, worst_status
 from aho.postflight.layout import detect_layout, LayoutVariant
 
 
@@ -20,19 +22,16 @@ def check_artifact(path: Path, artifact_type: str) -> dict:
     schema = SCHEMAS.get(artifact_type)
     if schema is None:
         return {"status": "PASS", "message": "No schema defined for artifact type", "errors": []}
-    
+
     variant = detect_layout(path)
     content = path.read_text()
     errors = []
 
     if artifact_type == "design" and variant == LayoutVariant.W_BASED:
-        # W-based design requirements
         required = ["## Workstreams", "### W0", "### W1", "## Success criteria"]
     elif artifact_type == "plan" and variant == LayoutVariant.W_BASED:
-        # W-based plan requirements (gates are inline as **Gate:** not ## headers)
         required = ["## W0", "## W1"]
     elif artifact_type == "build-log":
-        # Build logs may be stubs (Auto-generated) or manual; both use synthesis table
         if "Auto-generated" in content or "## Workstream Synthesis" in content:
             required = ["Build Log", "## Workstream Synthesis"]
         elif variant == LayoutVariant.W_BASED:
@@ -40,24 +39,19 @@ def check_artifact(path: Path, artifact_type: str) -> dict:
         else:
             required = schema.required_sections
     else:
-        # Fallback to schema-based requirements (§ markers)
         required = schema.required_sections
 
     if not required:
         return {"status": "PASS", "message": "No required sections defined", "errors": []}
 
     for section in required:
-        # Handle both exact matches and pattern matches
         if section.startswith("§"):
-            # Section header like "§1" must appear as "## §1" or similar
             if f"§{section[1:]}" not in content:
                 errors.append(f"Missing section: {section}")
         elif section.startswith("#"):
-            # Exact header match
             if section not in content:
                 errors.append(f"Missing header: {section}")
         else:
-            # Substring match in header or body
             if section not in content:
                 errors.append(f"Missing section reference: {section}")
 
@@ -81,7 +75,7 @@ def check_required_sections(content: str, required: list[str]) -> dict:
 
 
 def check(version: str = None) -> dict:
-    """Entry point for post-flight runner."""
+    """Entry point for post-flight runner. Returns dict with checks[] detail."""
     if version is None:
         try:
             with open(".aho.json") as f:
@@ -92,10 +86,12 @@ def check(version: str = None) -> dict:
                 root = find_project_root()
                 version = json.loads((root / ".aho.json").read_text()).get("current_iteration", "")
             except Exception:
-                return {"status": "FAIL", "message": "Could not determine iteration version"}
+                return GateResult(
+                    status="fail",
+                    message="Could not determine iteration version",
+                ).to_dict()
 
     iter_dir = get_iterations_dir() / version
-    results = {}
 
     try:
         with open(".aho.json") as f:
@@ -104,6 +100,7 @@ def check(version: str = None) -> dict:
     except Exception:
         prefix = "aho"
 
+    checks = []
     for artifact_type, filename_pattern in [
         ("design", f"{prefix}-design-{version}.md"),
         ("plan", f"{prefix}-plan-{version}.md"),
@@ -111,17 +108,28 @@ def check(version: str = None) -> dict:
         ("report", f"{prefix}-report-{version}.md"),
     ]:
         path = iter_dir / filename_pattern
-        results[artifact_type] = check_artifact(path, artifact_type)
+        result = check_artifact(path, artifact_type)
+        raw_status = result["status"].lower()
+        # Map PASS→ok, FAIL→fail, DEFERRED→deferred
+        status = {"pass": "ok", "fail": "fail", "deferred": "deferred"}.get(raw_status, raw_status)
+        errors = result.get("errors", [])
+        message = result["message"]
+        if errors:
+            message = f"{message}: {'; '.join(errors)}"
+        checks.append(CheckResult(
+            name=f"structural_{artifact_type}",
+            status=status,
+            message=message,
+            evidence_path=str(path) if path.exists() else None,
+        ))
 
-    all_pass = all(r["status"] == "PASS" for r in results.values() if r["status"] != "DEFERRED")
-    all_errors = []
-    for at, r in results.items():
-        for e in r.get("errors", []):
-            all_errors.append(f"{at}: {e}")
+    rollup = worst_status([c.status for c in checks])
+    pass_count = sum(1 for c in checks if c.status == "ok")
+    fail_count = sum(1 for c in checks if c.status == "fail")
+    deferred_count = sum(1 for c in checks if c.status == "deferred")
 
-    return {
-        "status": "PASS" if all_pass else "FAIL",
-        "message": f"Structural gates: {sum(1 for r in results.values() if r['status'] == 'PASS')} pass, {sum(1 for r in results.values() if r['status'] == 'FAIL')} fail, {sum(1 for r in results.values() if r['status'] == 'DEFERRED')} deferred",
-        "errors": all_errors,
-        "per_artifact": results,
-    }
+    return GateResult(
+        status=rollup,
+        message=f"Structural gates: {pass_count} pass, {fail_count} fail, {deferred_count} deferred",
+        checks=checks,
+    ).to_dict()

@@ -10,7 +10,10 @@ from pathlib import Path
 
 def generate_components_section(iteration: str, event_log_path: Path = None) -> str:
     if event_log_path is None:
-        event_log_path = Path("data/aho_event_log.jsonl")
+        from aho.logger import event_log_path as _elp
+        event_log_path = _elp()
+        if not event_log_path.exists():
+            event_log_path = Path("data/aho_event_log.jsonl")
 
     if not event_log_path.exists():
         return "## §22. Agentic Components\n\n*(no event log found)*\n"

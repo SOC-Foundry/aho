@@ -61,12 +61,17 @@ def check():
             sidecar_missing.append(md_file.name)
 
     # Category 2: Canonical missing — expected canonical files not on disk
+    # report/run are alternates — either satisfies the report requirement
+    _CANONICAL_ALTERNATES = {
+        "report": ["report", "run"],
+    }
     canonical_missing = []
     for doc_type in ["design", "plan", "run", "build-log", "report"]:
-        candidates = [
-            iter_dir / f"{prefix}-{doc_type}-{iteration}.md",
-            iter_dir / f"{prefix}-{doc_type}-{version}.md",
-        ]
+        variants = _CANONICAL_ALTERNATES.get(doc_type, [doc_type])
+        candidates = []
+        for v in variants:
+            candidates.append(iter_dir / f"{prefix}-{v}-{iteration}.md")
+            candidates.append(iter_dir / f"{prefix}-{v}-{version}.md")
         if not any(c.exists() for c in candidates):
             canonical_missing.append(f"{prefix}-{doc_type}-{iteration}.md")
 

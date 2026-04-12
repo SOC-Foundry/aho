@@ -66,7 +66,7 @@ class Conductor:
 
 def smoke():
     """Smoke test: dispatch a verifiable task, assert file + event log spans."""
-    from aho.paths import get_data_dir
+    from aho.logger import event_log_path
 
     marker = f"/tmp/aho-smoke-marker-{int(time.time())}.txt"
     task = f'Create file {marker} containing exactly the text OK'
@@ -94,7 +94,7 @@ def smoke():
     print("[smoke] PASS: marker content is 'OK'")
 
     # Assert 3: event log has 7+ events since start
-    log_path = get_data_dir() / "aho_event_log.jsonl"
+    log_path = event_log_path()
     if log_path.exists():
         recent = 0
         for line in log_path.read_text().strip().splitlines():

@@ -165,7 +165,8 @@ def _daemon_state() -> list:
 
 def _trace_state() -> list:
     """Return last 20 events from the event log."""
-    log_path = get_data_dir() / "aho_event_log.jsonl"
+    from aho.logger import event_log_path
+    log_path = event_log_path()
     if not log_path.exists():
         return []
     try:

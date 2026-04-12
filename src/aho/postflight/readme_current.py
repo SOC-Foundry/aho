@@ -32,3 +32,10 @@ def check():
         return ("ok", f"README updated during this iteration (mtime: {readme_mtime.isoformat()})")
     except Exception as e:
         return ("fail", f"error: {e}")
+
+
+if __name__ == "__main__":
+    status, msg = check()
+    print(f"{status}: {msg}")
+    import sys
+    sys.exit(0 if status == "ok" else 1)
