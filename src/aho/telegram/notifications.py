@@ -168,18 +168,25 @@ def _write_bot_state():
 
 
 def serve():
-    """Start the Telegram bridge daemon."""
+    """Start the Telegram bridge daemon (outbound socket + inbound polling)."""
     from aho.logger import emit_heartbeat
+    from aho.telegram.inbound import start_inbound_thread
+
     SOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
     if SOCK_PATH.exists():
         SOCK_PATH.unlink()
     _write_bot_state()
     emit_heartbeat("telegram")
+
+    # Start inbound getUpdates polling thread
+    inbound_stop = start_inbound_thread()
+
     print(f"[telegram] listening on {SOCK_PATH}", flush=True)
     server = socketserver.UnixStreamServer(str(SOCK_PATH), TelegramHandler)
     try:
         server.serve_forever()
     finally:
+        inbound_stop.set()
         if SOCK_PATH.exists():
             SOCK_PATH.unlink()
 

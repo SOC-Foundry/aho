@@ -12,20 +12,21 @@
 |---|---|---|---|
 | W0 | Bumps + decisions + run report template | bump | 10 artifacts → 0.2.8, decisions.md, "MCP Tools Invoked" section added |
 | W1 | D1 diagnosis report | discovery | mcp-utilization-gap.md, predicted vs actual |
-| W2 | CLAUDE.md + GEMINI.md MCP-first rules | code | New "MCP Toolchain" section in both, MUST-strength |
-| W3 | 9 per-server MCP smoke scripts | code | artifacts/scripts/mcp-smoke/*.fish |
+| W2 | CLAUDE.md + GEMINI.md MCP-first rules | code | New "MCP Toolchain" section in both, MUST-strength, [INSTALLED-NOT-WIRED] tag, plan doc W2.5 insert |
+| W2.5 | MCP wiring — project .mcp.json | code | Project-level .mcp.json registering 9 servers as MCP connections. Hard prereq for W3 agent-native smoke |
+| W3 | 9 per-server MCP smoke scripts (CLI + MCP-protocol) | code | artifacts/scripts/mcp-smoke/*.fish — two categories: CLI health + agent-native invocation |
 | W4 | bin/aho-mcp smoke aggregator | code | mcp-readiness.md + data/mcp_readiness.json |
 | W5 | Dashboard MCP verifier | code | aggregator.py reads readiness, 12 unknowns flip; verify via @playwright/mcp |
 | W6 | components.yaml reconciliation | code | Remove 4 dead entries, update count claims |
 | W7 | mcp_sources_aligned postflight gate | code | New gate diffing components.yaml against bin/aho-mcp |
 | W8 | harness-watcher diagnosis + branch fix | discovery+code | harness-watcher-diagnosis.md, then Branch A/B/C/D execution |
-| W9 | aho-G066 + aho-G067 + ADR-044 update | bump | Two new gotchas, ADR text update for dashboard as Phase 2 tooling |
+| W9 | aho-G066 + aho-G067 + aho-G068 + ADR-044 update | bump | Three new gotchas (22 total), ADR text update for dashboard as Phase 2 tooling |
 | W10 | Bundle generator sidecars + ADRs fix | code | Walk iterations dir + adrs dir, populate §6 and §12 properly, verify §4 Report generation runs |
 | W11 | bundle_completeness postflight gate | code | Assert every iteration .md appears in bundle |
 | W12 | Telegram inbound bridge to openclaw | code | inbound.py polls getUpdates, routes commands + free-text, openclaw socket client, formatter, allow-list, tests |
 | W13 | Close | bump | Tests, postflight, bundle, run report, build log, changelog |
 
-13 workstreams. Largest aho iteration to date. Risk register names the cut order.
+14 workstreams (W2.5 added post-W1 discovery). Largest aho iteration to date. Risk register names the cut order.
 
 **MCP-first mandate per workstream:**
 - W3/W4: by definition uses MCP
@@ -43,9 +44,11 @@ Each workstream's row in the run report includes "mcp_used" listing tools invoke
 
 **W1** — execute D1 5-step diagnosis, write `mcp-utilization-gap.md`. No code.
 
-**W2** — add "MCP Toolchain" section to CLAUDE.md and GEMINI.md per W0 strength decision (lean MUST). List 9 servers + use cases. Add explicit examples. Update First Actions Checklist.
+**W2** — add "MCP Toolchain" section to CLAUDE.md and GEMINI.md per W0 strength decision (lean MUST). List 9 servers + use cases. Add [INSTALLED-NOT-WIRED] tag convention. Update First Actions Checklist with MCP surface verification step. Update this plan doc to insert W2.5.
 
-**W3** — 9 fish scripts under `artifacts/scripts/mcp-smoke/`. Each: print test, execute MCP call, assert response, exit 0/1. Servers requiring MCP-protocol stdio (vs CLI invocation) get a tiny Python helper — if more than 3 need it, scope a W3.5 helper module.
+**W2.5** — MCP wiring. Produce project-level `.mcp.json` at repo root registering all 9 servers as MCP connections for Claude Code. Hard prerequisite for W3 agent-native smoke tests. ~30 minutes.
+
+**W3** — 9 fish scripts under `artifacts/scripts/mcp-smoke/`. Two test categories: CLI smoke (server health via binary/npx) and MCP-protocol smoke (agent-native invocation via wired surface, depends on W2.5). Each: print test, execute MCP call, assert response, exit 0/1. Servers requiring MCP-protocol stdio (vs CLI invocation) get a tiny Python helper — if more than 3 need it, scope a W3.5 helper module.
 
 **W4** — `bin/aho-mcp smoke` aggregator runs all 9 W3 scripts, produces markdown matrix + JSON sidecar.
 
@@ -86,13 +89,14 @@ Use context7-mcp for Telegram Bot API documentation lookups during implementatio
 - [ ] All 10 canonical artifacts at 0.2.8
 - [ ] Run report template includes "MCP Tools Invoked" section
 - [ ] CLAUDE.md and GEMINI.md have MCP-first toolchain section
+- [ ] Project-level `.mcp.json` exists registering 9 servers (W2.5)
 - [ ] 9 MCP smoke test scripts exist; `bin/aho-mcp smoke` works end-to-end
 - [ ] mcp-readiness.md and data/mcp_readiness.json exist
 - [ ] Dashboard MCP rows show ok/missing instead of unknown (verified via Playwright MCP)
 - [ ] components.yaml has 4 dead entries removed; component counts updated
 - [ ] mcp_sources_aligned postflight gate passes
 - [ ] harness-watcher diagnosis report exists; fix landed or daemon removed
-- [ ] aho-G066 + aho-G067 in gotcha registry (21 total)
+- [ ] aho-G066 + aho-G067 + aho-G068 in gotcha registry (22 total)
 - [ ] ADR-044 text updated with dashboard reference
 - [ ] Bundle generator includes sidecars from iteration dir + ADRs with iteration-window mtime
 - [ ] §4 Report is non-hollow in 0.2.8 bundle

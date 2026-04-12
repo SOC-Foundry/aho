@@ -131,7 +131,11 @@ def _verify_component(comp: dict, root: Path) -> str:
         return "ok" if full.exists() else "missing"
 
     if kind == "mcp_server":
-        # MCP servers are npm packages, can't verify file path
+        readiness = _load_mcp_readiness()
+        comp_name = comp.get("name", "")
+        for entry in readiness:
+            if comp_name.endswith(entry.get("server", "")) or entry.get("server", "") in comp_name:
+                return "ok" if entry.get("cli_smoke") == "pass" else "missing"
         return "unknown"
 
     return "unknown"
@@ -177,19 +181,31 @@ def _trace_state() -> list:
         return []
 
 
+def _load_mcp_readiness() -> list:
+    """Load smoke test results from data/mcp_readiness.json."""
+    readiness_path = get_data_dir() / "mcp_readiness.json"
+    if not readiness_path.exists():
+        return []
+    try:
+        data = json.loads(readiness_path.read_text())
+        return data.get("results", [])
+    except (json.JSONDecodeError, KeyError):
+        return []
+
+
 def _mcp_state() -> list:
-    """Check MCP package installation via npm list."""
-    packages = [
+    """Check MCP server status via smoke readiness data, npm list, and dart version."""
+    npm_packages = [
         "firebase-tools",
         "@upstash/context7-mcp",
         "firecrawl-mcp",
         "@playwright/mcp",
-        "flutter-mcp",
         "@modelcontextprotocol/server-filesystem",
         "@modelcontextprotocol/server-memory",
         "@modelcontextprotocol/server-sequential-thinking",
         "@modelcontextprotocol/server-everything",
     ]
+
     try:
         out = subprocess.run(
             ["npm", "list", "-g", "--depth=0"],
@@ -199,10 +215,45 @@ def _mcp_state() -> list:
     except Exception:
         installed_text = ""
 
+    readiness = _load_mcp_readiness()
+    readiness_by_server = {r["server"]: r["cli_smoke"] for r in readiness if "server" in r}
+
     result = []
-    for pkg in packages:
-        status = "ok" if pkg in installed_text else "missing"
-        result.append({"name": pkg, "status": status})
+    for pkg in npm_packages:
+        installed = pkg in installed_text
+        # Map npm package name to smoke script name
+        smoke_name = pkg.split("/")[-1].replace("@", "")
+        if pkg == "firebase-tools":
+            smoke_name = "firebase-tools"
+        elif pkg == "@upstash/context7-mcp":
+            smoke_name = "context7"
+        elif pkg == "firecrawl-mcp":
+            smoke_name = "firecrawl"
+        elif pkg == "@playwright/mcp":
+            smoke_name = "playwright"
+
+        smoke_status = readiness_by_server.get(smoke_name, "unknown")
+        if smoke_status == "pass":
+            status = "ok"
+        elif installed:
+            status = "ok"
+        else:
+            status = "missing"
+        result.append({"name": pkg, "installed": installed, "smoke": smoke_status, "status": status})
+
+    # Dart MCP server (SDK-bundled, not npm)
+    try:
+        dart_out = subprocess.run(
+            ["dart", "--version"], capture_output=True, text=True, timeout=5,
+        )
+        dart_installed = dart_out.returncode == 0
+    except Exception:
+        dart_installed = False
+
+    dart_smoke = readiness_by_server.get("dart", "unknown")
+    dart_status = "ok" if dart_smoke == "pass" or dart_installed else "missing"
+    result.append({"name": "dart-mcp-server", "installed": dart_installed, "smoke": dart_smoke, "status": dart_status})
+
     return result
 
 

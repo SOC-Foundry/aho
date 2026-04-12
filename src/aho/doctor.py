@@ -263,9 +263,9 @@ def _check_role_agents():
 
 def _check_mcp_fleet():
     """Verify all 9 MCP server packages are installed globally."""
-    mcp_packages = [
+    npm_packages = [
         "firebase-tools", "@upstash/context7-mcp", "firecrawl-mcp",
-        "@playwright/mcp", "flutter-mcp",
+        "@playwright/mcp",
         "@modelcontextprotocol/server-filesystem",
         "@modelcontextprotocol/server-memory",
         "@modelcontextprotocol/server-sequential-thinking",
@@ -277,10 +277,18 @@ def _check_mcp_fleet():
             capture_output=True, text=True, timeout=10
         )
         output = r.stdout
-        missing = [p for p in mcp_packages if p not in output]
+        missing = [p for p in npm_packages if p not in output]
+        # Also check dart mcp-server (SDK-bundled, not npm)
+        try:
+            dr = subprocess.run(["dart", "--version"], capture_output=True, text=True, timeout=5)
+            if dr.returncode != 0:
+                missing.append("dart-mcp-server")
+        except Exception:
+            missing.append("dart-mcp-server")
+        total = len(npm_packages) + 1  # +1 for dart
         if missing:
-            return ("warn", f"missing MCP servers: {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''} ({len(missing)}/{len(mcp_packages)})")
-        return ("ok", f"all {len(mcp_packages)} MCP servers present")
+            return ("warn", f"missing MCP servers: {', '.join(missing[:3])}{'...' if len(missing) > 3 else ''} ({len(missing)}/{total})")
+        return ("ok", f"all {total} MCP servers present")
     except Exception as e:
         return ("warn", f"MCP fleet check failed: {e}")
 

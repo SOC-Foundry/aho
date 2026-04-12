@@ -7,12 +7,12 @@ import subprocess
 
 
 # Must match bin/aho-mcp and src/aho/doctor.py
-MCP_PACKAGES = [
+# npm-managed packages only; dart mcp-server is SDK-bundled (checked separately)
+MCP_NPM_PACKAGES = [
     "firebase-tools",
     "@upstash/context7-mcp",
     "firecrawl-mcp",
     "@playwright/mcp",
-    "flutter-mcp",
     "@modelcontextprotocol/server-filesystem",
     "@modelcontextprotocol/server-memory",
     "@modelcontextprotocol/server-sequential-thinking",
@@ -30,7 +30,7 @@ def check():
         return ("skip", "npm not available")
 
     failures = []
-    for pkg in MCP_PACKAGES:
+    for pkg in MCP_NPM_PACKAGES:
         try:
             r = subprocess.run(
                 ["npm", "view", pkg, "version"],
@@ -45,6 +45,15 @@ def check():
         except Exception as e:
             return ("skip", f"npm view failed: {e}")
 
+    # Verify dart SDK presence (dart mcp-server is SDK-bundled)
+    try:
+        dr = subprocess.run(["dart", "--version"], capture_output=True, text=True, timeout=5)
+        if dr.returncode != 0:
+            failures.append("dart-mcp-server: dart SDK not found")
+    except Exception:
+        failures.append("dart-mcp-server: dart not on PATH")
+
+    total = len(MCP_NPM_PACKAGES) + 1  # +1 for dart
     if failures:
         return ("fail", "; ".join(failures))
-    return ("ok", f"all {len(MCP_PACKAGES)} MCP packages registry-verified")
+    return ("ok", f"all {total} MCP packages registry-verified")

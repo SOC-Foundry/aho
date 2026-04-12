@@ -507,44 +507,16 @@ components:
     owner: soc-foundry
     notes: "npm global, activated 0.2.3 W1"
 
-  - name: mcp-flutter
+  - name: mcp-dart
     kind: mcp_server
-    path: flutter-mcp
+    path: dart-mcp-server
     status: active
-    owner: soc-foundry
-    notes: "npm global, activated 0.2.3 W1"
+    owner: dart-team
+    notes: "SDK-bundled (Dart 3.9+), replaces broken flutter-mcp, activated 0.2.8 W3"
 
   - name: mcp-server-filesystem
     kind: mcp_server
     path: "@modelcontextprotocol/server-filesystem"
-    status: active
-    owner: soc-foundry
-    notes: "npm global, activated 0.2.3 W1"
-
-  - name: mcp-server-github
-    kind: mcp_server
-    path: "@modelcontextprotocol/server-github"
-    status: active
-    owner: soc-foundry
-    notes: "npm global, activated 0.2.3 W1"
-
-  - name: mcp-server-google-drive
-    kind: mcp_server
-    path: "@modelcontextprotocol/server-google-drive"
-    status: active
-    owner: soc-foundry
-    notes: "npm global, activated 0.2.3 W1"
-
-  - name: mcp-server-slack
-    kind: mcp_server
-    path: "@modelcontextprotocol/server-slack"
-    status: active
-    owner: soc-foundry
-    notes: "npm global, activated 0.2.3 W1"
-
-  - name: mcp-server-fetch
-    kind: mcp_server
-    path: "@modelcontextprotocol/server-fetch"
     status: active
     owner: soc-foundry
     notes: "npm global, activated 0.2.3 W1"
@@ -562,6 +534,13 @@ components:
     status: active
     owner: soc-foundry
     notes: "npm global, activated 0.2.3 W1"
+
+  - name: mcp-server-everything
+    kind: mcp_server
+    path: "@modelcontextprotocol/server-everything"
+    status: active
+    owner: soc-foundry
+    notes: "npm global, reference/test server, activated 0.2.3 W1, added to manifest 0.2.8 W7"
 
   # === Components (self-reference) ===
   - name: component-manifest

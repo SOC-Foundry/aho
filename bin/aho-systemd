@@ -74,9 +74,10 @@ function _cmd_install
     systemctl --user daemon-reload
     for d in $daemons
         systemctl --user enable aho-$d.service 2>/dev/null; or true
+        systemctl --user start aho-$d.service 2>/dev/null; or true
     end
 
-    _info "$installed services installed and enabled."
+    _info "$installed services installed, enabled, and started."
 end
 
 function _cmd_doctor

@@ -50,4 +50,4 @@ The token is never stored in plaintext on disk. The `token_secret_key` field in 
 
 ---
 
-*orchestrator-config.md v0.2.7 — aho harness artifact.*
+*orchestrator-config.md v0.2.8 — aho harness artifact.*

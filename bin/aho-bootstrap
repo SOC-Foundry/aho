@@ -94,7 +94,6 @@ set -l mcp_packages \
     @upstash/context7-mcp \
     firecrawl-mcp \
     @playwright/mcp \
-    flutter-mcp \
     @modelcontextprotocol/server-filesystem \
     @modelcontextprotocol/server-github \
     @modelcontextprotocol/server-google-drive \

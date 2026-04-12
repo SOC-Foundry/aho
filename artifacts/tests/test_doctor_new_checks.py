@@ -45,15 +45,19 @@ def test_check_mcp_fleet_missing(mock_run):
 
 @patch("aho.doctor.subprocess.run")
 def test_check_mcp_fleet_all_present(mock_run):
-    packages = [
+    npm_packages = [
         "firebase-tools", "@upstash/context7-mcp", "firecrawl-mcp",
-        "@playwright/mcp", "flutter-mcp",
+        "@playwright/mcp",
         "@modelcontextprotocol/server-filesystem",
         "@modelcontextprotocol/server-memory",
         "@modelcontextprotocol/server-sequential-thinking",
         "@modelcontextprotocol/server-everything",
     ]
-    mock_run.return_value = MagicMock(stdout="\n".join(packages))
+    # mock_run is called twice: once for npm list, once for dart --version
+    npm_result = MagicMock(stdout="\n".join(npm_packages), returncode=0)
+    dart_result = MagicMock(returncode=0)
+    mock_run.side_effect = [npm_result, dart_result]
     from aho.doctor import _check_mcp_fleet
     status, msg = _check_mcp_fleet()
     assert status == "ok"
+    assert "9" in msg

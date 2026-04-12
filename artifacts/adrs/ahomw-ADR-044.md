@@ -111,6 +111,20 @@ This ADR does not introduce a new pillar. It documents the human-side companion 
 
 ---
 
+## Phase 2 Tooling: Dashboard
+
+The aho dashboard (`src/aho/dashboard/`, served by `bin/aho-dashboard` on port 7800) automates a significant portion of Phase 2 forensic consumption. The dashboard aggregates component status, daemon health, recent traces, MCP fleet readiness, and model fleet state into a single `/api/state` endpoint, surfacing the gap between declared and actual state that Phase 2 is designed to find.
+
+Concrete examples from 0.2.7–0.2.8:
+- MCP fleet: 12 "unknown" components visible at a glance, surfacing five iterations of declared-but-not-exercised infrastructure
+- components.yaml drift: dead entries (github, google-drive, slack, fetch) visible as "unknown" status, not hiding behind a green test suite
+- harness-watcher: daemon health card showed red, prompting the W8 diagnosis that found the enable-not-start bug
+- Bundle generator: hollow §4 Report and missing sidecars identified during dashboard-informed Phase 2 review
+
+The dashboard does not replace human Phase 2 review. It accelerates it by making the declared-vs-actual gap visible before the human reads the bundle. The adversarial reading discipline described in Phase 2 above still applies; the dashboard is a lens, not a verdict.
+
+---
+
 ## What this ADR does NOT decide
 
 - Whether the cadence applies to Phase 1+ iterations (multi-machine, multi-project) — likely yes but TBD when Phase 1 starts

@@ -1,5 +1,23 @@
 # aho changelog
 
+## [0.2.8] — 2026-04-11
+
+**Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
+
+- MCP-first mandate: CLAUDE.md + GEMINI.md gain MUST-strength MCP Toolchain section, [INSTALLED-NOT-WIRED] tag convention
+- Project `.mcp.json` wires 9 MCP servers as Claude Code tool connections (8 npm + 1 SDK-bundled dart)
+- `bin/aho-mcp smoke` — 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
+- Dashboard MCP verifier: aggregator reads smoke results, 85 ok / 0 missing / 0 unknown (zero unknowns for first time)
+- components.yaml reconciled: 4 dead entries removed, flutter-mcp replaced with dart mcp-server, server-everything added. 88 → 85 components
+- `mcp_sources_aligned` postflight gate: diffs components.yaml against bin/aho-mcp, caught server-everything gap on first run
+- `bundle_completeness` postflight gate: three-category check (sidecar drift, canonical missing, ADR coverage)
+- harness-watcher diagnosis: Branch A (enable-not-start), fixed in bin/aho-systemd, daemon running
+- 4 new gotchas: G066 (declared ≠ exercised), G067 (declared ≠ populated), G068 (installed ≠ wired), G069 (enabled ≠ started)
+- ADR-044 updated: Phase 2 Tooling section with dashboard as forensic consumption accelerator
+- Bundle generator: §6 walks artifacts/adrs/, §12 walks iteration dir for sidecars
+- Telegram inbound bridge: getUpdates polling, /status /iteration /last + free-text→openclaw, verified live on phone
+- 182 tests (up from 158), 14 workstreams (largest iteration), MCP fleet smoke 9/9 pass
+
 ## [0.2.7] — 2026-04-11
 
 **Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config

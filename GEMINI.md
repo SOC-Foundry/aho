@@ -36,7 +36,8 @@ You are launched with `gemini --yolo` which implies sandbox bypass — single fl
 2. Read the run's design doc and plan doc from `artifacts/iterations/{iteration}/`.
 3. Query the gotcha registry: `python -c "from aho.registry import query_gotchas; print(query_gotchas(phase=0))"`.
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
-5. Write first event to `data/aho_event_log.jsonl` marking workstream start.
+5. Verify MCP tool surface: confirm which MCP servers from the fleet are available as tools in this session. If any server listed in `artifacts/harness/mcp-fleet.md` is absent from your tool surface, note it as `[INSTALLED-NOT-WIRED]` before proceeding.
+6. Write first event to `data/aho_event_log.jsonl` marking workstream start.
 
 ## Gotcha Registry — Phase 0 Critical List
 
@@ -80,6 +81,37 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 9. **No preference prompts mid-run.** Capability gaps only. Pillar 10.
 10. **No bare `ls`.** Use `command ls`. aho-G022.
 
+## MCP Toolchain
+
+The aho MCP fleet (9 servers, see `artifacts/harness/mcp-fleet.md`) is the primary tool surface for technology-specific work. Agents MUST use MCP tools when the work domain matches a server's capability AND the server is wired in the agent's tool surface.
+
+**MUST-use rules:**
+
+- **Flutter/Dart code** — MUST consult `dart mcp-server` before writing Flutter/Dart from memory.
+- **Web UI verification** — MUST use `@playwright/mcp` before declaring a UI workstream done.
+- **Library documentation** — MUST use `@upstash/context7-mcp` for Telegram Bot API, Firebase SDK, and other library doc lookups. Do not code library integrations from training-data recall.
+- **Filesystem walks** — MUST use `@modelcontextprotocol/server-filesystem` for structured directory operations where applicable.
+- **Web fetching** — MUST use `firecrawl-mcp` for retrieving external references during planning.
+- **Firebase/Firestore** — MUST use `firebase-tools` MCP for Firebase operations.
+
+**Bash fallback:** Permitted, but every workstream that takes the bash path on a domain where an MCP tool exists MUST include a one-line justification in the run report's "MCP Tools Invoked" section. Format: `"none — bash sufficient because <reason>"`.
+
+**[INSTALLED-NOT-WIRED] protocol:** If a server is listed in `mcp-fleet.md` but absent from your tool surface, do not silently fall back to bash. Tag the gap explicitly as `[INSTALLED-NOT-WIRED]` in the workstream output and surface it as a capability gap. This distinction matters: "chose not to use MCP" is a behavioral issue; "MCP not in tool surface" is a configuration issue. They have different fixes.
+
+**MCP server catalog (9 servers):**
+
+| Server | Use when |
+|---|---|
+| firebase-tools | Firebase/Firestore operations |
+| @upstash/context7-mcp | Library/API documentation lookups |
+| firecrawl-mcp | Web scraping, external reference retrieval |
+| @playwright/mcp | Browser automation, UI verification |
+| dart mcp-server | Flutter/Dart development (official Dart team server) |
+| @modelcontextprotocol/server-filesystem | Structured filesystem operations |
+| @modelcontextprotocol/server-memory | Persistent memory store |
+| @modelcontextprotocol/server-sequential-thinking | Chain-of-thought reasoning |
+| @modelcontextprotocol/server-everything | Reference/test server |
+
 ## Capability-Gap Interrupt Protocol
 
 If you hit an unavoidable capability gap (sudo, credential, physical access):
@@ -99,4 +131,4 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — updated during 0.2.3 W0. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 — updated during 0.2.8 W2. Next rewrite: Phase 1 boundary.*

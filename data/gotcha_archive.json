@@ -219,6 +219,62 @@
       "context": "Surfaced in 0.2.3 W4 conductor dispatch. Qwen roleplayed deliverables, GLM rubber-stamped. Fixed in 0.2.5 W9 with real verifiable smoke test.",
       "surfaced_in": "0.2.3",
       "status": "fixed in 0.2.5 W9"
+    },
+    {
+      "id": "aho-G066",
+      "title": "Declared tools must be exercised",
+      "pattern": "A tool declared in the harness (installed, listed, counted) but never invoked during agent execution is declared-but-not-exercised. The declaration creates a false signal that the tool is operational.",
+      "symptoms": [
+        "Dashboard shows 'ok' for tools that have never been called",
+        "MCP fleet installed for five iterations with zero invocations",
+        "Component coverage reports 'ok' based on installation, not usage"
+      ],
+      "mitigation": "Smoke tests per tool (bin/aho-mcp smoke). MCP-first mandate in CLAUDE.md/GEMINI.md. Run report 'MCP Tools Invoked' section per workstream.",
+      "context": "Surfaced in 0.2.8 W1. MCP fleet installed since 0.2.3, zero invocations across 0.2.3–0.2.7. Fixed in 0.2.8 W2–W5.",
+      "surfaced_in": "0.2.8",
+      "status": "fixed in 0.2.8 W2-W5"
+    },
+    {
+      "id": "aho-G067",
+      "title": "Declared structures must be populated",
+      "pattern": "A structure declared in one source of truth but absent from another is a drift gap. The declaration implies completeness; the absence contradicts it.",
+      "symptoms": [
+        "components.yaml lists entries that don't exist in bin/aho-mcp",
+        "bin/aho-mcp lists entries that don't exist in components.yaml",
+        "server-everything present in fleet but missing from manifest for five iterations"
+      ],
+      "mitigation": "mcp_sources_aligned postflight gate (src/aho/postflight/mcp_sources_aligned.py) diffs components.yaml against bin/aho-mcp on every close.",
+      "context": "Surfaced in 0.2.8 W7. server-everything was in bin/aho-mcp since 0.2.4 but never in components.yaml. Gate caught it on first run.",
+      "surfaced_in": "0.2.8",
+      "status": "fixed in 0.2.8 W7"
+    },
+    {
+      "id": "aho-G068",
+      "title": "Installed != wired: npm-global MCP packages require explicit agent configuration",
+      "pattern": "An MCP server installed globally via npm is not available to an agent until it is configured as an MCP connection in the agent's tool surface (e.g., .mcp.json for Claude Code). Installation puts the binary on PATH; wiring puts the tool in the agent's callable surface.",
+      "symptoms": [
+        "ToolSearch returns zero matches for installed MCP servers",
+        "Agent falls back to bash for work an MCP tool should handle",
+        "Dashboard reports 'ok' (npm-installed) while agent reports [INSTALLED-NOT-WIRED]"
+      ],
+      "mitigation": "Project-level .mcp.json at repo root registers servers as MCP connections. First Actions Checklist step 5 verifies tool surface on session start. [INSTALLED-NOT-WIRED] tag convention in CLAUDE.md/GEMINI.md.",
+      "context": "Surfaced in 0.2.8 W1. All 9 servers installed since 0.2.3 but none wired in Claude Code. Fixed in 0.2.8 W2.5.",
+      "surfaced_in": "0.2.8",
+      "status": "fixed in 0.2.8 W2.5"
+    },
+    {
+      "id": "aho-G069",
+      "title": "Enabled != started: systemd user services require explicit start after enable",
+      "pattern": "systemctl --user enable sets a service to start on next boot/login but does not start it immediately. A service that is enabled but never started will appear as 'inactive (dead)' with zero journal entries.",
+      "symptoms": [
+        "Dashboard daemon health card shows red for an enabled service",
+        "journalctl shows '-- No entries --' for the service",
+        "Service is enabled (verified by is-enabled) but never ran"
+      ],
+      "mitigation": "bin/aho-systemd install now runs both enable and start for all daemons. Pattern: enable + start + verify running.",
+      "context": "Surfaced in 0.2.8 W8. harness-watcher was enabled in 0.2.5 W5 but never started. Fixed in 0.2.8 W8.",
+      "surfaced_in": "0.2.8",
+      "status": "fixed in 0.2.8 W8"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # aho MCP Fleet — Architectural Specification
 
-**Version:** 0.2.7
+**Version:** 0.2.8
 **Date:** 2026-04-11
 **Scope:** Global MCP server fleet for aho agent orchestration
 
@@ -18,7 +18,7 @@ The MCP (Model Context Protocol) fleet provides standardized tool access for aho
 | 2 | @upstash/context7-mcp | mcp-context7 | Context-aware documentation lookup |
 | 3 | firecrawl-mcp | mcp-firecrawl | Web scraping and content extraction |
 | 4 | @playwright/mcp | mcp-playwright | Browser automation and testing |
-| 5 | flutter-mcp | mcp-flutter | Flutter app development tooling |
+| 5 | dart mcp-server (Dart SDK) | mcp-dart | Flutter/Dart development tooling (official Dart team server) |
 | 6 | @modelcontextprotocol/server-filesystem | mcp-server-filesystem | Local filesystem operations |
 | 7 | @modelcontextprotocol/server-memory | mcp-server-memory | Persistent memory store |
 | 8 | @modelcontextprotocol/server-sequential-thinking | mcp-server-sequential-thinking | Chain-of-thought reasoning |

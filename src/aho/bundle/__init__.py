@@ -204,9 +204,23 @@ def build_bundle(iteration):
     lines += ["## §5. Run Report", ""]
     lines += _embed("RUN REPORT", _find_doc(prefix, "run", iteration))
 
-    # §6 Harness
+    # §6 Harness + ADRs
     lines += ["## §6. Harness", ""]
     lines += _embed("base.md", ARTIFACTS_DIR / "harness" / "base.md")
+
+    # ADRs with mtime in iteration window
+    adrs_dir = ARTIFACTS_DIR / "adrs"
+    if adrs_dir.exists():
+        ckpt_path = PROJECT_DIR / ".aho-checkpoint.json"
+        started_at = None
+        if ckpt_path.exists():
+            try:
+                ckpt = json.loads(ckpt_path.read_text())
+                started_at = ckpt.get("started_at")
+            except Exception:
+                pass
+        for adr in sorted(adrs_dir.glob("*.md")):
+            lines += _embed(f"ADR: {adr.name}", adr)
 
     # §7 README
     lines += ["## §7. README", ""]
@@ -228,15 +242,32 @@ def build_bundle(iteration):
     lines += ["## §11. .aho.json", ""]
     lines += _embed(".aho.json", PROJECT_DIR / ".aho.json", lang="json")
 
-    # §12 Sidecars
+    # §12 Sidecars — walk iteration dir for .md files not used by §1-§5
     lines += ["## §12. Sidecars", ""]
+    canonical_prefixes = {"design", "plan", "build-log", "report", "run", "bundle"}
+    iter_dir_path = DOCS_DIR / "iterations" / version
+    sidecar_count = 0
+    if iter_dir_path.exists():
+        for sidecar_file in sorted(iter_dir_path.glob("*.md")):
+            # Skip files already used by §1-§5 (design, plan, build-log, report, run, bundle)
+            name_lower = sidecar_file.name.lower()
+            is_canonical = any(f"-{cp}-" in name_lower or f"-{cp}." in name_lower for cp in canonical_prefixes)
+            if is_canonical:
+                continue
+            lines += _embed(f"Sidecar: {sidecar_file.name}", sidecar_file)
+            sidecar_count += 1
+
+    # Legacy sidecar locations (pre-0.2.8 compatibility)
     sidecar = DOCS_DIR / f"classification-{sidecar_phase}.json"
     if sidecar.exists():
         lines += _embed("classification", sidecar, lang="json")
+        sidecar_count += 1
     sterilization = DOCS_DIR / f"sterilization-log-{sidecar_phase}.md"
     if sterilization.exists():
         lines += _embed("sterilization-log", sterilization)
-    if not sidecar.exists() and not sterilization.exists():
+        sidecar_count += 1
+
+    if sidecar_count == 0:
         lines.append("(no sidecars for this iteration)")
         lines.append("")
 
