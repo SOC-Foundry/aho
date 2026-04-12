@@ -1,0 +1,13 @@
+[Unit]
+Description=aho OTEL Collector (otelcol-contrib)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/otelcol-contrib --config=%h/.local/share/aho/otelcol-config.yaml
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,193 @@
+#!/usr/bin/env fish
+# aho-install - Populate local install directory (~/.local/share/aho/).
+# 0.2.10 W3 — Creates system-local aho layout from project repo.
+# Per install-surface-architecture.md decision 4c.
+
+set -g script_version "0.2.10"
+set -g project_root (dirname (dirname (realpath (status filename))))
+
+function _info
+    set_color cyan; echo "[aho-install] $argv"; set_color normal
+end
+
+function _warn
+    set_color yellow; echo "[aho-install WARN] $argv"; set_color normal
+end
+
+function _error
+    set_color red; echo "[aho-install ERROR] $argv"; set_color normal
+end
+
+set -g base_dir $HOME/.local/share/aho
+set -g dry_run 0
+set -g force 0
+
+for arg in $argv
+    switch $arg
+        case --dry-run
+            set dry_run 1
+        case --force
+            set force 1
+    end
+end
+
+# 1. Create directory layout
+set -l dirs \
+    $base_dir/bin \
+    $base_dir/harness \
+    $base_dir/registries \
+    $base_dir/agents \
+    $base_dir/secrets \
+    $base_dir/runtime \
+    $base_dir/traces \
+    $base_dir/jaeger/data \
+    $base_dir/jaeger/key
+
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would create directories:"
+    for d in $dirs
+        echo "  $d"
+    end
+else
+    for d in $dirs
+        mkdir -p $d
+    end
+    _info "Directory layout created at $base_dir"
+end
+
+# 2. Copy harness files
+set -l harness_files \
+    base.md \
+    agents-architecture.md \
+    model-fleet.md \
+    global-deployment.md \
+    mcp-fleet.md \
+    dashboard-contract.md \
+    orchestrator-config.md
+
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would copy harness files:"
+    for f in $harness_files
+        echo "  $project_root/artifacts/harness/$f -> $base_dir/harness/$f"
+    end
+else
+    for f in $harness_files
+        set -l src "$project_root/artifacts/harness/$f"
+        if test -f $src
+            cp $src "$base_dir/harness/$f"
+        else
+            _warn "Harness file missing: $src"
+        end
+    end
+    _info "Harness files installed."
+end
+
+# 3. Copy registries
+set -l registry_files \
+    gotcha_archive.json \
+    script_registry.json
+
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would copy registries:"
+    for f in $registry_files
+        echo "  $project_root/data/$f -> $base_dir/registries/$f"
+    end
+else
+    for f in $registry_files
+        set -l src "$project_root/data/$f"
+        if test -f $src
+            cp $src "$base_dir/registries/$f"
+        else
+            _warn "Registry file missing: $src"
+        end
+    end
+    _info "Registries installed."
+end
+
+# 4. Copy agent instruction files
+set -l agent_files CLAUDE.md GEMINI.md
+# Also copy persona 3 run instructions if they exist (W4 creates these)
+for f in CLAUDE-iteration.md CLAUDE-run.md GEMINI-iteration.md GEMINI-run.md
+    if test -f "$project_root/$f"
+        set agent_files $agent_files $f
+    end
+end
+
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would copy agent instruction files:"
+    for f in $agent_files
+        echo "  $project_root/$f -> $base_dir/agents/$f"
+    end
+else
+    for f in $agent_files
+        set -l src "$project_root/$f"
+        if test -f $src
+            cp $src "$base_dir/agents/$f"
+        else
+            _warn "Agent file missing: $src"
+        end
+    end
+    _info "Agent instructions installed."
+end
+
+# 5. Migrate fernet secrets store (per Q4 decision)
+set -l old_secrets_dir $HOME/.config/aho
+set -l new_secrets_dir $base_dir/secrets
+
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would check fernet store migration."
+else
+    # Copy fernet store from old location if it exists and new doesn't
+    for f in (command ls $old_secrets_dir/*.fernet 2>/dev/null)
+        set -l basename (basename $f)
+        set -l new_path "$new_secrets_dir/$basename"
+        if not test -f $new_path; or test $force -eq 1
+            cp $f $new_path
+            chmod 600 $new_path
+            _info "Migrated $basename to $new_secrets_dir"
+            # Verify read before deleting old
+            if test -f $new_path
+                _info "Verified $basename at new location. Old file preserved (manual cleanup)."
+            end
+        end
+    end
+end
+
+# 6. Create aho CLI symlink in ~/.local/bin/
+set -l aho_bin $HOME/.local/bin/aho
+
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would create symlink: $aho_bin"
+else
+    # Create a thin wrapper script that invokes the Python CLI
+    printf '#!/usr/bin/env fish\n' > $base_dir/bin/aho
+    printf '# aho CLI wrapper — delegates to Python CLI.\n' >> $base_dir/bin/aho
+    printf 'python3 -m aho.cli $argv\n' >> $base_dir/bin/aho
+    chmod +x $base_dir/bin/aho
+
+    ln -sf $base_dir/bin/aho $aho_bin
+    _info "CLI symlink: $aho_bin -> $base_dir/bin/aho"
+end
+
+# 7. Copy components.yaml
+if test $dry_run -eq 1
+    _info "[DRY RUN] Would copy components.yaml"
+else
+    if test -f "$project_root/components.yaml"
+        cp "$project_root/components.yaml" "$base_dir/registries/components.yaml"
+        _info "components.yaml installed."
+    end
+end
+
+# 8. Summary
+_info "---"
+_info "aho $script_version local install complete."
+_info "  Base dir:    $base_dir"
+_info "  Harness:     $base_dir/harness/"
+_info "  Registries:  $base_dir/registries/"
+_info "  Agents:      $base_dir/agents/"
+_info "  Secrets:     $base_dir/secrets/"
+_info "  Runtime:     $base_dir/runtime/"
+_info "  CLI:         $aho_bin"
+_info "---"
+_info "Run 'aho doctor' to verify installation."

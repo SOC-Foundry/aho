@@ -1,0 +1,37 @@
+# aho OTEL Collector Configuration
+# 0.2.10 W8 — per Q3 decision.
+# OTLP gRPC receiver on 127.0.0.1:4317
+# File exporter to ~/.local/share/aho/traces/
+# Batch processor, 24h retention via file rotation.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "127.0.0.1:4317"
+
+processors:
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+
+exporters:
+  file:
+    path: "${HOME}/.local/share/aho/traces/otel-traces.jsonl"
+    rotation:
+      max_megabytes: 50
+      max_days: 1
+      max_backups: 1
+  otlp/jaeger:
+    endpoint: "127.0.0.1:14317"
+    # Must use 127.0.0.1 not localhost — Jaeger binds IPv4 only,
+    # but Go resolves localhost to IPv6 first, causing connection-refused.
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [file, otlp/jaeger]

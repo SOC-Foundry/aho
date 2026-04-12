@@ -30,6 +30,7 @@ def get_state(force: bool = False) -> dict:
         "traces": _trace_state(),
         "mcp": _mcp_state(),
         "models": _model_state(),
+        "install": _install_completeness(),
     }
     _cache["data"] = state
     _cache["ts"] = now
@@ -141,7 +142,7 @@ def _verify_component(comp: dict, root: Path) -> str:
     return "unknown"
 
 
-_DAEMONS = ["openclaw", "nemoclaw", "telegram", "harness-watcher"]
+_DAEMONS = ["openclaw", "nemoclaw", "telegram", "harness-watcher", "otel-collector", "jaeger", "dashboard"]
 
 
 def _daemon_state() -> list:
@@ -283,3 +284,58 @@ def _model_state() -> list:
         status = "ok" if model in installed else "missing"
         result.append({"name": model, "status": status})
     return result
+
+
+def _install_completeness() -> dict:
+    """Check install completeness for both project-local and system-local components."""
+    base_dir = Path.home() / ".local/share/aho"
+
+    # System-local directories
+    dirs = {
+        "bin": base_dir / "bin",
+        "harness": base_dir / "harness",
+        "registries": base_dir / "registries",
+        "agents": base_dir / "agents",
+        "secrets": base_dir / "secrets",
+        "runtime": base_dir / "runtime",
+        "traces": base_dir / "traces",
+        "jaeger": base_dir / "jaeger",
+    }
+    dir_status = {}
+    for name, path in dirs.items():
+        dir_status[name] = "present" if path.is_dir() else "missing"
+
+    # CLI symlink
+    cli_symlink = Path.home() / ".local/bin/aho"
+    cli_status = "present" if cli_symlink.exists() else "missing"
+
+    # System binaries
+    binaries = {
+        "fish": "fish",
+        "python3": "python3",
+        "node": "node",
+        "npm": "npm",
+        "age": "age",
+        "jq": "jq",
+        "rg": "rg",
+        "fd": "fd",
+        "ollama": "ollama",
+        "otelcol-contrib": "otelcol-contrib",
+        "jaeger-all-in-one": "jaeger-all-in-one",
+    }
+    binary_status = {}
+    for name, cmd in binaries.items():
+        try:
+            result = subprocess.run(
+                ["which", cmd], capture_output=True, text=True, timeout=2,
+            )
+            binary_status[name] = "present" if result.returncode == 0 else "missing"
+        except Exception:
+            binary_status[name] = "unknown"
+
+    return {
+        "base_dir": str(base_dir),
+        "directories": dir_status,
+        "cli_symlink": cli_status,
+        "binaries": binary_status,
+    }

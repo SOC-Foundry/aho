@@ -1,2 +1,7 @@
 #!/usr/bin/env fish
-docker compose -f (dirname (status filename))/../docker-compose.otel.yml down
+# aho-otel-down — Stop OTEL collector + Jaeger systemd user services.
+# 0.2.10 W8 — migrated from docker-compose to native AUR packages.
+
+systemctl --user stop aho-otel-collector 2>&1; or true
+systemctl --user stop aho-jaeger 2>&1; or true
+echo "OTEL collector and Jaeger stopped."

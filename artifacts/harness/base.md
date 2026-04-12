@@ -1,6 +1,6 @@
 # aho - Base Harness
 
-**Version:** 0.2.9
+**Version:** 0.2.10
 **Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable

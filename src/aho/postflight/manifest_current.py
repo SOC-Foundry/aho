@@ -27,6 +27,9 @@ def check():
     missing = []
     checked = 0
     for rel_path, expected_hash in files.items():
+        # Skip self-referential entry — MANIFEST.json cannot hash itself
+        if rel_path == "MANIFEST.json":
+            continue
         p = root / rel_path
         if not p.exists():
             missing.append(rel_path)

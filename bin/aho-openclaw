@@ -2,7 +2,7 @@
 # aho-openclaw — wrapper for the OpenClaw global daemon.
 # Connects to the Unix socket and dispatches commands.
 
-set sock $HOME/.local/share/aho/openclaw.sock
+set sock /run/user/(id -u)/openclaw.sock
 
 if not test -S $sock
     echo "openclaw daemon not running (no socket at $sock)"

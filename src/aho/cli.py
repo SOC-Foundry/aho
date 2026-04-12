@@ -6,10 +6,24 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "aho 0.2.2"
+VERSION = "aho 0.2.10"
 CONFIG_DIR = Path.home() / ".config" / "aho"
 PROJECTS_FILE = CONFIG_DIR / "projects.json"
 ACTIVE_FILE = CONFIG_DIR / "active.fish"
+
+
+def _dispatch_wrapper(wrapper_name, args_list=None):
+    """Dispatch to a bin/aho-* fish wrapper script."""
+    from aho.paths import find_project_root
+    root = find_project_root()
+    script = root / "bin" / wrapper_name
+    if not script.exists():
+        print(f"ERROR: {script} not found")
+        sys.exit(1)
+    import subprocess
+    cmd = ["fish", str(script)] + (args_list or [])
+    result = subprocess.run(cmd)
+    sys.exit(result.returncode)
 
 
 def _load_projects():
@@ -438,6 +452,7 @@ def main():
     dr_sub.add_parser("preflight", help="Environment readiness check")
     dr_sub.add_parser("postflight", help="Iteration results verification")
     dr_sub.add_parser("full", help="Run all levels")
+    dr_sub.add_parser("deep", help="Full + Flutter/Dart SDK integration checks")
 
     sub.add_parser("status")
     sub.add_parser("eval")
@@ -448,6 +463,7 @@ def main():
     pcomp_list = pcomps.add_parser("list", help="List all components")
     pcomp_list.add_argument("--status", default=None, help="Filter by status (active, stub, broken, deprecated)")
     pcomps.add_parser("attribution", help="Show workload attribution from event log")
+    pcomps.add_parser("check", help="Check installed status of all components")
 
     prag = sub.add_parser("rag")
     prags = prag.add_subparsers(dest="rag_cmd")
@@ -517,6 +533,68 @@ def main():
     ppipe_val.add_argument("--dir", default=None, help="Target directory (default: cwd)")
     ppipe_status = ppipes.add_parser("status", help="Show pipeline checkpoint status")
     ppipe_status.add_argument("name", help="Pipeline name")
+
+    # --- aho run ---
+    prun = sub.add_parser("run", help="Run a task via OpenClaw agent dispatch")
+    prun.add_argument("task", nargs="?", help="Task description (quoted string)")
+    prun.add_argument("--agent", default=None, choices=["qwen", "claude", "nemotron"], help="Force specific agent (default: auto-route)")
+    prun.add_argument("--cwd", default=None, help="Override working directory (default: $PWD)")
+    prun.add_argument("--dry-run", action="store_true", help="Show what would happen without executing")
+
+    # --- aho mcp ---
+    pmcp = sub.add_parser("mcp", help="MCP server fleet management")
+    pmcps = pmcp.add_subparsers(dest="mcp_cmd")
+    pmcps.add_parser("list", help="List all MCP servers")
+    pmcps.add_parser("status", help="Show MCP server status")
+    pmcps.add_parser("doctor", help="Run MCP fleet health checks")
+    pmcp_install = pmcps.add_parser("install", help="Install MCP server packages")
+    pmcp_install.add_argument("--force", action="store_true", help="Force reinstall")
+    pmcp_smoke = pmcps.add_parser("smoke", help="Run MCP smoke tests")
+
+    # --- aho install ---
+    pinst = sub.add_parser("install", help="Populate local install directory (~/.local/share/aho/)")
+    pinst.add_argument("--force", action="store_true", help="Force overwrite existing files")
+    pinst.add_argument("--dry-run", action="store_true", help="Show what would be installed")
+
+    # --- aho update ---
+    pupd = sub.add_parser("update", help="Update aho components")
+    pupds = pupd.add_subparsers(dest="update_cmd")
+    pupds.add_parser("self", help="Update aho package from repo")
+    pupds.add_parser("models", help="Update model fleet")
+    pupds.add_parser("mcp", help="Update MCP server packages")
+    pupds.add_parser("all", help="Update everything")
+
+    # --- aho dashboard ---
+    pdash = sub.add_parser("dashboard", help="Localhost dashboard server")
+
+    # --- aho models ---
+    pmod = sub.add_parser("models", help="Model fleet management")
+    pmods = pmod.add_subparsers(dest="models_cmd")
+    pmods.add_parser("status", help="Show Ollama model fleet status")
+    pmods.add_parser("pull", help="Pull configured models")
+
+    # --- aho openclaw ---
+    pocl = sub.add_parser("openclaw", help="OpenClaw daemon management")
+    pocl.add_argument("openclaw_args", nargs="*", help="Arguments to pass to openclaw")
+
+    # --- aho nemoclaw ---
+    pnem = sub.add_parser("nemoclaw", help="NemoClaw daemon management")
+    pnem.add_argument("nemoclaw_args", nargs="*", help="Arguments to pass to nemoclaw")
+
+    # --- aho conductor ---
+    pcond = sub.add_parser("conductor", help="Conductor orchestrator")
+    pcond.add_argument("conductor_args", nargs="*", help="Arguments to pass to conductor")
+
+    # --- aho otel ---
+    potel = sub.add_parser("otel", help="OTEL collector management")
+    potels = potel.add_subparsers(dest="otel_cmd")
+    potels.add_parser("up", help="Start OTEL collector")
+    potels.add_parser("down", help="Stop OTEL collector")
+    potels.add_parser("status", help="Show OTEL collector status")
+
+    # --- aho bootstrap ---
+    pboot = sub.add_parser("bootstrap", help="Bootstrap aho environment from repo")
+    pboot.add_argument("bootstrap_args", nargs="*", help="Arguments to pass to bootstrap")
 
     pit = sub.add_parser("iteration", help="Iteration artifact loop (Qwen-managed)")
     pits = pit.add_subparsers(dest="iteration_cmd")
@@ -706,8 +784,77 @@ def main():
                 else:
                     for agent, pct in workload.items():
                         print(f"  {agent:<30} {pct*100:5.1f}%")
+        elif args.components_cmd == "check":
+            from aho.components.manifest import check_installed
+            results = check_installed()
+            present = sum(1 for r in results if r["present"])
+            missing = sum(1 for r in results if not r["present"])
+            print(f"{'Name':<40} {'Kind':<18} {'Method':<15} {'Present'}")
+            print("-" * 85)
+            for r in results:
+                mark = "ok" if r["present"] else "MISSING"
+                print(f"{r['name']:<40} {r['kind']:<18} {r['check_method']:<15} {mark}")
+            print(f"\nTotal: {len(results)} | Present: {present} | Missing: {missing}")
         else:
             pcomp.print_help()
+    elif args.cmd == "run":
+        if not args.task:
+            prun.print_help()
+        else:
+            from aho.run_dispatch import dispatch_run
+            cwd = args.cwd or os.getcwd()
+            result = dispatch_run(
+                task=args.task,
+                cwd=cwd,
+                agent_hint=args.agent,
+                dry_run=args.dry_run,
+            )
+            if not result["ok"]:
+                print(f"ERROR: {result.get('error', 'unknown')}")
+                sys.exit(1)
+    elif args.cmd == "mcp":
+        if not args.mcp_cmd:
+            pmcp.print_help()
+        else:
+            _dispatch_wrapper("aho-mcp", [args.mcp_cmd])
+    elif args.cmd == "install":
+        install_args = []
+        if args.force:
+            install_args.append("--force")
+        if args.dry_run:
+            install_args.append("--dry-run")
+        _dispatch_wrapper("aho-install", install_args)
+    elif args.cmd == "update":
+        if not args.update_cmd:
+            pupd.print_help()
+        else:
+            print(f"aho update {args.update_cmd}: dispatch not yet wired")
+    elif args.cmd == "dashboard":
+        _dispatch_wrapper("aho-dashboard")
+    elif args.cmd == "models":
+        if args.models_cmd == "status":
+            _dispatch_wrapper("aho-models-status")
+        elif args.models_cmd == "pull":
+            _dispatch_wrapper("aho-models")
+        else:
+            pmod.print_help()
+    elif args.cmd == "openclaw":
+        _dispatch_wrapper("aho-openclaw", args.openclaw_args or [])
+    elif args.cmd == "nemoclaw":
+        _dispatch_wrapper("aho-nemoclaw", args.nemoclaw_args or [])
+    elif args.cmd == "conductor":
+        _dispatch_wrapper("aho-conductor", args.conductor_args or [])
+    elif args.cmd == "otel":
+        if args.otel_cmd == "up":
+            _dispatch_wrapper("aho-otel-up")
+        elif args.otel_cmd == "down":
+            _dispatch_wrapper("aho-otel-down")
+        elif args.otel_cmd == "status":
+            _dispatch_wrapper("aho-otel-status")
+        else:
+            potel.print_help()
+    elif args.cmd == "bootstrap":
+        _dispatch_wrapper("aho-bootstrap", args.bootstrap_args or [])
     elif args.cmd in ("eval", "registry"):
         cmd_stub(args)
     else:

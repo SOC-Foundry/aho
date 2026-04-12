@@ -91,16 +91,19 @@ def test_trace_state_returns_last_20(project_root):
     assert "24" in traces[0]["timestamp"]
 
 
-def test_daemon_state_returns_4(project_root):
+def test_daemon_state_returns_7(project_root):
     from aho.dashboard.aggregator import _daemon_state, _cache
     _cache["data"] = None
     daemons = _daemon_state()
-    assert len(daemons) == 4
+    assert len(daemons) == 7
     names = [d["name"] for d in daemons]
     assert "openclaw" in names
     assert "nemoclaw" in names
     assert "telegram" in names
     assert "harness-watcher" in names
+    assert "otel-collector" in names
+    assert "jaeger" in names
+    assert "dashboard" in names
 
 
 def test_get_state_returns_all_sections(project_root):

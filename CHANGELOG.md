@@ -1,5 +1,27 @@
 # aho changelog
 
+## [0.2.10] — 2026-04-12
+
+**Theme:** Install surface implementation + CLI unification + observability deployment
+
+- Unified `aho` CLI: run, mcp, install, update, dashboard, models, openclaw, otel, bootstrap subcommands
+- `_dispatch_wrapper()` bridges `aho <sub>` → `bin/aho-*` fish scripts; old wrappers kept as implementations
+- `bin/aho-install` populates `~/.local/share/aho/` with harness, registries, agents, bin, secrets, runtime
+- Agent instruction split: CLAUDE-iteration.md + CLAUDE-run.md, GEMINI-iteration.md + GEMINI-run.md (persona 1 vs persona 3)
+- OpenClaw socket relocated from `~/.local/share/aho/` to `/run/user/$UID/openclaw.sock` (XDG_RUNTIME_DIR)
+- OpenClaw file bridge: `run` command reads CWD files, routes to model per Q1 decision, writes output to `$CWD/aho-output/`
+- `aho run "task"` end-to-end: dispatch to OpenClaw socket, persona 3 agent instructions, structured output
+- otelcol-contrib v0.149.0 (direct binary, predates 0.2.10) + Jaeger v1.62.0 (direct binary) as systemd user services
+- Dashboard promoted from ad-hoc to systemd user service, install completeness section in /api/state
+- MANIFEST live-refresh daemon: 5s debounced regeneration on harness/registry changes
+- `aho doctor --deep`: flutter doctor -v + dart --version SDK integration checks
+- `aho components check`: per-kind presence verification (85/85 on NZXTcos)
+- OpenClaw stability: Errno 11 retry, repetition detector (30% threshold), Errno 104 catch
+- Postflight gate fixes: readme_current timezone, bundle_quality §22 flexible format, manifest_current self-referential skip
+- 6 systemd user services active: openclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard
+- AUR install path deferred to 0.2.11 (CachyOS mirror PGP issue + Jaeger-bin AUR rename)
+- 227 tests (maintained from 0.2.9), 17 workstreams, W3/W5/W9/W10 re-executed after drift verification
+
 ## [0.2.9] — 2026-04-11
 
 **Theme:** Remote operability plumbing + persona 3 discovery + install surface architecture

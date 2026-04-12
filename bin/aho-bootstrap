@@ -123,7 +123,7 @@ _info "MCP fleet checked."
 
 # 9. Install systemd user services for aho daemons
 _info "Installing systemd user services..."
-for daemon in openclaw nemoclaw telegram harness-watcher
+for daemon in openclaw nemoclaw telegram harness-watcher otel-collector jaeger dashboard
     set -l template "$project_root/templates/systemd/aho-$daemon.service.template"
     set -l dest "$HOME/.config/systemd/user/aho-$daemon.service"
     if test -f $template
@@ -132,6 +132,11 @@ for daemon in openclaw nemoclaw telegram harness-watcher
     else
         _warn "  Template missing: $template"
     end
+end
+# Copy OTEL collector config
+if test -f "$project_root/templates/otelcol-config.yaml"
+    cp "$project_root/templates/otelcol-config.yaml" "$HOME/.local/share/aho/otelcol-config.yaml"
+    _info "  OTEL collector config installed."
 end
 systemctl --user daemon-reload
 systemctl --user enable --now aho-openclaw aho-nemoclaw aho-telegram aho-harness-watcher 2>/dev/null; or true

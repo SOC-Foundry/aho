@@ -1,8 +1,7 @@
 # aho AUR packages
 #
-# Intentionally empty as of 0.2.5. aho proper has no AUR dependencies.
-# Consumer projects (kjtcom, etc.) layer their own AUR needs on top
-# via their own bootstrap (e.g., flutter-bin, google-cloud-cli).
+# 0.2.10 W8/W9: otelcol-contrib and jaeger for local observability.
+# Installed via bin/aho-aur install. Both run as systemd --user services.
 #
-# bin/aho-aur exists as a wrapper for future use and to keep yay
-# bootstrap logic available to consumer projects.
+otelcol-contrib
+jaeger

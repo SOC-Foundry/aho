@@ -4,6 +4,7 @@
 gotchas, ADRs, and component registrations. LLM=nemotron-mini:4b.
 """
 import json
+import os
 import subprocess
 import sys
 import time
@@ -51,11 +52,24 @@ class HarnessAgent:
         return {"propose": False, "category": result}
 
     def watch(self, event_log_path: str):
-        """Long-lived tail of event log, classify each new event."""
+        """Long-lived tail of event log, classify each new event.
+
+        Also monitors harness/ and data/ for file changes, triggering
+        MANIFEST.json refresh with 5s debounce (0.2.10 W11).
+        """
         from aho.logger import emit_heartbeat
+        from aho.manifest import ManifestRefresher
+
         emit_heartbeat("harness-watcher")
         log_event("agent_msg", "harness-agent", "event-log", "watch_start",
                   input_summary=f"path={event_log_path}")
+
+        # Start MANIFEST refresher
+        refresher = ManifestRefresher()
+
+        # Start inotifywait for harness/registry file changes (if available)
+        self._start_file_watcher(refresher)
+
         proc = subprocess.Popen(
             ["tail", "-F", event_log_path],
             stdout=subprocess.PIPE,
@@ -69,6 +83,9 @@ class HarnessAgent:
                     if proposal["propose"]:
                         log_event("harness_proposal", "harness-agent", "registry", "gotcha_candidate",
                                   output_summary=f"new gotcha candidate: {proposal['code']}")
+                    # Trigger manifest refresh on workstream events
+                    if event.get("event_type") in ("workstream_complete", "close_complete"):
+                        refresher.trigger()
                 except (json.JSONDecodeError, KeyError):
                     continue
         except KeyboardInterrupt:
@@ -76,6 +93,45 @@ class HarnessAgent:
         finally:
             proc.terminate()
             proc.wait()
+
+    def _start_file_watcher(self, refresher):
+        """Start background thread watching harness/ and data/ for changes."""
+        import threading
+        from pathlib import Path
+
+        try:
+            from aho.paths import find_project_root
+            root = find_project_root()
+        except Exception:
+            return
+
+        watch_dirs = [
+            root / "artifacts" / "harness",
+            root / "data",
+        ]
+        existing_dirs = [str(d) for d in watch_dirs if d.is_dir()]
+        if not existing_dirs:
+            return
+
+        def _poll_watcher():
+            """Simple polling watcher — checks mtimes every 10s."""
+            mtimes = {}
+            while True:
+                for watch_dir in existing_dirs:
+                    for dirpath, _, filenames in os.walk(watch_dir):
+                        for fname in filenames:
+                            fpath = os.path.join(dirpath, fname)
+                            try:
+                                mtime = os.path.getmtime(fpath)
+                                if fpath in mtimes and mtime > mtimes[fpath]:
+                                    refresher.trigger()
+                                mtimes[fpath] = mtime
+                            except OSError:
+                                continue
+                time.sleep(10)
+
+        t = threading.Thread(target=_poll_watcher, daemon=True)
+        t.start()
 
 
 def main():

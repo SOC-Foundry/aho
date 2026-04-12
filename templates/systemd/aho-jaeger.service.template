@@ -1,0 +1,12 @@
+[Unit]
+Description=aho Jaeger Trace Viewer
+After=network.target aho-otel-collector.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/jaeger-all-in-one --collector.otlp.enabled=true --collector.otlp.grpc.host-port=localhost:14317 --collector.otlp.http.host-port=localhost:14318 --query.http-server.host-port=127.0.0.1:16686
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

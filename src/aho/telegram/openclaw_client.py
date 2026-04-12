@@ -4,10 +4,16 @@ Speaks the existing openclaw JSON protocol: one line JSON in, one line JSON out.
 Supports sync wait with configurable timeout and async ack fallback.
 """
 import json
+import os
 import socket
 from pathlib import Path
 
-OPENCLAW_SOCK = Path.home() / ".local/share/aho/openclaw.sock"
+
+def _get_openclaw_sock():
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    return Path(runtime_dir) / "openclaw.sock"
+
+OPENCLAW_SOCK = _get_openclaw_sock()
 
 
 def send_chat(message: str, timeout: float = 30.0, role: str = "assistant") -> dict:

@@ -1,7 +1,7 @@
 # Phase 0 Charter — aho
 
 **Phase:** 0 — NZXT-only authoring → clone-to-deploy on P3
-**Charter version:** 0.2.9
+**Charter version:** 0.2.10
 **Charter date:** 2026-04-11
 **Status:** active
 

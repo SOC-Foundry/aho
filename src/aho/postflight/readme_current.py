@@ -1,12 +1,10 @@
 """Post-flight check: README currency enforcement (ahomw-ADR-033)."""
-import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def check():
     """Returns (status, message). FAIL if README mtime < iteration start."""
     import json
-    from pathlib import Path
     from aho.paths import find_project_root
 
     try:
@@ -24,9 +22,9 @@ def check():
         if not started_at:
             return ("warn", "Checkpoint has no started_at timestamp")
 
-        # Parse iteration start time
+        # Parse iteration start time — always use UTC
         start_time = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
-        readme_mtime = datetime.fromtimestamp(readme.stat().st_mtime, tz=start_time.tzinfo)
+        readme_mtime = datetime.fromtimestamp(readme.stat().st_mtime, tz=timezone.utc)
 
         if readme_mtime < start_time:
             return ("fail", f"README.md last modified {readme_mtime.isoformat()} < iteration start {started_at}")

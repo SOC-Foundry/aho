@@ -1,3 +1,8 @@
 #!/usr/bin/env fish
-docker compose -f (dirname (status filename))/../docker-compose.otel.yml up -d
-echo "Jaeger UI: http://localhost:16686"
+# aho-otel-up — Start OTEL collector + Jaeger as systemd user services.
+# 0.2.10 W8 — migrated from docker-compose to native AUR packages.
+
+systemctl --user start aho-otel-collector 2>&1; or echo "[WARN] aho-otel-collector failed to start"
+systemctl --user start aho-jaeger 2>&1; or echo "[WARN] aho-jaeger failed to start"
+echo "OTEL collector: 127.0.0.1:4317 (gRPC)"
+echo "Jaeger UI: http://127.0.0.1:16686"

@@ -404,12 +404,80 @@ def _postflight_checks():
             
     return results
 
+def _check_flutter_doctor():
+    """Run flutter doctor -v and extract structured results."""
+    try:
+        r = subprocess.run(
+            ["flutter", "doctor", "-v"],
+            capture_output=True, text=True, timeout=60
+        )
+        output = r.stdout
+        # Count check categories
+        ok_count = output.count("[✓]")
+        warn_count = output.count("[!]")
+        fail_count = output.count("[✗]")
+        total = ok_count + warn_count + fail_count
+        if total == 0:
+            return ("warn", "flutter doctor produced no check results")
+        if fail_count > 0:
+            return ("warn", f"flutter doctor: {ok_count}/{total} ok, {fail_count} failures")
+        return ("ok", f"flutter doctor: {ok_count}/{total} ok, {warn_count} warnings")
+    except FileNotFoundError:
+        return ("warn", "flutter not found on PATH")
+    except subprocess.TimeoutExpired:
+        return ("warn", "flutter doctor timed out (60s)")
+    except Exception as e:
+        return ("warn", f"flutter doctor error: {e}")
+
+
+def _check_dart_version():
+    """Run dart --version and report SDK version."""
+    try:
+        r = subprocess.run(
+            ["dart", "--version"],
+            capture_output=True, text=True, timeout=10
+        )
+        version_text = (r.stdout + r.stderr).strip()
+        if "Dart SDK version" in version_text:
+            return ("ok", version_text.split("\n")[0])
+        if r.returncode == 0:
+            return ("ok", version_text.split("\n")[0] if version_text else "dart present")
+        return ("warn", f"dart returned {r.returncode}")
+    except FileNotFoundError:
+        return ("warn", "dart not found on PATH")
+    except Exception as e:
+        return ("warn", f"dart version error: {e}")
+
+
+def _check_install_completeness():
+    """Check if ~/.local/share/aho/ is populated."""
+    base = Path.home() / ".local/share/aho"
+    expected_dirs = ["bin", "harness", "registries", "agents", "secrets", "runtime"]
+    missing = [d for d in expected_dirs if not (base / d).is_dir()]
+    if not base.is_dir():
+        return ("warn", "~/.local/share/aho/ not found — run aho install")
+    if missing:
+        return ("warn", f"missing subdirs: {', '.join(missing)}")
+    return ("ok", f"all {len(expected_dirs)} install directories present")
+
+
+def _deep_checks():
+    """Deep checks: SDK integrations, install completeness."""
+    return {
+        "flutter_doctor": _check_flutter_doctor(),
+        "dart_version": _check_dart_version(),
+        "install_completeness": _check_install_completeness(),
+    }
+
+
 def run_all(level: str = "quick") -> dict[str, tuple[str, str]]:
     """Run health checks at the specified level."""
     checks = {}
     checks.update(_quick_checks())
-    if level in ("preflight", "postflight", "full"):
+    if level in ("preflight", "postflight", "full", "deep"):
         checks.update(_preflight_checks())
-    if level in ("postflight", "full"):
+    if level in ("postflight", "full", "deep"):
         checks.update(_postflight_checks())
+    if level == "deep":
+        checks.update(_deep_checks())
     return checks
