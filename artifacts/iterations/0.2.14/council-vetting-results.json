@@ -1,0 +1,143 @@
+{
+  "iteration": "0.2.14",
+  "workstream": "W1",
+  "vetting_date": "2026-04-13",
+  "environment": "NZXTcos CachyOS 6.19.11",
+  "members": [
+    {
+      "name": "Qwen-3.5:9B",
+      "category": "llm",
+      "status": "operational",
+      "invocation": "POST /api/generate model=qwen3.5:9b",
+      "latency_ms": 7658,
+      "response_excerpt": "Qwen3.5",
+      "notes": "Correct self-identification. Primary viable LLM for cascade."
+    },
+    {
+      "name": "Nemotron-mini:4b",
+      "category": "llm",
+      "status": "substrate-compromised",
+      "invocation": "POST /api/generate model=nemotron-mini:4b",
+      "latency_ms": 1394,
+      "response_excerpt": "Sure, I can help you with that! What's the name of the AI model you're referring to?",
+      "notes": "Does not self-identify. 0.2.13 W2.5: 80% feature-bias on classification."
+    },
+    {
+      "name": "GLM-4.6V-Flash-9B",
+      "category": "llm",
+      "status": "substrate-compromised",
+      "invocation": "POST /api/generate model=haervwe/GLM-4.6V-Flash-9B",
+      "latency_ms": 34614,
+      "response_excerpt": "GLM-4.5V",
+      "notes": "Identity mismatch (reports 4.5V, tag says 4.6V-Flash). 0.2.13: 80% timeout, wrong JSON schema."
+    },
+    {
+      "name": "OpenClaw",
+      "category": "llm",
+      "status": "operational",
+      "invocation": "socket /run/user/1000/openclaw.sock cmd=status",
+      "latency_ms": 100,
+      "response_excerpt": "{sessions: {}, session_count: 0}",
+      "notes": "Wraps Qwen 3.5:9B. Creates sessions on demand. Configurable via orchestrator.json."
+    },
+    {
+      "name": "context7",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "resolve-library-id",
+      "notes": "Returns library IDs with descriptions and snippet counts."
+    },
+    {
+      "name": "sequential-thinking",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "sequentialthinking",
+      "notes": "Returns thought history."
+    },
+    {
+      "name": "playwright",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "browser_snapshot schema loaded",
+      "notes": "Full browser automation available."
+    },
+    {
+      "name": "filesystem",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "list_directory",
+      "notes": "Returns directory listing."
+    },
+    {
+      "name": "dart",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "list_devices",
+      "notes": "2 devices: Linux + Chrome."
+    },
+    {
+      "name": "memory",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "read_graph",
+      "notes": "Empty graph. Knowledge graph functional."
+    },
+    {
+      "name": "firebase-tools",
+      "category": "mcp",
+      "status": "configured-but-no-project",
+      "invocation": "firebase_get_environment",
+      "notes": "Auth OK (kthompson@socfoundry.com). No firebase.json, no active project."
+    },
+    {
+      "name": "firecrawl",
+      "category": "mcp",
+      "status": "gap",
+      "invocation": "not loaded",
+      "notes": "API key empty in .mcp.json. MCP server never started."
+    },
+    {
+      "name": "everything",
+      "category": "mcp",
+      "status": "operational",
+      "invocation": "echo",
+      "notes": "Test/demo server. Echoes messages."
+    },
+    {
+      "name": "Nemoclaw",
+      "category": "other",
+      "status": "operational",
+      "invocation": "socket ~/.local/share/aho/nemoclaw.sock cmd=dispatch",
+      "latency_ms": 18500,
+      "notes": "3 sessions. Explicit role param bypasses Nemotron classify. Classification: B — minor change for model_id routing."
+    },
+    {
+      "name": "ChromaDB",
+      "category": "other",
+      "status": "operational",
+      "invocation": "chromadb.Client()",
+      "notes": "v1.5.5. 0 collections."
+    },
+    {
+      "name": "nomic-embed-text",
+      "category": "other",
+      "status": "operational",
+      "invocation": "POST /api/embeddings",
+      "notes": "768-dim embeddings. Valid float vectors."
+    }
+  ],
+  "summary": {
+    "total": 16,
+    "operational": 12,
+    "substrate_compromised": 2,
+    "configured_incomplete": 1,
+    "gap": 1
+  },
+  "nemoclaw_investigation": {
+    "classification": "B",
+    "explicit_role_bypass": true,
+    "explicit_model_id": false,
+    "estimated_change_lines": 20,
+    "evidence": "dispatch(task, role=None) skips route() when role provided. Socket handler passes role through."
+  }
+}

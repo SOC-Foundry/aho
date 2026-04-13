@@ -33,3 +33,15 @@
 - **Qwen cameo execution** — Deferred from W8.5. Site scoped in W0 (`workstream_gate.py:24`). Three-executor forensics data (Claude, Gemini, Qwen) still desired. **0.2.14 candidate, after model viability.**
 
 - **workstream_start event emission** — 0.2.13 never emitted workstream_start events for any workstream. Event log has complete events but no starts. Cosmetic gap but reduces lifecycle traceability. **0.2.14 harness fix.**
+
+---
+
+## AUDIT FINDINGS — W10 (added post-audit reconciliation, 2026-04-13)
+
+- **Root directory hygiene** — 22+ `patch_*.py` and `run_acceptance_w*.py` scripts at repo root, plus `install.fish` backup variants. Disposition criteria for 0.2.14 W0: (a) grep references in `src/` and `artifacts/` before any deletion, (b) move iteration-scratch scripts to `artifacts/iterations/{iter}/scratch/`, (c) promote any reusable migration logic to `scripts/migrations/`, (d) delete one-shot scripts only with Kyle confirmation. Bonus: `firebase-debug.log` should not be tracked (add to `.gitignore`). **0.2.14 W0 candidate.**
+
+- **3–4 workstream cap for 0.2.14 cadence** — Kyle directive. Last two iterations both planned 11–20 workstreams and shipped 4–9. Surgical work compresses well; planning should size down. 0.2.14 plan should not exceed 4 work workstreams plus W0 setup and Wn close. **0.2.14 planning constraint.**
+
+- **README/CHANGELOG narrative gap** — 2 iterations behind. Append-only, narrative-preserving update needed in 0.2.14 W0. Story lost includes: 0.2.12 council audits, gotchas G078–G083, 0.2.13 dispatch repair (W1 GLM parser, W2 Nemotron classifier), Pattern C trial, W2.5 substrate findings. **0.2.14 W0 candidate.**
+
+- **workstream_start protocol gap** — Zero `workstream_start` events fired in 0.2.13. Pattern C protocol doc (`artifacts/harness/pattern-c-protocol.md`) should explicitly require `workstream_start` emit when Claude begins a workstream, mirroring `workstream_complete` on the other end. Lifecycle events should bracket every workstream: start at entry, complete at terminal. **0.2.14 W0 — patch protocol doc.**

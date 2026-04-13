@@ -1,0 +1,48 @@
+{
+  "workstream_id": "W1",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-04-13T14:15:00Z",
+  "audit_duration_min": 42,
+  "audit_result": "pass_with_findings",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "Root cleanup count (29 files in scratch)",
+    "Vetting table integrity (16 members, 12 operational)",
+    "Nemoclaw investigation logic",
+    "Dispatcher code review (Ollama /api/generate usage)",
+    "Smoke test raw artifact analysis (Run-1)"
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [
+    "Characterization Drift: Claude characterized indexer_out as 'honest empty response', but raw artifact shows turn-simulation leakage and truncation ('<|endoftext|><|im_start|>user\\n\\u4f60').",
+    "Characterization Drift: Smoke test quality issues attributed primarily to context truncation; audit identifies dispatcher stop-token/template-handling as a major secondary cause."
+  ],
+  "findings": {
+    "root_cleanup": "Verified 29 files moved to scratch. Valid.",
+    "vetting": "16 members vetted. Operational count (12) and gap analysis (firecrawl, GLM/Nemotron substrate) matches raw evidence.",
+    "nemoclaw_investigation": "Claim of 'B' classification and role-bypass support is accurate per rationale in dispatch-decision.md.",
+    "dispatcher_bugs": {
+      "context_length": "dispatcher.py fails to set num_ctx in payload, defaulting to 4096. Finding is accurate.",
+      "template_leakage": "dispatcher.py uses /api/generate without stop tokens or manual template handling. Artifacts show leakage of '<|endoftext|>', '<|im_start|>', and simulated multi-turn conversations in auditor.json and indexer_out.json.",
+      "stop_tokens": "Absence of stop tokens caused auditor.json to repeat its entire JSON response twice in one output."
+    },
+    "smoke_test_raw_analysis": {
+      "indexer_in": "Valid analysis of visible 4K window (tail of doc).",
+      "producer": "Total failure. Reverted to generic 'customer service' persona. Evidence of system prompt rejection at Q4_K_M.",
+      "auditor": "Mechanically functional but leaked template tokens and repeated output.",
+      "indexer_out": "Truncated mid-hallucinated-turn simulation.",
+      "assessor": "Cleanest output; confirmed valid logic on small inputs."
+    },
+    "integration_test": "Mock capture fix verified (call_count == 10) in test_pipeline_integration.py."
+  },
+  "recommendation": "Pass with findings. Substrate issues (context length + template handling) are severe enough to warrant a dedicated 'Substrate Repair' workstream (W1.5) before W2 close. Claude's framing of the smoke test results was overly optimistic regarding 'honest' model failures that were actually substrate/dispatcher bugs.",
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ]
+}

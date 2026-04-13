@@ -1,0 +1,63 @@
+{
+  "pipeline_run_id": "2a39cb516c61",
+  "document_id": "artifacts/iterations/0.2.14/matrix-docs/nosql-manual.txt",
+  "role_assignment": {
+    "indexer_in": "qwen3.5:9b",
+    "producer": "qwen3.5:9b",
+    "auditor": "qwen3.5:9b",
+    "indexer_out": "qwen3.5:9b",
+    "assessor": "qwen3.5:9b"
+  },
+  "dispatch_layer": "ollama-direct",
+  "handoffs": [
+    {
+      "stage": "indexer_in",
+      "started_at": "2026-04-13T12:29:55Z",
+      "completed_at": "2026-04-13T12:32:11Z",
+      "wall_clock_seconds": 136.45,
+      "partial_completion": false,
+      "error": null,
+      "output_size_chars": 3061
+    },
+    {
+      "stage": "producer",
+      "started_at": "2026-04-13T12:32:11Z",
+      "completed_at": "2026-04-13T12:38:00Z",
+      "wall_clock_seconds": 348.49,
+      "partial_completion": false,
+      "error": null,
+      "output_size_chars": 222
+    },
+    {
+      "stage": "auditor",
+      "started_at": "2026-04-13T12:38:00Z",
+      "completed_at": "2026-04-13T12:46:47Z",
+      "wall_clock_seconds": 527.12,
+      "partial_completion": false,
+      "error": null,
+      "output_size_chars": 1936
+    },
+    {
+      "stage": "indexer_out",
+      "started_at": "2026-04-13T12:46:47Z",
+      "completed_at": "2026-04-13T12:55:56Z",
+      "wall_clock_seconds": 549.16,
+      "partial_completion": false,
+      "error": null,
+      "output_size_chars": 214
+    },
+    {
+      "stage": "assessor",
+      "started_at": "2026-04-13T12:55:56Z",
+      "completed_at": "2026-04-13T13:01:20Z",
+      "wall_clock_seconds": 324.07,
+      "partial_completion": false,
+      "error": null,
+      "output_size_chars": 1468
+    }
+  ],
+  "exceptions": [],
+  "total_wall_clock_seconds": 1885.29,
+  "started_at": "2026-04-13T12:29:55Z",
+  "completed_at": "2026-04-13T13:01:20Z"
+}

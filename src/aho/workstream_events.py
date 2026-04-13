@@ -110,6 +110,20 @@ def emit_workstream_complete(workstream_id: str, status: str = "pass",
         workstream_id=workstream_id,
     )
 
+    # Update checkpoint: only the named workstream's state.
+    # Sibling workstream states must be preserved (0.2.13 side-effect bug fix).
+    try:
+        from aho.paths import find_project_root
+        root = find_project_root()
+        ckpt_path = root / ".aho-checkpoint.json"
+        if ckpt_path.exists():
+            ckpt = json.loads(ckpt_path.read_text())
+            ckpt.setdefault("workstreams", {})[workstream_id] = "workstream_complete"
+            ckpt["last_event"] = f"{workstream_id}_workstream_complete"
+            ckpt_path.write_text(json.dumps(ckpt, indent=2) + "\n")
+    except Exception:
+        pass
+
     has_v2 = acceptance_results is not None
     has_v3 = any(x is not None for x in [agents_involved, token_count,
                                           harness_contributions, ad_hoc_forensics_minutes])

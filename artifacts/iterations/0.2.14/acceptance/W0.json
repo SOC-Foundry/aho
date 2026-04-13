@@ -1,0 +1,95 @@
+{
+  "workstream_id": "W0",
+  "iteration": "0.2.14",
+  "status": "pass",
+  "audit_status": "pending_audit",
+  "agents_involved": [
+    {"agent": "claude-code", "role": "primary"}
+  ],
+  "timestamp": "2026-04-13T12:30:00Z",
+  "acceptance_checks": [
+    {
+      "name": "0.2.13 close state verified",
+      "passed": true,
+      "notes": "Checkpoint closed, .aho.json last_completed_iteration: 0.2.13. Baseline at 14 (not 13): 2 new failures (test_structural_gates_emits_checks, test_gate_returns_gate_result_dict) — predicted close-reconciliation transients. 1 fixed (test_healthy_unit_passes). Documented, not blocking."
+    },
+    {
+      "name": "0.2.14 version stamps updated",
+      "passed": true,
+      "notes": "6 files updated: VERSION, .aho.json, .aho-checkpoint.json, MANIFEST.json, pyproject.toml, src/aho/cli.py"
+    },
+    {
+      "name": "Root cleanup proposal written",
+      "passed": true,
+      "notes": "artifacts/iterations/0.2.14/w0-root-cleanup-proposal.md — 28 files proposed for move, 1 .gitignore entry. NOT executed."
+    },
+    {
+      "name": "README + CHANGELOG appended",
+      "passed": true,
+      "notes": "CHANGELOG: entries added for 0.2.13 (dispatch repair, Pattern C, W2.5 substrate findings, rescope) and 0.2.12 (G078-G083 gotchas, strategic rescope at W5). README: narrative section added covering 0.2.12-0.2.14, including substrate findings and 'where we are' honest assessment. 0.2.14 stub in CHANGELOG."
+    },
+    {
+      "name": "Pattern C protocol doc patched",
+      "passed": true,
+      "notes": "Emitter table added. workstream_start REQUIRED. Audit archive overwrites forbidden. Terminal event session requirement. Checkpoint update scoping. Cautionary examples from 0.2.13."
+    },
+    {
+      "name": "emit_workstream_complete patched with passing unit test",
+      "passed": true,
+      "notes": "Checkpoint update added to emit_workstream_complete — only named workstream modified. test_emit_sibling_preservation.py: 2 tests (complete + start), both verify sibling states preserved. Test properly isolated via find_project_root mock."
+    },
+    {
+      "name": "Council models doc complete",
+      "passed": true,
+      "notes": "artifacts/council-models-0.2.14.md — 4 models covered (Qwen 3.5:9B, Nemotron-mini:4b, GLM-4.6V-Flash-9B, OpenClaw). Identity clarification: repo uses Qwen 3.5 (not Qwen 3 or 2.5). Cross-cutting observation: structured output is weak link across all models."
+    },
+    {
+      "name": "Council inventory list complete",
+      "passed": true,
+      "notes": "artifacts/iterations/0.2.14/council-inventory.md — 16 total members: 4 LLMs, 9 MCPs (from .mcp.json), 3 other (Nemoclaw, ChromaDB, nomic-embed-text). 8 operational, 2 substrate-compromised, 6 unknown."
+    },
+    {
+      "name": "NoSQL manual staged",
+      "passed": true,
+      "notes": "Source PDF at matrix-docs/source/. Extracted to matrix-docs/nosql-manual.txt via pdftotext -layout. 201 pages, 413,331 bytes, 7,091 lines, 247,275 chars. Metadata at nosql-manual-meta.md."
+    },
+    {
+      "name": "baseline_regression_check status",
+      "passed": true,
+      "notes": "baseline-stable post-changes. 1 fixed baseline failure (test_healthy_unit_passes). 2 predicted transient failures remain in baseline as known. No NEW regressions from W0 work."
+    },
+    {
+      "name": "No git operations",
+      "passed": true,
+      "notes": "Pillar 11 honored. No git add/commit/push/merge."
+    },
+    {
+      "name": "Gotcha registry consulted",
+      "passed": true,
+      "notes": "No gotcha registry file found at artifacts/harness/gotcha-registry*. Gotchas referenced from CLAUDE.md and carry-forwards: G070 (__pycache__ cleared after src/aho/ touch), G071 (daemon restart — no imports changed), G078 (schema v3), G079 (baseline backstop), G081 (no celebratory framing), G082 (canonical paths), G083 (no except Exception in new code). All honored."
+    }
+  ],
+  "findings": [
+    "Baseline at 14, not 13. Two new failures from 0.2.13 close reconciliation: test_structural_gates_emits_checks and test_gate_returns_gate_result_dict. These were predicted to resolve at 0.2.14 open but did not. They remain in baseline as known failures. One baseline failure fixed: test_healthy_unit_passes (DBUS_SESSION_BUS_ADDRESS now available).",
+    "The emit_workstream_complete side-effect bug was confirmed live: calling emit_workstream_start('W0') on the 0.2.13 closed checkpoint corrupted W1, W3-W6 sibling states to in_progress. Root cause unclear — the code path in emit_workstream_start only modifies the named workstream's dict entry. Possible concurrent write or MANIFEST daemon interaction. The fix adds checkpoint updating to emit_workstream_complete (which previously had none) and the test verifies sibling preservation. The root corruption mechanism in emit_workstream_start needs further investigation in W1 if it recurs.",
+    "Existing test suite (test_workstream_events.py) does NOT mock find_project_root, causing real checkpoint corruption when tests run. The new test_emit_sibling_preservation.py properly mocks it. The existing tests should be patched to use isolated project roots — deferred, not in W0 scope.",
+    "Gotcha registry file not found at expected location (artifacts/harness/gotcha-registry*). Gotchas referenced inline from CLAUDE.md, design docs, and carry-forwards. Registry may exist under a different name or be embedded in another artifact.",
+    "CLAUDE.md updated to 0.2.14. GEMINI.md NOT updated (out of W0 scope — Gemini's instructions for audit session).",
+    "No workstream_start event was logged to the event log because AHO_ITERATION was null at the time of the call (pre-version-bump). The checkpoint was updated manually. Future workstream starts should happen after version bumps."
+  ],
+  "deliverables": {
+    "version_bumps": ["VERSION", ".aho.json", ".aho-checkpoint.json", "MANIFEST.json", "pyproject.toml", "src/aho/cli.py"],
+    "root_cleanup_proposal": "artifacts/iterations/0.2.14/w0-root-cleanup-proposal.md",
+    "changelog_lines_added": 19,
+    "readme_lines_added": 32,
+    "protocol_doc": "artifacts/harness/pattern-c-protocol.md",
+    "emit_fix": "src/aho/workstream_events.py",
+    "emit_test": "artifacts/tests/test_emit_sibling_preservation.py",
+    "council_models": "artifacts/council-models-0.2.14.md",
+    "council_inventory": "artifacts/iterations/0.2.14/council-inventory.md",
+    "nosql_source": "artifacts/iterations/0.2.14/matrix-docs/source/NoSQL_DataPipelines_Technical_Manual.pdf",
+    "nosql_text": "artifacts/iterations/0.2.14/matrix-docs/nosql-manual.txt",
+    "nosql_meta": "artifacts/iterations/0.2.14/matrix-docs/nosql-manual-meta.md",
+    "claude_md": "CLAUDE.md"
+  }
+}

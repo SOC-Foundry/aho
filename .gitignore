@@ -49,6 +49,9 @@ app/build/
 # Machine-local MCP config (generated from .mcp.json.tpl by aho-bootstrap)
 .mcp.json
 
+# Firebase CLI debug output
+firebase-debug.log
+
 # Downloaded binary artifacts (installed to /usr/local/bin/)
 *.tar.gz
 jaeger-*-linux-amd64/

@@ -1,11 +1,33 @@
 # aho changelog
 
+## [0.2.14] — 2026-04-13
+
+**Theme:** Council wiring verification + cascade smoke test (Pattern C modified, claude-code drafter, gemini-cli auditor)
+
+- In progress. 3 workstreams planned (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
+
+## [0.2.13] — 2026-04-12
+
+**Theme:** Dispatch-layer repair — parser honesty, model-quality gate, Pattern C trial (claude-code drafter, gemini-cli auditor)
+
+- First iteration under Pattern C: Claude Code as primary drafter, Gemini CLI as auditor, Kyle as signer. Two-agent coordination with per-workstream audit gates.
+- W1 GLM parser fix: `GLMParseError(Exception)` replaces hardcoded `{score: 8, recommendation: ship}` fallback. `_strip_markdown_fences()` handles ```json, bare ```, partial-wrap, whitespace. 3 new tests.
+- W2 Nemotron classifier fix: `NemotronParseError(Exception)` and `NemotronConnectionError(Exception)` replace blanket `except Exception` and `categories[-1]` fallback returns. Specific `requests.ConnectionError`, `requests.HTTPError`, `requests.Timeout` handlers. 3 new tests.
+- W2.5 model-quality gate (hard gate, rescope trigger): GLM-4.6V-Flash-9B at Q4_K_M — 4/5 inputs timed out at 180s, 1/5 returned wrong JSON schema at 105s. Nemotron-mini:4b — 8/10 inputs returned "feature" regardless of content. Parsers are honest; models cannot produce usable signal through honest parsers.
+- Rescope at W2.5 (Path A): W3-W9 skipped. Fixing exception handlers around non-functional models produces correct error handling of useless responses. Carry-forwards to 0.2.14 for model viability assessment.
+- Pattern C protocol documented: state machine (`in_progress → pending_audit → audit_complete → workstream_complete`), emitter table, halt conditions.
+- 5 new gotchas from 0.2.12 close (G078-G083): schema v3 drift, baseline backstop, age-encrypt interaction, celebratory framing ban, exception-handler-returns-positive-value.
+- Baseline stable at 13 known failures, 0 new across all 4 delivered workstreams.
+- 4 workstreams delivered (W0, W1, W2, W2.5), 7 skipped per rescope, 1 close (W10).
+
 ## [0.2.12] — 2026-04-12
 
 **Theme:** Council activation — discovery, visibility, design, measurement (gemini-cli primary executor)
 
 - Primary executor shift: gemini-cli takes the lead for all 20 workstreams (Pillar 1/8 focus)
 - Council inventory: structured audit of Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, and MCP fleet (W1-W5)
+- Gotcha run: G078 (schema v3 drift), G079 (baseline-as-backstop), G080 (age-encrypt interaction), G081 (celebratory framing ban), G082 (canonical path resolution), G083 (exception-handler-returns-positive-value, 35 definitive sites + 117 ambiguous)
+- Strategic rescope at W5: substrate findings on model output quality prompted reassessment. Council health measured at 35.3/100.
 - Visibility: `aho council status` CLI + lego office visualization foundation (W6-W9)
 - Design: Workstream-level delegation pattern + dispatch contract (W10-W11)
 - Pattern framework: 5 seeds authored (planner-discipline, age-fernet-keyring, install-surface, daemon-lifecycle, council-dispatch)

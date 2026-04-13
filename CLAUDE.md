@@ -1,6 +1,6 @@
-# CLAUDE.md — aho 0.2.13
+# CLAUDE.md — aho 0.2.14
 
-You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -30,15 +30,16 @@ You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI 
 
 Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Numbers honest to substance, not regex. "Clean close," "landed beautifully," "all green" are banned (G081).
 
-## Pattern C Role — Primary Drafter
+## Pattern C Role — Primary Drafter (Modified for 0.2.14)
 
 For each workstream N:
-1. Execute scope per `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`.
-2. Write `artifacts/iterations/0.2.13/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
-3. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
-4. Stop. Gemini audits.
-5. After Gemini writes `artifacts/iterations/0.2.13/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return, read the audit, and emit `workstream_complete`. Checkpoint advances.
-6. If audit is `"fail"`, correct and rewrite the acceptance archive. Do not advance.
+1. Emit `workstream_start` at workstream begin (**REQUIRED — 0.2.13 fired zero**).
+2. Execute scope per `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`.
+3. Write `artifacts/iterations/0.2.14/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+4. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
+5. Stop. Gemini audits.
+6. After Gemini writes `artifacts/iterations/0.2.14/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
+7. If audit is `"fail"`, correct and rewrite the acceptance archive. Do not advance.
 
 ## State Machine (authoritative)
 
@@ -47,6 +48,7 @@ For each workstream N:
 **Claude emits:** `workstream_start`, `pending_audit`, `workstream_complete`.
 **Gemini emits:** `audit_complete` only.
 **No agent emits `workstream_complete` before `audit_complete` exists.**
+**Audit archive overwrites forbidden — re-audits create `audit/W{N}-v2.json`, `v3`, etc.**
 
 ## Hard Rules
 
@@ -59,25 +61,28 @@ For each workstream N:
 - `baseline_regression_check()` is the backstop, not regex counts (G079)
 - No `except Exception` blocks in new code
 
-## Current Iteration: 0.2.13
+## Current Iteration: 0.2.14
 
-**Theme:** Dispatch-layer repair.
+**Theme:** Council wiring verification + cascade smoke test.
 **Executor role:** You draft. Gemini audits. Kyle signs.
-**Success:** Council health ≥50/100 (from 35.3).
-**Hard gate:** W2.5 — if models rubber-stamp post-parse-fix, iteration closes early.
+**Success:** Council exists as verifiable wired system. Sign-off on member operational status. NoSQL manual smoke test executes 5-stage cascade end-to-end.
+**Workstreams:** 3 (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
 
 ## Reference Reading (consult at diligence)
 
-- `artifacts/iterations/0.2.13/aho-design-0.2.13.md`
-- `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`
+- `artifacts/iterations/0.2.14/aho-design-0.2.14.md`
+- `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- Gotcha registry
+- `artifacts/council-models-0.2.14.md` — model docs review
+- `artifacts/iterations/0.2.14/council-inventory.md` — W1 vetting target
 
-## W0 Findings Carried Forward
+## Findings Carried Forward
 
 - Do not grow `test-baseline.json` to paper over breakage. Additions require justification and Kyle sign-off.
 - Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity — this file is authoritative going forward.
 - Acceptance criteria drift gets flagged in findings, not quietly redefined.
+- `emit_workstream_complete()` must only modify the named workstream's state in the checkpoint. Sibling corruption was the 0.2.13 side-effect bug — patched in 0.2.14 W0.
+- `workstream_start` must be emitted at workstream begin. 0.2.13 fired zero — 0.2.14 establishes the discipline.

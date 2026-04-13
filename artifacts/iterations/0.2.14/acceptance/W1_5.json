@@ -1,0 +1,135 @@
+{
+  "workstream_id": "W1.5",
+  "iteration": "0.2.14",
+  "theme": "Substrate Repair — dispatcher /api/chat migration + re-smoke",
+  "executor": "claude-code",
+  "auditor": "gemini-cli",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-13T14:15:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary"
+    }
+  ],
+  "deliverables": {
+    "D1_dispatcher_repair": {
+      "status": "complete",
+      "file": "src/aho/pipeline/dispatcher.py",
+      "changes": {
+        "endpoint": "/api/generate -> /api/chat",
+        "payload": "prompt string -> messages array [{role: system, content: ...}, {role: user, content: ...}]",
+        "num_ctx": 32768,
+        "stop_tokens": ["<|endoftext|>", "<|im_end|>"],
+        "response_extraction": "body.response -> body.message.content",
+        "interface_preserved": true,
+        "function_signature_unchanged": true
+      },
+      "design_notes": "32K chosen over native 256K: (a) VRAM at Q4_K_M on 2080 SUPER 8GB may OOM at full 256K; (b) Qwen effective-useful-context may be smaller than advertised. Ollama /api/ps confirmed context_length: 32768 during run-2."
+    },
+    "D2_unit_tests": {
+      "status": "complete",
+      "file": "artifacts/tests/test_dispatcher_chat_api.py",
+      "test_count": 6,
+      "tests": [
+        "test_uses_chat_endpoint",
+        "test_payload_has_messages_array",
+        "test_num_ctx_in_options",
+        "test_stop_tokens_in_options",
+        "test_response_from_message_content",
+        "test_no_system_produces_user_only_messages"
+      ],
+      "all_passing": true
+    },
+    "D3_resmoke": {
+      "status": "complete",
+      "output_dir": "artifacts/iterations/0.2.14/smoke-test/run-2",
+      "run_1_preserved": true,
+      "role_assignment": "qwen3.5:9b across all 5 roles (Qwen-solo)",
+      "pillar_7_acknowledgment": "Still only viable option per W1 vetting — single-model across all roles",
+      "total_wall_clock_seconds": 1867.34,
+      "per_stage": {
+        "indexer_in": {"wall_clock_seconds": 485.96, "output_chars": 3550, "error": null},
+        "producer": {"wall_clock_seconds": 463.83, "output_chars": 3908, "error": null},
+        "auditor": {"wall_clock_seconds": 570.64, "output_chars": 2174, "error": null},
+        "indexer_out": {"wall_clock_seconds": 212.89, "output_chars": 2031, "error": null},
+        "assessor": {"wall_clock_seconds": 134.02, "output_chars": 3062, "error": null}
+      },
+      "hard_gates": {
+        "gate_1_zero_template_tokens": "PASS — zero instances of <|endoftext|>, <|im_start|>, <|im_end|> across all 5 stages",
+        "gate_2_no_multi_turn_simulation": "PASS — no simulated conversation turns in any stage response",
+        "gate_3_producer_on_topic_english": "PASS — substantive NoSQL pipeline scaling analysis, 0 Chinese characters, 3908 chars vs run-1's 222-char Chinese customer-service response",
+        "gate_4_auditor_single_json": "PASS — single coherent parseable JSON block, no doubling. Run-1 had doubled JSON with template tokens between copies",
+        "gate_5_all_stages_complete": "PASS — all 5 stages completed with non-null, non-truncated output, no errors",
+        "gate_6_no_60min_cap_hit": "PASS — longest stage was auditor at 570.6s (9.5 min)"
+      }
+    }
+  },
+  "run_comparison": {
+    "run_1_total_wall_clock": 1885.29,
+    "run_2_total_wall_clock": 1867.34,
+    "run_1_total_output_chars": 6901,
+    "run_2_total_output_chars": 14725,
+    "per_stage_comparison": {
+      "indexer_in": {
+        "run_1_chars": 3061,
+        "run_2_chars": 3550,
+        "run_1_template_leak": true,
+        "run_2_template_leak": false,
+        "run_1_note": "analyzed only pp.194-201 (last 4K of 247K doc due to default num_ctx 4096)",
+        "run_2_note": "analyzed Sections 71-100 with 32K context window"
+      },
+      "producer": {
+        "run_1_chars": 222,
+        "run_2_chars": 3908,
+        "run_1_template_leak": false,
+        "run_2_template_leak": false,
+        "run_1_note": "total failure — Chinese customer-service persona, off-topic",
+        "run_2_note": "substantive English scaling performance analysis with metrics table"
+      },
+      "auditor": {
+        "run_1_chars": 1936,
+        "run_2_chars": 2174,
+        "run_1_template_leak": true,
+        "run_2_template_leak": false,
+        "run_1_note": "doubled JSON output with template tokens between copies, Chinese text",
+        "run_2_note": "single coherent JSON, validates producer analysis, identifies Option 3/4 ambiguity"
+      },
+      "indexer_out": {
+        "run_1_chars": 214,
+        "run_2_chars": 2031,
+        "run_1_template_leak": true,
+        "run_2_template_leak": false,
+        "run_1_note": "truncated mid-Chinese-word during hallucinated user turn",
+        "run_2_note": "complete JSON with 3 substantive proposed deltas"
+      },
+      "assessor": {
+        "run_1_chars": 1468,
+        "run_2_chars": 3062,
+        "run_1_template_leak": false,
+        "run_2_template_leak": false,
+        "run_1_note": "cleanest run-1 output, valid logic on limited inputs",
+        "run_2_note": "comprehensive meta-assessment, quality_score 92, all 3 indexer-out deltas accepted"
+      }
+    }
+  },
+  "baseline_state": {
+    "failures": 12,
+    "passed": 302,
+    "skipped": 1,
+    "new_failures_introduced": 0,
+    "baseline_grown": false
+  },
+  "gotchas_consulted": ["G070 (__pycache__ cleared)", "G071 (daemon check — openclaw/nemoclaw running but don't import pipeline dispatcher)", "G075/G082 (canonical paths)", "G079 (baseline_regression_check)", "G081 (no celebratory framing)", "G083 (no hardcoded positive values in exception handlers)"],
+  "g083_sites_introduced": 0,
+  "findings": [
+    "Dispatcher /api/chat migration resolves both W1-audit-identified bugs: template token leakage eliminated, context window expanded from 4K default to 32K.",
+    "Wall clock per stage increased ~3x for stages receiving the full 247K document (indexer_in 136s -> 486s, producer 348s -> 464s) due to processing 8x more input tokens. This is expected and not a regression — run-1 was faster because it was processing truncated input.",
+    "Total output volume increased 2.1x (6901 -> 14725 chars) — every stage produces more substantive content with proper context.",
+    "Producer stage showed the most dramatic improvement: from 222-char Chinese customer-service persona (total failure) to 3908-char English analytical report. The persona drift was caused by the /api/generate endpoint not applying the chat template, causing the model to interpret the raw prompt as a customer-service scenario.",
+    "VRAM usage at 32K context: 7216/8192 MB on 2080 SUPER. Stable, no OOM. Headroom of ~1GB. Moving to higher num_ctx would risk OOM at Q4_K_M.",
+    "Language: all 5 run-2 stages produced English output. Run-1 had Chinese in 4/5 stages. The Chinese drift was a symptom of the template leak, not a model language preference issue.",
+    "Pillar 7 (generation/evaluation separation) remains violated — Qwen-solo across all roles. This is acknowledged and unchanged from W1; not in scope for W1.5.",
+    "Assessor gave quality_score: 92 for the cascade output. This is the model's self-assessment — take it as a signal that the model considered its own pipeline output coherent, not as an objective quality measure."
+  ]
+}
