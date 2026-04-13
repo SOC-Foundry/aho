@@ -286,3 +286,345 @@ For CI servers and headless environments, generate a new token with firebase log
 [error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
 
 For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:08:34.804Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:34.805Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:08:34.824Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:34.824Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:08:34.824Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:34.824Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:08:34.881Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:08:34.881Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:08:34.882Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T21:08:34.882Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T21:08:34.882Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T21:08:34.893Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:08:34.893Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:08:34.893Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T21:08:34.893Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T21:08:34.893Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T21:08:34.895Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:08:34.895Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:08:34.895Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T21:08:34.895Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T21:08:34.895Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T21:08:34.998Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T21:08:34.998Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:08:35.006Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T21:08:35.006Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:08:35.011Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T21:08:35.011Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:08:35.039Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:35.039Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:08:35.039Z] >>> [apiv2][query] POST https://developerknowledge.googleapis.com/mcp [none]
+[debug] [2026-04-12T21:08:35.039Z] >>> [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"method":"tools/list","jsonrpc":"2.0","id":1}
+[debug] [2026-04-12T21:08:35.055Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:35.055Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:08:35.056Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:35.056Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:08:35.187Z] <<< [apiv2][status] POST https://developerknowledge.googleapis.com/mcp 200
+[debug] [2026-04-12T21:08:35.187Z] <<< [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"id":1,"jsonrpc":"2.0","result":{"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to find documentation about Google developer products. The documents contain official APIs, code snippets, release notes, best practices, guides, debugging info, and more. It covers the following products and domains:\n\n\n* Android: developer.android.com\n\n* Apigee: docs.apigee.com\n\n* Chrome: developer.chrome.com\n\n* Firebase: firebase.google.com\n\n* Fuchsia: fuchsia.dev\n\n* Google AI: ai.google.dev\n\n* Google Cloud: docs.cloud.google.com\n\n* Google Developers, Ads, Search, Google Maps, Youtube: developers.google.com\n\n* Google Home: developers.home.google.com\n\n* TensorFlow: www.tensorflow.org\n\n* Web: web.dev\n\n\nThis tool returns chunks of text, names, and URLs for matching documents. If the returned chunks are not detailed enough to answer the user's question, use `get_documents` with the `parent` from this tool's output to retrieve the full document content.\n","inputSchema":{"description":"Request schema for search_documents. Use the query field to search for related Google developer documentation.","properties":{"query":{"description":"Required. The raw query string provided by the user, such as \"How to create a Cloud Storage bucket?\".","type":"string"}},"required":["query"],"type":"object"},"name":"search_documents","outputSchema":{"$defs":{"DocumentChunk":{"description":"A DocumentChunk represents a piece of content from a Document in the DeveloperKnowledge corpus. To fetch the entire document content, pass the `parent` to get_document or batch_get_documents.","properties":{"content":{"description":"Output only. The content of the document chunk.","readOnly":true,"type":"string"},"id":{"description":"Output only. The ID of this chunk within the document. The chunk ID is unique within a document, but not globally unique across documents. The chunk ID is not stable and may change over time.","readOnly":true,"type":"string"},"parent":{"description":"Output only. The resource name of the document this chunk is from. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for search_documents.","properties":{"results":{"description":"The search results for the given query. Each Document in this list contains a snippet of content relevant to the search query. Use the DocumentChunk.name field of each result with get_documents to retrieve the full document content.","items":{"$ref":"#/$defs/DocumentChunk"},"type":"array"}},"type":"object"}},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to retrieve the full content of a single document or up to 20 documents in a single call. The document names should be obtained from the `parent` field of results from a call to the `search_documents` tool. Set the `names` parameter to a list of document names.","inputSchema":{"description":"Request schema for get_documents.","properties":{"names":{"description":"Required. The names of the documents to retrieve, as returned by search_documents. A maximum of 20 documents can be retrieved in one call. The documents are returned in the same order as the `names` in the request. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","items":{"type":"string"},"type":"array"}},"required":["names"],"type":"object"},"name":"get_documents","outputSchema":{"$defs":{"Document":{"description":"A Document represents a piece of content from the Developer Knowledge corpus.","properties":{"content":{"description":"Output only. The content of the document in Markdown format.","readOnly":true,"type":"string"},"description":{"description":"Output only. A description of the document.","readOnly":true,"type":"string"},"name":{"description":"Identifier. The resource name of the document. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","type":"string","x-google-identifier":true},"title":{"description":"Output only. The title of the document.","readOnly":true,"type":"string"},"uri":{"description":"Output only. The URI of the content, such as `https://cloud.google.com/storage/docs/creating-buckets`.","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for get_documents.","properties":{"documents":{"description":"Documents requested.","items":{"$ref":"#/$defs/Document"},"type":"array"}},"type":"object"}}]}}
+[debug] [2026-04-12T21:08:35.188Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:08:35.189Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.671Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:10.672Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.672Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:10.672Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.679Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:10.679Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.765Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:53:10.765Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:53:10.765Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T21:53:10.766Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T21:53:10.766Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T21:53:10.769Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:53:10.769Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:53:10.769Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T21:53:10.769Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T21:53:10.769Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T21:53:10.771Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:53:10.771Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T21:53:10.771Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T21:53:10.771Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T21:53:10.771Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T21:53:10.892Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T21:53:10.892Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:53:10.894Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T21:53:10.894Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:53:10.894Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T21:53:10.894Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T21:53:10.934Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:10.934Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.934Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:10.934Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.935Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:10.935Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T21:53:10.935Z] >>> [apiv2][query] POST https://developerknowledge.googleapis.com/mcp [none]
+[debug] [2026-04-12T21:53:10.935Z] >>> [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"method":"tools/list","jsonrpc":"2.0","id":1}
+[debug] [2026-04-12T21:53:11.075Z] <<< [apiv2][status] POST https://developerknowledge.googleapis.com/mcp 200
+[debug] [2026-04-12T21:53:11.075Z] <<< [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"id":1,"jsonrpc":"2.0","result":{"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to find documentation about Google developer products. The documents contain official APIs, code snippets, release notes, best practices, guides, debugging info, and more. It covers the following products and domains:\n\n\n* Android: developer.android.com\n\n* Apigee: docs.apigee.com\n\n* Chrome: developer.chrome.com\n\n* Firebase: firebase.google.com\n\n* Fuchsia: fuchsia.dev\n\n* Google AI: ai.google.dev\n\n* Google Cloud: docs.cloud.google.com\n\n* Google Developers, Ads, Search, Google Maps, Youtube: developers.google.com\n\n* Google Home: developers.home.google.com\n\n* TensorFlow: www.tensorflow.org\n\n* Web: web.dev\n\n\nThis tool returns chunks of text, names, and URLs for matching documents. If the returned chunks are not detailed enough to answer the user's question, use `get_documents` with the `parent` from this tool's output to retrieve the full document content.\n","inputSchema":{"description":"Request schema for search_documents. Use the query field to search for related Google developer documentation.","properties":{"query":{"description":"Required. The raw query string provided by the user, such as \"How to create a Cloud Storage bucket?\".","type":"string"}},"required":["query"],"type":"object"},"name":"search_documents","outputSchema":{"$defs":{"DocumentChunk":{"description":"A DocumentChunk represents a piece of content from a Document in the DeveloperKnowledge corpus. To fetch the entire document content, pass the `parent` to get_document or batch_get_documents.","properties":{"content":{"description":"Output only. The content of the document chunk.","readOnly":true,"type":"string"},"id":{"description":"Output only. The ID of this chunk within the document. The chunk ID is unique within a document, but not globally unique across documents. The chunk ID is not stable and may change over time.","readOnly":true,"type":"string"},"parent":{"description":"Output only. The resource name of the document this chunk is from. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for search_documents.","properties":{"results":{"description":"The search results for the given query. Each Document in this list contains a snippet of content relevant to the search query. Use the DocumentChunk.name field of each result with get_documents to retrieve the full document content.","items":{"$ref":"#/$defs/DocumentChunk"},"type":"array"}},"type":"object"}},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to retrieve the full content of a single document or up to 20 documents in a single call. The document names should be obtained from the `parent` field of results from a call to the `search_documents` tool. Set the `names` parameter to a list of document names.","inputSchema":{"description":"Request schema for get_documents.","properties":{"names":{"description":"Required. The names of the documents to retrieve, as returned by search_documents. A maximum of 20 documents can be retrieved in one call. The documents are returned in the same order as the `names` in the request. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","items":{"type":"string"},"type":"array"}},"required":["names"],"type":"object"},"name":"get_documents","outputSchema":{"$defs":{"Document":{"description":"A Document represents a piece of content from the Developer Knowledge corpus.","properties":{"content":{"description":"Output only. The content of the document in Markdown format.","readOnly":true,"type":"string"},"description":{"description":"Output only. A description of the document.","readOnly":true,"type":"string"},"name":{"description":"Identifier. The resource name of the document. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","type":"string","x-google-identifier":true},"title":{"description":"Output only. The title of the document.","readOnly":true,"type":"string"},"uri":{"description":"Output only. The URI of the content, such as `https://cloud.google.com/storage/docs/creating-buckets`.","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for get_documents.","properties":{"documents":{"description":"Documents requested.","items":{"$ref":"#/$defs/Document"},"type":"array"}},"type":"object"}}]}}
+[debug] [2026-04-12T21:53:11.076Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T21:53:11.076Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.106Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.107Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.107Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.107Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.114Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.114Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.175Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:27:38.175Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:27:38.176Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T22:27:38.176Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T22:27:38.176Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T22:27:38.188Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:27:38.188Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:27:38.188Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T22:27:38.189Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T22:27:38.189Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T22:27:38.192Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:27:38.192Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:27:38.192Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T22:27:38.192Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T22:27:38.192Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T22:27:38.298Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T22:27:38.298Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T22:27:38.301Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T22:27:38.302Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T22:27:38.323Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T22:27:38.323Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T22:27:38.345Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.345Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.346Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.346Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.365Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.365Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:27:38.366Z] >>> [apiv2][query] POST https://developerknowledge.googleapis.com/mcp [none]
+[debug] [2026-04-12T22:27:38.366Z] >>> [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"method":"tools/list","jsonrpc":"2.0","id":1}
+[debug] [2026-04-12T22:27:38.500Z] <<< [apiv2][status] POST https://developerknowledge.googleapis.com/mcp 200
+[debug] [2026-04-12T22:27:38.500Z] <<< [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"id":1,"jsonrpc":"2.0","result":{"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to find documentation about Google developer products. The documents contain official APIs, code snippets, release notes, best practices, guides, debugging info, and more. It covers the following products and domains:\n\n\n* Android: developer.android.com\n\n* Apigee: docs.apigee.com\n\n* Chrome: developer.chrome.com\n\n* Firebase: firebase.google.com\n\n* Fuchsia: fuchsia.dev\n\n* Google AI: ai.google.dev\n\n* Google Cloud: docs.cloud.google.com\n\n* Google Developers, Ads, Search, Google Maps, Youtube: developers.google.com\n\n* Google Home: developers.home.google.com\n\n* TensorFlow: www.tensorflow.org\n\n* Web: web.dev\n\n\nThis tool returns chunks of text, names, and URLs for matching documents. If the returned chunks are not detailed enough to answer the user's question, use `get_documents` with the `parent` from this tool's output to retrieve the full document content.\n","inputSchema":{"description":"Request schema for search_documents. Use the query field to search for related Google developer documentation.","properties":{"query":{"description":"Required. The raw query string provided by the user, such as \"How to create a Cloud Storage bucket?\".","type":"string"}},"required":["query"],"type":"object"},"name":"search_documents","outputSchema":{"$defs":{"DocumentChunk":{"description":"A DocumentChunk represents a piece of content from a Document in the DeveloperKnowledge corpus. To fetch the entire document content, pass the `parent` to get_document or batch_get_documents.","properties":{"content":{"description":"Output only. The content of the document chunk.","readOnly":true,"type":"string"},"id":{"description":"Output only. The ID of this chunk within the document. The chunk ID is unique within a document, but not globally unique across documents. The chunk ID is not stable and may change over time.","readOnly":true,"type":"string"},"parent":{"description":"Output only. The resource name of the document this chunk is from. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for search_documents.","properties":{"results":{"description":"The search results for the given query. Each Document in this list contains a snippet of content relevant to the search query. Use the DocumentChunk.name field of each result with get_documents to retrieve the full document content.","items":{"$ref":"#/$defs/DocumentChunk"},"type":"array"}},"type":"object"}},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to retrieve the full content of a single document or up to 20 documents in a single call. The document names should be obtained from the `parent` field of results from a call to the `search_documents` tool. Set the `names` parameter to a list of document names.","inputSchema":{"description":"Request schema for get_documents.","properties":{"names":{"description":"Required. The names of the documents to retrieve, as returned by search_documents. A maximum of 20 documents can be retrieved in one call. The documents are returned in the same order as the `names` in the request. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","items":{"type":"string"},"type":"array"}},"required":["names"],"type":"object"},"name":"get_documents","outputSchema":{"$defs":{"Document":{"description":"A Document represents a piece of content from the Developer Knowledge corpus.","properties":{"content":{"description":"Output only. The content of the document in Markdown format.","readOnly":true,"type":"string"},"description":{"description":"Output only. A description of the document.","readOnly":true,"type":"string"},"name":{"description":"Identifier. The resource name of the document. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","type":"string","x-google-identifier":true},"title":{"description":"Output only. The title of the document.","readOnly":true,"type":"string"},"uri":{"description":"Output only. The URI of the content, such as `https://cloud.google.com/storage/docs/creating-buckets`.","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for get_documents.","properties":{"documents":{"description":"Documents requested.","items":{"$ref":"#/$defs/Document"},"type":"array"}},"type":"object"}}]}}
+[debug] [2026-04-12T22:27:38.501Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:27:38.502Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.522Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:55.523Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.523Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:55.523Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.532Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:55.532Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.599Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:59:55.599Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:59:55.599Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T22:59:55.600Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T22:59:55.601Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T22:59:55.604Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:59:55.604Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:59:55.604Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T22:59:55.604Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T22:59:55.604Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T22:59:55.606Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:59:55.606Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-12T22:59:55.606Z] > refreshing access token with scopes: []
+[debug] [2026-04-12T22:59:55.606Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-12T22:59:55.606Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-12T22:59:55.719Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T22:59:55.719Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T22:59:55.720Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T22:59:55.720Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T22:59:55.728Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-12T22:59:55.728Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-12T22:59:55.763Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:55.763Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.763Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:55.763Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.770Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:55.770Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-12T22:59:55.770Z] >>> [apiv2][query] POST https://developerknowledge.googleapis.com/mcp [none]
+[debug] [2026-04-12T22:59:55.770Z] >>> [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"method":"tools/list","jsonrpc":"2.0","id":1}
+[debug] [2026-04-12T22:59:56.001Z] <<< [apiv2][status] POST https://developerknowledge.googleapis.com/mcp 200
+[debug] [2026-04-12T22:59:56.001Z] <<< [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"id":1,"jsonrpc":"2.0","result":{"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to find documentation about Google developer products. The documents contain official APIs, code snippets, release notes, best practices, guides, debugging info, and more. It covers the following products and domains:\n\n\n* Android: developer.android.com\n\n* Apigee: docs.apigee.com\n\n* Chrome: developer.chrome.com\n\n* Firebase: firebase.google.com\n\n* Fuchsia: fuchsia.dev\n\n* Google AI: ai.google.dev\n\n* Google Cloud: docs.cloud.google.com\n\n* Google Developers, Ads, Search, Google Maps, Youtube: developers.google.com\n\n* Google Home: developers.home.google.com\n\n* TensorFlow: www.tensorflow.org\n\n* Web: web.dev\n\n\nThis tool returns chunks of text, names, and URLs for matching documents. If the returned chunks are not detailed enough to answer the user's question, use `get_documents` with the `parent` from this tool's output to retrieve the full document content.\n","inputSchema":{"description":"Request schema for search_documents. Use the query field to search for related Google developer documentation.","properties":{"query":{"description":"Required. The raw query string provided by the user, such as \"How to create a Cloud Storage bucket?\".","type":"string"}},"required":["query"],"type":"object"},"name":"search_documents","outputSchema":{"$defs":{"DocumentChunk":{"description":"A DocumentChunk represents a piece of content from a Document in the DeveloperKnowledge corpus. To fetch the entire document content, pass the `parent` to get_document or batch_get_documents.","properties":{"content":{"description":"Output only. The content of the document chunk.","readOnly":true,"type":"string"},"id":{"description":"Output only. The ID of this chunk within the document. The chunk ID is unique within a document, but not globally unique across documents. The chunk ID is not stable and may change over time.","readOnly":true,"type":"string"},"parent":{"description":"Output only. The resource name of the document this chunk is from. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for search_documents.","properties":{"results":{"description":"The search results for the given query. Each Document in this list contains a snippet of content relevant to the search query. Use the DocumentChunk.name field of each result with get_documents to retrieve the full document content.","items":{"$ref":"#/$defs/DocumentChunk"},"type":"array"}},"type":"object"}},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to retrieve the full content of a single document or up to 20 documents in a single call. The document names should be obtained from the `parent` field of results from a call to the `search_documents` tool. Set the `names` parameter to a list of document names.","inputSchema":{"description":"Request schema for get_documents.","properties":{"names":{"description":"Required. The names of the documents to retrieve, as returned by search_documents. A maximum of 20 documents can be retrieved in one call. The documents are returned in the same order as the `names` in the request. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","items":{"type":"string"},"type":"array"}},"required":["names"],"type":"object"},"name":"get_documents","outputSchema":{"$defs":{"Document":{"description":"A Document represents a piece of content from the Developer Knowledge corpus.","properties":{"content":{"description":"Output only. The content of the document in Markdown format.","readOnly":true,"type":"string"},"description":{"description":"Output only. A description of the document.","readOnly":true,"type":"string"},"name":{"description":"Identifier. The resource name of the document. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","type":"string","x-google-identifier":true},"title":{"description":"Output only. The title of the document.","readOnly":true,"type":"string"},"uri":{"description":"Output only. The URI of the content, such as `https://cloud.google.com/storage/docs/creating-buckets`.","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for get_documents.","properties":{"documents":{"description":"Documents requested.","items":{"$ref":"#/$defs/Document"},"type":"array"}},"type":"object"}}]}}
+[debug] [2026-04-12T22:59:56.002Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-12T22:59:56.002Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.572Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.572Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.582Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.582Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.582Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.582Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.653Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T01:04:05.653Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T01:04:05.653Z] > refreshing access token with scopes: []
+[debug] [2026-04-13T01:04:05.654Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-13T01:04:05.654Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-13T01:04:05.657Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T01:04:05.657Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T01:04:05.657Z] > refreshing access token with scopes: []
+[debug] [2026-04-13T01:04:05.657Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-13T01:04:05.657Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-13T01:04:05.660Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T01:04:05.660Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T01:04:05.660Z] > refreshing access token with scopes: []
+[debug] [2026-04-13T01:04:05.660Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-13T01:04:05.660Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-13T01:04:05.776Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-13T01:04:05.776Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-13T01:04:05.776Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-13T01:04:05.776Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-13T01:04:05.780Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-13T01:04:05.780Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-13T01:04:05.819Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.819Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.820Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.820Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.823Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.823Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T01:04:05.824Z] >>> [apiv2][query] POST https://developerknowledge.googleapis.com/mcp [none]
+[debug] [2026-04-13T01:04:05.824Z] >>> [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"method":"tools/list","jsonrpc":"2.0","id":1}
+[debug] [2026-04-13T01:04:05.977Z] <<< [apiv2][status] POST https://developerknowledge.googleapis.com/mcp 200
+[debug] [2026-04-13T01:04:05.977Z] <<< [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"id":1,"jsonrpc":"2.0","result":{"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to find documentation about Google developer products. The documents contain official APIs, code snippets, release notes, best practices, guides, debugging info, and more. It covers the following products and domains:\n\n\n* Android: developer.android.com\n\n* Apigee: docs.apigee.com\n\n* Chrome: developer.chrome.com\n\n* Firebase: firebase.google.com\n\n* Fuchsia: fuchsia.dev\n\n* Google AI: ai.google.dev\n\n* Google Cloud: docs.cloud.google.com\n\n* Google Developers, Ads, Search, Google Maps, Youtube: developers.google.com\n\n* Google Home: developers.home.google.com\n\n* TensorFlow: www.tensorflow.org\n\n* Web: web.dev\n\n\nThis tool returns chunks of text, names, and URLs for matching documents. If the returned chunks are not detailed enough to answer the user's question, use `get_documents` with the `parent` from this tool's output to retrieve the full document content.\n","inputSchema":{"description":"Request schema for search_documents. Use the query field to search for related Google developer documentation.","properties":{"query":{"description":"Required. The raw query string provided by the user, such as \"How to create a Cloud Storage bucket?\".","type":"string"}},"required":["query"],"type":"object"},"name":"search_documents","outputSchema":{"$defs":{"DocumentChunk":{"description":"A DocumentChunk represents a piece of content from a Document in the DeveloperKnowledge corpus. To fetch the entire document content, pass the `parent` to get_document or batch_get_documents.","properties":{"content":{"description":"Output only. The content of the document chunk.","readOnly":true,"type":"string"},"id":{"description":"Output only. The ID of this chunk within the document. The chunk ID is unique within a document, but not globally unique across documents. The chunk ID is not stable and may change over time.","readOnly":true,"type":"string"},"parent":{"description":"Output only. The resource name of the document this chunk is from. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for search_documents.","properties":{"results":{"description":"The search results for the given query. Each Document in this list contains a snippet of content relevant to the search query. Use the DocumentChunk.name field of each result with get_documents to retrieve the full document content.","items":{"$ref":"#/$defs/DocumentChunk"},"type":"array"}},"type":"object"}},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to retrieve the full content of a single document or up to 20 documents in a single call. The document names should be obtained from the `parent` field of results from a call to the `search_documents` tool. Set the `names` parameter to a list of document names.","inputSchema":{"description":"Request schema for get_documents.","properties":{"names":{"description":"Required. The names of the documents to retrieve, as returned by search_documents. A maximum of 20 documents can be retrieved in one call. The documents are returned in the same order as the `names` in the request. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","items":{"type":"string"},"type":"array"}},"required":["names"],"type":"object"},"name":"get_documents","outputSchema":{"$defs":{"Document":{"description":"A Document represents a piece of content from the Developer Knowledge corpus.","properties":{"content":{"description":"Output only. The content of the document in Markdown format.","readOnly":true,"type":"string"},"description":{"description":"Output only. A description of the document.","readOnly":true,"type":"string"},"name":{"description":"Identifier. The resource name of the document. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","type":"string","x-google-identifier":true},"title":{"description":"Output only. The title of the document.","readOnly":true,"type":"string"},"uri":{"description":"Output only. The URI of the content, such as `https://cloud.google.com/storage/docs/creating-buckets`.","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for get_documents.","properties":{"documents":{"description":"Documents requested.","items":{"$ref":"#/$defs/Document"},"type":"array"}},"type":"object"}}]}}
+[debug] [2026-04-13T01:04:05.978Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T01:04:05.978Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.120Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.121Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.131Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.131Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.131Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.131Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.218Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T02:31:46.218Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T02:31:46.218Z] > refreshing access token with scopes: []
+[debug] [2026-04-13T02:31:46.219Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-13T02:31:46.219Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-13T02:31:46.224Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T02:31:46.224Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T02:31:46.224Z] > refreshing access token with scopes: []
+[debug] [2026-04-13T02:31:46.225Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-13T02:31:46.225Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-13T02:31:46.227Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T02:31:46.227Z] Checked if tokens are valid: false, expires at: 1776003429427
+[debug] [2026-04-13T02:31:46.227Z] > refreshing access token with scopes: []
+[debug] [2026-04-13T02:31:46.227Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-13T02:31:46.227Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-13T02:31:46.362Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-13T02:31:46.362Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-13T02:31:46.363Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-13T02:31:46.363Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-13T02:31:46.364Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2026-04-13T02:31:46.364Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[error] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2026-04-13T02:31:46.405Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.405Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.405Z] >>> [apiv2][query] POST https://developerknowledge.googleapis.com/mcp [none]
+[debug] [2026-04-13T02:31:46.405Z] >>> [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"method":"tools/list","jsonrpc":"2.0","id":1}
+[debug] [2026-04-13T02:31:46.407Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.408Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.408Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.408Z] > authorizing via signed-in user (kthompson@socfoundry.com)
+[debug] [2026-04-13T02:31:46.552Z] <<< [apiv2][status] POST https://developerknowledge.googleapis.com/mcp 200
+[debug] [2026-04-13T02:31:46.552Z] <<< [apiv2][body] POST https://developerknowledge.googleapis.com/mcp {"id":1,"jsonrpc":"2.0","result":{"tools":[{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to find documentation about Google developer products. The documents contain official APIs, code snippets, release notes, best practices, guides, debugging info, and more. It covers the following products and domains:\n\n\n* Android: developer.android.com\n\n* Apigee: docs.apigee.com\n\n* Chrome: developer.chrome.com\n\n* Firebase: firebase.google.com\n\n* Fuchsia: fuchsia.dev\n\n* Google AI: ai.google.dev\n\n* Google Cloud: docs.cloud.google.com\n\n* Google Developers, Ads, Search, Google Maps, Youtube: developers.google.com\n\n* Google Home: developers.home.google.com\n\n* TensorFlow: www.tensorflow.org\n\n* Web: web.dev\n\n\nThis tool returns chunks of text, names, and URLs for matching documents. If the returned chunks are not detailed enough to answer the user's question, use `get_documents` with the `parent` from this tool's output to retrieve the full document content.\n","inputSchema":{"description":"Request schema for search_documents. Use the query field to search for related Google developer documentation.","properties":{"query":{"description":"Required. The raw query string provided by the user, such as \"How to create a Cloud Storage bucket?\".","type":"string"}},"required":["query"],"type":"object"},"name":"search_documents","outputSchema":{"$defs":{"DocumentChunk":{"description":"A DocumentChunk represents a piece of content from a Document in the DeveloperKnowledge corpus. To fetch the entire document content, pass the `parent` to get_document or batch_get_documents.","properties":{"content":{"description":"Output only. The content of the document chunk.","readOnly":true,"type":"string"},"id":{"description":"Output only. The ID of this chunk within the document. The chunk ID is unique within a document, but not globally unique across documents. The chunk ID is not stable and may change over time.","readOnly":true,"type":"string"},"parent":{"description":"Output only. The resource name of the document this chunk is from. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for search_documents.","properties":{"results":{"description":"The search results for the given query. Each Document in this list contains a snippet of content relevant to the search query. Use the DocumentChunk.name field of each result with get_documents to retrieve the full document content.","items":{"$ref":"#/$defs/DocumentChunk"},"type":"array"}},"type":"object"}},{"annotations":{"destructiveHint":false,"idempotentHint":true,"openWorldHint":false,"readOnlyHint":true},"description":"Use this tool to retrieve the full content of a single document or up to 20 documents in a single call. The document names should be obtained from the `parent` field of results from a call to the `search_documents` tool. Set the `names` parameter to a list of document names.","inputSchema":{"description":"Request schema for get_documents.","properties":{"names":{"description":"Required. The names of the documents to retrieve, as returned by search_documents. A maximum of 20 documents can be retrieved in one call. The documents are returned in the same order as the `names` in the request. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","items":{"type":"string"},"type":"array"}},"required":["names"],"type":"object"},"name":"get_documents","outputSchema":{"$defs":{"Document":{"description":"A Document represents a piece of content from the Developer Knowledge corpus.","properties":{"content":{"description":"Output only. The content of the document in Markdown format.","readOnly":true,"type":"string"},"description":{"description":"Output only. A description of the document.","readOnly":true,"type":"string"},"name":{"description":"Identifier. The resource name of the document. Format: `documents/{uri_without_scheme}` Example: `documents/docs.cloud.google.com/storage/docs/creating-buckets`","type":"string","x-google-identifier":true},"title":{"description":"Output only. The title of the document.","readOnly":true,"type":"string"},"uri":{"description":"Output only. The URI of the content, such as `https://cloud.google.com/storage/docs/creating-buckets`.","readOnly":true,"type":"string"}},"type":"object"}},"description":"Response schema for get_documents.","properties":{"documents":{"description":"Documents requested.","items":{"$ref":"#/$defs/Document"},"type":"array"}},"type":"object"}}]}}
+[debug] [2026-04-13T02:31:46.554Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-13T02:31:46.554Z] > authorizing via signed-in user (kthompson@socfoundry.com)

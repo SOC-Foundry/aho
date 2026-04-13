@@ -1,0 +1,60 @@
+{
+  "workstream_id": "W2",
+  "executor": "claude-code",
+  "role": "primary",
+  "timestamp": "2026-04-13T00:30:00Z",
+  "scope_confirmed": true,
+  "commands_run": [
+    "grep -r 'nemotron|Nemotron|_classify_impl|categories\\[-1\\]' src/aho/agents/",
+    "grep -r 'class.*Error.*Exception|class.*ParseError' src/aho/",
+    "python -m pytest artifacts/tests/test_nemotron_classifier.py -v",
+    "python -m pytest artifacts/tests/ -q --tb=short",
+    "grep 'except Exception' src/aho/artifacts/nemotron_client.py",
+    "grep 'categories\\[-1\\]' src/aho/artifacts/nemotron_client.py"
+  ],
+  "outputs_produced": [
+    "src/aho/artifacts/nemotron_client.py — NemotronParseError class added (line 17), NemotronConnectionError class added (line 25), _classify_impl parse-failure path now raises NemotronParseError (line 90), connection/HTTP/timeout errors now raise NemotronConnectionError (lines 104, 118, 132), both categories[-1] fallbacks removed",
+    "artifacts/tests/test_nemotron_classifier.py — 3 new W2 test cases (good classification, unparseable response, connection error)"
+  ],
+  "baseline_regression_status": "stable",
+  "baseline_known_failures": 13,
+  "baseline_new_failures": 0,
+  "gotcha_registry_consulted": [
+    "G070 — cleared __pycache__ after src/aho/ touch",
+    "G071 — nemotron_client is imported by harness_agent and nemoclaw at load time; if either daemon is running, restart needed. No daemons active in this session.",
+    "G079 — baseline_regression_check is the backstop, not regex counts; ran full suite, 13 known failures, zero new",
+    "G081 — no celebratory framing in this archive",
+    "G082 — canonical paths used; located nemotron_client via grep, not hardcoded assumption",
+    "G083 — zero except Exception in new/touched classify code; zero categories[-1] in executable code; verified via grep"
+  ],
+  "audit_status": "pending_audit",
+  "findings": {
+    "d1_exception_hierarchy": {
+      "status": "complete",
+      "detail": "Verified project convention is flat exceptions (GLMParseError(Exception) in evaluator_agent.py, DegenerateGenerationError(Exception) in repetition_detector.py). Followed flat convention: NemotronParseError(Exception) at line 17, NemotronConnectionError(Exception) at line 25. No base NemotronClassifyError — flat is the project pattern. Both carry diagnostic attributes: raw_response for parse errors, original_error for connection errors."
+    },
+    "d2_categories_minus_1_removal": {
+      "status": "complete",
+      "detail": "Removed both categories[-1] returns. Parse failure (no category match) raises NemotronParseError with raw_response. Connection/HTTP/timeout errors raise NemotronConnectionError with original_error. Callers (nemoclaw.py route(), harness_agent.py propose_gotcha/propose_adr/propose_component) now receive exceptions instead of silent misroutes."
+    },
+    "d3_exception_specificity": {
+      "status": "complete",
+      "detail": "Replaced blanket except Exception with three specific requests exception types: requests.ConnectionError (Ollama unreachable), requests.HTTPError (Ollama returns non-2xx), requests.Timeout (30s timeout exceeded). NemotronParseError raised outside try/except for category-match failures. No catch-all remains in _classify_impl."
+    },
+    "d4_test_cases": {
+      "status": "complete",
+      "test_verified_good": "Response 'code_runner' with categories ['assistant', 'code_runner', 'reviewer'] → returns 'code_runner' (explicitly asserts result != categories[-1] to prove non-default)",
+      "test_verified_bad_malformed": "Response 'I'm not sure what category this belongs to...' → raises NemotronParseError with raw_response preserved, message contains 'does not match any category'",
+      "test_verified_bad_connection": "requests.ConnectionError('Connection refused') → raises NemotronConnectionError with original_error set, message contains 'localhost:11434'"
+    },
+    "collateral_g083_site": {
+      "status": "disclosed",
+      "detail": "_call() at nemotron_client.py:164 still has 'except Exception as e: return f\"Error: {e}\"'. This is a pre-existing G083-class site in the raw-call path (used by evaluator.py), not the classifier path. Out of W2 scope (classifier fix only). Candidate for W6 (G083 Tier 1: src/aho/agents/) or W8 (Tier 3: Remainder), depending on where the G083 sweep places nemotron_client.py."
+    },
+    "schema_note": "AgentInvolvement used as-is, not modified."
+  },
+  "agents_involved": [
+    {"agent": "claude-code", "role": "primary"}
+  ],
+  "status": "pending_audit"
+}

@@ -67,18 +67,16 @@ def test_score_1_0_float_normalized(mock_deps):
     assert result["raw_score"] == 1.0
 
 
-def test_malformed_json_uses_defaults(mock_deps):
-    """Malformed GLM response should use default score."""
+def test_malformed_json_raises_glm_parse_error(mock_deps):
+    """Malformed GLM response should raise GLMParseError, not fall back."""
     mock_glm, mock_span = mock_deps
     mock_glm.return_value = "this is not json at all"
 
-    from aho.agents.roles.evaluator_agent import EvaluatorAgent
+    from aho.agents.roles.evaluator_agent import EvaluatorAgent, GLMParseError
     agent = EvaluatorAgent()
-    result = agent.review({"workstream": "W4"}, "design", "plan")
-
-    assert result["score"] == 8  # default
-    assert result["raw_score"] is None
-    assert result["raw_recommendation"] is None
+    with pytest.raises(GLMParseError) as exc_info:
+        agent.review({"workstream": "W4"}, "design", "plan")
+    assert exc_info.value.raw_response == "this is not json at all"
 
 
 def test_raw_recommendation_preserved(mock_deps):

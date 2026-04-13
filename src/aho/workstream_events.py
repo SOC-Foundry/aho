@@ -12,6 +12,11 @@ and iteration.
 Schema v2 (0.2.11 W2): workstream_complete events may include
 acceptance_results — a list of AcceptanceResult dicts. When present,
 schema_version=2 is set. When absent, schema_version is omitted (v1 compat).
+
+Schema v3 (0.2.13 W0): agents_involved extended from list[str] to
+list[dict] with {agent: str, role: "primary"|"auditor"|"cameo"}.
+AgentInvolvement model in acceptance.py normalizes bare strings to
+{agent: str, role: "primary"} for backward compatibility.
 """
 import json
 import os
@@ -78,7 +83,7 @@ def emit_workstream_start(workstream_id: str, summary: str = "",
 def emit_workstream_complete(workstream_id: str, status: str = "pass",
                              summary: str = "",
                              acceptance_results: list | None = None,
-                             agents_involved: list[str] | None = None,
+                             agents_involved: list[dict | str] | None = None,
                              token_count: int | None = None,
                              harness_contributions: list[str] | None = None,
                              ad_hoc_forensics_minutes: int | None = None,
@@ -112,7 +117,12 @@ def emit_workstream_complete(workstream_id: str, status: str = "pass",
     if (has_v2 or has_v3) and event is not None:
         v3_fields = {}
         if agents_involved is not None:
-            v3_fields["agents_involved"] = agents_involved
+            from aho.acceptance import AgentInvolvement
+            normalized = []
+            for a in agents_involved:
+                ai = AgentInvolvement.model_validate(a)
+                normalized.append(ai.model_dump())
+            v3_fields["agents_involved"] = normalized
         if token_count is not None:
             v3_fields["token_count"] = token_count
         if harness_contributions is not None:

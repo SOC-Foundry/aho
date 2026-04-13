@@ -1,0 +1,64 @@
+{
+  "workstream_id": "W1",
+  "executor": "claude-code",
+  "role": "primary",
+  "timestamp": "2026-04-12T23:15:00Z",
+  "scope_confirmed": true,
+  "commands_run": [
+    "grep -r 'GLM|glm|evaluator' src/aho/agents/",
+    "grep -r 'class.*Error|class.*ParseError' src/aho/",
+    "python -m pytest artifacts/tests/test_glm_parser.py -v",
+    "python -m pytest artifacts/tests/test_evaluator_agent_score.py -v",
+    "python -m pytest artifacts/tests/test_role_evaluator_agent.py -v",
+    "python -m pytest artifacts/tests/ -q --tb=short",
+    "grep 'except Exception' src/aho/agents/roles/evaluator_agent.py",
+    "grep 'score.*8|ship.*True' src/aho/agents/roles/evaluator_agent.py"
+  ],
+  "outputs_produced": [
+    "src/aho/agents/roles/evaluator_agent.py — GLMParseError class added (line 23), _strip_markdown_fences() helper added (line 30), json.loads() now operates on fence-stripped text, parse failure raises GLMParseError instead of returning hardcoded {score:8, ship} defaults",
+    "artifacts/tests/test_glm_parser.py — 3 new W1 test cases (clean JSON, markdown-wrapped, malformed)",
+    "artifacts/tests/test_evaluator_agent_score.py — test_malformed_json_uses_defaults renamed to test_malformed_json_raises_glm_parse_error, now expects GLMParseError",
+    "artifacts/tests/test_role_evaluator_agent.py — test_evaluator_agent_handles_non_json renamed to test_evaluator_agent_raises_on_non_json, now expects GLMParseError"
+  ],
+  "baseline_regression_status": "stable",
+  "baseline_known_failures": 13,
+  "baseline_new_failures": 0,
+  "gotcha_registry_consulted": [
+    "G070 — cleared __pycache__ after src/aho/ touch",
+    "G071 — no daemon imports evaluator_agent at load time; no restart needed",
+    "G079 — baseline_regression_check is the backstop, not regex counts; ran full suite",
+    "G081 — no celebratory framing in this archive",
+    "G082 — canonical paths only; used grep to locate evaluator, not hardcoded",
+    "G083 — zero except Exception in new code; zero hardcoded positive fallbacks; verified via grep"
+  ],
+  "audit_status": "pending_audit",
+  "findings": {
+    "d1_fence_stripping": {
+      "status": "complete",
+      "detail": "_strip_markdown_fences() handles: ```json ... ```, bare ``` ... ```, leading/trailing whitespace, partial-wrap (opening fence only, no closing). Uses re.search with DOTALL for multi-line fence content. Falls through to original text if no fences detected."
+    },
+    "d2_glm_parse_error": {
+      "status": "complete",
+      "detail": "GLMParseError(Exception) added at evaluator_agent.py:23. Follows project pattern (DegenerateGenerationError in repetition_detector.py). Carries raw_response attribute for caller diagnostics. Raised from json.JSONDecodeError/TypeError — chains original exception."
+    },
+    "d3_hardcoded_fallback_removed": {
+      "status": "complete",
+      "detail": "Removed the pre-initialized result dict with score:8, recommendation:'ship', issues:[]. Parse result now populates result dict directly from parsed JSON. If parse fails, GLMParseError propagates to caller (conductor.py:44). Caller decides — parser does not mask failures."
+    },
+    "d4_test_cases": {
+      "status": "complete",
+      "test_verified_good": "Clean JSON {score:6, issues:['missing edge-case coverage'], recommendation:'rework'} → parses to real dict, score=6, recommendation='rework'",
+      "test_verified_bad_markdown": "Fenced JSON ```json\\n{score:4, ...}\\n``` → stripped and parsed, score=4, recommendation='halt'",
+      "test_verified_bad_malformed": "Plain English 'I think the code looks great! Ship it immediately.' → raises GLMParseError with raw_response preserved"
+    },
+    "d5_existing_test_updates": {
+      "status": "complete",
+      "detail": "Two existing tests expected the old fallback behavior. Updated: test_malformed_json_uses_defaults → test_malformed_json_raises_glm_parse_error (test_evaluator_agent_score.py), test_evaluator_agent_handles_non_json → test_evaluator_agent_raises_on_non_json (test_role_evaluator_agent.py). Also fixed KeyError in logging line (result['recommendation'] → result.get('recommendation', 'unknown')) for partial JSON responses missing recommendation key."
+    },
+    "schema_note": "AgentInvolvement used as-is, not modified."
+  },
+  "agents_involved": [
+    {"agent": "claude-code", "role": "primary"}
+  ],
+  "status": "pending_audit"
+}

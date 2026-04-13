@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-VERSION = "aho 0.2.10"
+VERSION = "aho 0.2.13"
 CONFIG_DIR = Path.home() / ".config" / "aho"
 PROJECTS_FILE = CONFIG_DIR / "projects.json"
 ACTIVE_FILE = CONFIG_DIR / "active.fish"
@@ -284,7 +284,8 @@ def cmd_iteration(args, parser):
             from aho.doctor import run_all as doctor_run_all
             postflight = doctor_run_all(level="postflight")
             has_fail = False
-            for name, (status, msg) in postflight.items():
+            for name, result_tuple in postflight.items():
+                status, msg = result_tuple[0], result_tuple[1]
                 tag = {"ok": "[ok]", "warn": "[WARN]", "fail": "[FAIL]", "deferred": "[DEFR]"}.get(status, f"[{status}]")
                 print(f"  {tag:8} {name}: {msg}")
                 if status == "fail":
@@ -381,7 +382,16 @@ def cmd_iteration(args, parser):
                 except FileNotFoundError:
                     print(f"ERROR: Acceptance file not found: {acceptance_file}")
                     sys.exit(1)
-            agents = args.agents.split(",") if args.agents else None
+            agents = None
+            if args.agents:
+                raw = args.agents.split(",")
+                agents = []
+                for entry in raw:
+                    if ":" in entry:
+                        name, role = entry.split(":", 1)
+                        agents.append({"agent": name.strip(), "role": role.strip()})
+                    else:
+                        agents.append({"agent": entry.strip(), "role": "primary"})
             harness = args.harness_contributions.split(",") if args.harness_contributions else None
             result = emit_workstream_complete(
                 args.ws_id, status=args.status, summary=args.summary,

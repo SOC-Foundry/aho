@@ -26,6 +26,20 @@ class AcceptanceCheck:
     timeout_seconds: int = 30
 
 
+class AgentInvolvement(BaseModel):
+    """Schema v3 role-tagged agent involvement."""
+    agent: str
+    role: str  # "primary" | "auditor" | "cameo"
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_agent(cls, data: Any) -> Any:
+        """Accept both role-tagged dicts and bare strings (v2 compat)."""
+        if isinstance(data, str):
+            return {"agent": data, "role": "primary"}
+        return data
+
+
 class AcceptanceResult(BaseModel):
     check_name: str
     passed: bool

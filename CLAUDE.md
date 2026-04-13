@@ -1,119 +1,83 @@
-# CLAUDE.md — aho (Agentic Harness Orchestration) Phase 0
+# CLAUDE.md — aho 0.2.13
 
-**Scope:** Universal agent instructions for Claude Code executing aho Phase 0 iterations.
-**Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
-**Do not edit per-run.** Edits are per-phase only.
+You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI audits. Kyle signs.
 
----
+## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
-## Phase 0 Objective
+1. **Delegate everything delegable.** The paid orchestrator is the most expensive resource in the system. Any task that can run on a free local model must run on a free local model. Drafting, classification, retrieval, validation, grading, and routing all belong to the local fleet. The orchestrator's minutes are spent on judgment, scope, and novelty.
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.** NZXTcos is the authoring machine. P3 is the UAT target for clone-to-deploy. Phase 0 ends when `git clone` + `install.fish` on P3 produces a working aho environment with local model fleet operational.
+2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-## Your Role
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
-You are Claude Code operating inside an aho iteration. You execute workstreams defined by the run's plan doc. You do not design scope, invent amendments, or produce artifacts Kyle has not explicitly requested. Kyle is the sole author and decision-maker. You are a delegate.
+4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
-Split-agent model: Gemini CLI runs W0–W5 (bulk execution); you run W6 close (dogfood, bundle, postflight gates). Handoff happens via `.aho-checkpoint.json`. If you are launched mid-run, read the checkpoint before acting.
+5. **Three octets, three meanings: phase, iteration, run.** Phase is strategic scope. Iteration is tactical scope. Run is execution instance. Every artifact carries the full phase.iteration.run label.
 
-## The Eleven Pillars
+6. **Transitions are durable.** Moving between phases, iterations, or runs writes state to a durable artifact before the transition is considered complete. Every gate is a write point. No implicit state.
 
-1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet (Qwen, Nemotron, GLM) executes.
-2. **The harness is the contract.** Instructions live in versioned harness files, not model context.
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out.
-4. **Wrappers are the tool surface.** Every tool is invoked through a `/bin` wrapper.
-5. **Three octets, three meanings: phase, iteration, run.**
-6. **Transitions are durable.** State is written before any transition.
-7. **Generation and evaluation are separate roles.** Drafter and reviewer are different agents.
-8. **Efficacy is measured in cost delta.** Wall clock, token cost, delegate ratio are ground truth.
-9. **The gotcha registry is the harness's memory.** Query it at run start.
-10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt.
-11. **The human holds the keys.** No agent writes to git, merges, pushes, or manages secrets.
+7. **Generation and evaluation are separate roles.** The model that produced an artifact is never the model that grades it. Drafter and reviewer are different agents behind different wrappers with different prompts and ideally different underlying weights.
 
-## First Actions Checklist (every run)
+8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-1. Read `.aho.json` and `.aho-checkpoint.json`. Confirm iteration and current workstream.
-2. Read the run's design doc and plan doc from `artifacts/iterations/{iteration}/`.
-3. Query the gotcha registry: `python -c "from aho.registry import query_gotchas; print(query_gotchas(phase=0))"`.
-4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
-5. Verify MCP tool surface: confirm which MCP servers from the fleet are available as tools in this session. If any server listed in `artifacts/harness/mcp-fleet.md` is absent from your tool surface, note it as `[INSTALLED-NOT-WIRED]` before proceeding.
-6. If closing a run: read the manual build log first (authoritative per ADR-042), synthesis second.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
 
-## Gotcha Registry — Query First
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
-Before any novel action, query the gotcha registry. Known Phase 0 gotchas include:
-- **aho-G001 (printf not heredoc):** Use `printf '...\n' > file` not heredocs in fish.
-- **aho-G022 (command ls):** Use `command ls` to strip color codes from agent output.
-- **aho-G060:** Evaluator baseline must reload per call, not at init (fixed 0.1.12).
-- **aho-G061:** Smoke instrumentation reads iteration from checkpoint at script start.
-- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` — leaks API keys.
+11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
-## Sign-off Format
+## Operating Stance
 
-Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
+Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Numbers honest to substance, not regex. "Clean close," "landed beautifully," "all green" are banned (G081).
 
-## Octet Discipline
+## Pattern C Role — Primary Drafter
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
+For each workstream N:
+1. Execute scope per `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`.
+2. Write `artifacts/iterations/0.2.13/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+3. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
+4. Stop. Gemini audits.
+5. After Gemini writes `artifacts/iterations/0.2.13/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return, read the audit, and emit `workstream_complete`. Checkpoint advances.
+6. If audit is `"fail"`, correct and rewrite the acceptance archive. Do not advance.
 
-## What NOT to Do
+## State Machine (authoritative)
 
-1. **No git operations.** No commit, no push, no merge, no add. Kyle runs git manually. Pillar 11.
-2. **No secret reads.** Never `cat` fish config, env exports, credential files, or `~/.config/aho/`.
-3. **No invented scope.** Each run ships as its design and plan said. Amendments become the next run's inputs.
-4. **No hardcoded future runs.** Do not draft 0.1.14+ scope unless explicitly asked.
-5. **No fake version dirs.** No `0.1.99`, no `0.1.13.1`, no test throwaways outside checkpointed iteration dirs.
-6. **No prose mixed into fish code blocks.** Commands are copy-paste targets; prose goes outside.
-7. **No heredocs.** Use `printf` blocks. aho-G001.
-8. **No raw tool calls.** Every tool invocation goes through a `/bin` wrapper. Pillar 4.
-9. **No per-run edits to this file.** CLAUDE.md is per-phase universal.
-10. **No preference prompts mid-run.** Surface capability gaps only. Pillar 10.
+`in_progress` (Claude working) → `pending_audit` (Claude done, archive written) → `audit_complete` (Gemini done, audit archive written) → `workstream_complete` (Claude emits terminal event after reading audit)
 
-## MCP Toolchain
+**Claude emits:** `workstream_start`, `pending_audit`, `workstream_complete`.
+**Gemini emits:** `audit_complete` only.
+**No agent emits `workstream_complete` before `audit_complete` exists.**
 
-The aho MCP fleet (9 servers, see `artifacts/harness/mcp-fleet.md`) is the primary tool surface for technology-specific work. Agents MUST use MCP tools when the work domain matches a server's capability AND the server is wired in the agent's tool surface.
+## Hard Rules
 
-**MUST-use rules:**
+- No git commits, pushes, merges, add (Pillar 11)
+- No reading secrets, no `cat ~/.config/fish/config.fish`
+- Clear `__pycache__` after any `src/aho/` touch (G070); restart daemons if imported (G071)
+- Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22), no bash process substitution
+- Exception handlers raise or return failure sentinels, never hardcode positive values (G083)
+- Canonical paths only, resolvers not hardcodes (G075, G082)
+- `baseline_regression_check()` is the backstop, not regex counts (G079)
+- No `except Exception` blocks in new code
 
-- **Flutter/Dart code** — MUST consult `dart mcp-server` before writing Flutter/Dart from memory.
-- **Web UI verification** — MUST use `@playwright/mcp` before declaring a UI workstream done.
-- **Library documentation** — MUST use `@upstash/context7-mcp` for Telegram Bot API, Firebase SDK, and other library doc lookups. Do not code library integrations from training-data recall.
-- **Filesystem walks** — MUST use `@modelcontextprotocol/server-filesystem` for structured directory operations where applicable.
-- **Web fetching** — MUST use `firecrawl-mcp` for retrieving external references during planning.
-- **Firebase/Firestore** — MUST use `firebase-tools` MCP for Firebase operations.
+## Current Iteration: 0.2.13
 
-**Bash fallback:** Permitted, but every workstream that takes the bash path on a domain where an MCP tool exists MUST include a one-line justification in the run report's "MCP Tools Invoked" section. Format: `"none — bash sufficient because <reason>"`.
+**Theme:** Dispatch-layer repair.
+**Executor role:** You draft. Gemini audits. Kyle signs.
+**Success:** Council health ≥50/100 (from 35.3).
+**Hard gate:** W2.5 — if models rubber-stamp post-parse-fix, iteration closes early.
 
-**[INSTALLED-NOT-WIRED] protocol:** If a server is listed in `mcp-fleet.md` but absent from your tool surface (ToolSearch returns no match), do not silently fall back to bash. Tag the gap explicitly as `[INSTALLED-NOT-WIRED]` in the workstream output and surface it as a capability gap. This distinction matters: "chose not to use MCP" is a behavioral issue; "MCP not in tool surface" is a configuration issue. They have different fixes.
+## Reference Reading (consult at diligence)
 
-**MCP server catalog (9 servers):**
+- `artifacts/iterations/0.2.13/aho-design-0.2.13.md`
+- `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`
+- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/test-baseline.json`
+- `artifacts/harness/prompt-conventions.md`
+- Gotcha registry
 
-| Server | Use when |
-|---|---|
-| firebase-tools | Firebase/Firestore operations |
-| @upstash/context7-mcp | Library/API documentation lookups |
-| firecrawl-mcp | Web scraping, external reference retrieval |
-| @playwright/mcp | Browser automation, UI verification |
-| dart mcp-server | Flutter/Dart development (official Dart team server) |
-| @modelcontextprotocol/server-filesystem | Structured filesystem operations |
-| @modelcontextprotocol/server-memory | Persistent memory store |
-| @modelcontextprotocol/server-sequential-thinking | Chain-of-thought reasoning |
-| @modelcontextprotocol/server-everything | Reference/test server |
+## W0 Findings Carried Forward
 
-## Close Sequence (W6 pattern)
-
-1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates.
-3. Bundle: validate §1–§21 spec, §22 component checklist = 6.
-4. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
-5. Populate `aho-run-{iteration}.md` — workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
-6. Generate `aho-bundle-{iteration}.md`.
-7. Write checkpoint state = closed. Notify Kyle.
-
-## Communication Style
-
-Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout — no bashisms.
-
----
-
-*CLAUDE.md for aho Phase 0 — updated during 0.2.12 W0. Next rewrite: Phase 1 boundary.*
+- Do not grow `test-baseline.json` to paper over breakage. Additions require justification and Kyle sign-off.
+- Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity — this file is authoritative going forward.
+- Acceptance criteria drift gets flagged in findings, not quietly redefined.

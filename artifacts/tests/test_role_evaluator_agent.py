@@ -37,19 +37,17 @@ def test_evaluator_agent_review(mock_log, mock_glm, mock_qwen):
 @patch("aho.agents.openclaw.QwenClient")
 @patch("aho.agents.roles.evaluator_agent.glm_generate")
 @patch("aho.logger.log_event")
-def test_evaluator_agent_handles_non_json(mock_log, mock_glm, mock_qwen):
+def test_evaluator_agent_raises_on_non_json(mock_log, mock_glm, mock_qwen):
     mock_qwen.return_value.generate.return_value = ""
     mock_glm.return_value = "Looks good to me, ship it."
-    from aho.agents.roles.evaluator_agent import EvaluatorAgent
+    from aho.agents.roles.evaluator_agent import EvaluatorAgent, GLMParseError
     agent = EvaluatorAgent()
-    result = agent.review(
-        {"workstream": "W0", "status": "pass"},
-        "design",
-        "plan",
-    )
-    # Falls back to defaults
-    assert result["score"] == 8
-    assert result["recommendation"] == "ship"
+    with pytest.raises(GLMParseError):
+        agent.review(
+            {"workstream": "W0", "status": "pass"},
+            "design",
+            "plan",
+        )
     agent.close()
 
 

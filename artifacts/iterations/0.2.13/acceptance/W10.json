@@ -1,0 +1,93 @@
+{
+  "workstream_id": "W10",
+  "executor": "claude-code",
+  "role": "primary",
+  "timestamp": "2026-04-13T03:00:00Z",
+  "scope_confirmed": true,
+  "deliverables": {
+    "D1_council_health": {
+      "status": "captured",
+      "health_score": 35.3,
+      "health_max": 100,
+      "delta_from_0212": 0.0,
+      "note": "Unchanged from 0.2.12. Parser fixes (W1, W2) repaired code behavior but did not change member operational status data that drives the health formula. Score honestly reflects substrate state.",
+      "success_criterion_met": false,
+      "success_criterion": ">=50/100"
+    },
+    "D2_retrospective": {
+      "status": "complete",
+      "path": "artifacts/iterations/0.2.13/retrospective-0.2.13.md",
+      "sections": ["§1 What was planned", "§2 What was delivered", "§3 What was skipped and why", "§4 Pattern C trial", "§5 Substrate findings", "§6 Casing-variant design question", "§7 Coaching/process notes"],
+      "word_count": 2100
+    },
+    "D3_carry_forwards": {
+      "status": "complete",
+      "path": "artifacts/iterations/0.2.13/carry-forwards.md",
+      "item_count": 14,
+      "categories": {
+        "model_viability": 1,
+        "deferred_repair": 3,
+        "deferred_decisions": 2,
+        "protocol_gaps": 3,
+        "pre_existing_defects": 1,
+        "deferred_from_prior": 3,
+        "lifecycle_gap": 1
+      }
+    },
+    "D4_kyle_notes": {
+      "status": "complete",
+      "path": "artifacts/iterations/0.2.13/kyle-notes-stub.md",
+      "question_count": 6
+    },
+    "D5_bundle": {
+      "status": "complete",
+      "path": "artifacts/iterations/0.2.13/aho-bundle-0.2.13.md",
+      "size_bytes": 504090,
+      "size_kb": 492.3,
+      "within_target": true,
+      "target_range_kb": "300-500",
+      "sections": 26
+    },
+    "D6_signoff_sheet": {
+      "status": "complete",
+      "path": "artifacts/iterations/0.2.13/aho-run-0.2.13.md",
+      "signoff_boxes": ["Session 1 (W0-W2.5)", "Session 2 (W10)"],
+      "kyles_notes_inline": true
+    }
+  },
+  "baseline_regression_status": "stable",
+  "baseline_known_failures": 13,
+  "baseline_actual_failures": 12,
+  "baseline_new_failures": 0,
+  "baseline_newly_passing": ["test_daemon_healthy.py::test_healthy_unit_passes"],
+  "gotcha_registry_consulted": [
+    "G070 — cleared __pycache__ after src/aho/ imports during council health measurement",
+    "G079 — baseline_regression_check is backstop: 12 actual failures all within 13 known baseline",
+    "G081 — no celebratory framing in any deliverable; substrate findings front-and-center",
+    "G082 — canonical paths: event log at ~/.local/share/aho/events/ per canonical resolution",
+    "G083 — no new code written; close artifacts only"
+  ],
+  "audit_status": "pending_audit",
+  "findings": {
+    "f1_health_unchanged": {
+      "severity": "expected",
+      "detail": "Council health 35.3/100 — unchanged from 0.2.12. Success criterion (>=50) not met. This is honest: parser fixes make failures visible rather than silent, but the models themselves remain non-functional. Health score reflects member status, which correctly hasn't changed."
+    },
+    "f2_checkpoint_inconsistency": {
+      "severity": "medium",
+      "detail": "Checkpoint file (.aho-checkpoint.json) had reverted to partially incoherent state between hygiene session and W10 launch. W0 and W1 showed 'in_progress', W3-W6 showed 'in_progress'. Re-corrected to reconciled state at W10 start. Root cause: likely manual edit or another process writing to checkpoint between sessions."
+    },
+    "f3_missing_workstream_start_events": {
+      "severity": "low",
+      "detail": "No workstream_start events exist in the event log for any 0.2.13 workstream. workstream_complete events exist (from hygiene session) but lifecycle is cosmetically incomplete. Carried forward as protocol gap."
+    },
+    "f4_plan_doc_workstream_count_discrepancy": {
+      "severity": "info",
+      "detail": "Plan doc footer says '11 (W0, W1, W2, W2.5, W3, W4, W5, W6, W7, W8, W8.5, W9, W10)' which is actually 13 workstreams, not 11. This is a pre-existing error in the plan doc. Per ADR-012, plan doc is immutable — noting it here, not correcting it."
+    }
+  },
+  "agents_involved": [
+    {"agent": "claude-code", "role": "primary"}
+  ],
+  "status": "pending_audit"
+}

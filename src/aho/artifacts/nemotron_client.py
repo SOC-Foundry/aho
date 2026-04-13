@@ -1,6 +1,10 @@
 """Nemotron-mini client for lightweight classification tasks.
 
 Uses nemotron-mini:4b via Ollama.
+
+0.2.13 W2: Parse fix — raise NemotronParseError on unparseable classification,
+raise NemotronConnectionError on Ollama connection failure, instead of
+silently returning categories[-1] (G083).
 """
 import json
 import requests
@@ -8,6 +12,22 @@ from opentelemetry import trace
 from aho.logger import log_event
 
 _tracer = trace.get_tracer("aho.nemotron_client")
+
+
+class NemotronParseError(Exception):
+    """Raised when Nemotron response cannot be matched to any known category."""
+
+    def __init__(self, message: str, raw_response: str = ""):
+        super().__init__(message)
+        self.raw_response = raw_response
+
+
+class NemotronConnectionError(Exception):
+    """Raised when Ollama/Nemotron endpoint is unreachable or returns an HTTP error."""
+
+    def __init__(self, message: str, original_error: Exception = None):
+        super().__init__(message)
+        self.original_error = original_error
 
 
 def classify(text: str, categories: list[str], bias: str = None) -> str:
@@ -67,8 +87,11 @@ def _classify_impl(text: str, categories: list[str], bias: str = None) -> str:
         for cat in categories:
             if cat.lower() in result.lower():
                 return cat
-        return categories[-1] # Fallback to last category (often AMBIGUOUS or similar)
-    except Exception as e:
+        raise NemotronParseError(
+            f"Nemotron response '{result}' does not match any category: {categories}",
+            raw_response=result,
+        )
+    except requests.ConnectionError as e:
         log_event(
             event_type="llm_call",
             source_agent="nemotron-client",
@@ -78,7 +101,38 @@ def _classify_impl(text: str, categories: list[str], bias: str = None) -> str:
             status="error",
             error=str(e)
         )
-        return categories[-1]
+        raise NemotronConnectionError(
+            f"Cannot reach Ollama at localhost:11434: {e}",
+            original_error=e,
+        ) from e
+    except requests.HTTPError as e:
+        log_event(
+            event_type="llm_call",
+            source_agent="nemotron-client",
+            target="nemotron-mini:4b",
+            action="classify",
+            input_summary=text,
+            status="error",
+            error=str(e)
+        )
+        raise NemotronConnectionError(
+            f"Ollama returned HTTP error: {e}",
+            original_error=e,
+        ) from e
+    except requests.Timeout as e:
+        log_event(
+            event_type="llm_call",
+            source_agent="nemotron-client",
+            target="nemotron-mini:4b",
+            action="classify",
+            input_summary=text,
+            status="error",
+            error=str(e)
+        )
+        raise NemotronConnectionError(
+            f"Ollama request timed out: {e}",
+            original_error=e,
+        ) from e
 
 
 def _call(prompt: str, system: str = None) -> str:

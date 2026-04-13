@@ -1,0 +1,142 @@
+{
+  "workstream_id": "W2.5",
+  "executor": "claude-code",
+  "role": "primary",
+  "timestamp": "2026-04-13T01:35:00Z",
+  "scope_confirmed": true,
+  "gate_result": "proceed",
+  "gate_rationale": "Neither halt condition tripped. Nemotron: 0/10 silent empty returns or hardcoded defaults (3 mismatches are model non-determinism producing valid 'feature' category, not parser failures). GLM: 0/5 defective inputs rubber-stamped as ship/score>=7 (all 5 produced parse errors — 4 timeouts, 1 malformed JSON). However, substrate quality findings are severe: Nemotron has 80% feature-bias and GLM cannot produce parseable JSON within 180s.",
+  "nemotron_halt_count": 0,
+  "nemotron_pass_count": 5,
+  "nemotron_mismatch_count": 3,
+  "nemotron_design_decision_count": 2,
+  "nemotron_detail": {
+    "feature_bucket": {
+      "count": 3,
+      "result": "3/3 classified as 'feature' — baseline working",
+      "all_match": true
+    },
+    "empty_bucket": {
+      "count": 3,
+      "result": "2/3 raised NemotronParseError (correct), 1/3 model returned 'feature' instead of empty (model non-determinism, not parser failure)",
+      "parse_errors_raised": 2,
+      "valid_category_returned": 1,
+      "note": "Model behavior is non-deterministic. Same input historically produced empty response, now produces 'feature'. Parser correctly handled both cases."
+    },
+    "casing_variant_Gotcha": {
+      "count": 1,
+      "result": "Model returned empty (NemotronParseError raised). Historical: 'Gotcha'. Model behavior changed.",
+      "design_note": "If model had returned 'Gotcha', parser would have matched 'gotcha' via case-insensitive substring. Model didn't reproduce this output."
+    },
+    "casing_variant_gotch": {
+      "count": 1,
+      "result": "Model returned 'feature'. Historical: 'gotch'. Model behavior changed.",
+      "design_note": "'gotch' would not have matched any category (substring too short for 'gotcha'). Post-fix would have raised NemotronParseError. Instead model returned valid 'feature'."
+    },
+    "hallucinated_category": {
+      "count": 1,
+      "result": "Model returned 'feature'. Historical: 'category_a'. Model no longer hallucinating this specific output.",
+      "note": "Input was 'test text' — may not be a representative production input. Model returned valid category instead of hallucinating."
+    },
+    "reviewer_bucket": {
+      "count": 1,
+      "result": "Model returned 'feature'. Historical: 'reviewer'. Model no longer producing out-of-category response.",
+      "ground_truth_analysis": "Input is event JSON of a nemotron classify llm_call. Ground truth category would be 'noise' (meta-event). Model returned 'feature' instead — wrong classification but valid category. Parser correctly returned it."
+    },
+    "dominant_pattern": "8/10 raw model responses were 'feature'. Model has strong feature-bias — effectively defaulting rather than genuinely classifying. Parser is correct; model quality is the concern."
+  },
+  "glm_halt_count": 0,
+  "glm_pass_count": 0,
+  "glm_parse_error_count": 5,
+  "glm_detail": {
+    "input_1_g083_site": {
+      "ground_truth": "defective",
+      "result": "GLMParseError — malformed JSON after 105s. Raw response DID identify the defect ('Exception handling uses pass to mask failures'). Used wrong schema ('defects' array instead of requested 'score/issues/recommendation').",
+      "latency_ms": 105278,
+      "rubber_stamp": false,
+      "signal_present_in_text": true
+    },
+    "input_2_categories_fallback": {
+      "ground_truth": "defective",
+      "result": "GLMParseError — Ollama timeout at 180s",
+      "latency_ms": 180102,
+      "rubber_stamp": false
+    },
+    "input_3_synthetic_bug": {
+      "ground_truth": "defective",
+      "result": "GLMParseError — Ollama timeout at 180s",
+      "latency_ms": 180007,
+      "rubber_stamp": false
+    },
+    "input_4_tachtech_contradiction": {
+      "ground_truth": "defective",
+      "result": "GLMParseError — Ollama timeout at 180s",
+      "latency_ms": 180103,
+      "rubber_stamp": false
+    },
+    "input_5_clean_code": {
+      "ground_truth": "clean",
+      "result": "GLMParseError — Ollama timeout at 180s",
+      "latency_ms": 180082,
+      "rubber_stamp": false,
+      "note": "Control input also failed. GLM is non-functional as structured-output evaluator within current timeout."
+    },
+    "dominant_pattern": "GLM-4.6V-Flash-9B at Q4_K_M quantization cannot reliably produce structured JSON output within 180s timeout. 4/5 inputs timed out entirely. 1/5 returned text that identified the defect but used wrong JSON schema. Model has evaluation capability (input #1 text shows real analysis) but cannot deliver it as parseable structured output."
+  },
+  "selection_method_nemotron": "First N chronological matches per bucket from ~/.local/share/aho/events/aho_event_log.jsonl. No filtering, no cherry-picking. 32,108 total classify events in log.",
+  "construction_method_glm": "Input #1: actual G083 pre-fix code from evaluator_agent.py (hardcoded score:8/ship fallback). Input #2: actual categories[-1] pre-fix code from nemotron_client.py. Input #3: synthetic find_median with wrong return type and off-by-one. Input #4: TachTech-style Panther SIEM analysis with internal logical contradiction (rule fires on failures but text claims successful auth). Input #5: clean merge_sorted control.",
+  "baseline_regression_status": "stable",
+  "baseline_known_failures": 13,
+  "baseline_actual_failures": 11,
+  "baseline_new_failures": 0,
+  "baseline_newly_passing": ["test_telegram_ws_commands.py::TestWsLast::test_no_events", "test_daemon_healthy.py::test_healthy_unit_passes"],
+  "gotcha_registry_consulted": [
+    "G070 — cleared __pycache__ after src/aho/ imports during measurement",
+    "G075 — canonical paths: event log at ~/.local/share/aho/events/aho_event_log.jsonl per G082",
+    "G079 — baseline_regression_check is backstop, not regex counts; 11 actual failures all in known 13",
+    "G081 — no celebratory framing in this archive",
+    "G082 — event log path from canonical location",
+    "G083 — no new code written; measurement only"
+  ],
+  "findings": {
+    "f1_nemotron_feature_bias": {
+      "severity": "high",
+      "detail": "Nemotron-mini:4b returns 'feature' for 80% of inputs regardless of content. The model is not genuinely classifying — it's defaulting. This means the propose_gotcha pipeline has been routing nearly everything to 'feature' bucket, with occasional genuine gotcha/noise classifications. Parser fix (W2) is working correctly; the model itself is the quality bottleneck.",
+      "carry_forward": true
+    },
+    "f2_glm_timeout_dominant": {
+      "severity": "critical",
+      "detail": "GLM-4.6V-Flash-9B times out at 180s for 80% of evaluation inputs. The model is non-functional as a structured-output evaluator at Q4_K_M quantization on this hardware. When it does respond (input #1 at 105s), it produces real analysis but in the wrong JSON schema, causing GLMParseError.",
+      "carry_forward": true
+    },
+    "f3_parser_fixes_validated": {
+      "severity": "info",
+      "detail": "Both W1 (GLMParseError) and W2 (NemotronParseError) parser fixes are working as designed. GLMParseError catches malformed JSON and timeouts. NemotronParseError catches empty responses and non-matching categories. The fixes make failures visible instead of masking them.",
+      "carry_forward": false
+    },
+    "f4_model_nondeterminism": {
+      "severity": "medium",
+      "detail": "Nemotron model behavior is non-deterministic across runs. Same input produced '' historically but 'feature' in measurement. Same input produced 'category_a' historically but 'feature' in measurement. Single-invocation measurement is honest per anti-gaming rules but should not be treated as definitive model characterization.",
+      "carry_forward": true
+    },
+    "f5_glm_has_real_signal_buried": {
+      "severity": "medium",
+      "detail": "Input #1 raw text shows GLM can identify G083-class defects ('Exception handling uses pass to mask failures, violating the requirement...'). The signal exists but is inaccessible through JSON parsing. Possible paths: increase timeout, reduce num_predict, or accept text-mode analysis without structured output.",
+      "carry_forward": true
+    }
+  },
+  "pillar_8_metrics": {
+    "nemotron_total_latency_ms": 1747,
+    "nemotron_avg_latency_ms": 175,
+    "glm_total_latency_ms": 825572,
+    "glm_avg_latency_ms": 165114,
+    "orchestrator_tokens": "not measured (orchestrator is Claude Code, not token-metered in this context)",
+    "local_fleet_compute_time_s": 827,
+    "wall_clock_s": 1200
+  },
+  "audit_status": "pending_audit",
+  "agents_involved": [
+    {"agent": "claude-code", "role": "primary"}
+  ],
+  "status": "pending_audit"
+}

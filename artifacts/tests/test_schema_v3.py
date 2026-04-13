@@ -46,7 +46,10 @@ def test_v3_emit_with_efficacy_fields():
         assert len(events) == 1
         ev = events[0]
         assert ev["schema_version"] == 3
-        assert ev["agents_involved"] == ["claude-code", "qwen-local"]
+        assert ev["agents_involved"] == [
+            {"agent": "claude-code", "role": "primary"},
+            {"agent": "qwen-local", "role": "primary"},
+        ]
         assert ev["token_count"] == 45000
         assert ev["harness_contributions"] == ["daemon_healthy", "acceptance_framework"]
         assert ev["ad_hoc_forensics_minutes"] == 17
