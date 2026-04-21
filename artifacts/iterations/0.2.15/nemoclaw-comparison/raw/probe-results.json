@@ -1,0 +1,218 @@
+{
+  "probe_timestamp_utc": "2026-04-21T13:30:05Z",
+  "model": "nemotron-mini:4b",
+  "dispatcher_module": "aho.pipeline.dispatcher (W2 hardened, /api/chat)",
+  "nemotron_client_module": "aho.artifacts.nemotron_client (/api/generate)",
+  "nemoclaw_socket": "/home/kthompson/.local/share/aho/nemoclaw.sock",
+  "bug_feature_task_count": 5,
+  "role_task_count": 5,
+  "bug_feature_results": [
+    {
+      "task": "The login button doesn't respond when clicked on Safari.",
+      "expected": "bug",
+      "path_a_nemotron_client": {
+        "classification": "bug",
+        "raw_response": "bug",
+        "wall_clock_seconds": 0.143,
+        "error": null
+      },
+      "path_b_direct_dispatch": {
+        "classification": "bug",
+        "raw_response": " bug",
+        "wall_clock_seconds": 1.835,
+        "dispatcher_wall_clock_seconds": 1.83,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1830.147596,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "Add dark mode support to the settings page.",
+      "expected": "feature",
+      "path_a_nemotron_client": {
+        "classification": "feature",
+        "raw_response": "feature",
+        "wall_clock_seconds": 1.775,
+        "error": null
+      },
+      "path_b_direct_dispatch": {
+        "classification": "bug",
+        "raw_response": " bug",
+        "wall_clock_seconds": 1.662,
+        "dispatcher_wall_clock_seconds": 1.66,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1661.873781,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "API returns 500 when user has more than 10 groups.",
+      "expected": "bug",
+      "path_a_nemotron_client": {
+        "classification": "bug",
+        "raw_response": "bug",
+        "wall_clock_seconds": 1.644,
+        "error": null
+      },
+      "path_b_direct_dispatch": {
+        "classification": "bug",
+        "raw_response": " bug",
+        "wall_clock_seconds": 1.7,
+        "dispatcher_wall_clock_seconds": 1.7,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1699.78633,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "Users should be able to export data as CSV.",
+      "expected": "feature",
+      "path_a_nemotron_client": {
+        "classification": "feature",
+        "raw_response": "feature",
+        "wall_clock_seconds": 1.669,
+        "error": null
+      },
+      "path_b_direct_dispatch": {
+        "classification": "feature",
+        "raw_response": " feature",
+        "wall_clock_seconds": 1.844,
+        "dispatcher_wall_clock_seconds": 1.84,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1843.230589,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "Memory leak in the image uploader after 2 minutes of use.",
+      "expected": "bug",
+      "path_a_nemotron_client": {
+        "classification": "bug",
+        "raw_response": "bug",
+        "wall_clock_seconds": 1.865,
+        "error": null
+      },
+      "path_b_direct_dispatch": {
+        "classification": "bug",
+        "raw_response": " bug",
+        "wall_clock_seconds": 1.891,
+        "dispatcher_wall_clock_seconds": 1.89,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1890.901189,
+        "retries_used": 0
+      }
+    }
+  ],
+  "role_results": [
+    {
+      "task": "Explain what the eleven pillars of AHO are.",
+      "path_c_daemon_socket": {
+        "classification": null,
+        "raw_response": "{\"ok\": false, \"error\": \"Nemotron response '(The Eleven Pillars Of Agile)' does not match any category: ['assistant', 'code_runner', 'reviewer']\"}",
+        "wall_clock_seconds": 1.869,
+        "error": "Nemotron response '(The Eleven Pillars Of Agile)' does not match any category: ['assistant', 'code_runner', 'reviewer']"
+      },
+      "path_b_direct_dispatch": {
+        "classification": "reviewer",
+        "raw_response": " reviewer",
+        "wall_clock_seconds": 1.722,
+        "dispatcher_wall_clock_seconds": 1.72,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1721.125031,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "Write a python function that sorts a list of dicts by a key.",
+      "path_c_daemon_socket": {
+        "classification": null,
+        "raw_response": "{\"ok\": false, \"error\": \"Nemotron response 'AI' does not match any category: ['assistant', 'code_runner', 'reviewer']\"}",
+        "wall_clock_seconds": 1.682,
+        "error": "Nemotron response 'AI' does not match any category: ['assistant', 'code_runner', 'reviewer']"
+      },
+      "path_b_direct_dispatch": {
+        "classification": "code_runner",
+        "raw_response": " code_runner",
+        "wall_clock_seconds": 1.729,
+        "dispatcher_wall_clock_seconds": 1.73,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1728.286439,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "Review this code for G083 compliance.",
+      "path_c_daemon_socket": {
+        "classification": "reviewer",
+        "raw_response": "{\"ok\": true, \"role\": \"reviewer\"}",
+        "wall_clock_seconds": 1.75,
+        "error": null
+      },
+      "path_b_direct_dispatch": {
+        "classification": "reviewer",
+        "raw_response": " reviewer",
+        "wall_clock_seconds": 1.724,
+        "dispatcher_wall_clock_seconds": 1.72,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1723.380311,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "What's the difference between remediation and discovery iterations?",
+      "path_c_daemon_socket": {
+        "classification": null,
+        "raw_response": "{\"ok\": false, \"error\": \"Nemotron response '' does not match any category: ['assistant', 'code_runner', 'reviewer']\"}",
+        "wall_clock_seconds": 1.793,
+        "error": "Nemotron response '' does not match any category: ['assistant', 'code_runner', 'reviewer']"
+      },
+      "path_b_direct_dispatch": {
+        "classification": null,
+        "raw_response": " discovery",
+        "wall_clock_seconds": 1.705,
+        "dispatcher_wall_clock_seconds": 1.71,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1704.483366,
+        "retries_used": 0
+      }
+    },
+    {
+      "task": "Run the test suite and report which tests fail.",
+      "path_c_daemon_socket": {
+        "classification": null,
+        "raw_response": "{\"ok\": false, \"error\": \"Nemotron response 'AI' does not match any category: ['assistant', 'code_runner', 'reviewer']\"}",
+        "wall_clock_seconds": 1.818,
+        "error": "Nemotron response 'AI' does not match any category: ['assistant', 'code_runner', 'reviewer']"
+      },
+      "path_b_direct_dispatch": {
+        "classification": "code_runner",
+        "raw_response": " code_runner",
+        "wall_clock_seconds": 1.787,
+        "dispatcher_wall_clock_seconds": 1.79,
+        "family": "nemotron",
+        "error": null,
+        "total_duration_ms": 1786.461495,
+        "retries_used": 0
+      }
+    }
+  ],
+  "error_handling": [
+    {
+      "case": "unknown_model",
+      "path_b_direct_dispatch": {
+        "error": "Model 'nonexistent-model:99b' not found (HTTP 404)",
+        "wall_clock_seconds": 0.0,
+        "retries_used": 0
+      }
+    }
+  ]
+}

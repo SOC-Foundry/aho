@@ -13,7 +13,7 @@ components:
     path: src/aho/agents/nemoclaw.py
     status: active
     owner: soc-foundry
-    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2"
+    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2; classification layer migrated to pipeline.router in 0.2.15 W3 (ADR 0002), session layer retained"
 
   - name: telegram
     kind: external_service
@@ -34,6 +34,7 @@ components:
     path: src/aho/artifacts/nemotron_client.py
     status: active
     owner: soc-foundry
+    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window"
 
   - name: glm-client
     kind: llm
@@ -265,6 +266,21 @@ components:
     path: src/aho/pipelines/pattern.py
     status: active
     owner: soc-foundry
+
+  # === Pipeline (cascade dispatch) ===
+  - name: pipeline-dispatcher
+    kind: python_module
+    path: src/aho/pipeline/dispatcher.py
+    status: active
+    owner: soc-foundry
+    notes: "Ollama /api/chat dispatcher; hardened for multi-model in 0.2.15 W2 (stop tokens, typed errors, retry, template leak detection)"
+
+  - name: pipeline-router
+    kind: python_module
+    path: src/aho/pipeline/router.py
+    status: active
+    owner: soc-foundry
+    notes: "Classification routing over the hardened dispatcher; supersedes nemotron_client.classify (ADR 0002, 0.2.15 W3)"
 
   # === Postflight gates ===
   - name: pf-artifacts-present

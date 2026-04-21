@@ -1,0 +1,36 @@
+{
+  "requirement_id": "R7",
+  "requirement": "Error reporting fidelity",
+  "scope": "per-server",
+  "classification": "partial",
+  "probe_method": "Test three failure modes: unknown model name, malformed JSON payload, invalid model parameters (num_ctx above max). Verify distinguishable errors.",
+  "probes": [
+    {
+      "test": "Unknown model name",
+      "request": {"model": "nonexistent-model-xyz:latest"},
+      "http_status": 404,
+      "error_body": "{\"error\":\"model 'nonexistent-model-xyz:latest' not found\"}",
+      "distinguishable": true,
+      "result": "pass"
+    },
+    {
+      "test": "Malformed JSON payload",
+      "request_body": "{{not valid json}}",
+      "http_status": 400,
+      "error_body": "{\"error\":\"invalid character '{' looking for beginning of object key string\"}",
+      "distinguishable": true,
+      "result": "pass"
+    },
+    {
+      "test": "Invalid num_ctx (999999999)",
+      "request": {"model": "llama3.2:3b", "options": {"num_ctx": 999999999}},
+      "http_status": 200,
+      "response": "Normal response returned — Ollama silently accepted invalid num_ctx",
+      "distinguishable": false,
+      "result": "fail",
+      "note": "Ollama does not validate num_ctx bounds. Silently accepts absurd values without error or warning. Response was normal (8 eval_count tokens). Likely clamped internally but no signal to client."
+    }
+  ],
+  "evidence_summary": "2/3 failure modes produce clear, distinguishable HTTP errors (404 for unknown model, 400 for malformed JSON). Invalid model parameters (num_ctx=999999999) are silently accepted with HTTP 200 — no validation error. Partial: Ollama reliably reports structural errors but does not validate parameter bounds.",
+  "workaround": "Dispatcher should validate num_ctx client-side before sending to Ollama. Do not rely on Ollama for parameter validation."
+}

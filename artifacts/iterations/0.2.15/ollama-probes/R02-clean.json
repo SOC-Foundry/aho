@@ -1,0 +1,102 @@
+{
+  "probe_id": "R02-clean",
+  "requirement": "R2 LRU eviction predictability (clean-state retest)",
+  "context": "Post sudo systemctl restart ollama. W1 correction — retesting R2 after Kyle identified contaminated baseline in initial W1 probes.",
+  "gpu": "NVIDIA GeForce RTX 2080 SUPER 8192 MiB",
+  "ollama_version": "0.20.2",
+  "timestamp": "2026-04-13T18:44:00Z",
+  "classification": "partial",
+  "steps": [
+    {
+      "label": "Step 0: post-restart baseline",
+      "vram_mib": 4066,
+      "models_loaded": [{"name": "nemotron-mini:4b", "size_vram_gb": 2.92, "context_length": 4096}],
+      "model_count": 1,
+      "note": "Nemotron auto-loads on Ollama restart."
+    },
+    {
+      "label": "Step 0b: after Nemotron unload",
+      "vram_mib": 704,
+      "models_loaded": [],
+      "model_count": 0,
+      "note": "Clean VRAM baseline: 704 MiB (desktop processes only, no Ollama GPU process)."
+    },
+    {
+      "label": "Step 1: after Qwen load",
+      "vram_mib": 6988,
+      "models_loaded": [{"name": "qwen3.5:9b", "size_vram_gb": 6.43, "context_length": 4096}],
+      "model_count": 1,
+      "load_result": {"status": 200, "elapsed_s": 13.19, "response": "OK"}
+    },
+    {
+      "label": "Step 2: after Llama load",
+      "vram_mib": 6882,
+      "models_loaded": [
+        {"name": "llama3.2:3b", "size_vram_gb": 2.75, "context_length": 4096},
+        {"name": "nemotron-mini:4b", "size_vram_gb": 3.05, "context_length": 4096}
+      ],
+      "model_count": 2,
+      "load_result": {"status": 200, "elapsed_s": 2.35, "response": "OK"},
+      "note": "Qwen evicted (LRU). Nemotron reappeared — auto-load behavior."
+    },
+    {
+      "label": "Step 3: GLM load attempt (full GPU, 41 layers)",
+      "vram_mib": 704,
+      "models_loaded": [],
+      "model_count": 0,
+      "load_result": {"status": 500, "elapsed_s": 2.75, "error": "llama runner process has terminated"},
+      "crash_root_cause": "cudaMalloc failed: out of memory (allocating 1704.17 MiB). CUDA0 model buffer needs 5539 MiB. CUDA runtime context (~1.2 GiB) not accounted for by scheduler. Crash kills all loaded models."
+    },
+    {
+      "label": "Step 4: after Nemotron load",
+      "vram_mib": 4064,
+      "models_loaded": [{"name": "nemotron-mini:4b", "size_vram_gb": 2.92, "context_length": 4096}],
+      "model_count": 1,
+      "load_result": {"status": 200, "elapsed_s": 1.42, "response": "OK"}
+    },
+    {
+      "label": "Step 5: after Qwen reload",
+      "vram_mib": 6988,
+      "models_loaded": [{"name": "qwen3.5:9b", "size_vram_gb": 6.43, "context_length": 4096}],
+      "model_count": 1,
+      "load_result": {"status": 200, "elapsed_s": 9.71, "response": "OK"}
+    }
+  ],
+  "glm_empty_vram_test": {
+    "description": "GLM load attempted on truly empty VRAM (705 MiB, 0 Ollama GPU processes) after careful manual unload and verification",
+    "vram_before": 705,
+    "gpu_processes": "none",
+    "status": 500,
+    "elapsed_s": 1.84,
+    "error": "llama runner process has terminated",
+    "conclusion": "GLM full-GPU load fails even on completely empty VRAM. CUDA runtime context (~1.2 GiB) + GLM model buffer (5539 MiB) + KV/compute (293 MiB) = ~6.7 GiB exceeds available 7.5 GiB (8192 - 704 desktop). Margin too tight for CUDA's internal overhead."
+  },
+  "glm_partial_offload_test": {
+    "num_gpu": 30,
+    "layers_total": 41,
+    "status": 200,
+    "elapsed_s": 35.98,
+    "response": "ok",
+    "vram_mib": 7239,
+    "note": "GLM loads successfully with 30/41 layers on GPU. Inference slower (36s) but functional."
+  },
+  "crash_log_evidence": {
+    "scheduler_available_gib": 6.5,
+    "scheduler_free_gib": 6.9,
+    "model_buffer_mib": 5539,
+    "kv_cache_mib": 80,
+    "compute_graph_mib": 213,
+    "total_model_mib": 5832,
+    "failed_allocation_mib": 1704,
+    "error": "cudaMalloc failed: out of memory",
+    "signal": "SIGABRT",
+    "source": "journalctl -u ollama, 2026-04-13T11:50:00"
+  },
+  "nemotron_auto_load": {
+    "observed": true,
+    "behavior": "Nemotron reappears after Ollama restart and when VRAM becomes available after other model eviction. keep_alive:0 does not permanently suppress.",
+    "journalctl_evidence": "Multiple /api/generate POST calls appear in logs immediately after restart and after model evictions, loading Nemotron."
+  },
+  "evidence_summary": "R2 stays partial. LRU eviction is predictable for the 3 fully-loadable models. GLM cannot load with full GPU offload on 8GB VRAM — confirmed on clean state with crash root cause identified (CUDA OOM). GLM is loadable with partial offload (num_gpu=30) as a workaround. Nemotron auto-load adds unpredictability to VRAM management.",
+  "correction_vs_initial_w1": "Initial W1 misattributed GLM failure to '3362 MiB Ollama base overhead' — that figure was Nemotron model weights + Ollama runtime, not base. Kyle's post-W1 diagnostic correctly identified contaminated state (orphan runners) but the hardware constraint is real even on clean state. GLM loads for Kyle potentially due to fewer desktop GPU processes or different Ollama internal state."
+}

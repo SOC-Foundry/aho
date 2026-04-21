@@ -1,10 +1,8 @@
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration.** Methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
-
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.14** | **Status: Council Wiring Verification**
+**Phase 0** · **Iteration 0.2.15** · **Status: Tier 1 Partial Install Validation**
 
 ```mermaid
 graph BT
@@ -16,7 +14,42 @@ graph BT
     classDef prong fill:#161B22,stroke:#4ADE80,color:#4ADE80
 ```
 
-### The Eleven Pillars of AHO
+aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product. The executing model (Claude, Gemini, Qwen, Llama) is the engine. The harness ships working software without supervision.
+
+---
+
+## Quick start
+
+```fish
+git clone https://github.com/soc-foundry/aho
+cd aho
+./install.fish
+aho doctor
+```
+
+Requires: Arch-family Linux, Python 3.11+, fish shell, Ollama, 8GB+ VRAM for Tier 1 council.
+
+---
+
+## Cascade
+
+Five-stage pipeline. Each stage a distinct role. Handoffs validated.
+
+```
+Document → Indexer-in → Producer → Auditor → Indexer-out → Assessor → Output
+                              │           │
+                              ▼           ▼
+                         deltas      delta-validations
+                              │           │
+                              └─► staging ◄┘
+```
+
+Producer drafts. Indexers propose deltas. Auditor validates. Assessor meta-assesses.
+Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
+
+---
+
+## The Eleven Pillars of AHO
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -32,96 +65,176 @@ graph BT
 
 ---
 
-## What aho Does
+## Capabilities
 
-aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
+**Artifact loop.** Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word-count enforcement and 3-retry escalation.
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
-- **`/ws` Streaming** — Telegram commands (`/ws status`, `/ws pause`, `/ws proceed`, `/ws last`) for real-time workstream monitoring and agent pause/proceed control from phone. Auto-push notifications on workstream completion.
-- **Install Surface Architecture** — Three-persona model (pipeline builder, framework host, impromptu assistant). `aho-run` spec'd as the persona 3 entry point for pwd-scoped one-shot work against arbitrary files. Persona 3 discovery in 0.2.9 confirmed the gap exists; install-surface-architecture.md is the scope contract for 0.2.10–0.2.13 implementation.
+**Pre-flight / post-flight gates.** Environment validation before launch, quality gates after execution. Bundle completeness enforced.
+
+**Cascade orchestrator.** 5-stage pipeline (`src/aho/pipeline/`) with trace events, per-stage artifacts, cross-stage delta propagation. Dispatcher supports Ollama `/api/chat` with model-family stop tokens and `num_ctx` up to 32K on 8GB VRAM.
+
+**Pattern C execution.** Claude Code drafts, Gemini CLI audits, human signs. State machine: `in_progress → pending_audit → audit_complete → workstream_complete`. Audit archives are versioned, overwrites forbidden.
+
+**Gotcha registry.** 83+ indexed failure modes with mitigations, queried at iteration start.
+
+**Secrets architecture.** age encryption + OS keyring + fernet bulk storage. No keys, passphrases, or secret material in the repo.
+
+**Multi-agent orchestration.** Qwen for general work, Llama 3.2 for triage, GLM and Nemotron re-test in 0.2.15, OpenClaw as file-bridge wrapper, Nemoclaw as dispatcher.
+
+**Telegram `/ws` streaming.** `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`. Auto-push on workstream completion.
+
+**Install surface.** Three-persona model (pipeline builder, framework host, impromptu assistant). `aho run "task"` for persona 3 pwd-scoped work.
+
+**Observability.** otelcol-contrib + Jaeger as systemd user services. Spans in dispatcher, openclaw, nemoclaw, telegram.
 
 ---
 
-## Canonical Folder Layout (0.1.13+)
+## Folder layout
 
 ```
 aho/
 ├── src/aho/                    # Python package (src-layout)
+│   └── pipeline/               # Cascade: schemas, dispatcher, orchestrator
 ├── bin/                        # CLI entry points and tool wrappers
-├── artifacts/                  # Project-specific artifacts (from docs/, scripts/, etc.)
-│   ├── harness/                # Universal and project-specific harnesses
+├── artifacts/
+│   ├── harness/                # Pillars, ADRs, Pattern C protocol
 │   ├── adrs/                   # Architecture Decision Records
-│   ├── iterations/             # Per-iteration outputs (Design, Plan, Build Log)
+│   ├── iterations/             # Per-iteration design, plan, build, report, bundle
 │   ├── phase-charters/         # Phase objective contracts
 │   ├── roadmap/                # Strategic planning
-│   ├── scripts/                # Utility and instrumentation scripts
-│   ├── templates/              # Scaffolding templates
+│   ├── scripts/                # Utility and instrumentation
+│   ├── templates/              # Scaffolding
 │   ├── prompts/                # LLM generation templates
 │   └── tests/                  # Verification suite
 ├── data/                       # Registries, event log, ChromaDB
-├── app/                        # Consumer application mount point (Phase 1+)
-└── pipeline/                   # Processing pipeline mount point (Phase 1+)
+├── app/                        # Consumer application mount (Phase 1+)
+└── pipeline/                   # Processing pipeline mount (Phase 1+)
 ```
+
+Canonical since 0.1.13. Path-agnostic via `iao_paths.find_project_root()` and `.aho.json` sentinel.
 
 ---
 
-## Iteration Roadmap
+## State machine
+
+Every workstream flows through four states. Claude emits three events. Gemini emits one. Checkpoint advances only after audit archive exists with pass or pass-with-findings.
+
+```
+  in_progress   ──►   pending_audit   ──►   audit_complete   ──►   workstream_complete
+  (Claude)           (Claude done)        (Gemini done)           (Claude emits)
+```
+
+No agent emits `workstream_complete` before `audit_complete` exists. Audit archive overwrites forbidden; re-audits create versioned files.
+
+---
+
+## Roadmap
 
 | Iteration | Theme | Status |
 |---|---|---|
 | 1 (0.1.x) | Build the harness | graduated 2026-04-11 |
-| 2 (0.2.x) | Ship to soc-foundry + P3 | active |
-| 3 (0.3.x) | Alex demo + claw3d + polish | planned |
+| 2 (0.2.x) | Ship to soc-foundry + P3 | active (0.2.15) |
+| 3 (0.3.x) | Alex demo + polish | planned |
 | Phase 1 | Multi-project, multi-machine | planned |
 
-## Phase 0 Status
+**Phase 0 charter:** `artifacts/phase-charters/aho-phase-0.md`
 
-**Phase:** 0 — Clone-to-Deploy
-**Charter:** artifacts/phase-charters/aho-phase-0.md
+Phase 0 is complete when soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
+---
+
+## Recent iterations
+
+**0.2.15 — Tier 1 Partial Install Validation (in progress).** Wire and ship Tier 1 install package. 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) validated through Ollama on fixed dispatcher. Fair re-test of GLM and Nemotron after 0.2.13 W2.5 compromise findings measured on broken substrate. Ollama Tier 1 capability audit, dispatcher hardening, Nemoclaw decision ADR, cross-model cascade integration test. 5 workstreams.
+
+**0.2.14 — Council Wiring Verification.** 4 workstreams delivered (W0 setup, W1 vet+wire+smoke, W1.5 substrate repair, W2 close). W1 smoke test surfaced two dispatcher bugs: `num_ctx` default 4096 truncating input to ~4K tokens, and `/api/generate` without stop tokens causing chat template leakage. W1.5 repaired the dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens). Run-2 smoke test produced 14,725 chars of substantive cross-stage output vs run-1's 6,901 chars of template-leaked garbage. Council validated as real-but-thin: cascade mechanics work, Pillar 7 violation persists (Qwen-solo), auditor role-prompt bifurcation identified.
+
+**0.2.13 — Dispatch-Layer Repair.** First Pattern C iteration. W1 fixed GLM parser (`GLMParseError` replaces hardcoded `{score:8, ship}` fallback). W2 fixed Nemotron classifier (specific error types replace blanket `except Exception`). W2.5 hard gate: honest parsers exposed that GLM timed out 80% of inputs, Nemotron returned "feature" 80% regardless of content. Rescoped W3-W9. 4 workstreams delivered.
+
+**0.2.12 — Council Activation.** 20 workstreams. Gemini CLI primary executor. Council inventory audit. Five gotchas landed (G078-G083) including foundational G083: exception handlers returning hardcoded positive values, masking real failures. Council health measured at 35.3/100. Strategic rescope at W5.
+
+See [CHANGELOG.md](CHANGELOG.md) for full history back to 0.1.0-alpha.
+
+---
+
+## Core concepts
+
+**Harness.** The versioned set of files that constrain agent behavior. Pillars, ADRs, Pattern C protocol, gotcha registry, prompt conventions, test baseline. Changes at phase or iteration boundaries.
+
+**Cascade.** Five role-bound stages that produce and validate analytical artifacts. Handoffs are traced events. Deltas proposed by Indexers validated by Auditor and Assessor.
+
+**Pattern C.** Execution model where a cloud orchestrator drafts, a second cloud orchestrator audits, and a human signs. Separates generation from evaluation at the orchestrator boundary. Introduced in 0.2.13.
+
+**Council.** The set of local LLMs available to the harness. Members have distinct roles. Pillar 7 requires drafter ≠ reviewer; council composition enables this.
+
+**Gotcha registry.** Structured record of failure modes with mitigations. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+
+**Three personas.** Persona 1 (pipeline builder) runs full iterations against known projects. Persona 2 (framework host) imports aho into another repo. Persona 3 (impromptu assistant) runs pwd-scoped one-shot work via `aho run`.
 
 ---
 
 ## Installation
 
 ```fish
+# 1. Clone
+git clone https://github.com/soc-foundry/aho ~/dev/projects/aho
 cd ~/dev/projects/aho
-pip install -e . --break-system-packages
+
+# 2. Install (idempotent; 9-step orchestrator)
+./install.fish
+
+# 3. Verify
 aho doctor
+aho doctor --deep    # includes Flutter and dart checks
+aho components check # per-kind presence verification
 ```
 
-**Requirements:** Python 3.11+, Ollama with qwen3.5:9b, fish shell (Linux).
+**Requirements:**
+
+- Arch Linux family (CachyOS tested)
+- Python 3.11+ (`pip install -e . --break-system-packages`)
+- fish shell (primary)
+- Ollama (installed via upstream script, not pacman)
+- 8GB+ VRAM for Tier 1 council (Qwen 3.5:9B + Llama 3.2:3B + GLM + Nemotron)
+- systemd user services (linger enabled)
+- Telegram bot token (optional, for `/ws` streaming)
+- Brave Search API token (optional, for search tools)
+
+**Tier 1 install** pulls four chat LLMs and one embedding model. Tier 2 and Tier 3 (Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo) land with 16GB+ machines; see 0.2.15 carry-forwards.
 
 ---
 
-## Iteration Narrative (0.2.12–0.2.14)
+## Configuration
 
-### 0.2.12 — Council Activation (gemini-cli primary)
+**Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
 
-20 workstreams. Gemini CLI took the executor lead for the first time. The iteration audited every declared council member (Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, MCP fleet), built visibility infrastructure (`aho council status`, lego office visualization), and established the delegation/dispatch design. Five gotchas landed (G078–G083), including the foundational G083: exception handlers that return hardcoded positive values, masking real failures. 35 definitive G083 sites identified, 117 ambiguous. Council health measured at 35.3/100. Strategic rescope at W5 after substrate findings revealed that model output quality was the binding constraint — not dispatch architecture.
+**MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. 9 MCP servers smoke-tested via `bin/aho-mcp smoke`.
 
-### 0.2.13 — Dispatch-Layer Repair (Pattern C trial)
+**Secrets** via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
 
-First iteration under Pattern C: Claude Code drafts, Gemini CLI audits, Kyle signs. 11 workstreams planned, 4 delivered, 7 skipped per rescope.
+**Per-machine systemd user services:** openclaw, nemoclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard.
 
-W1 fixed the GLM parser — `GLMParseError` replaced the hardcoded `{score: 8, recommendation: ship}` fallback that had been lying about evaluation quality. W2 fixed the Nemotron classifier — `NemotronParseError` and `NemotronConnectionError` replaced blanket `except Exception` with specific error types. Both parsers now fail honestly instead of returning manufactured success.
+---
 
-W2.5 was the hard gate. With honest parsers in place, the models were tested: GLM-4.6V-Flash-9B at Q4_K_M timed out 80% of inputs at 180s and produced wrong-schema JSON the other 20%. Nemotron-mini:4b returned "feature" 80% of the time regardless of input. The parsers are honest. The models cannot produce usable signal through honest parsers. W3–W9 were skipped — fixing exception handlers around non-functional models was not a productive use of the iteration.
+## Related work
 
-### Where we are
+**[karpathy/llm-council](https://github.com/karpathy/llm-council).** Conceptual reference for multi-LLM cross-review pattern. Three-stage architecture (first opinions → review → chairman) differs from aho's five-stage role-bound cascade. OpenRouter cloud APIs vs aho's local Ollama inference. Karpathy's description: "99% vibe coded as a fun Saturday hack." Value is conceptual, not implementation.
 
-The council as a wired system has never been verified end-to-end. Two iterations of parser fixes and individual model invocations. Zero iterations of "Producer → Indexer → Auditor → Indexer → Assessor cascade actually runs." 9 of 17 council members claimed-operational, 6 unknown, 2 substrate-compromised. No agent-to-agent handoff in cascade architecture has ever been exercised.
+**[ruvnet/ruflo](https://github.com/ruvnet/ruflo).** Claude Code orchestration platform with swarm coordination, WASM policy engine, plugin system. Much larger scope than aho; different architectural premises (swarm-per-task vs role-bound cascade, dynamic agent spawning vs fixed council composition). Structural reference for OSS project organization.
 
-### 0.2.14 — Council Wiring Verification (current)
+aho's focus is narrower than either: harness-governed iterations with durable state transitions, honest substrate measurement, and supervised-free software delivery. Local-first, 8-24GB VRAM tier, Arch Linux family, fish shell.
 
-0.2.14 verifies wiring. Every declared council member gets invoked (W1 vetting). The 5-stage cascade orchestrator gets built and run end-to-end against the NoSQL manual (201-page test document). Sign-off package presented to Kyle. No measurement of model quality, no architecture decisions, no matrix testing, no dashboard — those are 0.2.15+ after wiring is signed off.
+---
+
+## Status
+
+**Phase 0 active.** Second-machine clone target: ThinkStation P3 (tsP3-cos). Third-machine (A8cos) reframed as orchestration/daily-driver after integrated GPU constraint. Luke's machine (24GB) is candidate Tier 3 clone for 0.2.17.
+
+**Council:** Qwen 3.5:9B operational. Llama 3.2:3B integration in 0.2.15 W0. GLM-4.6V-Flash-9B and Nemotron-mini:4b substrate-compromise re-test in 0.2.15 W0. Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo planned for 16GB+ machines.
+
+**Testing:** 302 passing, 12-13 known baseline failures (daemon-dependent), 0 new regressions across recent iterations.
+
+**Gotcha registry:** 83+ entries.
 
 ---
 
@@ -131,6 +244,6 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.14 — aho.run — Phase 0 — April 2026*
+*aho v0.2.15 · aho.run · Phase 0 · April 2026*
 
-*README last reviewed: 2026-04-13 by 0.2.14 W0*
+*README last reviewed: 2026-04-13 by 0.2.15 W0 work session*

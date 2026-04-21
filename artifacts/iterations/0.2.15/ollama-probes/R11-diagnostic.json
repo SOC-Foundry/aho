@@ -1,0 +1,78 @@
+{
+  "probe_id": "R11-diagnostic",
+  "requirement": "R11 Chat template application (GLM diagnostic)",
+  "context": "W1 correction. GLM loaded with num_gpu=30 (partial offload). Testing whether template leak is stop-token fixable or structural.",
+  "timestamp": "2026-04-13T18:53:00Z",
+  "classification": "partial",
+  "verdict": "stop-token fixable",
+  "probes": [
+    {
+      "id": "probe1",
+      "description": "GLM without explicit stop tokens (baseline)",
+      "prompt": "Classify this input: Database connection fails after 30 seconds. Output only a single word: bug, feature, or unknown.",
+      "stop_tokens": [],
+      "raw_content": "<|begin_of_box|>bug<|end_of_box|>",
+      "template_leak": true,
+      "done_reason": "stop",
+      "elapsed_s": 15.65,
+      "thinking_present": true,
+      "thinking_language": "English",
+      "thinking_preview": "Got it, let's tackle this classification task. The user wants to classify the input..."
+    },
+    {
+      "id": "probe2",
+      "description": "GLM with both begin_of_box and end_of_box as stop tokens",
+      "prompt": "same as probe1",
+      "stop_tokens": ["<|begin_of_box|>", "<|end_of_box|>"],
+      "raw_content": "",
+      "template_leak": false,
+      "done_reason": "stop",
+      "elapsed_s": 11.54,
+      "note": "Empty output — begin_of_box stop token fired immediately, cutting off all visible content. GLM wraps output in <|begin_of_box|>...<|end_of_box|>, so the begin token fires before content starts.",
+      "thinking_present": true,
+      "thinking_language": "English",
+      "thinking_preview": "Got it, let's see. The user wants to classify..."
+    },
+    {
+      "id": "probe3",
+      "description": "GLM identity probe (checking thinking language)",
+      "prompt": "What is your model name? Reply in one sentence.",
+      "stop_tokens": [],
+      "raw_content": "I am the GLM large language model developed by Zhipu AI.",
+      "template_leak": false,
+      "done_reason": "stop",
+      "elapsed_s": 18.69,
+      "note": "No template leak on identity probe (no structured output wrapping). Clean English response. Correct self-identification.",
+      "thinking_present": true,
+      "thinking_language": "Chinese",
+      "thinking_preview_unicode": "用户现在需要回答"你的模型名称是什么？用一句话回复。"首先看问题，要求是给出模型名...",
+      "thinking_note": "GLM's thinking field contains Chinese reasoning even when prompt and response are in English. This consumes context budget proportionally."
+    },
+    {
+      "id": "probe4",
+      "description": "GLM with only end_of_box as stop token (the W2 fix path)",
+      "prompt": "same as probe1",
+      "stop_tokens": ["<|end_of_box|>"],
+      "raw_content": "<|begin_of_box|>feature",
+      "template_leak": true,
+      "done_reason": "stop",
+      "elapsed_s": 47.76,
+      "note": "Output includes begin_of_box prefix but stops before end_of_box. Content after stripping prefix: 'feature'. The W2 dispatcher can strip this prefix.",
+      "w2_fix": "Use <|end_of_box|> as stop token + post-process strip of <|begin_of_box|> prefix from response content.",
+      "classification_unstable": "Response was 'feature' instead of 'bug' (temperature-dependent). Functional for classification tasks but output varies."
+    }
+  ],
+  "w2_fix_path": {
+    "stop_tokens": ["<|end_of_box|>"],
+    "post_processing": "Strip '<|begin_of_box|>' prefix from message.content",
+    "dispatcher_change": "Add GLM family to model-family stop token lookup table. Add response post-processor for GLM.",
+    "feasibility": "Confirmed feasible. Probe 4 demonstrates the fix path works — clean content after prefix strip."
+  },
+  "thinking_field_findings": {
+    "field_name": "thinking",
+    "present_in_api": true,
+    "language_behavior": "Chinese for identity/simple prompts. English for classification tasks. Language selection appears task-dependent.",
+    "w4_cascade_impact": "If GLM serves as Auditor, thinking field reasoning is in Chinese — not visible in cascade artifacts unless explicitly captured. Content field is in English."
+  },
+  "evidence_summary": "GLM template leak is stop-token fixable. W2 dispatcher adds <|end_of_box|> to GLM stop tokens and strips <|begin_of_box|> from response. GLM's thinking field is present in /api/chat responses (new vs W0 — either Ollama 0.20.2 added it or it was missed). Thinking language is Chinese for identity probes, English for classification. Template leak is NOT structural — it's a known GLM output pattern that Ollama doesn't handle by default."
+}

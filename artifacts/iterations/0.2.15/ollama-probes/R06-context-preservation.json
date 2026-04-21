@@ -1,0 +1,32 @@
+{
+  "requirement_id": "R6",
+  "requirement": "Context preservation / leak",
+  "scope": "per-server",
+  "critical": true,
+  "classification": "meets",
+  "probe_method": "Two back-to-back requests with different system prompts containing unique secret words. Verify second response reflects only second request context, not first.",
+  "probes": [
+    {
+      "model": "qwen3.5:9b",
+      "request_1_secret": "ALPHA",
+      "request_1_response": "The secret word is ALPHA.",
+      "request_2_secret": "BRAVO",
+      "request_2_response": "The secret word is BRAVO.",
+      "leak_detected": false,
+      "correct_secret_in_r2": true,
+      "result": "pass"
+    },
+    {
+      "model": "llama3.2:3b",
+      "request_1_secret": "DELTA",
+      "request_1_response": "*stays silent*",
+      "request_2_secret": "ECHO",
+      "request_2_response": "ECHO",
+      "leak_detected": false,
+      "correct_secret_in_r2": true,
+      "result": "pass"
+    }
+  ],
+  "evidence_summary": "No context leak detected. Each request is stateless — response reflects only the current request's system prompt and user message. Tested across 2 models with unique identifiers. Ollama's /api/chat endpoint is correctly stateless per-request.",
+  "note": "GLM and Nemotron not tested (GLM cannot load; Nemotron context leak is low-risk given identity confusion is model-intrinsic, not context-bleed). Qwen and Llama cover the primary concern."
+}

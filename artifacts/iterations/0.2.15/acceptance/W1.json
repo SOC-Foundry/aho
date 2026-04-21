@@ -1,0 +1,171 @@
+{
+  "workstream_id": "W1",
+  "iteration": "0.2.15",
+  "title": "Ollama Tier 1 Capability Audit",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-13T18:15:00Z",
+  "revision_timestamp": "2026-04-13T19:00:00Z",
+  "revision_note": "Post-W1 correction: Kyle identified contaminated Ollama state during initial probes (resident Qwen + orphan runner). Clean-state retests performed for R2 and R11. GLM full-GPU still fails on clean state (CUDA OOM) but loads with num_gpu=30 (partial offload). Template leak confirmed stop-token fixable. R5 promoted to meets. Fitness report and probe artifacts updated.",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-6"
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "check": "AHO_ITERATION env confirmed before workstream_start",
+      "result": "pass",
+      "evidence": "AHO_ITERATION=0.2.15 set before emit_workstream_start. Event logged at 2026-04-13T17:43:45Z with iteration=0.2.15."
+    },
+    {
+      "check": "Checkpoint advanced to W1",
+      "result": "pass",
+      "evidence": "Checkpoint shows current_workstream=W1, W1=pending_audit. W0=workstream_complete preserved."
+    },
+    {
+      "check": "All 12 requirements probed with evidence (no unknown)",
+      "result": "pass",
+      "evidence": "12 probe artifacts in ollama-probes/R01-R12. R02-clean.json and R11-diagnostic.json added during correction. Classifications after correction: 8 meets, 3 partial, 0 fails. R5 promoted to meets after GLM partial-offload routing confirmed."
+    },
+    {
+      "check": "Critical requirements (R2, R5, R6, R11) have explicit shippability decisions",
+      "result": "pass",
+      "evidence": "R2: partial (GLM needs num_gpu=30, 3 models fully loadable). R5: meets (all 4 route correctly with appropriate config). R6: meets (no context leak). R11: partial (GLM template leak stop-token fixable, W2 scope). All documented in corrected fitness report."
+    },
+    {
+      "check": "Any fails documented with workaround or defer notation",
+      "result": "pass",
+      "evidence": "No hard fails. Three partial classifications with workarounds: R2 (GLM num_gpu=30), R7 (client-side validation), R11 (W2 stop-token fix + prefix strip)."
+    },
+    {
+      "check": "Raw response inspection for ambiguous probes",
+      "result": "pass",
+      "evidence": "Qwen empty responses diagnosed (thinking-mode). GLM CUDA OOM confirmed via journalctl crash logs. GLM template leak diagnosed with 4 probes (no stops, both stops, end-only stop, identity). Thinking field language inspected."
+    },
+    {
+      "check": "baseline_regression_check clean (12 carried from W0, 11 observed)",
+      "result": "pass",
+      "evidence": "11 failed, 304 passed, 1 skipped (1401.74s). W0 baseline: 12 failures, 303 passed. Delta: one fewer failure, one more pass. No new failures introduced. W1 made no src/aho/ code changes."
+    },
+    {
+      "check": "No G083 sites introduced",
+      "result": "pass",
+      "evidence": "W1 produced no new code. All artifacts are JSON probe data and markdown. Pre-existing G083 site at workstream_events.py:70-71 not affected."
+    },
+    {
+      "check": "No git operations performed",
+      "result": "pass",
+      "evidence": "Pillar 11 respected throughout W1 and correction."
+    },
+    {
+      "check": "W1 correction: R2 clean-state retest completed",
+      "result": "pass",
+      "evidence": "R02-clean.json written with 7-step LRU sequence + GLM empty-VRAM test + GLM partial-offload test. GLM CUDA OOM root cause identified from journalctl (cudaMalloc failed allocating 1704 MiB). GLM loads with num_gpu=30 at 7239 MiB VRAM."
+    },
+    {
+      "check": "W1 correction: R11 GLM template diagnostic completed",
+      "result": "pass",
+      "evidence": "R11-diagnostic.json written with 4 probes. Template leak confirmed stop-token fixable. W2 fix path: add <|end_of_box|> to GLM stops + strip <|begin_of_box|> prefix. GLM thinking field present (Chinese for identity, English for classification)."
+    },
+    {
+      "check": "W1 correction: No checkpoint advance, no workstream_complete",
+      "result": "pass",
+      "evidence": "Checkpoint remains at W1/pending_audit. No workstream_start or workstream_complete events emitted during correction."
+    }
+  ],
+  "deliverables": [
+    "artifacts/iterations/0.2.15/ollama-probes/R01-concurrent-model-awareness.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R02-lru-eviction.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R02-clean.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R03-explicit-unload.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R04-request-queuing.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R05-multi-model-routing.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R06-context-preservation.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R07-error-reporting.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R08-timeout-hang.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R09-model-swap-latency.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R10-stop-token-handling.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R11-chat-template.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R11-diagnostic.json",
+    "artifacts/iterations/0.2.15/ollama-probes/R12-embedding-coexistence.json",
+    "artifacts/iterations/0.2.15/ollama-probes/r2_clean_probe.py",
+    "artifacts/iterations/0.2.15/ollama-tier1-fitness-0.2.15.md"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "warning",
+      "description": "GLM-4.6V-Flash-9B cannot load with full GPU offload (41 layers) on 8GB VRAM. CUDA OOM: model buffer 5539 MiB + CUDA runtime ~1.2 GiB exceeds available VRAM. Loads with num_gpu=30 (partial CPU offload) at 7239 MiB, inference ~36s."
+    },
+    {
+      "id": "F002",
+      "severity": "info",
+      "description": "W1 baseline was contaminated during initial probes by resident Qwen + orphan runner process from crashed probe. Clean-state retests performed post-hoc for R2 and R11. Initial '3362 MiB base overhead' figure was actually Nemotron model weights + Ollama runtime, not base."
+    },
+    {
+      "id": "F003",
+      "severity": "info",
+      "description": "Qwen 3.5:9B thinking-mode consumes ~150-200 internal tokens per response. num_predict must be >= 2000 for adequate visible output. W2 dispatcher should account for this."
+    },
+    {
+      "id": "F004",
+      "severity": "info",
+      "description": "Ollama clean-state VRAM: ~704 MiB (including desktop GPU processes). Ollama process base adds ~449 MiB when runner starts. Available for models: ~7039 MiB."
+    },
+    {
+      "id": "F005",
+      "severity": "info",
+      "description": "GLM thinking field contains Chinese reasoning even when output is in English. Present in Ollama 0.20.2 /api/chat responses. W4 cascade consideration."
+    },
+    {
+      "id": "F006",
+      "severity": "info",
+      "description": "Nemotron auto-loads on Ollama restart and after model evictions. Cannot be permanently suppressed via keep_alive:0. W2 dispatcher should explicit-unload before loading large models."
+    },
+    {
+      "id": "F007",
+      "severity": "info",
+      "description": "GLM CUDA OOM crash kills ALL loaded models — VRAM drops to baseline. Destructive to concurrent model state. W2 dispatcher must verify model presence after GLM operations."
+    },
+    {
+      "id": "F008",
+      "severity": "info",
+      "description": "Ollama is system-level systemd service (/etc/systemd/system/ollama.service). Restart requires sudo. install.fish and harness docs should reflect this."
+    },
+    {
+      "id": "F009",
+      "severity": "info",
+      "description": "GLM template leak is stop-token fixable. Use <|end_of_box|> as stop + strip <|begin_of_box|> prefix. Confirmed via R11-diagnostic.json probe 4."
+    }
+  ],
+  "kyle_escalations": [
+    {
+      "id": "E1",
+      "title": "GLM Partial Offload for Tier 1 (was: GLM Non-Functional)",
+      "description": "GLM loads with num_gpu=30 (partial CPU offload). Inference ~36s (vs ~2s for smaller models). Full GPU offload crashes with CUDA OOM even on clean state. Decision: accept GLM with num_gpu=30 in Tier 1? Performance acceptable for Auditor role?",
+      "options": ["Accept GLM with num_gpu=30 in Tier 1", "Defer GLM to Tier 2+ (16GB+ VRAM)", "Test optimal num_gpu value in W2"]
+    },
+    {
+      "id": "E2",
+      "title": "Ollama Service Layer",
+      "description": "Ollama is system-level systemd. Restart requires sudo. install.fish and harness docs should be updated.",
+      "options": ["Update docs in W2", "Update in W4 install.fish work"]
+    }
+  ],
+  "classification_summary": {
+    "meets": 9,
+    "partial": 3,
+    "fails": 0,
+    "requirements_total": 12,
+    "critical_meets": 2,
+    "critical_partial": 2,
+    "critical_fails": 0,
+    "note": "R5 promoted from partial to meets after GLM partial-offload routing confirmed."
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "No cross-project contamination observed. All probe artifacts reference aho-native constructs only."
+  }
+}

@@ -2,6 +2,10 @@
 
 aho 0.1.7 W8 rebuild, 0.2.2 W2 global daemon.
 Routes tasks to OpenClaw sessions by role using Nemotron classification.
+
+0.2.15 W3: classification layer migrated to `aho.pipeline.router.classify_task`
+(hardened dispatcher, /api/chat) per ADR 0002. Session layer (OpenClaw per
+role, Unix socket IPC) retained unchanged.
 """
 import json
 import socketserver
@@ -12,7 +16,11 @@ from typing import Optional
 from opentelemetry import trace
 
 from aho.agents.openclaw import OpenClawSession
-from aho.artifacts.nemotron_client import classify
+from aho.pipeline.router import (
+    classify_task,
+    ClassificationError,
+    DispatchError,
+)
 from aho.logger import log_event
 
 _tracer = trace.get_tracer("aho.nemoclaw")
@@ -33,14 +41,21 @@ class NemoClawOrchestrator:
         self.sessions = [OpenClawSession(model=model, role=r) for r in roles]
         self.roles = roles
 
+    # Bias shortened in 0.2.15 W3 migration (ADR 0002). On /api/chat with a
+    # long multi-sentence system instruction, Nemotron-mini:4b reliably emits
+    # empty content (done_reason=stop with no tokens). A compact one-sentence
+    # bias is tolerated. This is a Nemotron+chat-template quirk; future models
+    # may not need the shortening.
+    _BIAS = (
+        "Use code_runner for coding/execution tasks, reviewer for "
+        "evaluating artifacts, assistant otherwise."
+    )
+
     def route(self, task: str) -> str:
-        """Classify a task into a role using Nemotron."""
+        """Classify a task into a role via the hardened dispatcher (0.2.15 W3)."""
         with _tracer.start_as_current_span("nemoclaw.route") as span:
             span.set_attribute("task_length", len(task))
-            role = classify(
-                task, DEFAULT_ROLES,
-                bias="Prefer 'assistant' for general tasks. Use 'code_runner' only if the task requires executing code. Use 'reviewer' only if the task is about evaluating an artifact.",
-            )
+            role = classify_task(task, DEFAULT_ROLES, bias=self._BIAS)
             span.set_attribute("classified_role", role)
             log_event("agent_msg", "nemoclaw", "nemotron", "route",
                       input_summary=task[:200], output_summary=f"role={role}")
@@ -119,12 +134,23 @@ class NemoClawHandler(socketserver.StreamRequestHandler):
             except Exception as e:
                 self._reply({"ok": False, "error": str(e)})
         elif cmd == "route":
+            task = req.get("task", "")
             try:
-                task = req.get("task", "")
                 role = orch.route(task)
                 self._reply({"ok": True, "role": role})
-            except Exception as e:
-                self._reply({"ok": False, "error": str(e)})
+            except ClassificationError as e:
+                self._reply({
+                    "ok": False,
+                    "error": str(e),
+                    "error_type": "classification_error",
+                    "raw_response": e.raw_response,
+                })
+            except DispatchError as e:
+                self._reply({
+                    "ok": False,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                })
         elif cmd == "status":
             sessions = {s.role: s.session_id for s in orch.sessions}
             history_counts = {s.role: len(s.history) for s in orch.sessions}

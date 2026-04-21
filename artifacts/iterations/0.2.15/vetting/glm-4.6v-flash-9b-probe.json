@@ -1,0 +1,57 @@
+{
+  "model_id": "haervwe/GLM-4.6V-Flash-9B:latest",
+  "model_family": "glm",
+  "iteration": "0.2.15",
+  "workstream": "W0",
+  "dispatcher": "direct_ollama_http",
+  "dispatcher_config": {
+    "endpoint": "/api/chat",
+    "num_ctx": 32768,
+    "stop_tokens": ["<|endoftext|>", "<|im_end|>"],
+    "stop_tokens_note": "Qwen stop tokens sent to GLM. Template token leakage: <|begin_of_box|> and <|end_of_box|> appear in raw response for probes A and B. W2 needs GLM-specific stop tokens or post-processing."
+  },
+  "classification": "partial",
+  "classification_rationale": "Two probes pass, one partial. Template token leakage in probes A and B (<|begin_of_box|>/<|end_of_box|> wrapping), but JSON content is correct under extraction. Probe C clean. Model is usable with post-processing; template tokens are strippable.",
+  "retest_vs_0213_w25": {
+    "0213_finding": "80% timeout at 180s, wrong-schema JSON on success",
+    "0215_finding": "Zero timeouts, correct JSON schema, template token leakage only",
+    "conclusion": "0.2.13 W2.5 finding was a substrate artifact of broken dispatcher (/api/generate, 4K context). Fixed dispatcher resolves both timeout and schema issues. Template leakage is a new, less severe concern addressable in W2."
+  },
+  "retain_remove_decision": "RETAIN — model is functional with known template token concern. W2 dispatcher hardening addresses the leakage. Candidate for Auditor role in W4 cross-model cascade.",
+  "probes": {
+    "probe_a_identity": {
+      "prompt": "Respond with your model name and nothing else.",
+      "raw_response": "<|begin_of_box|>GLM-4.5V<|end_of_box|>",
+      "wall_clock_seconds": 20.14,
+      "error": null,
+      "result": "partial",
+      "notes": "Correct model family name (self-identifies as GLM-4.5V), but wrapped in template tokens <|begin_of_box|>/<|end_of_box|>. Template leakage."
+    },
+    "probe_b_structured": {
+      "prompt": "Return a JSON object with fields \"name\" (string), \"count\" (integer), \"items\" (list of strings). Use name=\"test\", count=3, items=[\"a\",\"b\",\"c\"]. Return only the JSON, no other text.",
+      "raw_response": "<|begin_of_box|>{\"name\": \"test\", \"count\": 3, \"items\": [\"a\", \"b\", \"c\"]}<|end_of_box|>",
+      "wall_clock_seconds": 16.28,
+      "error": null,
+      "parsed": true,
+      "schema_match": true,
+      "extraction_needed": true,
+      "result": "partial",
+      "notes": "JSON content correct and parseable after stripping template tokens. Schema exact match. Template token wrapping is the only issue."
+    },
+    "probe_c_language": {
+      "prompt": "Briefly describe the ACID properties of a database transaction. Respond in English only.",
+      "raw_response": "Atomicity \u2013 all operations in a transaction are completed or none at all.\nConsistency \u2013 the database remains in a valid state before and after the transaction.\nIsolation \u2013 concurrent transactions do not interfere with each other\u2019s execution.\nDurability \u2013 once committed, changes survive system failures.",
+      "raw_response_length_chars": 310,
+      "wall_clock_seconds": 27.81,
+      "error": null,
+      "result": "pass",
+      "notes": "Clean English, concise, on-topic. No template tokens in this probe."
+    }
+  },
+  "w2_concerns": [
+    "GLM emits <|begin_of_box|> and <|end_of_box|> template tokens around structured content",
+    "W2 needs either: (a) add these as GLM stop tokens, or (b) post-processing strip, or (c) both",
+    "GLM-specific stop tokens need research during W2"
+  ],
+  "timestamp": "2026-04-13T16:46:00Z"
+}

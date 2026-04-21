@@ -1,0 +1,36 @@
+{
+  "requirement_id": "R1",
+  "requirement": "Concurrent model awareness",
+  "scope": "per-server",
+  "classification": "meets",
+  "probe_method": "Load models sequentially, inspect /api/ps after each. Verify model name, size_vram, context_length, expires_at fields present and accurate.",
+  "probes": [
+    {
+      "step": "Initial /api/ps",
+      "result": "1 model loaded (nemotron-mini:4b from W0 session)",
+      "fields_present": ["name", "model", "size", "digest", "details", "expires_at", "size_vram", "context_length"],
+      "details_fields": ["parent_model", "format", "family", "families", "parameter_size", "quantization_level"]
+    },
+    {
+      "step": "After Qwen load",
+      "models_reported": ["qwen3.5:9b"],
+      "qwen_size_vram_gb": 6.43,
+      "qwen_context_length": 4096,
+      "nemotron_evicted": true,
+      "note": "Nemotron (3.05GB) evicted when Qwen (6.43GB) loaded. Combined 9.48GB exceeds 8GB VRAM."
+    },
+    {
+      "step": "After Qwen + Llama load",
+      "models_reported": ["nemotron-mini:4b", "llama3.2:3b"],
+      "note": "Qwen evicted when Llama loaded. Nemotron reappeared — possible VRAM caching/partial offload behavior. Llama (2.75GB) + Nemotron (3.05GB) = 5.8GB fits in 8GB VRAM.",
+      "model_count": 2
+    }
+  ],
+  "evidence_summary": "/api/ps accurately reports loaded models with all required fields (name, size_vram, context_length, expires_at). Reports are consistent with observed VRAM behavior. Nemotron reappearance after Qwen eviction is surprising but not incorrect — Ollama may cache models in system RAM and restore when VRAM becomes available.",
+  "gpu_info": {
+    "gpu": "NVIDIA GeForce RTX 2080 SUPER",
+    "vram_total_mib": 8192,
+    "ollama_base_vram_mib": 3362,
+    "available_for_models_mib": 4830
+  }
+}

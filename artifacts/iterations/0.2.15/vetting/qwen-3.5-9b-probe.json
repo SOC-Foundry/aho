@@ -1,0 +1,46 @@
+{
+  "model_id": "qwen3.5:9b",
+  "model_family": "qwen",
+  "iteration": "0.2.15",
+  "workstream": "W0",
+  "dispatcher": "direct_ollama_http",
+  "dispatcher_config": {
+    "endpoint": "/api/chat",
+    "num_ctx": 32768,
+    "stop_tokens": ["<|endoftext|>", "<|im_end|>"],
+    "stop_tokens_note": "Qwen-native stop tokens; matched to model family"
+  },
+  "classification": "operational",
+  "regression_note": "No regression from 0.2.14 W1.5 baseline. All 3 probes pass identically to W1.5 behavior.",
+  "probes": {
+    "probe_a_identity": {
+      "prompt": "Respond with your model name and nothing else.",
+      "raw_response": "Qwen3.5",
+      "wall_clock_seconds": 8.66,
+      "error": null,
+      "result": "pass",
+      "notes": "Correct model name, no extra content, no template tokens"
+    },
+    "probe_b_structured": {
+      "prompt": "Return a JSON object with fields \"name\" (string), \"count\" (integer), \"items\" (list of strings). Use name=\"test\", count=3, items=[\"a\",\"b\",\"c\"]. Return only the JSON, no other text.",
+      "raw_response": "{\"name\": \"test\", \"count\": 3, \"items\": [\"a\", \"b\", \"c\"]}",
+      "wall_clock_seconds": 27.31,
+      "error": null,
+      "parsed": true,
+      "schema_match": true,
+      "extraction_needed": false,
+      "result": "pass",
+      "notes": "Exact JSON, no wrapping prose, no template tokens, schema match"
+    },
+    "probe_c_language": {
+      "prompt": "Briefly describe the ACID properties of a database transaction. Respond in English only.",
+      "raw_response_excerpt": "The **ACID** properties define the reliability and safety of a database transaction: ...",
+      "raw_response_length_chars": 661,
+      "wall_clock_seconds": 56.85,
+      "error": null,
+      "result": "pass",
+      "notes": "English throughout, on-topic, no language drift"
+    }
+  },
+  "timestamp": "2026-04-13T16:44:00Z"
+}

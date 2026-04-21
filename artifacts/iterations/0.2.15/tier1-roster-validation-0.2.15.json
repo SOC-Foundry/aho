@@ -1,0 +1,72 @@
+{
+  "iteration": "0.2.15",
+  "workstream": "W0",
+  "validation_type": "tier1_roster",
+  "dispatcher_config": {
+    "endpoint": "/api/chat",
+    "base_url": "http://127.0.0.1:11434",
+    "num_ctx": 32768,
+    "stop_tokens_used": ["<|endoftext|>", "<|im_end|>"],
+    "stop_tokens_note": "Qwen-native sent to all 4 models; W2 adds per-family tokens"
+  },
+  "methodology": "clean_slate_fixed_dispatcher",
+  "models": {
+    "qwen3.5:9b": {
+      "classification": "operational",
+      "probe_a": "pass",
+      "probe_b": "pass",
+      "probe_c": "pass",
+      "regression_check": true,
+      "regression_status": "no_regression",
+      "probe_artifact": "vetting/qwen-3.5-9b-probe.json"
+    },
+    "llama3.2:3b": {
+      "classification": "operational",
+      "probe_a": "pass",
+      "probe_b": "pass",
+      "probe_c": "pass",
+      "first_integration": true,
+      "integration_status": "clean",
+      "dispatcher_change_required": false,
+      "w2_stop_token_concern": true,
+      "probe_artifact": "vetting/llama-3.2-3b-probe.json"
+    },
+    "haervwe/GLM-4.6V-Flash-9B:latest": {
+      "classification": "partial",
+      "probe_a": "partial",
+      "probe_b": "partial",
+      "probe_c": "pass",
+      "template_leakage": true,
+      "template_tokens": ["<|begin_of_box|>", "<|end_of_box|>"],
+      "retest_of_0213_w25": true,
+      "0213_finding_was_substrate_artifact": true,
+      "retain_decision": "retain",
+      "probe_artifact": "vetting/glm-4.6v-flash-9b-probe.json"
+    },
+    "nemotron-mini:4b": {
+      "classification": "compromised",
+      "probe_a": "fail",
+      "probe_b": "pass",
+      "probe_c": "pass",
+      "probe_d_classify": "pass",
+      "identity_failure": true,
+      "feature_bias_resolved": true,
+      "retest_of_0213_w25": true,
+      "0213_finding_was_substrate_artifact": true,
+      "retain_decision": "retain_with_caveat",
+      "retain_caveat": "identity confusion non-blocking for classification/triage roles",
+      "probe_artifact": "vetting/nemotron-mini-4b-probe.json"
+    }
+  },
+  "summary": {
+    "total_models": 4,
+    "operational": 2,
+    "partial": 1,
+    "compromised": 1,
+    "unknown": 0,
+    "substrate_artifacts_confirmed": 2,
+    "pillar_7_candidates": ["haervwe/GLM-4.6V-Flash-9B:latest", "nemotron-mini:4b"],
+    "w4_auditor_candidate": "haervwe/GLM-4.6V-Flash-9B:latest"
+  },
+  "timestamp": "2026-04-13T16:48:00Z"
+}

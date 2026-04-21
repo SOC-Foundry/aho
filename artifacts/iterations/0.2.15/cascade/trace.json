@@ -1,0 +1,154 @@
+{
+  "run_id": "w4-cross-model-1776790990",
+  "started_at": "2026-04-21T17:03:10Z",
+  "role_assignment": {
+    "indexer_in": "llama3.2:3b",
+    "producer": "qwen3.5:9b",
+    "auditor": "haervwe/GLM-4.6V-Flash-9B:latest",
+    "indexer_out": "llama3.2:3b",
+    "assessor": "nemotron-mini:4b"
+  },
+  "document_path": "artifacts/iterations/0.2.15/cascade/nosql-manual-text.txt",
+  "document_chars": 247275,
+  "baseline_run_2_qwen_solo_chars": 14725,
+  "baseline_run_2_wall_clock_s": 1867.34,
+  "stages": [
+    {
+      "stage_index": 1,
+      "role": "indexer_in",
+      "model": "llama3.2:3b",
+      "family": "llama3",
+      "wall_clock_s": 20.31,
+      "output_chars": 613,
+      "tokens_eval": 131,
+      "tokens_prompt": 32768,
+      "errors": null,
+      "template_leak_detected": null,
+      "thinking_field_present": false,
+      "thinking_chars": 0
+    },
+    {
+      "stage_index": 2,
+      "role": "producer",
+      "model": "qwen3.5:9b",
+      "family": "qwen",
+      "wall_clock_s": 151.67,
+      "output_chars": 0,
+      "tokens_eval": 2000,
+      "tokens_prompt": 32768,
+      "errors": null,
+      "template_leak_detected": null,
+      "thinking_field_present": true,
+      "thinking_chars": 8026
+    },
+    {
+      "stage_index": 3,
+      "role": "auditor",
+      "model": "haervwe/GLM-4.6V-Flash-9B:latest",
+      "family": "glm",
+      "wall_clock_s": 138.87,
+      "output_chars": 777,
+      "tokens_eval": 1816,
+      "tokens_prompt": 233,
+      "errors": null,
+      "template_leak_detected": null,
+      "thinking_field_present": true,
+      "thinking_chars": 8002
+    },
+    {
+      "stage_index": 4,
+      "role": "indexer_out",
+      "model": "llama3.2:3b",
+      "family": "llama3",
+      "wall_clock_s": 10.5,
+      "output_chars": 1669,
+      "tokens_eval": 336,
+      "tokens_prompt": 247,
+      "errors": null,
+      "template_leak_detected": null,
+      "thinking_field_present": false,
+      "thinking_chars": 0
+    },
+    {
+      "stage_index": 5,
+      "role": "assessor",
+      "model": "nemotron-mini:4b",
+      "family": "nemotron",
+      "wall_clock_s": 2.08,
+      "output_chars": 65,
+      "tokens_eval": 16,
+      "tokens_prompt": 854,
+      "errors": null,
+      "template_leak_detected": null,
+      "thinking_field_present": false,
+      "thinking_chars": 0
+    }
+  ],
+  "vram_snapshots": [
+    {
+      "label": "pre-run",
+      "models": [
+        {
+          "model": "nemotron-mini:4b",
+          "size_vram_mib": 2912,
+          "context_length": 4096
+        }
+      ]
+    },
+    {
+      "label": "post-indexer_in",
+      "models": [
+        {
+          "model": "llama3.2:3b",
+          "size_vram_mib": 6939,
+          "context_length": 32768
+        }
+      ]
+    },
+    {
+      "label": "post-producer",
+      "models": [
+        {
+          "model": "qwen3.5:9b",
+          "size_vram_mib": 7037,
+          "context_length": 32768
+        }
+      ]
+    },
+    {
+      "label": "post-auditor",
+      "models": [
+        {
+          "model": "haervwe/GLM-4.6V-Flash-9B:latest",
+          "size_vram_mib": 8143,
+          "context_length": 32768
+        }
+      ]
+    },
+    {
+      "label": "post-indexer_out",
+      "models": [
+        {
+          "model": "llama3.2:3b",
+          "size_vram_mib": 6939,
+          "context_length": 32768
+        }
+      ]
+    },
+    {
+      "label": "post-assessor",
+      "models": [
+        {
+          "model": "nemotron-mini:4b",
+          "size_vram_mib": 2912,
+          "context_length": 4096
+        }
+      ]
+    }
+  ],
+  "total_wall_clock_s": 366.85,
+  "completed_at": "2026-04-21T17:09:17Z",
+  "total_output_chars": 3124,
+  "errors_encountered": [],
+  "template_leaks_detected": []
+}

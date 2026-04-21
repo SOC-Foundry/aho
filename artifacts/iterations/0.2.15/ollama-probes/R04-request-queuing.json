@@ -1,0 +1,29 @@
+{
+  "requirement_id": "R4",
+  "requirement": "Request queuing",
+  "scope": "per-server",
+  "classification": "meets",
+  "probe_method": "Start long Qwen inference (200-word essay, num_predict=500). Mid-run, issue second concurrent request. Observe whether both succeed, queue, or 503.",
+  "probes": [
+    {
+      "step": "Warmup Qwen",
+      "elapsed_s": 16.77,
+      "response_preview": "Hello! How can I help you today?"
+    },
+    {
+      "step": "Two concurrent requests (0.5s stagger)",
+      "req1_topic": "200-word essay about history of computers",
+      "req2_topic": "200-word essay about history of rockets",
+      "req1_status": "ok",
+      "req1_elapsed_s": 27.24,
+      "req2_status": "ok",
+      "req2_elapsed_s": 48.89,
+      "total_wall_clock_s": 49.39,
+      "sequential_sum_s": 76.13,
+      "parallelism_ratio": 0.65,
+      "note": "Ratio 0.65 indicates partial overlap — Ollama processes concurrent requests with some degree of parallelism rather than strict serial queuing. Both requests completed successfully."
+    }
+  ],
+  "evidence_summary": "Ollama handles concurrent requests gracefully — no 503, no rejection. Both requests complete successfully. Behavior is partially parallel (ratio 0.65), not purely sequential. Server remains stable under concurrent load.",
+  "empty_response_note": "Both responses returned empty content due to Qwen 3.5 thinking-mode consuming num_predict budget (500 tokens). This is a Qwen-specific issue, not a queuing issue."
+}

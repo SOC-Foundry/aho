@@ -1,0 +1,51 @@
+{
+  "model_id": "llama3.2:3b",
+  "model_family": "llama3",
+  "iteration": "0.2.15",
+  "workstream": "W0",
+  "dispatcher": "direct_ollama_http",
+  "dispatcher_config": {
+    "endpoint": "/api/chat",
+    "num_ctx": 32768,
+    "stop_tokens": ["<|endoftext|>", "<|im_end|>"],
+    "stop_tokens_note": "Qwen stop tokens sent to Llama model. No template leakage observed — Ollama /api/chat handles template server-side. W2 should add Llama-native stop tokens (<|eot_id|>, <|end_of_text|>) for correctness."
+  },
+  "classification": "operational",
+  "integration_status": "implicit — dispatcher is model-agnostic at /api/chat level; Llama dispatches without code changes",
+  "first_integration": true,
+  "probes": {
+    "probe_a_identity": {
+      "prompt": "Respond with your model name and nothing else.",
+      "raw_response": "LLaMA",
+      "wall_clock_seconds": 1.83,
+      "error": null,
+      "result": "pass",
+      "notes": "Correct family name, no extra content, no template tokens"
+    },
+    "probe_b_structured": {
+      "prompt": "Return a JSON object with fields \"name\" (string), \"count\" (integer), \"items\" (list of strings). Use name=\"test\", count=3, items=[\"a\",\"b\",\"c\"]. Return only the JSON, no other text.",
+      "raw_response": "{\"name\": \"test\", \"count\": 3, \"items\": [\"a\", \"b\", \"c\"]}",
+      "wall_clock_seconds": 0.71,
+      "error": null,
+      "parsed": true,
+      "schema_match": true,
+      "extraction_needed": false,
+      "result": "pass",
+      "notes": "Exact JSON, no wrapping, correct schema. Notably fast (0.71s vs Qwen 27.31s — 3B vs 9B parameter difference)"
+    },
+    "probe_c_language": {
+      "prompt": "Briefly describe the ACID properties of a database transaction. Respond in English only.",
+      "raw_response_excerpt": "ACID stands for Atomicity, Consistency, Isolation, and Durability ...",
+      "raw_response_length_chars": 809,
+      "wall_clock_seconds": 5.33,
+      "error": null,
+      "result": "pass",
+      "notes": "English throughout, on-topic, no language drift"
+    }
+  },
+  "w2_concerns": [
+    "Dispatcher sends Qwen stop tokens to Llama — no leakage observed because Ollama /api/chat applies template server-side, but W2 should add Llama-native stop tokens for correctness",
+    "Llama 3.x native stop tokens: <|eot_id|> (end of turn), <|end_of_text|> (end of text)"
+  ],
+  "timestamp": "2026-04-13T16:45:00Z"
+}

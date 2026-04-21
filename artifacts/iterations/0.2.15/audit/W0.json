@@ -1,0 +1,35 @@
+{
+  "workstream_id": "W0",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-04-13T17:35:00Z",
+  "audit_duration_min": 25,
+  "audit_result": "pass",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "raw_response inspection for all 4 model probes",
+    "GLM-4.6V-Flash-9B substrate artifact claim verification",
+    "Nemotron-mini-4b identity vs classification capability check",
+    "Llama 3.2 3B first-integration wall clock validation",
+    "src/aho/pipeline/dispatcher.py W1.5 integrity check",
+    "Baseline regression count (316 tests, 12 failures)"
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [],
+  "findings": {
+    "re_test_methodology": "Verified as clean-slate. Probes in artifacts/iterations/0.2.15/vetting/ contain unique timestamps and wall-clock data specific to the 0.2.15 environment. No evidence of recycled 0.2.13 W2.5 results found.",
+    "retain_decision_glm": "Pass. Evidence (<|begin_of_box|> token leakage) matches characterization. Timeout and schema issues from 0.2.13 are resolved on fixed dispatcher. Recommendation to RETAIN as Auditor candidate is defensible.",
+    "retain_decision_nemotron": "Pass. Classify probe returns 'bug' correctly, resolving feature-bias. Identity failure ('BERT') is documented and correctly used to downgrade classification to 'compromised' while maintaining functional utility for triage.",
+    "dispatcher_integrity": "W1.5 repairs (/api/chat, 32K context, Qwen stop tokens) are intact. Llama 3.2 integration is model-agnostic and does not regress existing paths.",
+    "cross_project_contamination": "Zero instances found. 11-pillar count verified in tier1-roster-validation-0.2.15.md. No kjtcom terminology leakage."
+  },
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ],
+  "recommendation": "W0 validated. W1 Ollama Tier 1 capability audit may proceed. GLM and Nemotron retained in operational roster for W4 cross-model cascade consideration."
+}

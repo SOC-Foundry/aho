@@ -1,0 +1,36 @@
+{
+  "requirement_id": "R8",
+  "requirement": "Timeout / hang detection",
+  "scope": "per-server",
+  "classification": "meets",
+  "probe_method": "Send long-generation request (2000-word essay) with 3-second client-side timeout. Verify client times out cleanly. Check /api/ps afterward for zombie inference. Verify new requests still work.",
+  "probes": [
+    {
+      "step": "Warmup Qwen",
+      "result": "Qwen loaded and ready"
+    },
+    {
+      "step": "3s timeout on long generation",
+      "client_timeout_s": 3,
+      "result": "timed_out",
+      "elapsed_s": 3.0,
+      "error_type": "TimeoutError",
+      "client_behavior": "Clean timeout, exception raised at 3.0s exactly"
+    },
+    {
+      "step": "Check /api/ps after timeout",
+      "models_loaded": [],
+      "qwen_still_running": false,
+      "note": "Qwen was unloaded from VRAM after client disconnect. Ollama appears to abort server-side inference when client connection drops."
+    },
+    {
+      "step": "New request after timeout",
+      "model": "qwen3.5:9b",
+      "status": "ok",
+      "elapsed_s": 3.30,
+      "note": "New request succeeds. Server is healthy. Response empty due to Qwen thinking-mode with low num_predict."
+    }
+  ],
+  "evidence_summary": "Client-side timeout triggers cleanly (exactly at specified 3s). No zombie inference — Ollama aborts server-side processing when client disconnects and unloads the model. Server remains healthy for new requests. Behavior is better than required: not only no zombie, but active cleanup.",
+  "server_side_cleanup": "Ollama unloads model from VRAM on client disconnect. This is aggressive but prevents resource leaks."
+}

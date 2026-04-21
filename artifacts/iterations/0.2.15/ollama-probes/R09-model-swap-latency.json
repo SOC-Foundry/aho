@@ -1,0 +1,25 @@
+{
+  "requirement_id": "R9",
+  "requirement": "Model-swap latency",
+  "scope": "per-model",
+  "classification": "meets",
+  "probe_method": "6-swap sequence: Qwen (warm) -> Llama -> Nemotron -> Qwen -> Llama -> Qwen. Minimal prompt ('Say OK'), num_predict=10. Measure wall clock per swap.",
+  "probes": [
+    {"label": "Qwen (warm)", "model": "qwen3.5:9b", "elapsed_s": 5.14, "type": "warm_start"},
+    {"label": "Llama (swap from Qwen)", "model": "llama3.2:3b", "elapsed_s": 1.66, "type": "cold_swap"},
+    {"label": "Nemotron (swap from Llama)", "model": "nemotron-mini:4b", "elapsed_s": 1.26, "type": "cold_swap"},
+    {"label": "Qwen (swap from Nemotron)", "model": "qwen3.5:9b", "elapsed_s": 4.77, "type": "cold_swap"},
+    {"label": "Llama (swap from Qwen, 2nd)", "model": "llama3.2:3b", "elapsed_s": 1.51, "type": "cold_swap"},
+    {"label": "Qwen (swap from Llama, 2nd)", "model": "qwen3.5:9b", "elapsed_s": 5.66, "type": "cold_swap"}
+  ],
+  "summary": {
+    "average_swap_s": 2.97,
+    "max_swap_s": 5.66,
+    "min_swap_s": 1.26,
+    "qwen_avg_swap_s": 5.22,
+    "llama_avg_swap_s": 1.59,
+    "nemotron_avg_swap_s": 1.26
+  },
+  "evidence_summary": "All model swaps complete under 6 seconds. Qwen (6.6GB) takes 4-6s to load. Smaller models (Llama 2GB, Nemotron 2.7GB) load in 1-2s. No swap exceeded 10s threshold. Pattern is size-proportional and predictable.",
+  "note": "Qwen empty responses on minimal prompts due to thinking-mode token budget consumption. Swap latency measurement is valid regardless (measures load + first-token time)."
+}

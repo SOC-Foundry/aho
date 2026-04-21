@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 @patch("aho.agents.conductor.send")
 @patch("aho.agents.roles.evaluator_agent.glm_generate")
 @patch("aho.agents.openclaw.QwenClient")
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.logger.log_event")
 def test_conductor_dispatch(mock_log, mock_nemo_classify, mock_qwen, mock_glm, mock_send):
     mock_nemo_classify.return_value = "assistant"
@@ -27,7 +27,7 @@ def test_conductor_dispatch(mock_log, mock_nemo_classify, mock_qwen, mock_glm, m
 @patch("aho.agents.conductor.send")
 @patch("aho.agents.roles.evaluator_agent.glm_generate")
 @patch("aho.agents.openclaw.QwenClient")
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.logger.log_event")
 def test_conductor_dispatch_with_plan(mock_log, mock_nemo_classify, mock_qwen, mock_glm, mock_send):
     mock_nemo_classify.return_value = "assistant"
@@ -45,7 +45,7 @@ def test_conductor_dispatch_with_plan(mock_log, mock_nemo_classify, mock_qwen, m
 @patch("aho.agents.conductor.send")
 @patch("aho.agents.roles.evaluator_agent.glm_generate")
 @patch("aho.agents.openclaw.QwenClient")
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.conductor.log_event")
 def test_conductor_logs_dispatch(mock_conductor_log, mock_nemo_classify, mock_qwen, mock_glm, mock_send):
     mock_nemo_classify.return_value = "assistant"

@@ -10,21 +10,21 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
-def test_route_returns_role(mock_qwen_cls, mock_classify):
+def test_route_returns_role(mock_qwen_cls, mock_classify_task):
     """Route classifies task into a role."""
     from aho.agents.nemoclaw import NemoClawOrchestrator
-    mock_classify.return_value = "code_runner"
+    mock_classify_task.return_value = "code_runner"
     mock_qwen_cls.return_value = MagicMock()
     orch = NemoClawOrchestrator(session_count=3, roles=["assistant", "code_runner", "reviewer"])
     role = orch.route("write a python script to sort a list")
     assert role == "code_runner"
-    mock_classify.assert_called_once()
+    mock_classify_task.assert_called_once()
     orch.close_all()
 
 
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
 def test_dispatch_routes_and_chats(mock_qwen_cls, mock_classify):
     """Dispatch classifies then sends to correct session."""
@@ -40,7 +40,7 @@ def test_dispatch_routes_and_chats(mock_qwen_cls, mock_classify):
     orch.close_all()
 
 
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
 def test_dispatch_with_explicit_role(mock_qwen_cls, mock_classify):
     """Dispatch with explicit role skips classification."""
@@ -55,7 +55,7 @@ def test_dispatch_with_explicit_role(mock_qwen_cls, mock_classify):
     orch.close_all()
 
 
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
 def test_session_reuse(mock_qwen_cls, mock_classify):
     """Second dispatch to same role reuses session."""
@@ -72,7 +72,7 @@ def test_session_reuse(mock_qwen_cls, mock_classify):
     orch.close_all()
 
 
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
 def test_collect_returns_histories(mock_qwen_cls, mock_classify):
     """Collect returns all session histories."""
@@ -91,7 +91,7 @@ def test_collect_returns_histories(mock_qwen_cls, mock_classify):
 
 # --- Daemon protocol tests ---
 
-@patch("aho.agents.nemoclaw.classify")
+@patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
 def test_daemon_status(mock_qwen_cls, mock_classify):
     """Daemon responds to status command."""

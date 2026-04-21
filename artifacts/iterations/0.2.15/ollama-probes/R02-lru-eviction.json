@@ -1,0 +1,60 @@
+{
+  "requirement_id": "R2",
+  "requirement": "LRU eviction predictability",
+  "scope": "per-server",
+  "critical": true,
+  "classification": "partial",
+  "probe_method": "Sequential load of all 4 models on 8GB VRAM. Observe eviction order. Attempt GLM (8GB) load. Document what evicts and what fails.",
+  "probes": [
+    {
+      "step": "Clear all models",
+      "result": "3 models unloaded via keep_alive:0. 1 model still showed in /api/ps after 5s (Nemotron slow unload).",
+      "post_state_models": 0
+    },
+    {
+      "step": "Load Qwen 3.5:9B (6.6GB)",
+      "result": "Loaded in 6.09s",
+      "post_state": ["qwen3.5:9b"],
+      "qwen_vram_gb": 6.43
+    },
+    {
+      "step": "Load Llama 3.2:3B (2GB) alongside Qwen",
+      "result": "Loaded in 1.58s. Qwen evicted.",
+      "post_state": ["llama3.2:3b"],
+      "llama_vram_gb": 2.75,
+      "note": "Qwen (6.43GB) + Llama (2.75GB) = 9.18GB exceeds available VRAM (~4.8GB after Ollama base). Qwen evicted as expected (LRU — oldest unused)."
+    },
+    {
+      "step": "Load GLM-4.6V-Flash-9B (8GB)",
+      "result": "HTTP 500: llama runner process has terminated",
+      "error_raw": "{\"error\":\"llama runner process has terminated: %!w(<nil>)\"}",
+      "post_state": [],
+      "note": "GLM crashes regardless of VRAM state. Tested with empty VRAM — same crash. GLM model file is 8GB but effective VRAM needed exceeds available ~4.8GB (8192 - 3362 Ollama base)."
+    },
+    {
+      "step": "Load Nemotron (2.7GB)",
+      "result": "Loaded in 1.31s",
+      "post_state": ["nemotron-mini:4b"]
+    },
+    {
+      "step": "Reload Qwen",
+      "result": "Loaded in 10.21s. Nemotron evicted.",
+      "post_state": ["qwen3.5:9b"]
+    },
+    {
+      "step": "GLM on fully empty VRAM (all models unloaded first)",
+      "result": "HTTP 500: llama runner process has terminated",
+      "note": "Confirmed: GLM failure is not VRAM contention — it fails even with 0 models loaded. Root cause: Ollama base process consumes 3362 MiB, leaving only ~4.8GB for model. GLM at 8GB cannot fit."
+    }
+  ],
+  "eviction_behavior": {
+    "observed_pattern": "LRU-consistent for functional models. When new model requires more VRAM than available, oldest-unused model evicts first.",
+    "qwen_llama_coexistence": false,
+    "qwen_nemotron_coexistence": false,
+    "llama_nemotron_coexistence": true,
+    "glm_loadable": false
+  },
+  "evidence_summary": "Eviction is LRU-predictable for the 3 loadable models (Qwen, Llama, Nemotron). Only small-model pairs (Llama 2.75GB + Nemotron 3.05GB = 5.8GB) can coexist on 8GB VRAM. GLM (8GB) cannot load at all — the Ollama process base overhead (3362 MiB) leaves insufficient VRAM. This is a regression from W0 where GLM was functional.",
+  "workaround": "GLM cannot participate in any VRAM-bound operation on 8GB hardware. Cascade must use 3 models max. GLM usable only with CPU offloading if Ollama supports it, or on higher-VRAM hardware.",
+  "shippability_impact": "4-model cascade is not achievable on 8GB VRAM with current Ollama. 3-model cascade (Qwen, Llama, Nemotron) is viable."
+}

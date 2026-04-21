@@ -1,0 +1,29 @@
+{
+  "requirement_id": "R12",
+  "requirement": "Embedding endpoint coexistence",
+  "scope": "per-server",
+  "classification": "meets",
+  "probe_method": "Call /api/embed with nomic-embed-text. Verify response shape (embeddings array, dimension). Then issue /api/chat request to confirm chat still works.",
+  "probes": [
+    {
+      "step": "Embedding request",
+      "endpoint": "/api/embed",
+      "model": "nomic-embed-text:latest",
+      "input": "The quick brown fox jumps over the lazy dog.",
+      "status": 200,
+      "embeddings_count": 1,
+      "embedding_dimension": 768,
+      "first_5_values": [-0.00035096935, 0.010764715, -0.15319033, 0.0022843627, 0.011614716],
+      "elapsed_s": 0.68
+    },
+    {
+      "step": "Chat after embedding",
+      "model": "llama3.2:3b",
+      "status": 200,
+      "response_preview": "What's on your mind?",
+      "result": "pass"
+    }
+  ],
+  "evidence_summary": "/api/embed works with nomic-embed-text (768-dim vectors, sub-second response). /api/chat remains functional after embedding call. No interference between endpoints. nomic-embed-text is a small model (0.3GB) that coexists with chat models without VRAM contention.",
+  "note": "Full nomic + ChromaDB RAG integration is 0.2.16+ scope. This probe only verifies endpoint coexistence."
+}

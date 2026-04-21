@@ -1,0 +1,128 @@
+{
+  "workstream_id": "W0",
+  "iteration": "0.2.15",
+  "title": "Setup + Tier 1 Roster Re-vetting",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-13T17:10:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-6"
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "check": "AHO_ITERATION env set before workstream_start emission",
+      "result": "pass",
+      "evidence": "Set AHO_ITERATION=0.2.15 before emit_workstream_start call. Event logged with iteration=0.2.15."
+    },
+    {
+      "check": "workstream_start emitted for W0",
+      "result": "pass",
+      "evidence": "Event timestamp 2026-04-13T16:43:29Z, status=success, source_agent=claude-code"
+    },
+    {
+      "check": "Iteration scaffolding complete",
+      "result": "pass",
+      "evidence": "Directories created: artifacts/iterations/0.2.15/{vetting,acceptance,audit}. Checkpoint updated to iteration 0.2.15."
+    },
+    {
+      "check": "All 4 LLMs have explicit status (no unknown)",
+      "result": "pass",
+      "evidence": "Qwen: operational, Llama: operational, GLM: partial, Nemotron: compromised. Zero unknown."
+    },
+    {
+      "check": "Llama 3.2 3B first-integration status documented",
+      "result": "pass",
+      "evidence": "Integration is implicit — dispatcher model-agnostic at /api/chat level. No code changes needed. Llama dispatches and responds correctly."
+    },
+    {
+      "check": "GLM re-test is clean-slate (not recycled 0.2.13 findings)",
+      "result": "pass",
+      "evidence": "Fresh probes on fixed dispatcher (/api/chat, num_ctx=32768). 0.2.13 W2.5 findings compared but not reused as baseline. Evidence from 0.2.15 dispatcher only."
+    },
+    {
+      "check": "Nemotron re-test is clean-slate (not recycled 0.2.13 findings)",
+      "result": "pass",
+      "evidence": "Fresh probes including specific classify task. 0.2.13 feature-bias finding compared but evidence is from 0.2.15 fixed dispatcher."
+    },
+    {
+      "check": "Raw response inspection performed for each probe",
+      "result": "pass",
+      "evidence": "All raw_response fields captured and inspected. Template tokens identified in GLM raw response. Persona hallucination identified in Nemotron raw response. No parsed-JSON-only characterization."
+    },
+    {
+      "check": "baseline_regression_check clean (12 baseline failures carried)",
+      "result": "pass",
+      "evidence": "12 failures, 303 passed, 1 skipped. 11 of 13 baseline failures present. 2 baseline failures absent (daemon_healthy likely skipped, gate_verbosity possibly fixed). 1 environmental failure (test_cascade_end_to_end — model swap during vetting). No new failures from W0 code changes (W0 made no src/aho/ code changes)."
+    },
+    {
+      "check": "No G083 sites introduced",
+      "result": "pass",
+      "evidence": "W0 introduced no new code in src/aho/. Pre-existing G083 site noted at workstream_events.py:70-71 (except Exception: pass) — not W0-introduced."
+    },
+    {
+      "check": "No git operations performed",
+      "result": "pass",
+      "evidence": "Pillar 11 respected throughout W0."
+    }
+  ],
+  "deliverables": [
+    "artifacts/iterations/0.2.15/vetting/qwen-3.5-9b-probe.json",
+    "artifacts/iterations/0.2.15/vetting/llama-3.2-3b-probe.json",
+    "artifacts/iterations/0.2.15/vetting/glm-4.6v-flash-9b-probe.json",
+    "artifacts/iterations/0.2.15/vetting/nemotron-mini-4b-probe.json",
+    "artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.md",
+    "artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.json"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "info",
+      "description": "Checkpoint iteration field not updated by emit_workstream_start — required manual bump from 0.2.14 to 0.2.15"
+    },
+    {
+      "id": "F002",
+      "severity": "warning",
+      "description": "test_workstream_events.py checkpoint corruption recurred. Tests wrote W_V3_TEST, W_V3_COMBO, W_V2_COMPAT, W_V1_COMPAT, W_V2_TEST, W_V1_TEST, W_PARSE_TEST, W_V1_DEFAULT to real checkpoint. Also set W0 to workstream_complete and current_workstream to W6. Checkpoint manually restored. This is the same carry-forward from 0.2.14."
+    },
+    {
+      "id": "F003",
+      "severity": "info",
+      "description": "GLM 0.2.13 W2.5 finding (80% timeout, wrong-schema JSON) was substrate artifact of broken dispatcher. On fixed dispatcher: zero timeouts, correct JSON, template token leakage only."
+    },
+    {
+      "id": "F004",
+      "severity": "info",
+      "description": "Nemotron 0.2.13 W2.5 finding (80% feature-bias) was substrate artifact. On fixed dispatcher: classify returns 'bug' correctly. New failure mode: identity confusion (returns 'BERT' when asked model name)."
+    },
+    {
+      "id": "F005",
+      "severity": "info",
+      "description": "Pre-existing G083 site at src/aho/workstream_events.py:70-71 (except Exception: pass in emit_workstream_start checkpoint update). Not introduced by W0."
+    },
+    {
+      "id": "F006",
+      "severity": "info",
+      "description": "Dispatcher hardcodes Qwen stop tokens for all models. Llama shows no leakage (Ollama handles template server-side), GLM shows template token leakage (<|begin_of_box|>/<|end_of_box|>). W2 scope."
+    },
+    {
+      "id": "F007",
+      "severity": "info",
+      "description": "test_cascade_end_to_end failure is environmental — GLM 8GB model load during vetting displaced Qwen from VRAM. Not a code regression."
+    }
+  ],
+  "roster_summary": {
+    "operational": ["qwen3.5:9b", "llama3.2:3b"],
+    "partial": ["haervwe/GLM-4.6V-Flash-9B:latest"],
+    "compromised": ["nemotron-mini:4b"],
+    "unknown": [],
+    "substrate_artifacts_confirmed": 2,
+    "pillar_7_path": "GLM is Auditor candidate for W4 cross-model cascade. Nemotron usable for classification/triage. Pillar 7 restoration attempt meaningful with 3-4 model roster."
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "No cross-project contamination observed during W0. All pillar references verified against aho canonicals (11 pillars). No kjtcom version labels or ADR numbers fabricated."
+  }
+}

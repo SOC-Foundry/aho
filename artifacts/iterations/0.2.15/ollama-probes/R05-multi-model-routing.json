@@ -1,0 +1,46 @@
+{
+  "requirement_id": "R5",
+  "requirement": "Multi-model routing by name",
+  "scope": "per-model",
+  "critical": true,
+  "classification": "partial",
+  "probe_method": "Dispatch simple prompt to each Tier 1 model using exact name from ollama list. Verify model_returned field matches requested model.",
+  "probes": [
+    {
+      "model_requested": "qwen3.5:9b",
+      "status": 200,
+      "model_returned": "qwen3.5:9b",
+      "name_match": true,
+      "response_preview": "I am a large language model trained by Google.",
+      "elapsed_s": 91.2,
+      "note": "Name match correct. Self-identification wrong (says Google) but routing is correct — Ollama dispatched to Qwen model. Long elapsed due to cold load + thinking mode."
+    },
+    {
+      "model_requested": "llama3.2:3b",
+      "status": 200,
+      "model_returned": "llama3.2:3b",
+      "name_match": true,
+      "response_preview": "I'm an AI model known as Llama.",
+      "elapsed_s": 2.92
+    },
+    {
+      "model_requested": "haervwe/GLM-4.6V-Flash-9B:latest",
+      "status": 500,
+      "error": "llama runner process has terminated",
+      "name_match": false,
+      "note": "GLM fails to load. Cannot verify routing. Same crash as R2."
+    },
+    {
+      "model_requested": "nemotron-mini:4b",
+      "status": 200,
+      "model_returned": "nemotron-mini:4b",
+      "name_match": true,
+      "response_preview": "My model name is \"AI-powered assistant.\"",
+      "elapsed_s": 1.35,
+      "note": "Routing correct. Self-identification wrong (says AI-powered assistant) — known W0 identity confusion. Routing mechanism works."
+    }
+  ],
+  "evidence_summary": "3/4 models route correctly by exact name — model_returned matches model_requested for Qwen, Llama, Nemotron. No typo-sensitivity or silent wrong-model dispatch observed. GLM cannot load (500), so routing untestable. Routing mechanism itself is sound.",
+  "workaround": "GLM routing failure is a load failure, not a routing failure. If GLM could load, routing would likely work. 3-model routing is fully functional.",
+  "shippability_impact": "3-model routing works. 4-model cascade requires GLM fix or alternative model."
+}

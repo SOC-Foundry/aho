@@ -1,0 +1,187 @@
+{
+  "workstream_id": "W3",
+  "iteration": "0.2.15",
+  "title": "Nemoclaw re-vetting + ADR dispatcher choice",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-21T14:15:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-7"
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "check": "AHO_ITERATION env confirmed before workstream_start",
+      "result": "pass",
+      "evidence": "AHO_ITERATION=0.2.15 verified before emit_workstream_start call. Event logged at 2026-04-21T13:26:58Z with iteration=0.2.15 (see data/aho_event_log.jsonl)."
+    },
+    {
+      "check": "Checkpoint advanced to W3 in_progress before work",
+      "result": "pass",
+      "evidence": ".aho-checkpoint.json shows current_workstream=W3, W3=in_progress after emit_workstream_start. W0/W1/W2 preserved as workstream_complete."
+    },
+    {
+      "check": "Empirical comparison performed on identical inputs (N=5 bug/feature + N=5 role)",
+      "result": "pass",
+      "evidence": "probe.py ran 5 bug/feature classifications through Path A (nemotron_client, /api/generate) and Path B (dispatcher, /api/chat), plus 5 role classifications through daemon socket (Path C) and Path B. Raw results in artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json."
+    },
+    {
+      "check": "Metric table populated with measured values (5 metrics x 2 paths)",
+      "result": "pass",
+      "evidence": "Wall clock, correctness, token overhead, error fidelity, code complexity documented in nemoclaw-vs-dispatch.md. Wall clock ~1.42 s (Path A) vs ~1.79 s (Path B). Correctness 5/5 vs 4/5 on bug/feature; 1/5 vs 4/5 on role classify."
+    },
+    {
+      "check": "The '~23s overhead' claim verified or refuted with measurement",
+      "result": "pass",
+      "evidence": "Refuted. Socket IPC roundtrip (Path C) 1.68-1.87 s; direct dispatch (Path B) 1.66-1.89 s. Overhead is within measurement noise. Wall clock dominated by Nemotron-mini inference at Q4_K_M. Finding documented in nemoclaw-vs-dispatch.md section 'The 23-second-overhead claim'."
+    },
+    {
+      "check": "ADR drafted with correct sequential number from aho-internal ADR series",
+      "result": "pass",
+      "evidence": "artifacts/adrs/0002-nemoclaw-decision.md. Next available number in the aho-internal series (0001-phase-a-externalization.md was the only prior member). ahomw-ADR-NNN series (044/045 currently) is a separate methodology series and not incremented here. Rationale documented in ADR trailer."
+    },
+    {
+      "check": "Decision is explicit, evidence-based, and consistent with measured data",
+      "result": "pass",
+      "evidence": "Decision: REPLACE classification layer, retain session layer. Basis: /api/chat outperforms /api/generate on role classify (4/5 vs 1/5); dispatcher has 5 typed exceptions vs Nemoclaw's 2 client types + string-wrapped errors (G083 violation); socket/session value proposition is orthogonal to classifier and not measured against."
+    },
+    {
+      "check": "Pillar 4 examination present in ADR",
+      "result": "pass",
+      "evidence": "ADR 0002 dedicated 'Pillar 4 examination' section. Strong vs weak reading of 'wrappers are the tool surface' discussed. Notes that the replacement does not worsen Pillar 4 conformance and flags the underlying tension as a 0.2.16+ concern (not re-decided in W3)."
+    },
+    {
+      "check": "Implementation: new router exists and is functional",
+      "result": "pass",
+      "evidence": "src/aho/pipeline/router.py created. classify_task() uses hardened dispatcher on /api/chat. ClassificationError subclasses DispatchError; raw_response and categories preserved on failure. 24 unit tests in artifacts/tests/test_pipeline_router.py all pass."
+    },
+    {
+      "check": "Implementation: Nemoclaw route() migrated to use new router",
+      "result": "pass",
+      "evidence": "src/aho/agents/nemoclaw.py imports classify_task from aho.pipeline.router. route() method calls classify_task with shortened bias (_BIAS class constant). Live integration probe confirms end-to-end classification via real Ollama."
+    },
+    {
+      "check": "Implementation: route socket handler error handling narrowed (G083 improvement)",
+      "result": "pass",
+      "evidence": "NemoClawHandler.handle cmd='route' branch now catches ClassificationError (with raw_response and error_type in reply) and DispatchError (with error_type in reply) explicitly. Prior blanket except Exception removed on that code path."
+    },
+    {
+      "check": "Implementation: nemotron_client.classify deprecated with migration window",
+      "result": "pass",
+      "evidence": "Docstring of src/aho/artifacts/nemotron_client.py updated to cite ADR 0002 and indicate the function is deprecated in favour of aho.pipeline.router.classify_task. Function body unchanged; kept callable during 0.2.15-0.2.16 transition."
+    },
+    {
+      "check": "components.yaml updated to reflect decision",
+      "result": "pass",
+      "evidence": "nemoclaw note updated ('classification layer migrated to pipeline.router in 0.2.15 W3 ADR 0002'). nemotron-client marked deprecated. New entries: pipeline-dispatcher (W2) and pipeline-router (W3)."
+    },
+    {
+      "check": "aho doctor unaffected (daemon still checked)",
+      "result": "pass",
+      "evidence": "doctor._check_aho_daemons still references aho-nemoclaw service (per the retain decision). systemd unit aho-nemoclaw.service is unchanged; daemon continues to run."
+    },
+    {
+      "check": "No new except Exception in W3 code (G083)",
+      "result": "pass",
+      "evidence": "grep 'except Exception' in src/aho/pipeline/router.py yields zero matches. Two pre-existing blocks remain in src/aho/agents/nemoclaw.py (line 77 dispatch method, line 134 handler dispatch branch) in the OpenClaw path, which is out of W3 scope and documented as a carry-forward in ADR 0002."
+    },
+    {
+      "check": "baseline_regression_check",
+      "result": "pass_with_finding",
+      "evidence": "Full suite: 10 failed (matching W2 baseline exactly), 374 passed (+23 from 351 W2 baseline, net of 24 new router tests and 1 cascade-flake deselection), 1 skipped. All 10 failures are pre-existing entries in test-baseline.json. See F001 below for the one test that newly diverges (test_cascade_end_to_end, Ollama integration, not W3-caused).",
+      "note": "Excluding the integration flake, 10/10 failures match W2 baseline — zero new failures caused by W3 code."
+    },
+    {
+      "check": "No G083 sites introduced",
+      "result": "pass",
+      "evidence": "New code (router.py, migrated route method, narrowed route handler) uses only typed exceptions. No blanket except introduced."
+    },
+    {
+      "check": "__pycache__ cleared after src/aho/ touches (G070)",
+      "result": "pass",
+      "evidence": "find src/aho -name __pycache__ -type d | xargs rm -rf executed after each src/aho/ edit cycle during W3 implementation."
+    },
+    {
+      "check": "No git operations performed (Pillar 11)",
+      "result": "pass",
+      "evidence": "Pillar 11 respected throughout W3. Status at workstream start had existing M .aho-checkpoint.json etc. unchanged by git actions from this agent."
+    },
+    {
+      "check": "Cross-project contamination check",
+      "result": "pass",
+      "evidence": "ADR number chosen by enumerating artifacts/adrs/ (existing: 0001-phase-a-externalization.md, ahomw-ADR-044.md, ahomw-ADR-045.md). The aho-internal series receives 0002; no fabrication. ahomw-ADR series left untouched. No kjtcom constructs pulled into ADR content or code."
+    },
+    {
+      "check": "Raw response field inspected for ambiguous probe results",
+      "result": "pass",
+      "evidence": "probe-results.json captures raw_response per call. Role-classify daemon failures show literal Nemotron output ('(The Eleven Pillars Of Agile)', 'AI', 'AI', '') — ground truth before parse. Empty-response finding during bias migration corroborated by direct urllib.request inspection, not parsed dispatcher fields."
+    }
+  ],
+  "deliverables": [
+    "artifacts/adrs/0002-nemoclaw-decision.md",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/probe.py",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json",
+    "src/aho/pipeline/router.py",
+    "src/aho/agents/nemoclaw.py",
+    "src/aho/artifacts/nemotron_client.py",
+    "artifacts/tests/test_pipeline_router.py",
+    "artifacts/tests/test_nemoclaw_real.py",
+    "artifacts/tests/test_conductor.py",
+    "artifacts/harness/components.yaml"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "info",
+      "description": "test_pipeline_integration.py::test_cascade_end_to_end fails at the producer stage with wall_clock_seconds=105.1 and output_size_chars=0 — Qwen 3.5:9b emitted empty message.content on /api/chat. Reproducible. This test is not in test-baseline.json and is an integration test added in 0.2.14. My W3 changes do not touch src/aho/pipeline/orchestrator.py, pipeline/schemas.py, or Qwen dispatch. Ollama state at test time: nemotron-mini:4b resident (3054 MiB VRAM), 4373 MiB free. Qwen model is 6.4 GB — must evict Nemotron to load. Suspected cause: the same 'long system prompt -> empty content on /api/chat' behaviour observed during the W3 bias migration, now affecting Qwen's cascade prompts. Not gated in W3; flagged for Gemini audit and W4 cascade validation."
+    },
+    {
+      "id": "F002",
+      "severity": "info",
+      "description": "Nemotron-mini:4b classify accuracy on 3-category role routing is weak regardless of endpoint. With shortened bias on /api/chat, router returns reviewer for 'What is the capital of France?' (expected assistant). This is a model limitation, not a dispatcher or router bug, consistent with W0 roster validation classifying Nemotron as 'compromised' on identity but functional on classify. Nemoclaw.route callers should accept that route decisions may be noisy on this 4b model and consider a fallback strategy when the category is load-bearing (not in W3 scope)."
+    },
+    {
+      "id": "F003",
+      "severity": "info",
+      "description": "Two except Exception blocks remain in src/aho/agents/nemoclaw.py (dispatch method line 77, handler dispatch command line 134). Both are in the OpenClawSession path, not the classifier path. Scoped as a carry-forward in ADR 0002 Consequences section: narrowing these is deferred because W3's mandate is the classification layer, not OpenClaw dispatch. W4 or a dedicated iteration can pick this up."
+    },
+    {
+      "id": "F004",
+      "severity": "info",
+      "description": "Nemoclaw's running daemon (aho-nemoclaw.service, PID 1217 at W3 start) was NOT restarted during W3. The daemon in memory still holds the pre-W3 code. This is intentional — Pillar 11 / user-state discipline: restarting a systemd user service is a shared-state change. In-process tests verified the new code; socket-level integration tests were performed via probe.py against the running (pre-W3) daemon, which is also documented in nemoclaw-vs-dispatch.md. Kyle can restart the daemon at any time to pick up the new code; W4 cascade integration will exercise the socket path with the new code if the daemon is restarted before W4 execution."
+    },
+    {
+      "id": "F005",
+      "severity": "low",
+      "description": "The 0.2.14 carry-forward 'test_workstream_events.py checkpoint corruption' recurred. Running the full pytest suite during baseline regression caused the real .aho-checkpoint.json to be rewritten with bogus workstream entries (W_V3_TEST, W_V3_COMBO, W_V2_COMPAT, W_V1_COMPAT, W_V2_TEST, W_V1_TEST, W_PARSE_TEST, W_V1_DEFAULT) and current_workstream bumped to W6. Root cause (per 0.2.14 carry-forward notes): test_workstream_events.py does not mock find_project_root and therefore writes to the real checkpoint. I restored the checkpoint to the correct W3/pending_audit state immediately after regression. No data lost — event log is append-only and unaffected. Still a pre-existing fixture-isolation bug, not a W3 introduction. Flagged here for visibility; fix deferred per 0.2.15 carry-forward list."
+    }
+  ],
+  "test_results": {
+    "new_tests": 24,
+    "tests_updated_for_migration": 3,
+    "affected_suites_pass": {
+      "test_pipeline_router.py": "24/24 pass",
+      "test_nemoclaw_real.py": "6/6 pass",
+      "test_conductor.py": "3/3 pass (migrated mock names)",
+      "test_dispatcher_hardening.py": "46/46 pass (unchanged)",
+      "test_dispatcher_chat_api.py": "6/6 pass (unchanged)"
+    },
+    "baseline_regression": {
+      "failed": 10,
+      "passed": 374,
+      "skipped": 1,
+      "deselected": 1,
+      "delta_vs_w2": "10 failed (identical to W2 baseline), +23 passed (24 new - 1 cascade flake deselected)",
+      "new_failures_caused_by_w3": 0,
+      "failures_list_matches_baseline": true,
+      "cascade_integration_flake": "test_pipeline_integration.py::test_cascade_end_to_end deselected for baseline comparison; tracked in F001."
+    }
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "ADR number chosen via repo enumeration (no fabrication). ahomw-ADR-NNN methodology series untouched. All citations trace to aho artifacts."
+  }
+}

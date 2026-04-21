@@ -1,0 +1,77 @@
+{
+  "audit_id": "W4",
+  "iteration": "0.2.15",
+  "auditor": "gemini-cli",
+  "timestamp": "2026-04-21T17:40:00Z",
+  "overall_verdict": "pass_with_findings",
+  "spot_checks": [
+    {
+      "id": "A1",
+      "label": "Stage artifacts completeness",
+      "result": "pass",
+      "notes": "Stage-1 through stage-5 JSON files exist and contain all required metadata. template_leak_detected is null (clean) across all stages."
+    },
+    {
+      "id": "A2",
+      "label": "Qwen Producer raw response (F002)",
+      "result": "pass",
+      "notes": "Verified stage-2-producer.json: raw_response is empty, thinking_chars=8026, tokens_eval=2000 (num_predict hit)."
+    },
+    {
+      "id": "A3",
+      "label": "Nemotron Assessor raw response (F004)",
+      "result": "pass",
+      "notes": "Verified stage-5-assessor.json: raw_response is a vacuous chat-model helpfulness string (65 chars)."
+    },
+    {
+      "id": "A4",
+      "label": "GLM Auditor thinking language (F003)",
+      "result": "pass",
+      "notes": "Verified stage-3-auditor.json: 8,002 chars of thinking in English, contradicting W1 F005 prediction (Chinese). Confirms task-context dependency."
+    },
+    {
+      "id": "A5",
+      "label": "Pillar 7 verdict honesty",
+      "result": "pass",
+      "notes": "cascade-summary-0.2.15.md correctly identifies the positive signal (non-rubber-stamp) while admitting the test was compromised by Producer failure."
+    },
+    {
+      "id": "A6",
+      "label": "Retrospective characterization",
+      "result": "pass",
+      "notes": "retrospective-0.2.15.md is substantively honest. Directly addresses W1 contamination, 23s overhead refutation, and install.fish deferral."
+    },
+    {
+      "id": "A7",
+      "label": "Sign-off sheet correctness",
+      "result": "pass_with_findings",
+      "notes": "Sign-off sheet has unchecked boxes and valid evidence paths. Minor discrepancy: carry-forward count (21) in sign-off does not match carry-forwards.md (25 footer, 27 actual)."
+    },
+    {
+      "id": "A8",
+      "label": "Bundle section coverage",
+      "result": "pass",
+      "notes": "aho-bundle-0.2.15.md contains all 9 required sections."
+    }
+  ],
+  "findings": [
+    {
+      "id": "AF001",
+      "severity": "info",
+      "description": "Minor count drift in carry-forwards citation. carry-forwards-0.2.15.md footer claims 25 items, actual count is 27. sign-off-0.2.15.md cites 21 items. Does not affect substance of critical items.",
+      "acceptance_check_reference": "Carry-forwards documented with origin, severity, target"
+    },
+    {
+      "id": "AF002",
+      "severity": "important",
+      "description": "template_leak_detected field is represented as 'null' (None) in JSON artifacts rather than 'false'. While correct per dispatcher.py logic (None = clean), it diverges from the 'false' expectation in the audit prompt.",
+      "acceptance_check_reference": "Per-stage cascade artifacts written with raw response and extended metadata"
+    }
+  ],
+  "acceptance_discrepancies": [],
+  "pillar_11_confirmed": true,
+  "g083_clean": true,
+  "cross_project_contamination": false,
+  "install_fish_fail_confirmed": true,
+  "ready_for_workstream_complete": true
+}

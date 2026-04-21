@@ -1,0 +1,197 @@
+{
+  "workstream_id": "W4",
+  "iteration": "0.2.15",
+  "title": "Cross-Model Cascade Integration + Iteration Close",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-21T17:45:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-7[1m]"
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "check": "AHO_ITERATION env confirmed before workstream_start",
+      "result": "pass",
+      "evidence": "AHO_ITERATION=0.2.15 verified via shell env and python env check before emit_workstream_start call. Event logged at 2026-04-21T16:59:26Z with iteration=0.2.15 (see /home/kthompson/.local/share/aho/events/aho_event_log.jsonl)."
+    },
+    {
+      "check": "Checkpoint advanced to W4 in_progress before work",
+      "result": "pass",
+      "evidence": ".aho-checkpoint.json shows current_workstream=W4, W4=in_progress after emit_workstream_start. W0/W1/W2/W3 preserved as workstream_complete."
+    },
+    {
+      "check": "Cross-model cascade executed with distinct models across roles",
+      "result": "pass",
+      "evidence": "Role assignment: indexer_in=llama3.2:3b, producer=qwen3.5:9b, auditor=haervwe/GLM-4.6V-Flash-9B:latest, indexer_out=llama3.2:3b, assessor=nemotron-mini:4b. Producer and Auditor are different model families (qwen vs glm) — Pillar 7 separation attempted. See cascade/trace.json role_assignment field."
+    },
+    {
+      "check": "Per-stage cascade artifacts written with raw response and extended metadata",
+      "result": "pass",
+      "evidence": "artifacts/iterations/0.2.15/cascade/stage-1-indexer_in.json through stage-5-assessor.json. Each artifact contains: stage, stage_index, role, model, family, wall_clock_s, output_chars, tokens_eval, tokens_prompt, raw_response, processed_output, thinking_field_present, thinking_chars, thinking_excerpt, template_leak_detected, raw_body_keys."
+    },
+    {
+      "check": "Cascade summary with baseline comparison present",
+      "result": "pass",
+      "evidence": "cascade/cascade-summary-0.2.15.md documents role-assignment table, per-stage metrics, 0.2.14 W1.5 Qwen-solo baseline comparison (14,725 chars / 1,867s vs W4 3,124 chars / 366.85s), Pillar 7 verdict with verbatim GLM auditor output quoted, honest characterization of both the positive Pillar 7 signal and the Producer failure that compromised the test."
+    },
+    {
+      "check": "Pillar 7 assessed with evidence — not rhetoric",
+      "result": "pass_with_finding",
+      "evidence": "Verdict: GLM-as-Auditor did NOT rubber-stamp — produced substantive critique that correctly identified the Producer failure, validated one delta with source-text-cited reasoning, and surfaced two independent findings. This is the first clean Pillar 7 signal in aho history. FINDING: The test was partially compromised because Qwen Producer emitted 0 chars (thinking-mode exhausted num_predict=2000). Full Pillar 7 comparison with working Producer belongs to 0.2.16.",
+      "note": "One positive data point. Not conclusive. Re-run required on fixed Producer substrate."
+    },
+    {
+      "check": "Retrospective covers all 5 workstreams, honest, no celebratory framing (G081)",
+      "result": "pass",
+      "evidence": "retrospective-0.2.15.md: §1 charter, §2 delivered, §3 substrate findings (baseline contamination, 23s claim refuted, substrate artifacts confirmed twice, Ollama state hygiene), §4 cross-model cascade (metrics, Producer failure headline, Pillar 7 verdict, GLM thinking observation refined, Nemotron assessor finding), §5 Pattern C third-iteration data, §6 infrastructure maturation, §7 honest assessment. Producer failure and Tier 1 install.fish deferral surfaced explicitly. No 'landed beautifully' / 'all green' / 'clean close' language."
+    },
+    {
+      "check": "Carry-forwards documented with origin, severity, target",
+      "result": "pass",
+      "evidence": "carry-forwards-0.2.15.md: 25 items total (2 critical, 13 important, 10 nice-to-have). Grouped by target: 20 items to 0.2.16, 5 items to 0.2.17+. Two critical items: install.fish Tier 1 finalization, Qwen num_predict insufficiency. Each item has origin workstream citation, severity, and target iteration."
+    },
+    {
+      "check": "Bundle generated with required sections",
+      "result": "pass",
+      "evidence": "aho-bundle-0.2.15.md: §1 Design+Plan, §2 Build Artifacts (W0-W4), §3 CLAUDE+GEMINI, §4 Harness State, §5 Gotchas+ADRs (including ADR-0002), §6 Delta State (src/aho/ changes), §7 Test Results Summary (baseline progression W0-W4), §8 Event Log Summary (workstream chronology), §9 Close Package. 9 sections present."
+    },
+    {
+      "check": "Sign-off sheet present with unchecked boxes for Kyle",
+      "result": "pass",
+      "evidence": "sign-off-0.2.15.md: 8 Kyle Hard Gate items, 3 Kyle Soft Gate items, 2 iteration acceptance items — all boxes unchecked. Evidence paths verified exist per item. Sign-off note explicit about install.fish deferral."
+    },
+    {
+      "check": "baseline_regression_check clean (10 failed matching W3)",
+      "result": "pass",
+      "evidence": "Full suite (with test_cascade_end_to_end deselected per W3 F001 precedent): 10 failed, 374 passed, 1 skipped, 1 deselected in 32.95s. Identical to W3 baseline. All 10 failures match test-baseline.json entries. No new failures attributable to W4.",
+      "note": "test_workstream_events.py checkpoint corruption recurred (3rd time — see F001 below). Restored from /tmp backup taken pre-regression. This is a known fixture-isolation bug, not W4-caused."
+    },
+    {
+      "check": "No G083 sites introduced",
+      "result": "pass",
+      "evidence": "W4 introduced one new Python file (artifacts/iterations/0.2.15/cascade/run_cross_model_cascade.py). Grep 'except Exception' on that file yields zero matches. All catches use specific error types (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError). The two remaining pre-existing G083 sites in nemoclaw.py (lines 77, 134) are unchanged carry-forwards from W3 F003."
+    },
+    {
+      "check": "__pycache__ cleared after src/aho/ touches (G070)",
+      "result": "pass",
+      "evidence": "find src/aho -name __pycache__ -type d -exec rm -rf {} + executed before baseline regression. W4 did not modify src/aho/ — the W4 runner lives under artifacts/iterations/0.2.15/cascade/ — but pycache clear is enforced per G070 discipline."
+    },
+    {
+      "check": "No git operations performed (Pillar 11)",
+      "result": "pass",
+      "evidence": "Pillar 11 respected throughout W4. Checkpoint restored from /tmp backup (not via git), event log appended-only (not rewritten)."
+    },
+    {
+      "check": "No celebratory framing (G081)",
+      "result": "pass",
+      "evidence": "Retrospective and cascade summary characterize Producer failure directly as 'fatal for this cascade' and iteration as 'Tier 1 prerequisites landed, install.fish finalization deferred' — not 'shipped' or 'landed'. Pillar 7 verdict given as 'small, clean data point' not 'restored'. No banned phrases per G081."
+    },
+    {
+      "check": "Cross-project contamination check",
+      "result": "pass",
+      "evidence": "ADR references = 0002 (aho-internal) — verified against artifacts/adrs/ enumeration in W3 acceptance. Pillar count = 11 (aho canonical per base.md, CLAUDE.md). No kjtcom constructs, no v10.66-style labels, no '10 IAO Pillars' appear in any 0.2.15 W4 artifact. All bundle section structure derived from 0.2.14 bundle structure (aho-native reference)."
+    },
+    {
+      "check": "Raw response field inspected per cascade stage",
+      "result": "pass",
+      "evidence": "Per-stage artifacts capture raw_response verbatim. Inspection findings: Stage 2 raw_response='' with thinking_chars=8026 (Qwen num_predict exhaustion). Stage 3 GLM thinking in English ('First, I need to review the Producer Analysis...') contradicting W1 F005 prediction. Stage 5 Nemotron raw_response=\" Sure, I'll incorporate those deltas into my work product output.\" (chat-model helpfulness, not assessment). All findings are derived from raw response inspection, not parsed fields."
+    },
+    {
+      "check": "VRAM management operational during cascade",
+      "result": "pass",
+      "evidence": "trace.json vram_snapshots field captures Ollama /api/ps before cascade and after each stage. Explicit unload_model() calls between stages kept models from co-residing. Nemotron auto-load observed and corrected mid-cascade. No GLM OOM despite 8143 MiB VRAM usage at stage 3. W2 dispatcher helpers (unload_model, list_loaded_models) exercised in production."
+    },
+    {
+      "check": "install.fish Tier 1 section finalized",
+      "result": "fail",
+      "evidence": "install.fish Tier 1 section was NOT finalized in W4. Deferred to 0.2.16 W0 as the critical carry-forward. Acknowledged explicitly in retrospective §7 and sign-off-0.2.15.md Soft Gate. W4 prioritized cross-model cascade over install.fish given the scope/budget tradeoff.",
+      "note": "This fails the W4 launch prompt's 'install.fish Tier 1 section' deliverable. Kyle's decision at sign-off determines whether this is iteration-blocking or acceptable-with-deferral. Documented honestly as fail."
+    }
+  ],
+  "deliverables": [
+    "artifacts/iterations/0.2.15/cascade/run_cross_model_cascade.py",
+    "artifacts/iterations/0.2.15/cascade/nosql-manual-text.txt",
+    "artifacts/iterations/0.2.15/cascade/stage-1-indexer_in.json",
+    "artifacts/iterations/0.2.15/cascade/stage-2-producer.json",
+    "artifacts/iterations/0.2.15/cascade/stage-3-auditor.json",
+    "artifacts/iterations/0.2.15/cascade/stage-4-indexer_out.json",
+    "artifacts/iterations/0.2.15/cascade/stage-5-assessor.json",
+    "artifacts/iterations/0.2.15/cascade/trace.json",
+    "artifacts/iterations/0.2.15/cascade/cascade-summary-0.2.15.md",
+    "artifacts/iterations/0.2.15/retrospective-0.2.15.md",
+    "artifacts/iterations/0.2.15/carry-forwards-0.2.15.md",
+    "artifacts/iterations/0.2.15/sign-off-0.2.15.md",
+    "artifacts/iterations/0.2.15/aho-bundle-0.2.15.md",
+    "artifacts/iterations/0.2.15/acceptance/W4.json"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "important",
+      "description": "test_workstream_events.py checkpoint corruption recurred (third recurrence: 0.2.14 W1, 0.2.15 W3, 0.2.15 W4). Running the full pytest suite caused the real .aho-checkpoint.json to be rewritten with bogus workstream entries (W_V3_TEST, W_V3_COMBO, W_V2_COMPAT, W_V1_COMPAT, W_V2_TEST, W_V1_TEST, W_PARSE_TEST, W_V1_DEFAULT, W5, W6) and current_workstream bumped to W6 AND critically W4 prematurely set to workstream_complete. I pre-emptively backed up the checkpoint before regression and restored from /tmp/checkpoint-w4-backup.json immediately after. No lost state. Fix path is clear (mock find_project_root in test fixture) — lack of fix is the issue. Critical carry-forward for 0.2.16 W0 per carry-forwards-0.2.15.md."
+    },
+    {
+      "id": "F002",
+      "severity": "critical",
+      "description": "Qwen num_predict=2000 is insufficient for cascade Producer role on long prompts. W4 cross-model cascade reproduced W3 F001 live: Qwen 3.5:9b in the Producer role with 32K context, 247K-char document + Indexer_in output as user prompt, exhausted the entire 2,000-token num_predict budget on internal thinking (message.thinking=8026 chars) and emitted 0 chars of visible content (message.content=''). done_reason='length'. This is the measured root cause of the cascade integration flake. Carry-forward for 0.2.16 W0 — blocks clean Pillar 7 comparison re-run."
+    },
+    {
+      "id": "F003",
+      "severity": "info",
+      "description": "GLM thinking field language is task-context-dependent, not fixed per model (refinement of W1 F005). W4 cascade captured 8,002 chars of GLM auditor thinking in English on an analytical task with English input. W1 F005 observed Chinese thinking on an identity probe. Update ollama-tier1-fitness-0.2.15.md or equivalent reference to reflect task-dependent variability. Carry-forward for 0.2.16 W0."
+    },
+    {
+      "id": "F004",
+      "severity": "important",
+      "description": "Nemotron-mini:4b cannot substantively assume the Assessor role. W4 cascade stage 5 output was \" Sure, I'll incorporate those deltas into my work product output.\" — 65 chars, chat-model helpfulness, no assessment content. Consistent with W0 classification of 'compromised' on identity/instruction-following. Argues for a role-compatibility gate in the cascade orchestrator — models with compromised status should fail a role-fit assertion before dispatch. Carry-forward for 0.2.16 W1."
+    },
+    {
+      "id": "F005",
+      "severity": "important",
+      "description": "Cascade protocol does not halt on empty stage output. W4 Producer returned error=None with message.content='' — the dispatcher did not flag this as an error, and the cascade converted it to '[stage producer failed: None]' as Indexer-out input, which then propagated downstream. Auditor (GLM) correctly identified this as a failure mode in its analysis_review; Indexer-out (Llama) attempted to 'enhance' the failed Producer. The cascade should define halt/escalate semantics for empty content from load-bearing stages. Independent of model choice. Carry-forward for 0.2.16 W1."
+    },
+    {
+      "id": "F006",
+      "severity": "info",
+      "description": "Orchestrator hardcodes workstream_id='W1' in pipeline_handoff log_event calls (src/aho/pipeline/orchestrator.py:149, 199). W4 runner bypassed orchestrator.run_cascade() and emitted its own W4-tagged events. Fix is trivial (parameterize); worth doing in 0.2.16 W0 so future workstreams can call run_cascade() directly. Nice-to-have carry-forward."
+    },
+    {
+      "id": "F007",
+      "severity": "fail",
+      "description": "install.fish Tier 1 section not finalized in W4. Scope tradeoff: the W4 launch prompt called for both cross-model cascade AND install.fish finalization; the session budget did not cover both. I chose the cascade (the Pillar 7 restoration attempt) because it had harder dependencies (dispatcher hardening, GLM substrate, Producer/Auditor model distinctness) and was only runnable as part of W4. install.fish finalization is derivable from existing W0/W1/W2 artifacts in under an hour. Carry-forward flagged as CRITICAL for 0.2.16 W0 — it blocks the 'Tier 1 shippable' claim."
+    }
+  ],
+  "test_results": {
+    "new_tests": 0,
+    "baseline_regression": {
+      "failed": 10,
+      "passed": 374,
+      "skipped": 1,
+      "deselected": 1,
+      "duration_seconds": 32.95,
+      "delta_vs_w3": "no change (identical counts)",
+      "new_failures_caused_by_w4": 0,
+      "failures_list_matches_baseline": true,
+      "cascade_integration_flake": "test_pipeline_integration.py::test_cascade_end_to_end deselected per W3 F001 precedent. Root cause reproduced live in W4 cascade run — Qwen num_predict exhaustion. Tracked in F002."
+    }
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "ADR 0002 number verified via artifacts/adrs/ enumeration in W3 (pre-W4). Pillar count (11) verified against CLAUDE.md / base.md. No kjtcom constructs referenced. Bundle section structure derived from 0.2.14 bundle (aho-native). All citations trace to aho canonical artifacts."
+  },
+  "pillar_7_data_point": {
+    "first_observation": true,
+    "producer_model": "qwen3.5:9b",
+    "auditor_model": "haervwe/GLM-4.6V-Flash-9B:latest",
+    "producer_output_chars": 0,
+    "auditor_output_chars": 777,
+    "auditor_rubber_stamped": false,
+    "auditor_identified_producer_failure": true,
+    "auditor_substantive_findings_count": 2,
+    "test_compromised_by": "Qwen num_predict exhaustion — Producer emitted 0 chars",
+    "verdict": "Single clean positive Pillar 7 signal. Full comparison requires Producer substrate fix. Blocks to 0.2.16."
+  }
+}

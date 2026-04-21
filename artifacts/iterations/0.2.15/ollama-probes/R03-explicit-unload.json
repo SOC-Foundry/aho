@@ -1,0 +1,38 @@
+{
+  "requirement_id": "R3",
+  "requirement": "Explicit unload API",
+  "scope": "per-model",
+  "classification": "meets",
+  "probe_method": "For each model: load via /api/chat, send keep_alive:0 request, verify unload via /api/ps at 0s and 5s intervals.",
+  "probes": [
+    {
+      "model": "qwen3.5:9b",
+      "loaded_confirmed": true,
+      "unloaded_immediately": false,
+      "unloaded_after_5s": true,
+      "result": "pass"
+    },
+    {
+      "model": "llama3.2:3b",
+      "loaded_confirmed": true,
+      "unloaded_immediately": false,
+      "unloaded_after_5s": true,
+      "result": "pass"
+    },
+    {
+      "model": "nemotron-mini:4b",
+      "loaded_confirmed": true,
+      "unloaded_immediately": false,
+      "unloaded_after_5s": true,
+      "result": "pass"
+    },
+    {
+      "model": "haervwe/GLM-4.6V-Flash-9B:latest",
+      "loaded_confirmed": false,
+      "error": "Model failed to load (HTTP 500: llama runner process has terminated)",
+      "result": "untestable"
+    }
+  ],
+  "evidence_summary": "All 3 loadable models unload reliably within 5 seconds of keep_alive:0 request. Unload is not immediate — there is a grace period of 1-5 seconds. GLM cannot load, so unload is untestable.",
+  "grace_period_note": "Models show in /api/ps immediately after keep_alive:0 but are gone within 5s. This is consistent Ollama behavior — unload is deferred, not synchronous."
+}

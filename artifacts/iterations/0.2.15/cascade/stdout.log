@@ -1,0 +1,11 @@
+[2026-04-21T17:03:34Z] stage 1:indexer_in model=llama3.2:3b wall=20.31s chars=613 err=None
+[2026-04-21T17:06:13Z] stage 2:producer model=qwen3.5:9b wall=151.67s chars=0 err=None
+[2026-04-21T17:08:44Z] stage 3:auditor model=haervwe/GLM-4.6V-Flash-9B:latest wall=138.87s chars=777 err=None
+[2026-04-21T17:09:08Z] stage 4:indexer_out model=llama3.2:3b wall=10.5s chars=1669 err=None
+[2026-04-21T17:09:17Z] stage 5:assessor model=nemotron-mini:4b wall=2.08s chars=65 err=None
+
+=== cascade complete ===
+total wall clock: 366.85s
+total output chars: 3124 (baseline Qwen-solo: 14725)
+errors: 0
+template leaks: 0

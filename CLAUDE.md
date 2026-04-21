@@ -1,6 +1,6 @@
-# CLAUDE.md — aho 0.2.14
+# CLAUDE.md — aho 0.2.15
 
-You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.15 under Pattern C (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -30,15 +30,19 @@ You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). 
 
 Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Numbers honest to substance, not regex. "Clean close," "landed beautifully," "all green" are banned (G081).
 
-## Pattern C Role — Primary Drafter (Modified for 0.2.14)
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1). Acceptance checks must include raw-response inspection, not just parsed-structure validity.
+
+**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions.
+
+## Pattern C Role — Primary Drafter (Modified for 0.2.15)
 
 For each workstream N:
-1. Emit `workstream_start` at workstream begin (**REQUIRED — 0.2.13 fired zero**).
-2. Execute scope per `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`.
-3. Write `artifacts/iterations/0.2.14/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.15** (0.2.14 W0 lesson — firing pre-env-set caused null iteration logging).
+2. Execute scope per `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`.
+3. Write `artifacts/iterations/0.2.15/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 4. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
 5. Stop. Gemini audits.
-6. After Gemini writes `artifacts/iterations/0.2.14/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
+6. After Gemini writes `artifacts/iterations/0.2.15/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
 7. If audit is `"fail"`, correct and rewrite the acceptance archive. Do not advance.
 
 ## State Machine (authoritative)
@@ -61,28 +65,45 @@ For each workstream N:
 - `baseline_regression_check()` is the backstop, not regex counts (G079)
 - No `except Exception` blocks in new code
 
-## Current Iteration: 0.2.14
+## Cross-Project Contamination Vigilance (new for 0.2.15)
 
-**Theme:** Council wiring verification + cascade smoke test.
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14: kjtcom bundle version label (v10.66) bled into aho W2 prompt; "10 IAO Pillars" proposed instead of "11 aho Pillars" in 0.2.15 design drafting.
+
+When working with version labels, ADR numbers, pillar lists, bundle sections, or harness conventions:
+- Verify against aho canonical references (`artifacts/harness/base.md`, `README.md`, ADR index, this file) before use
+- Do not fabricate version numbers or ADR numbers to fill prompts — look them up
+- If memory suggests a structural convention, confirm it's aho-native before embedding it in artifacts
+- "10 IAO Pillars" is a kjtcom construct. aho has 11 pillars (verbatim above).
+
+## Current Iteration: 0.2.15
+
+**Theme:** Tier 1 Partial Install Validation & Ship.
 **Executor role:** You draft. Gemini audits. Kyle signs.
-**Success:** Council exists as verifiable wired system. Sign-off on member operational status. NoSQL manual smoke test executes 5-stage cascade end-to-end.
-**Workstreams:** 3 (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
+**Success:** Tier 1 install.fish is shippable. All 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) wired through Ollama on fixed dispatcher, vetted with fixed-dispatcher evidence. Dispatcher hardened for multi-model use. Nemoclaw decision evidence-based (ADR published). Cross-model cascade proven.
+**Workstreams:** 5 (W0 setup + roster re-vet, W1 Ollama capability audit, W2 dispatcher hardening, W3 Nemoclaw + ADR, W4 integration + close).
+
+**Hard gate blocker for iteration close:** All 4 LLMs wired through Ollama, all 4 vetted with fixed-dispatcher evidence, cross-model cascade test completes successfully. No shipping without all 4 wired.
 
 ## Reference Reading (consult at diligence)
 
-- `artifacts/iterations/0.2.14/aho-design-0.2.14.md`
-- `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`
+- `artifacts/iterations/0.2.15/aho-design-0.2.15.md`
+- `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0
+- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0, raw-response-ground-truth rule added at 0.2.14 close
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/council-models-0.2.14.md` — model docs review
-- `artifacts/iterations/0.2.14/council-inventory.md` — W1 vetting target
+- `artifacts/iterations/0.2.14/retrospective-0.2.14.md` — substrate findings, auditor bifurcation, carry-forwards
+- `artifacts/iterations/0.2.14/carry-forwards.md` — what 0.2.15 inherits
+- `artifacts/iterations/0.2.14/kyle-notes-0.2.15-planning.md` — fleet topology, tiered install, cross-project contamination
 
-## Findings Carried Forward
+## Findings Carried Forward from 0.2.14
 
-- Do not grow `test-baseline.json` to paper over breakage. Additions require justification and Kyle sign-off.
-- Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity — this file is authoritative going forward.
-- Acceptance criteria drift gets flagged in findings, not quietly redefined.
-- `emit_workstream_complete()` must only modify the named workstream's state in the checkpoint. Sibling corruption was the 0.2.13 side-effect bug — patched in 0.2.14 W0.
-- `workstream_start` must be emitted at workstream begin. 0.2.13 fired zero — 0.2.14 establishes the discipline.
+- **Dispatcher repaired** — `/api/chat` with messages array, `num_ctx=32768`, Qwen stop tokens. W1.5 verified. 0.2.15 extends to 4 LLMs.
+- **Cascade architecture works end-to-end** when dispatcher configured correctly. Producer → Indexer-in → Auditor → Indexer-out → Assessor with cross-stage handoff validated on 247K-char document.
+- **Pillar 7 violated throughout 0.2.14** (Qwen-solo across all 5 roles, only viable option per vetting). 0.2.15 attempts Pillar 7 restoration via cross-model assignment after GLM/Nemotron re-test.
+- **Auditor role-prompt bifurcation** — validations rubber-stamp, critique in `additional_findings`. Deferred to later iteration; 0.2.15 does not fix this.
+- **GLM and Nemotron substrate findings (0.2.13 W2.5)** were measured on broken dispatcher. 0.2.15 W0 re-tests both with clean-slate methodology. Original removal decisions are not final until re-test evidence lands.
+- **Do not grow `test-baseline.json` to paper over breakage.** Additions require justification and Kyle sign-off.
+- **`emit_workstream_complete()` side-effect root cause** unresolved from 0.2.14. Symptomatic fix applied. Investigate if recurs.
+- **Checkpoint corruption from `test_workstream_events.py`** — doesn't mock `find_project_root`. Caused checkpoint resets in 0.2.14 W1. Fix in 0.2.15 if time or carry.
+- **Gotcha registry location** — W0 couldn't find canonical file in 0.2.14. Locate or create in 0.2.15.

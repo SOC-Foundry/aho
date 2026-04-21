@@ -5,6 +5,12 @@ Uses nemotron-mini:4b via Ollama.
 0.2.13 W2: Parse fix — raise NemotronParseError on unparseable classification,
 raise NemotronConnectionError on Ollama connection failure, instead of
 silently returning categories[-1] (G083).
+
+0.2.15 W3 (ADR 0002): `classify()` here is deprecated in favour of
+`aho.pipeline.router.classify_task()`, which uses the hardened dispatcher
+on /api/chat (applies model-family chat template server-side, typed errors,
+retry/backoff). This module is kept callable for a migration window; new
+code should import from `aho.pipeline.router`.
 """
 import json
 import requests

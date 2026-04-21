@@ -1,6 +1,6 @@
 # aho - Bundle 0.2.3
 
-**Generated:** 2026-04-13T14:43:39.578334Z
+**Generated:** 2026-04-21T17:31:37.615109Z
 **Iteration:** 0.2.3
 **Project code:** ahomw
 **Project root:** /home/kthompson/dev/projects/aho
@@ -959,6 +959,154 @@ Externalize the harness components into an `aho` Python package that is:
 Accepted. Updated in aho 0.1.13 W2 to reflect name transition from `aho` to `aho`.
 ```
 
+### ADR: 0002-nemoclaw-decision.md (0002-nemoclaw-decision.md)
+```markdown
+# ADR 0002 — Nemoclaw Retain / Remove / Replace Decision
+
+**Status:** Accepted
+**Date:** 2026-04-21
+**Iteration of record:** aho 0.2.15 W3
+**Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
+**Context surface:** aho project-internal architecture (not universal methodology)
+
+---
+
+## Context
+
+`src/aho/agents/nemoclaw.py` (0.1.7 W8 rebuild, 0.2.2 W2 daemonized) provides:
+
+1. A **classification/routing layer** — `NemoClawOrchestrator.route()` calls `aho.artifacts.nemotron_client.classify()`, which posts to Ollama `/api/generate` with `nemotron-mini:4b` to pick one of a fixed set of roles (`assistant`, `code_runner`, `reviewer`).
+2. A **dispatch/session layer** — three `OpenClawSession` instances (Qwen 3.5:9b chats) held warm behind a Unix socket daemon (`aho-nemoclaw.service`), dispatched by role.
+3. **IPC plumbing** — `bin/aho-nemoclaw` fish wrapper speaks newline-delimited JSON over the Unix socket at `~/.local/share/aho/nemoclaw.sock`.
+
+Nemoclaw was built before the pipeline dispatcher had any model-family awareness. At the time, `/api/generate` with raw prompts and a hand-rolled parser was the only available primitive. aho 0.2.15 W2 hardened `src/aho/pipeline/dispatcher.py` with:
+
+- Per-model-family stop tokens (Qwen, Llama 3.x, GLM, Nemotron)
+- Five typed error classes (`DispatchError`, `MalformedResponseError`, `TemplateLeakError`, `ModelUnavailableError`, `DispatchTimeoutError`) — G083 compliant
+- Retry with exponential backoff on transient failures; no retry on systemic failures
+- Template leak detection
+- Model management helpers (`unload_model`, `list_loaded_models`, `ensure_model_ready`)
+- `/api/chat` endpoint (chat template applied server-side)
+
+W3 asks: does Nemoclaw still contribute value on the classification path given the W2 dispatcher, or is it redundant?
+
+Evidence is in `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` and `raw/probe-results.json`. Summary:
+
+| Dimension | Nemoclaw path (`classify` via `/api/generate`) | Hardened dispatcher (`/api/chat`) |
+|---|---|---|
+| Wall clock per classify call | ~1.42 s (bug/feature, 5 samples) | ~1.79 s (same samples) |
+| Bug/feature correctness (5 inputs) | 5/5 | 4/5 (one divergence from Path A) |
+| Role classify correctness (5 inputs, 3 categories) | 1/5 (4 responses drifted into prose / stub output) | 4/5 |
+| Chat template application | None (`/api/generate`) | Server-side per model family |
+| Error typing | Two client-layer types + upstream `except Exception` wrapper that returns `"[error] ..."` string (G083 violation at `nemoclaw.py:62`) | Five typed exceptions, retry/backoff, no blanket catches |
+| Socket IPC roundtrip overhead | Present; immeasurable against inference baseline | N/A (in-process) |
+| Code weight for classify capability | ~400 LOC across `nemoclaw.py` + `nemotron_client.py` + fish wrapper + systemd unit | ~15 LOC wrapping a stateless function call |
+
+The "~23 s Nemoclaw overhead" referenced in the W3 launch prompt is not substantiated by measurement. Socket IPC roundtrip was within measurement noise of direct dispatch. Wall clock on both paths is dominated by model inference, not plumbing.
+
+A second observation worth lifting: the 0.2.13 W2.5 "Nemotron 80% feature-bias" finding was in significant part a substrate artifact of template-free dispatch via `/api/generate`. On `/api/chat` in W3 probes, Nemotron produces cleaner classifier output (4/5 clean matches on role classify vs 1/5 via the daemon's `/api/generate` path). This is consistent with 0.2.15 W0's re-vetting finding that Nemotron's feature-bias dissolved once the dispatcher was fixed.
+
+---
+
+## Decision
+
+**Replace the classification layer of Nemoclaw. Retain the dispatch/session layer.**
+
+Specifically:
+
+1. Introduce `src/aho/pipeline/router.py` — a stateless classification function `classify_task(task, categories, *, model=None, bias=None)` that uses the W2 hardened dispatcher on `/api/chat`. This supersedes `aho.artifacts.nemotron_client.classify()` as the canonical classification primitive.
+
+2. Migrate `NemoClawOrchestrator.route()` to call `aho.pipeline.router.classify_task()`. The daemon, the socket IPC, the three `OpenClawSession` instances, and the systemd unit **stay in place** — they provide session persistence and warm-process sharing, which the stateless dispatcher does not replicate.
+
+3. Mark `aho.artifacts.nemotron_client.classify()` as deprecated in its docstring. Leave it callable during 0.2.15–0.2.16 so existing call sites have a migration window; removal is a future-iteration concern.
+
+4. `bin/aho-nemoclaw` and `aho-nemoclaw.service` are unchanged. Users who use `aho-nemoclaw route` or `dispatch` via the socket continue to work.
+
+5. Fix the G083 violation at `nemoclaw.py:62` (`except Exception` swallowing dispatch errors into `"[error] ..."` string) as part of this migration, since we are editing that code path. The other two `except Exception` sites (`nemoclaw.py:119, 126`) are inside the `NemoClawHandler` socket handler; narrowing those is deferred to W4 or later and documented as a carry-forward.
+
+This is a **replace** decision, not retain or remove:
+- Retain (no-op) is inconsistent with the measured evidence — the `/api/generate` path classifies worse than `/api/chat` on role classify (1/5 vs 4/5) and the typed-exception gap is non-trivial.
+- Remove is too aggressive — the session layer (persistent OpenClaw roles, socket IPC, systemd integration) provides value orthogonal to the dispatcher. Removing it because the classifier layer is obsolete would be scope creep.
+
+---
+
+## Pillar 4 examination
+
+Pillar 4 (wrappers are the tool surface): *"Agents never call raw tools. Every tool is invoked through a /bin wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs."*
+
+Two readings of Pillar 4 relative to this decision:
+
+1. **Strong reading — every Ollama call must go through a `/bin/aho-*` wrapper.** Under this reading, the hardened dispatcher (called in-process from Python) violates Pillar 4 because `dispatcher.dispatch()` is a library call, not a wrapper invocation. The Nemoclaw daemon's socket wrapper (`bin/aho-nemoclaw`) is more Pillar-4-conformant.
+2. **Weak reading — the tool surface is wrapped when agents invoke it from outside the process; intra-process library calls are not "raw tool" calls.** Under this reading, the dispatcher IS the versioned tool surface and is invoked from wrappers (e.g., `bin/aho-conductor`, `bin/aho-nemoclaw`) that internally call it. Raw `curl http://127.0.0.1:11434/api/chat` from an agent's hand would violate Pillar 4; `from aho.pipeline import dispatcher; dispatcher.dispatch(...)` in a wrapper-invoked Python process does not.
+
+The pipeline dispatcher as written is consistent with the weak reading: it is a versioned library (lives under `src/aho/pipeline/`, event-logged via OTel spans in callers, replayable from recorded prompts). W3 does not re-decide Pillar 4 semantics; it notes this as a tension that 0.2.16+ may want to address if the weak reading is insufficient for an external-observer audit.
+
+The proposed replacement (`src/aho/pipeline/router.py`) does not worsen Pillar 4 conformance relative to the current `nemotron_client.classify()`, which is itself a library function. It improves typed-error compliance (Pillar 9 / G083) and reduces duplicated tool-surface code.
+
+---
+
+## Consequences
+
+**Immediate (W3):**
+
+- New file: `src/aho/pipeline/router.py` with `classify_task()` and one error type (`ClassificationError` subclass of `DispatchError`).
+- New tests: `artifacts/tests/test_pipeline_router.py` — unit coverage for correct classification, parse failure, unknown-model error, empty-category-list guard.
+- `src/aho/agents/nemoclaw.py`:
+  - `route()` now calls `pipeline.router.classify_task()`; no longer imports `nemotron_client.classify`.
+  - `except Exception` at line 62 replaced with typed handler raising/surfacing the specific error.
+  - The two handler-scope `except Exception` blocks remain (carry-forward note below).
+- `aho.artifacts.nemotron_client.classify()` docstring updated to note deprecation; function body unchanged for now (no downstream breakage).
+- `components.yaml`: `nemoclaw` note updated; `nemotron-client` note updated to "deprecated, use pipeline.router"; new entry for `pipeline-router`.
+- `aho doctor` behaviour unchanged (the daemon systemd unit still exists and is still checked).
+- Baseline regression test run and compared against W2 (10 failed, 351 passed).
+
+**Downstream (W4 or later — not this workstream):**
+
+- Full removal of `nemotron_client.classify()` after callers migrate.
+- Narrowing the two remaining `except Exception` blocks in `NemoClawHandler` to typed handlers. Tracked as a carry-forward, not gated by W3.
+- `aho doctor` could be extended to surface which classification path is in use (library router vs legacy nemotron_client) — future hygiene, not W3 scope.
+
+**Risk:**
+
+- Nemoclaw's classification is used by `src/aho/agents/conductor.py` via `self.nemoclaw.route()`. Because the route method is being updated to call the new router internally, the conductor behaviour is unchanged — same input, same output categories, different underlying endpoint. Integration sanity probe is part of W3 acceptance.
+
+- Not a risk on this iteration, but worth recording: the session layer (OpenClawSession) still uses the older qwen_client pre-W2-harden path. Migrating OpenClaw to the hardened dispatcher is a distinct decision (carry-forward candidate).
+
+**Observed during migration (behaviour note):**
+
+Nemotron-mini:4b on `/api/chat` reliably emits empty `message.content` when the system-role prompt contains a long multi-sentence bias instruction. The same bias flattened into `/api/generate` (prior Nemoclaw path) worked. The fix was to compress the Nemoclaw `route()` bias from three sentences to one. The full explanation and probe evidence are in `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` under "Migration finding — long-bias-via-system quirk". This is a Nemotron quirk; future models may not require the compression. Worth re-checking if Nemotron is ever replaced or if a higher quantization is deployed.
+
+---
+
+## Alternatives considered
+
+- **Retain Nemoclaw classifier unchanged.** Rejected: `/api/chat` produces cleaner role-classify output on the same model (4/5 vs 1/5 on role classify task); G083 violation in the current handler is structural.
+
+- **Remove Nemoclaw daemon entirely.** Rejected: conflates two concerns. The classification layer is obsolete; the session layer is not. Removing the daemon would require reimplementing persistent OpenClaw sessions elsewhere, out of W3 scope.
+
+- **Replace daemon with thin routing function and delete the daemon (combined remove + replace).** Rejected for the same reason as "remove entirely" — the session-persistence property is not addressed.
+
+- **Defer to W4.** Rejected: W4 is integration + close, not architecture. W3 exists to land this decision so W4 can rely on the migrated router in its cross-model cascade.
+
+---
+
+## References
+
+- `src/aho/pipeline/dispatcher.py` — W2 hardened dispatcher (0.2.15 W2)
+- `artifacts/iterations/0.2.15/acceptance/W2.json` — W2 acceptance archive
+- `artifacts/iterations/0.2.15/audit/W2.json` — W2 audit pass (Gemini)
+- `artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.md` — Nemotron W0 re-vetting (classify probe passed)
+- `artifacts/iterations/0.2.15/ollama-tier1-fitness-0.2.15.md` — Ollama control-plane fitness (R11: chat template application)
+- `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` — W3 empirical comparison
+- `artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json` — raw probe output
+- `artifacts/adrs/0001-phase-a-externalization.md` — prior aho-internal ADR (for series convention)
+- `artifacts/harness/base.md` — Pillar 4 text, G083 text
+
+---
+
+*0002 is the second aho-internal project ADR (separate from the `ahomw-ADR-NNN` universal methodology series, whose highest published member is ADR-045). Number chosen by enumerating `artifacts/adrs/` and selecting the next available in the aho-internal series.*
+```
+
 ### ADR: ahomw-ADR-044.md (ahomw-ADR-044.md)
 ```markdown
 # ADR-044: Four-Phase Question-Driven Iteration Cadence
@@ -1236,11 +1384,9 @@ ADR-045 does not modify ADR-044. It refines the scope contract semantics within 
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration.** Methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
-
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.14** | **Status: Council Wiring Verification**
+**Phase 0** · **Iteration 0.2.15** · **Status: Tier 1 Partial Install Validation**
 
 ```mermaid
 graph BT
@@ -1252,7 +1398,42 @@ graph BT
     classDef prong fill:#161B22,stroke:#4ADE80,color:#4ADE80
 ```
 
-### The Eleven Pillars of AHO
+aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product. The executing model (Claude, Gemini, Qwen, Llama) is the engine. The harness ships working software without supervision.
+
+---
+
+## Quick start
+
+```fish
+git clone https://github.com/soc-foundry/aho
+cd aho
+./install.fish
+aho doctor
+```
+
+Requires: Arch-family Linux, Python 3.11+, fish shell, Ollama, 8GB+ VRAM for Tier 1 council.
+
+---
+
+## Cascade
+
+Five-stage pipeline. Each stage a distinct role. Handoffs validated.
+
+```
+Document → Indexer-in → Producer → Auditor → Indexer-out → Assessor → Output
+                              │           │
+                              ▼           ▼
+                         deltas      delta-validations
+                              │           │
+                              └─► staging ◄┘
+```
+
+Producer drafts. Indexers propose deltas. Auditor validates. Assessor meta-assesses.
+Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
+
+---
+
+## The Eleven Pillars of AHO
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -1268,96 +1449,176 @@ graph BT
 
 ---
 
-## What aho Does
+## Capabilities
 
-aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
+**Artifact loop.** Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word-count enforcement and 3-retry escalation.
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
-- **`/ws` Streaming** — Telegram commands (`/ws status`, `/ws pause`, `/ws proceed`, `/ws last`) for real-time workstream monitoring and agent pause/proceed control from phone. Auto-push notifications on workstream completion.
-- **Install Surface Architecture** — Three-persona model (pipeline builder, framework host, impromptu assistant). `aho-run` spec'd as the persona 3 entry point for pwd-scoped one-shot work against arbitrary files. Persona 3 discovery in 0.2.9 confirmed the gap exists; install-surface-architecture.md is the scope contract for 0.2.10–0.2.13 implementation.
+**Pre-flight / post-flight gates.** Environment validation before launch, quality gates after execution. Bundle completeness enforced.
+
+**Cascade orchestrator.** 5-stage pipeline (`src/aho/pipeline/`) with trace events, per-stage artifacts, cross-stage delta propagation. Dispatcher supports Ollama `/api/chat` with model-family stop tokens and `num_ctx` up to 32K on 8GB VRAM.
+
+**Pattern C execution.** Claude Code drafts, Gemini CLI audits, human signs. State machine: `in_progress → pending_audit → audit_complete → workstream_complete`. Audit archives are versioned, overwrites forbidden.
+
+**Gotcha registry.** 83+ indexed failure modes with mitigations, queried at iteration start.
+
+**Secrets architecture.** age encryption + OS keyring + fernet bulk storage. No keys, passphrases, or secret material in the repo.
+
+**Multi-agent orchestration.** Qwen for general work, Llama 3.2 for triage, GLM and Nemotron re-test in 0.2.15, OpenClaw as file-bridge wrapper, Nemoclaw as dispatcher.
+
+**Telegram `/ws` streaming.** `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`. Auto-push on workstream completion.
+
+**Install surface.** Three-persona model (pipeline builder, framework host, impromptu assistant). `aho run "task"` for persona 3 pwd-scoped work.
+
+**Observability.** otelcol-contrib + Jaeger as systemd user services. Spans in dispatcher, openclaw, nemoclaw, telegram.
 
 ---
 
-## Canonical Folder Layout (0.1.13+)
+## Folder layout
 
 ```
 aho/
 ├── src/aho/                    # Python package (src-layout)
+│   └── pipeline/               # Cascade: schemas, dispatcher, orchestrator
 ├── bin/                        # CLI entry points and tool wrappers
-├── artifacts/                  # Project-specific artifacts (from docs/, scripts/, etc.)
-│   ├── harness/                # Universal and project-specific harnesses
+├── artifacts/
+│   ├── harness/                # Pillars, ADRs, Pattern C protocol
 │   ├── adrs/                   # Architecture Decision Records
-│   ├── iterations/             # Per-iteration outputs (Design, Plan, Build Log)
+│   ├── iterations/             # Per-iteration design, plan, build, report, bundle
 │   ├── phase-charters/         # Phase objective contracts
 │   ├── roadmap/                # Strategic planning
-│   ├── scripts/                # Utility and instrumentation scripts
-│   ├── templates/              # Scaffolding templates
+│   ├── scripts/                # Utility and instrumentation
+│   ├── templates/              # Scaffolding
 │   ├── prompts/                # LLM generation templates
 │   └── tests/                  # Verification suite
 ├── data/                       # Registries, event log, ChromaDB
-├── app/                        # Consumer application mount point (Phase 1+)
-└── pipeline/                   # Processing pipeline mount point (Phase 1+)
+├── app/                        # Consumer application mount (Phase 1+)
+└── pipeline/                   # Processing pipeline mount (Phase 1+)
 ```
+
+Canonical since 0.1.13. Path-agnostic via `iao_paths.find_project_root()` and `.aho.json` sentinel.
 
 ---
 
-## Iteration Roadmap
+## State machine
+
+Every workstream flows through four states. Claude emits three events. Gemini emits one. Checkpoint advances only after audit archive exists with pass or pass-with-findings.
+
+```
+  in_progress   ──►   pending_audit   ──►   audit_complete   ──►   workstream_complete
+  (Claude)           (Claude done)        (Gemini done)           (Claude emits)
+```
+
+No agent emits `workstream_complete` before `audit_complete` exists. Audit archive overwrites forbidden; re-audits create versioned files.
+
+---
+
+## Roadmap
 
 | Iteration | Theme | Status |
 |---|---|---|
 | 1 (0.1.x) | Build the harness | graduated 2026-04-11 |
-| 2 (0.2.x) | Ship to soc-foundry + P3 | active |
-| 3 (0.3.x) | Alex demo + claw3d + polish | planned |
+| 2 (0.2.x) | Ship to soc-foundry + P3 | active (0.2.15) |
+| 3 (0.3.x) | Alex demo + polish | planned |
 | Phase 1 | Multi-project, multi-machine | planned |
 
-## Phase 0 Status
+**Phase 0 charter:** `artifacts/phase-charters/aho-phase-0.md`
 
-**Phase:** 0 — Clone-to-Deploy
-**Charter:** artifacts/phase-charters/aho-phase-0.md
+Phase 0 is complete when soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
+---
+
+## Recent iterations
+
+**0.2.15 — Tier 1 Partial Install Validation (in progress).** Wire and ship Tier 1 install package. 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) validated through Ollama on fixed dispatcher. Fair re-test of GLM and Nemotron after 0.2.13 W2.5 compromise findings measured on broken substrate. Ollama Tier 1 capability audit, dispatcher hardening, Nemoclaw decision ADR, cross-model cascade integration test. 5 workstreams.
+
+**0.2.14 — Council Wiring Verification.** 4 workstreams delivered (W0 setup, W1 vet+wire+smoke, W1.5 substrate repair, W2 close). W1 smoke test surfaced two dispatcher bugs: `num_ctx` default 4096 truncating input to ~4K tokens, and `/api/generate` without stop tokens causing chat template leakage. W1.5 repaired the dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens). Run-2 smoke test produced 14,725 chars of substantive cross-stage output vs run-1's 6,901 chars of template-leaked garbage. Council validated as real-but-thin: cascade mechanics work, Pillar 7 violation persists (Qwen-solo), auditor role-prompt bifurcation identified.
+
+**0.2.13 — Dispatch-Layer Repair.** First Pattern C iteration. W1 fixed GLM parser (`GLMParseError` replaces hardcoded `{score:8, ship}` fallback). W2 fixed Nemotron classifier (specific error types replace blanket `except Exception`). W2.5 hard gate: honest parsers exposed that GLM timed out 80% of inputs, Nemotron returned "feature" 80% regardless of content. Rescoped W3-W9. 4 workstreams delivered.
+
+**0.2.12 — Council Activation.** 20 workstreams. Gemini CLI primary executor. Council inventory audit. Five gotchas landed (G078-G083) including foundational G083: exception handlers returning hardcoded positive values, masking real failures. Council health measured at 35.3/100. Strategic rescope at W5.
+
+See [CHANGELOG.md](CHANGELOG.md) for full history back to 0.1.0-alpha.
+
+---
+
+## Core concepts
+
+**Harness.** The versioned set of files that constrain agent behavior. Pillars, ADRs, Pattern C protocol, gotcha registry, prompt conventions, test baseline. Changes at phase or iteration boundaries.
+
+**Cascade.** Five role-bound stages that produce and validate analytical artifacts. Handoffs are traced events. Deltas proposed by Indexers validated by Auditor and Assessor.
+
+**Pattern C.** Execution model where a cloud orchestrator drafts, a second cloud orchestrator audits, and a human signs. Separates generation from evaluation at the orchestrator boundary. Introduced in 0.2.13.
+
+**Council.** The set of local LLMs available to the harness. Members have distinct roles. Pillar 7 requires drafter ≠ reviewer; council composition enables this.
+
+**Gotcha registry.** Structured record of failure modes with mitigations. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+
+**Three personas.** Persona 1 (pipeline builder) runs full iterations against known projects. Persona 2 (framework host) imports aho into another repo. Persona 3 (impromptu assistant) runs pwd-scoped one-shot work via `aho run`.
 
 ---
 
 ## Installation
 
 ```fish
+# 1. Clone
+git clone https://github.com/soc-foundry/aho ~/dev/projects/aho
 cd ~/dev/projects/aho
-pip install -e . --break-system-packages
+
+# 2. Install (idempotent; 9-step orchestrator)
+./install.fish
+
+# 3. Verify
 aho doctor
+aho doctor --deep    # includes Flutter and dart checks
+aho components check # per-kind presence verification
 ```
 
-**Requirements:** Python 3.11+, Ollama with qwen3.5:9b, fish shell (Linux).
+**Requirements:**
+
+- Arch Linux family (CachyOS tested)
+- Python 3.11+ (`pip install -e . --break-system-packages`)
+- fish shell (primary)
+- Ollama (installed via upstream script, not pacman)
+- 8GB+ VRAM for Tier 1 council (Qwen 3.5:9B + Llama 3.2:3B + GLM + Nemotron)
+- systemd user services (linger enabled)
+- Telegram bot token (optional, for `/ws` streaming)
+- Brave Search API token (optional, for search tools)
+
+**Tier 1 install** pulls four chat LLMs and one embedding model. Tier 2 and Tier 3 (Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo) land with 16GB+ machines; see 0.2.15 carry-forwards.
 
 ---
 
-## Iteration Narrative (0.2.12–0.2.14)
+## Configuration
 
-### 0.2.12 — Council Activation (gemini-cli primary)
+**Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
 
-20 workstreams. Gemini CLI took the executor lead for the first time. The iteration audited every declared council member (Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, MCP fleet), built visibility infrastructure (`aho council status`, lego office visualization), and established the delegation/dispatch design. Five gotchas landed (G078–G083), including the foundational G083: exception handlers that return hardcoded positive values, masking real failures. 35 definitive G083 sites identified, 117 ambiguous. Council health measured at 35.3/100. Strategic rescope at W5 after substrate findings revealed that model output quality was the binding constraint — not dispatch architecture.
+**MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. 9 MCP servers smoke-tested via `bin/aho-mcp smoke`.
 
-### 0.2.13 — Dispatch-Layer Repair (Pattern C trial)
+**Secrets** via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
 
-First iteration under Pattern C: Claude Code drafts, Gemini CLI audits, Kyle signs. 11 workstreams planned, 4 delivered, 7 skipped per rescope.
+**Per-machine systemd user services:** openclaw, nemoclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard.
 
-W1 fixed the GLM parser — `GLMParseError` replaced the hardcoded `{score: 8, recommendation: ship}` fallback that had been lying about evaluation quality. W2 fixed the Nemotron classifier — `NemotronParseError` and `NemotronConnectionError` replaced blanket `except Exception` with specific error types. Both parsers now fail honestly instead of returning manufactured success.
+---
 
-W2.5 was the hard gate. With honest parsers in place, the models were tested: GLM-4.6V-Flash-9B at Q4_K_M timed out 80% of inputs at 180s and produced wrong-schema JSON the other 20%. Nemotron-mini:4b returned "feature" 80% of the time regardless of input. The parsers are honest. The models cannot produce usable signal through honest parsers. W3–W9 were skipped — fixing exception handlers around non-functional models was not a productive use of the iteration.
+## Related work
 
-### Where we are
+**[karpathy/llm-council](https://github.com/karpathy/llm-council).** Conceptual reference for multi-LLM cross-review pattern. Three-stage architecture (first opinions → review → chairman) differs from aho's five-stage role-bound cascade. OpenRouter cloud APIs vs aho's local Ollama inference. Karpathy's description: "99% vibe coded as a fun Saturday hack." Value is conceptual, not implementation.
 
-The council as a wired system has never been verified end-to-end. Two iterations of parser fixes and individual model invocations. Zero iterations of "Producer → Indexer → Auditor → Indexer → Assessor cascade actually runs." 9 of 17 council members claimed-operational, 6 unknown, 2 substrate-compromised. No agent-to-agent handoff in cascade architecture has ever been exercised.
+**[ruvnet/ruflo](https://github.com/ruvnet/ruflo).** Claude Code orchestration platform with swarm coordination, WASM policy engine, plugin system. Much larger scope than aho; different architectural premises (swarm-per-task vs role-bound cascade, dynamic agent spawning vs fixed council composition). Structural reference for OSS project organization.
 
-### 0.2.14 — Council Wiring Verification (current)
+aho's focus is narrower than either: harness-governed iterations with durable state transitions, honest substrate measurement, and supervised-free software delivery. Local-first, 8-24GB VRAM tier, Arch Linux family, fish shell.
 
-0.2.14 verifies wiring. Every declared council member gets invoked (W1 vetting). The 5-stage cascade orchestrator gets built and run end-to-end against the NoSQL manual (201-page test document). Sign-off package presented to Kyle. No measurement of model quality, no architecture decisions, no matrix testing, no dashboard — those are 0.2.15+ after wiring is signed off.
+---
+
+## Status
+
+**Phase 0 active.** Second-machine clone target: ThinkStation P3 (tsP3-cos). Third-machine (A8cos) reframed as orchestration/daily-driver after integrated GPU constraint. Luke's machine (24GB) is candidate Tier 3 clone for 0.2.17.
+
+**Council:** Qwen 3.5:9B operational. Llama 3.2:3B integration in 0.2.15 W0. GLM-4.6V-Flash-9B and Nemotron-mini:4b substrate-compromise re-test in 0.2.15 W0. Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo planned for 16GB+ machines.
+
+**Testing:** 302 passing, 12-13 known baseline failures (daemon-dependent), 0 new regressions across recent iterations.
+
+**Gotcha registry:** 83+ entries.
 
 ---
 
@@ -1367,9 +1628,9 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.14 — aho.run — Phase 0 — April 2026*
+*aho v0.2.15 · aho.run · Phase 0 · April 2026*
 
-*README last reviewed: 2026-04-13 by 0.2.14 W0*
+*README last reviewed: 2026-04-13 by 0.2.15 W0 work session*
 ```
 
 ## §8. CHANGELOG
@@ -1709,9 +1970,9 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — aho 0.2.14
+# CLAUDE.md — aho 0.2.15
 
-You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.15 under Pattern C (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -1741,15 +2002,19 @@ You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). 
 
 Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Numbers honest to substance, not regex. "Clean close," "landed beautifully," "all green" are banned (G081).
 
-## Pattern C Role — Primary Drafter (Modified for 0.2.14)
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1). Acceptance checks must include raw-response inspection, not just parsed-structure validity.
+
+**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions.
+
+## Pattern C Role — Primary Drafter (Modified for 0.2.15)
 
 For each workstream N:
-1. Emit `workstream_start` at workstream begin (**REQUIRED — 0.2.13 fired zero**).
-2. Execute scope per `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`.
-3. Write `artifacts/iterations/0.2.14/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.15** (0.2.14 W0 lesson — firing pre-env-set caused null iteration logging).
+2. Execute scope per `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`.
+3. Write `artifacts/iterations/0.2.15/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 4. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
 5. Stop. Gemini audits.
-6. After Gemini writes `artifacts/iterations/0.2.14/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
+6. After Gemini writes `artifacts/iterations/0.2.15/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
 7. If audit is `"fail"`, correct and rewrite the acceptance archive. Do not advance.
 
 ## State Machine (authoritative)
@@ -1772,40 +2037,57 @@ For each workstream N:
 - `baseline_regression_check()` is the backstop, not regex counts (G079)
 - No `except Exception` blocks in new code
 
-## Current Iteration: 0.2.14
+## Cross-Project Contamination Vigilance (new for 0.2.15)
 
-**Theme:** Council wiring verification + cascade smoke test.
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14: kjtcom bundle version label (v10.66) bled into aho W2 prompt; "10 IAO Pillars" proposed instead of "11 aho Pillars" in 0.2.15 design drafting.
+
+When working with version labels, ADR numbers, pillar lists, bundle sections, or harness conventions:
+- Verify against aho canonical references (`artifacts/harness/base.md`, `README.md`, ADR index, this file) before use
+- Do not fabricate version numbers or ADR numbers to fill prompts — look them up
+- If memory suggests a structural convention, confirm it's aho-native before embedding it in artifacts
+- "10 IAO Pillars" is a kjtcom construct. aho has 11 pillars (verbatim above).
+
+## Current Iteration: 0.2.15
+
+**Theme:** Tier 1 Partial Install Validation & Ship.
 **Executor role:** You draft. Gemini audits. Kyle signs.
-**Success:** Council exists as verifiable wired system. Sign-off on member operational status. NoSQL manual smoke test executes 5-stage cascade end-to-end.
-**Workstreams:** 3 (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
+**Success:** Tier 1 install.fish is shippable. All 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) wired through Ollama on fixed dispatcher, vetted with fixed-dispatcher evidence. Dispatcher hardened for multi-model use. Nemoclaw decision evidence-based (ADR published). Cross-model cascade proven.
+**Workstreams:** 5 (W0 setup + roster re-vet, W1 Ollama capability audit, W2 dispatcher hardening, W3 Nemoclaw + ADR, W4 integration + close).
+
+**Hard gate blocker for iteration close:** All 4 LLMs wired through Ollama, all 4 vetted with fixed-dispatcher evidence, cross-model cascade test completes successfully. No shipping without all 4 wired.
 
 ## Reference Reading (consult at diligence)
 
-- `artifacts/iterations/0.2.14/aho-design-0.2.14.md`
-- `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`
+- `artifacts/iterations/0.2.15/aho-design-0.2.15.md`
+- `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0
+- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0, raw-response-ground-truth rule added at 0.2.14 close
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/council-models-0.2.14.md` — model docs review
-- `artifacts/iterations/0.2.14/council-inventory.md` — W1 vetting target
+- `artifacts/iterations/0.2.14/retrospective-0.2.14.md` — substrate findings, auditor bifurcation, carry-forwards
+- `artifacts/iterations/0.2.14/carry-forwards.md` — what 0.2.15 inherits
+- `artifacts/iterations/0.2.14/kyle-notes-0.2.15-planning.md` — fleet topology, tiered install, cross-project contamination
 
-## Findings Carried Forward
+## Findings Carried Forward from 0.2.14
 
-- Do not grow `test-baseline.json` to paper over breakage. Additions require justification and Kyle sign-off.
-- Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity — this file is authoritative going forward.
-- Acceptance criteria drift gets flagged in findings, not quietly redefined.
-- `emit_workstream_complete()` must only modify the named workstream's state in the checkpoint. Sibling corruption was the 0.2.13 side-effect bug — patched in 0.2.14 W0.
-- `workstream_start` must be emitted at workstream begin. 0.2.13 fired zero — 0.2.14 establishes the discipline.
+- **Dispatcher repaired** — `/api/chat` with messages array, `num_ctx=32768`, Qwen stop tokens. W1.5 verified. 0.2.15 extends to 4 LLMs.
+- **Cascade architecture works end-to-end** when dispatcher configured correctly. Producer → Indexer-in → Auditor → Indexer-out → Assessor with cross-stage handoff validated on 247K-char document.
+- **Pillar 7 violated throughout 0.2.14** (Qwen-solo across all 5 roles, only viable option per vetting). 0.2.15 attempts Pillar 7 restoration via cross-model assignment after GLM/Nemotron re-test.
+- **Auditor role-prompt bifurcation** — validations rubber-stamp, critique in `additional_findings`. Deferred to later iteration; 0.2.15 does not fix this.
+- **GLM and Nemotron substrate findings (0.2.13 W2.5)** were measured on broken dispatcher. 0.2.15 W0 re-tests both with clean-slate methodology. Original removal decisions are not final until re-test evidence lands.
+- **Do not grow `test-baseline.json` to paper over breakage.** Additions require justification and Kyle sign-off.
+- **`emit_workstream_complete()` side-effect root cause** unresolved from 0.2.14. Symptomatic fix applied. Investigate if recurs.
+- **Checkpoint corruption from `test_workstream_events.py`** — doesn't mock `find_project_root`. Caused checkpoint resets in 0.2.14 W1. Fix in 0.2.15 if time or carry.
+- **Gotcha registry location** — W0 couldn't find canonical file in 0.2.14. Locate or create in 0.2.15.
 ```
 
 ## §10. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — aho 0.2.13
+# GEMINI.md — aho 0.2.15
 
-You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. You audit. Kyle signs.
+You are Gemini CLI, auditor for aho 0.2.15 under Pattern C. Claude Code drafts. You audit. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -1833,21 +2115,24 @@ You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. 
 
 ## Operating Stance
 
-Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.12 trajectory (45 → 25 → 20min per workstream) is your baseline — bring the same skepticism auditing Claude.
+Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.14 audit trajectory (42 min W1, 25 min W1.5, 35 min W2) is your baseline — bring the same skepticism and budget discipline to 0.2.15.
+
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1 where Claude characterized stages as "honest empty" and "working mechanically" based on parsed JSON while raw responses leaked chat template tokens and ran hallucinated conversation turns). Before trusting any executor claim about output quality or substrate behavior, read the raw response field of relevant artifacts yourself.
 
 ## Pattern C Role — Auditor
 
 For each workstream N:
-1. Claude writes `artifacts/iterations/0.2.13/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+1. Claude writes `artifacts/iterations/0.2.15/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 2. Read it. Read `artifacts/harness/pattern-c-protocol.md` if unclear.
 3. Lightweight audit — **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
    - Spot-check 1-2 high-risk claims independently.
+   - **Raw artifact inspection** — if executor claims output quality, verify by reading raw response fields, not just parsed JSON.
    - Gotcha scan: G083, G078, G079, G081, G082 reintroduction?
    - Baseline check: if it grew, is each addition genuinely environmental, or a hidden failure?
    - Drift check: acceptance-criteria drift between plan and archive?
-4. Write `artifacts/iterations/0.2.13/audit/W{N}.json` with `audit_result` and detailed findings.
+4. Write `artifacts/iterations/0.2.15/audit/W{N}.json` with `audit_result` and detailed findings.
 5. **Stop. You do not advance the checkpoint. You do not emit `workstream_complete`.** Claude returns, reads your audit, and emits the terminal event.
 
 ## State Machine (authoritative)
@@ -1856,11 +2141,10 @@ For each workstream N:
 
 **Gemini emits:** `audit_complete` only.
 **Gemini does NOT emit:** `workstream_complete`, checkpoint advance, `current_workstream` bump.
-**W0 correction:** W0 audit closed with you advancing the checkpoint. That was a role crossing. Do not repeat it for W1+.
 
 ## Budget
 
-15-25 min per audit. >40min means you're re-executing — stop, write what you have, flag to Kyle.
+15-35 min per audit. Compound-scope workstreams (W0 with 4-model re-vet) may reach 45 min. >50 min means you're re-executing — stop, write what you have, flag to Kyle.
 
 ## Audit Archive Schema
 
@@ -1891,32 +2175,57 @@ For each workstream N:
 - Baseline growth without genuine justification
 - Schema drift from AgentInvolvement model
 - Protocol violation (Claude fires `workstream_complete` pre-audit)
+- Output quality claims made on parsed JSON only without raw response inspection
 
 ## Hard Rules
 
 - No git commits or pushes (Pillar 11)
-- Never `cat ~/.config/fish/config.fish` — secrets leak (your incident; established rule)
+- Never `cat ~/.config/fish/config.fish` — secrets leak (established rule)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22)
 - No reading secrets under any circumstance
 - Canonical resolvers only (G075, G082)
 
+## Cross-Project Contamination Vigilance
+
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14 W2 drafting: kjtcom bundle version label (v10.66) and "10 IAO Pillars" (kjtcom construct) bled into aho 0.2.15 design drafting. aho has 11 pillars (above). aho ADR numbers, bundle section specs, and structural conventions may differ from kjtcom's.
+
+When auditing artifacts, treat any structural or numerical claim (ADR number, pillar count, bundle section count, version label) as verifiable against aho canonicals — do not accept "looks right" without verification.
+
+## Current Iteration: 0.2.15
+
+**Theme:** Tier 1 Partial Install Validation & Ship.
+**Workstreams:** 5 (W0 setup + roster re-vet, W1 Ollama capability audit, W2 dispatcher hardening, W3 Nemoclaw + ADR, W4 integration + close).
+
+**Hard gate blocker for iteration close:** All 4 LLMs wired through Ollama, all 4 vetted with fixed-dispatcher evidence, cross-model cascade test completes successfully.
+
+**Specific audit focus for 0.2.15 workstreams:**
+- **W0:** GLM and Nemotron re-test methodology — are they genuinely retested on fixed dispatcher, or did executor recycle 0.2.13 W2.5 findings? Raw response inspection required to distinguish.
+- **W1:** Ollama capability audit — is each requirement probed with actual evidence, or are some marked "pass" without verification? The 8GB VRAM constraint is hot — LRU eviction claims in particular need live testing.
+- **W2:** Dispatcher hardening — stop tokens per model family must be verified against each model's actual tokenizer spec, not guessed. Unit tests must test actual HTTP payload structure.
+- **W3:** Nemoclaw re-vet + ADR — ADR number must not be fabricated; executor must read `artifacts/adrs/` index and use next actual available number. Dispatcher choice rationale must rest on measured evidence.
+- **W4:** Cross-model cascade — raw response inspection per stage. Assessor quality_score is self-assessment, not objective. Compare run artifacts to 0.2.14 W1.5 Qwen-solo baseline.
+
 ## Reference Reading (consult at diligence)
 
-- `artifacts/iterations/0.2.13/aho-design-0.2.13.md`
-- `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`
+- `artifacts/iterations/0.2.15/aho-design-0.2.15.md`
+- `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
 - `artifacts/harness/pattern-c-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- Gotcha registry
+- `artifacts/iterations/0.2.14/retrospective-0.2.14.md` — substrate findings, auditor bifurcation, lessons
+- `artifacts/iterations/0.2.14/smoke-test/run-2/` — W1.5 baseline for cross-model cascade comparison
+- Gotcha registry (locate canonical file; 0.2.14 W0 couldn't find it)
 
 ## Failure Modes to Avoid
 
 - Re-executing instead of auditing (budget blowout)
 - Rubber-stamping without spot-check (G083 in human form)
+- Accepting output quality claims without raw response inspection (0.2.14 W1 lesson)
 - Scope creep — asking Claude to fix things outside the workstream
 - Missing drift because the archive is well-formatted (substance over form)
-- Advancing the checkpoint yourself (W0 mistake — do not repeat)
+- Advancing the checkpoint yourself (0.2.13 W0 mistake)
+- Accepting fabricated ADR numbers, version labels, or pillar counts without canonical verification (cross-project contamination)
 ```
 
 ## §11. .aho.json
@@ -2435,7 +2744,7 @@ For each workstream N:
   "version": "0.2.14",
   "project_code": "ahomw",
   "files": {
-    ".aho-checkpoint.json": "c881409d22dce88b",
+    ".aho-checkpoint.json": "ec52f53a94772e87",
     ".aho.json": "04c93877ab61cebb",
     ".gitignore": "ddf6629d348fe182",
     ".mcp.json": "5e70df73f4713a20",
@@ -2446,14 +2755,15 @@ For each workstream N:
     ".pytest_cache/.gitignore": "803be75bef16fae5",
     ".pytest_cache/CACHEDIR.TAG": "83459a64cf189144",
     ".pytest_cache/README.md": "e1dae87d05c70e1f",
-    ".pytest_cache/v/cache/lastfailed": "b01184f698235376",
-    ".pytest_cache/v/cache/nodeids": "9b168e89b2b065f2",
+    ".pytest_cache/v/cache/lastfailed": "8bae93c83b61db2c",
+    ".pytest_cache/v/cache/nodeids": "1ce01040b1af1ac4",
     "CHANGELOG.md": "e1557770ceca91a2",
-    "CLAUDE.md": "0089aef027a2b711",
+    "CLAUDE.md": "c1822d84c65e614f",
     "COMPATIBILITY.md": "84cdc565a3273482",
-    "GEMINI.md": "54d92ad8d8cc8a4b",
-    "README.md": "a2a99ca79458ce30",
+    "GEMINI.md": "076cf4d103f9748a",
+    "README.md": "dad035a675c6e66f",
     "VERSION": "3927e6d6897f355e",
+    "aho-run-0.2.14.md": "1a2d3bdc0579d25e",
     "app/.gitignore": "2f6e4237a119428d",
     "app/.idea/libraries/Dart_SDK.xml": "5fb084420e84caac",
     "app/.idea/libraries/KotlinJavaRuntime.xml": "1b90dd3baf7b43aa",
@@ -2495,6 +2805,7 @@ For each workstream N:
     "app/web/index.html": "fe484de7da235f8a",
     "app/web/manifest.json": "89c7cd59d9e6fa81",
     "artifacts/adrs/0001-phase-a-externalization.md": "f6adb2d10d98bc24",
+    "artifacts/adrs/0002-nemoclaw-decision.md": "e78e952a32f35c10",
     "artifacts/adrs/ahomw-ADR-044.md": "60d88ce81616c64b",
     "artifacts/adrs/ahomw-ADR-045.md": "5dfd12f0c7a74c3d",
     "artifacts/council-models-0.2.14.md": "d75fcb031fb5b133",
@@ -2502,7 +2813,7 @@ For each workstream N:
     "artifacts/harness/aur-packages.txt": "9e93f0a5eac00c0c",
     "artifacts/harness/base.md": "d96eabb0a31f54d4",
     "artifacts/harness/canonical_artifacts.yaml": "38fc9f6372672bbf",
-    "artifacts/harness/components.yaml": "cf564981e0cd6285",
+    "artifacts/harness/components.yaml": "93540e9ef8a4f2ef",
     "artifacts/harness/dashboard-contract.md": "42fa529f82318d9f",
     "artifacts/harness/design-template.md": "92a0bd4b96a0b131",
     "artifacts/harness/global-deployment.md": "3321d6d620b84b50",
@@ -2750,16 +3061,26 @@ For each workstream N:
     "artifacts/iterations/0.2.14/NoSQL_DataPipelines_Technical_Manual.pdf": "290ace47953ac912",
     "artifacts/iterations/0.2.14/acceptance/W0.json": "5dbfadc6db59c5e3",
     "artifacts/iterations/0.2.14/acceptance/W1.json": "a64e037c90bcf725",
+    "artifacts/iterations/0.2.14/acceptance/W1_5.json": "7bc1914455d46ad6",
+    "artifacts/iterations/0.2.14/acceptance/W2.json": "1075510332fa1b1b",
+    "artifacts/iterations/0.2.14/aho-bundle-0.2.14.md": "855428f9bdc8ae7f",
     "artifacts/iterations/0.2.14/aho-design-0.2.14.md": "0e3c402efa7b099c",
     "artifacts/iterations/0.2.14/aho-plan-0.2.14.md": "60fbdf378dc62b7b",
+    "artifacts/iterations/0.2.14/aho-run-0.2.14.md": "7d5ecb8c65dd8805",
     "artifacts/iterations/0.2.14/audit/W1.json": "60c651131516f017",
+    "artifacts/iterations/0.2.14/audit/W1_5.json": "aab7958807b53a1b",
+    "artifacts/iterations/0.2.14/audit/W2.json": "49a444ebb7fb9b4b",
+    "artifacts/iterations/0.2.14/carry-forwards.md": "ee5d085c48056fab",
     "artifacts/iterations/0.2.14/council-inventory.md": "e18cc1848b1b4a8d",
     "artifacts/iterations/0.2.14/council-vetting-results.json": "9b3fa1856def34cd",
     "artifacts/iterations/0.2.14/council-vetting-results.md": "f8c50ef1b5375e80",
     "artifacts/iterations/0.2.14/dispatch-decision.md": "ea98a5adf15aaef5",
+    "artifacts/iterations/0.2.14/kyle-notes-0.2.15-planning.md": "1e3c65045607f98e",
+    "artifacts/iterations/0.2.14/llama-3.2-3b-pulled.md": "52547b22004e226a",
     "artifacts/iterations/0.2.14/matrix-docs/nosql-manual-meta.md": "f03af4f6c20e4844",
     "artifacts/iterations/0.2.14/matrix-docs/nosql-manual.txt": "d6aea717e86cc6b5",
     "artifacts/iterations/0.2.14/matrix-docs/source/NoSQL_DataPipelines_Technical_Manual.pdf": "290ace47953ac912",
+    "artifacts/iterations/0.2.14/retrospective-0.2.14.md": "9cb6c00d4856d8b3",
     "artifacts/iterations/0.2.14/smoke-test/role-assignment.md": "66136724200cd0b4",
     "artifacts/iterations/0.2.14/smoke-test/run-1/assessor.json": "9dda37efafe0fc6a",
     "artifacts/iterations/0.2.14/smoke-test/run-1/auditor.json": "751576ac0d5b8a05",
@@ -2767,10 +3088,64 @@ For each workstream N:
     "artifacts/iterations/0.2.14/smoke-test/run-1/indexer_out.json": "8bf6b15e4d754a45",
     "artifacts/iterations/0.2.14/smoke-test/run-1/producer.json": "37c0e58f27dd544f",
     "artifacts/iterations/0.2.14/smoke-test/run-1/trace.json": "9794325e26dba592",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/assessor.json": "910eb7e80edf90d0",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/auditor.json": "b48602519f084b94",
     "artifacts/iterations/0.2.14/smoke-test/run-2/indexer_in.json": "2db76d9e965fe672",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/indexer_out.json": "900f090633d5d5ce",
     "artifacts/iterations/0.2.14/smoke-test/run-2/producer.json": "fcdbaafcf45161d9",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/trace.json": "81fd93b8794caaf1",
     "artifacts/iterations/0.2.14/smoke-test/smoke-test-summary.md": "e1fb1cc8a148fe4b",
     "artifacts/iterations/0.2.14/w0-root-cleanup-proposal.md": "dec14f071125d022",
+    "artifacts/iterations/0.2.14/wiring-signoff.md": "43dbc2bfbbee8269",
+    "artifacts/iterations/0.2.15/acceptance/W0.json": "3c6848e968d41142",
+    "artifacts/iterations/0.2.15/acceptance/W1.json": "0eae4ff206d09f43",
+    "artifacts/iterations/0.2.15/acceptance/W2.json": "6041c8d53bffda9b",
+    "artifacts/iterations/0.2.15/acceptance/W3.json": "34866a28b1db5e17",
+    "artifacts/iterations/0.2.15/aho-design-0.2.15.md": "dc544e6902de02d7",
+    "artifacts/iterations/0.2.15/aho-plan-0.2.15.md": "a37954855a5eda6b",
+    "artifacts/iterations/0.2.15/audit/W0.json": "3010422d3052bd2a",
+    "artifacts/iterations/0.2.15/audit/W1.json": "76ee73c297d7edce",
+    "artifacts/iterations/0.2.15/audit/W2.json": "c91fbc68720d9d64",
+    "artifacts/iterations/0.2.15/audit/W3.json": "7d59127e42c5f547",
+    "artifacts/iterations/0.2.15/carry-forwards-0.2.15.md": "7559ae4f13cd5eb4",
+    "artifacts/iterations/0.2.15/cascade/cascade-summary-0.2.15.md": "d3eadee18537031d",
+    "artifacts/iterations/0.2.15/cascade/nosql-manual-text.txt": "d6aea717e86cc6b5",
+    "artifacts/iterations/0.2.15/cascade/run_cross_model_cascade.py": "6b0e17704bb6dd28",
+    "artifacts/iterations/0.2.15/cascade/stage-1-indexer_in.json": "18147845dc7db472",
+    "artifacts/iterations/0.2.15/cascade/stage-2-producer.json": "bdfa7e342b6de56b",
+    "artifacts/iterations/0.2.15/cascade/stage-3-auditor.json": "11e3e31c3f81de18",
+    "artifacts/iterations/0.2.15/cascade/stage-4-indexer_out.json": "84a1d0bbffbc1227",
+    "artifacts/iterations/0.2.15/cascade/stage-5-assessor.json": "be22d63c41413d85",
+    "artifacts/iterations/0.2.15/cascade/stdout.log": "655a9d4555e92e00",
+    "artifacts/iterations/0.2.15/cascade/trace.json": "576a4ea42fe949af",
+    "artifacts/iterations/0.2.15/dispatcher-hardening-notes.md": "5406ea433c78878a",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md": "5bf68b5a44e4c4bb",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/probe.py": "b8dad336f92ddd15",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json": "026d9ea24710911c",
+    "artifacts/iterations/0.2.15/ollama-probes/R01-concurrent-model-awareness.json": "c3bde1976dbf47e2",
+    "artifacts/iterations/0.2.15/ollama-probes/R02-clean.json": "b6db28661145f237",
+    "artifacts/iterations/0.2.15/ollama-probes/R02-lru-eviction.json": "792c2504318b5e15",
+    "artifacts/iterations/0.2.15/ollama-probes/R03-explicit-unload.json": "9bf9efea055b744a",
+    "artifacts/iterations/0.2.15/ollama-probes/R04-request-queuing.json": "c3dcbf064816d9ce",
+    "artifacts/iterations/0.2.15/ollama-probes/R05-multi-model-routing.json": "3f0d0877ad428dd0",
+    "artifacts/iterations/0.2.15/ollama-probes/R06-context-preservation.json": "5b6d7a02c591e502",
+    "artifacts/iterations/0.2.15/ollama-probes/R07-error-reporting.json": "35611caa8e92136e",
+    "artifacts/iterations/0.2.15/ollama-probes/R08-timeout-hang.json": "1b2d1b44acfa06fb",
+    "artifacts/iterations/0.2.15/ollama-probes/R09-model-swap-latency.json": "e02b110813478e16",
+    "artifacts/iterations/0.2.15/ollama-probes/R10-stop-token-handling.json": "a2cdc20bd515efac",
+    "artifacts/iterations/0.2.15/ollama-probes/R11-chat-template.json": "5a7105758cff0d99",
+    "artifacts/iterations/0.2.15/ollama-probes/R11-diagnostic.json": "856352c0ac08c778",
+    "artifacts/iterations/0.2.15/ollama-probes/R12-embedding-coexistence.json": "3e031347214fc4b1",
+    "artifacts/iterations/0.2.15/ollama-probes/r2_clean_probe.py": "e614a41a08621c45",
+    "artifacts/iterations/0.2.15/ollama-tier1-fitness-0.2.15.md": "292dc5372eaef857",
+    "artifacts/iterations/0.2.15/retrospective-0.2.15.md": "c8f1da2ba28168f4",
+    "artifacts/iterations/0.2.15/sign-off-0.2.15.md": "f05ddb557a72c4b0",
+    "artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.json": "18f6ac11ef48e303",
+    "artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.md": "9e8e67b7f58261b9",
+    "artifacts/iterations/0.2.15/vetting/glm-4.6v-flash-9b-probe.json": "3c305d0296c06805",
+    "artifacts/iterations/0.2.15/vetting/llama-3.2-3b-probe.json": "3c31af9694b630d2",
+    "artifacts/iterations/0.2.15/vetting/nemotron-mini-4b-probe.json": "e75e25e559f35d52",
+    "artifacts/iterations/0.2.15/vetting/qwen-3.5-9b-probe.json": "ce09f0562fb125b7",
     "artifacts/iterations/0.2.2/aho-build-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-build-log-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-bundle-0.2.2.md": "5d47133beaca242e",
@@ -2779,7 +3154,7 @@ For each workstream N:
     "artifacts/iterations/0.2.2/aho-report-0.2.2.md": "ae555a24b9b5cf59",
     "artifacts/iterations/0.2.2/aho-run-0.2.2.md": "4e8f3602bfccd15d",
     "artifacts/iterations/0.2.3/aho-build-log-0.2.3.md": "4b70d5555b7011af",
-    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "2adfd94a73d01767",
+    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "cebeea2e377a1082",
     "artifacts/iterations/0.2.3/aho-design-0.2.3.md": "d13ae32a9ac21a89",
     "artifacts/iterations/0.2.3/aho-plan-0.2.3.md": "37c8202077386688",
     "artifacts/iterations/0.2.3/aho-report-0.2.3.md": "4f33de71c95bfb58",
@@ -2868,12 +3243,13 @@ For each workstream N:
     "artifacts/tests/test_build_log_stub.py": "7e378e6d8b743b4a",
     "artifacts/tests/test_bundle_sections.py": "fa478538426312a7",
     "artifacts/tests/test_components_manifest.py": "2e3b118ad33b3f04",
-    "artifacts/tests/test_conductor.py": "7ea9b719310979ac",
+    "artifacts/tests/test_conductor.py": "d54196a2eed8a4ca",
     "artifacts/tests/test_config_port.py": "4e2add3c1a68afb9",
     "artifacts/tests/test_daemon_healthy.py": "1a9a434b3fe387b3",
     "artifacts/tests/test_dashboard_aggregator.py": "88235ef75f7167e7",
     "artifacts/tests/test_density_check.py": "3b6800874cad39ce",
     "artifacts/tests/test_dispatcher_chat_api.py": "b81f99feb4aa300d",
+    "artifacts/tests/test_dispatcher_hardening.py": "3a097724226ee32e",
     "artifacts/tests/test_doctor.py": "ae125e01e0bf7c15",
     "artifacts/tests/test_doctor_new_checks.py": "f22a8bb359be0ba0",
     "artifacts/tests/test_emit_sibling_preservation.py": "9c132ee33d03eacf",
@@ -2889,7 +3265,7 @@ For each workstream N:
     "artifacts/tests/test_mcp_smoke.py": "70fd5f47efbdc870",
     "artifacts/tests/test_mcp_template.py": "4a2535b7b84467a9",
     "artifacts/tests/test_migrate_config_fish.py": "f6edb9488ba03d82",
-    "artifacts/tests/test_nemoclaw_real.py": "c008a5316a5755c2",
+    "artifacts/tests/test_nemoclaw_real.py": "d061cf1eaaf74bd4",
     "artifacts/tests/test_nemotron_classifier.py": "e335757faaa72398",
     "artifacts/tests/test_openclaw_real.py": "ab1f90ecee42bdba",
     "artifacts/tests/test_orchestrator_config.py": "d35a50f59da4c2c5",
@@ -2897,6 +3273,7 @@ For each workstream N:
     "artifacts/tests/test_paths.py": "84ebc1cd20bd8c2c",
     "artifacts/tests/test_pillars_trident.py": "257659ec8d89f848",
     "artifacts/tests/test_pipeline_integration.py": "7bc16f5b68e4ee8f",
+    "artifacts/tests/test_pipeline_router.py": "b37cbcd0c89b0e7e",
     "artifacts/tests/test_pipeline_schemas.py": "31f6d4b0530de648",
     "artifacts/tests/test_postflight_layouts.py": "bfbfd0865fe21e68",
     "artifacts/tests/test_postflight_residuals.py": "0bb04882d969127a",
@@ -2961,7 +3338,7 @@ For each workstream N:
     "data/known_hallucinations.json": "aa5f9768e8e84b53",
     "data/mcp_readiness.json": "935bbed5a3ba2b40",
     "docker-compose.otel.yml": "0b6166d7632f23d2",
-    "firebase-debug.log": "b81c8d6a2cce3bb0",
+    "firebase-debug.log": "0031278ab448d06f",
     "install.fish": "290b9afa195927b8",
     "pipeline/README.md": "e72e84ecf50b887a",
     "projects.json": "160afb32b90b60cb",
@@ -2976,7 +3353,7 @@ For each workstream N:
     "src/aho/acceptance.py": "a53baf306a8f82fa",
     "src/aho/agents/__init__.py": "3d24c1aff057bc16",
     "src/aho/agents/conductor.py": "04a58a43f832816c",
-    "src/aho/agents/nemoclaw.py": "68a4407f04fa48e3",
+    "src/aho/agents/nemoclaw.py": "ab2e35634dbf2533",
     "src/aho/agents/openclaw.py": "1675cda9a402ae8c",
     "src/aho/agents/roles/__init__.py": "ca34cb44fd66a6c2",
     "src/aho/agents/roles/assistant.py": "21ba8ee182a93fbf",
@@ -2991,7 +3368,7 @@ For each workstream N:
     "src/aho/artifacts/evaluator.py": "095c8555e9a6e30c",
     "src/aho/artifacts/glm_client.py": "b3d456a330bb070f",
     "src/aho/artifacts/loop.py": "df8183cf01daacb4",
-    "src/aho/artifacts/nemotron_client.py": "d22fc749f68a704c",
+    "src/aho/artifacts/nemotron_client.py": "a59762ab81b0d402",
     "src/aho/artifacts/qwen_client.py": "f6ce4efb91d5d2fb",
     "src/aho/artifacts/repetition_detector.py": "afb5044893a63ed9",
     "src/aho/artifacts/schemas.py": "1630926df2218e96",
@@ -3038,8 +3415,9 @@ For each workstream N:
     "src/aho/orchestrator_config.py": "f4a3986392470930",
     "src/aho/paths.py": "da359bb27ccac62c",
     "src/aho/pipeline/__init__.py": "a4b65338af829eca",
-    "src/aho/pipeline/dispatcher.py": "7b940a8cec7330ea",
+    "src/aho/pipeline/dispatcher.py": "37a2a1c79090e27c",
     "src/aho/pipeline/orchestrator.py": "30d3c42932c9d4e9",
+    "src/aho/pipeline/router.py": "3ec2e1a2a73cb1f1",
     "src/aho/pipeline/schemas.py": "410b52bb2198eaee",
     "src/aho/pipelines/__init__.py": "9b23bc32afe708da",
     "src/aho/pipelines/pattern.py": "87322ca897d0ee07",
@@ -3354,514 +3732,514 @@ _info "────────────────────────�
 ## §19. Event Log (tail 500)
 
 ```jsonl
-{"timestamp": "2026-04-13T14:31:25.986998+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:17.194359+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:26.117479+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:19.607655+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:31.777524+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:31.777801+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:31.933439+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:19.930225+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:31.933669+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G691", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:31.933737+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G691", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:32.053095+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:19.930455+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:37.790913+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:37.791013+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:37.958967+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:25.986998+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:38.119067+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:26.117479+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:38.250445+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:31.777524+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:44.023679+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:44.023647+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:44.185421+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:31.933669+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:46.866763+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16470s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:47.193609+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16470s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:47.195092+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16470s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:49.735009+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:49.735090+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:49.959464+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:38.119067+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:50.116711+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:38.250445+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:50.257859+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:44.023679+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:55.790403+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:55.790839+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:31:55.971910+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:46.866763+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:01.505813+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:01.505853+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:01.650312+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:49.735009+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:07.270996+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:07.271061+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:07.422910+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:50.116711+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:07.572247+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:50.257859+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:13.397822+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:13.397768+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:13.559430+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:31:55.971910+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:13.559735+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G733", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:13.559854+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G733", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:13.686309+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:01.505813+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:16.867816+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16500s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:17.194439+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16500s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:17.195935+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16500s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.254452+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.254866+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.402349+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:13.397768+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.554856+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:13.559430+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.555082+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G739", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.555152+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G739", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:19.689528+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:13.559735+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:25.350300+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:25.350615+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:25.497292+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:17.195935+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.265742+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.265820+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.479239+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:19.402349+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.628151+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:19.554856+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.628356+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G751", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.628421+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G751", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:31.754095+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:19.555082+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:37.289761+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:37.289827+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:37.458161+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:25.497292+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:37.458384+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G757", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:37.458450+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G757", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:37.590263+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:31.265742+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:43.309353+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:43.309470+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:43.498106+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:31.628421+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:46.868363+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16530s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:47.194849+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16530s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:47.196326+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16530s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:49.085342+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:49.085717+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:49.247640+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:37.458450+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:55.023827+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:55.023889+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:32:55.209120+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:43.309470+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:00.797223+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:00.797503+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:00.960630+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:47.194849+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:06.561429+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:06.561529+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:06.689924+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:49.085717+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:12.293550+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:12.293519+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:12.461552+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:32:55.023889+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:16.869641+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16560s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:17.195890+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16560s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:17.197195+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16560s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:18.004758+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:18.005181+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:18.148394+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:06.561529+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:23.740465+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:23.740680+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:23.886520+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:12.293519+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.038671+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:12.461552+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.038922+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G804", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.038985+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G804", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.176249+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:16.869641+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.309030+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:17.195890+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.309262+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G804", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.309333+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G804", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.442882+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:17.197195+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:24.591796+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:18.004758+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:30.264463+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:30.264560+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:30.412818+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:24.038922+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:35.996031+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:35.996448+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:36.150914+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:24.309030+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:36.151346+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G816", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:36.151498+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G816", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:36.292739+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:24.309262+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:41.998781+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:41.999127+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:42.123480+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:30.264560+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:46.870655+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16590s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:47.196688+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16590s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:47.197919+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16590s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:47.779713+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:47.779680+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:47.912520+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:36.151498+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:53.642944+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:53.642982+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:53.777421+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:41.999127+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:53.933404+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:42.123480+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:59.577618+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:59.577588+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:33:59.722047+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:47.197919+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.342529+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.342876+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.596050+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:47.912520+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.767960+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:53.642944+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.768276+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G845", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.768389+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G845", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:05.922782+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:53.642982+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:06.083401+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:53.777421+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:06.237942+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:33:53.933404+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:11.818918+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:11.819009+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:11.987616+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:05.342876+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:16.871906+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16620s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:17.197661+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16620s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:17.198860+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16620s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:17.808476+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:17.808577+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:17.968616+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:06.083401+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:18.131931+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:06.237942+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:18.272326+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:11.818918+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:18.394827+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:11.819009+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:24.019489+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:24.019905+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:24.166596+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:17.197661+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:24.166946+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G864", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:24.167071+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G864", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:24.312140+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:17.198860+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:30.068159+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:30.068591+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:30.257243+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:18.272326+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:30.437730+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:18.394827+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:30.566826+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:24.019489+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:36.470994+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:36.471207+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:36.617319+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:24.166946+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:42.381034+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:42.380992+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:42.546190+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:30.068159+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:46.872901+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16650s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:47.198627+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16650s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:47.199564+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16650s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:48.313460+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:48.313769+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:48.476082+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:36.471207+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:48.709926+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:36.617319+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:54.529126+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:54.529390+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:54.702248+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:42.546190+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:54.907873+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:46.872901+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:34:55.140080+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:47.198627+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:00.801053+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:00.801246+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:00.942255+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:48.313769+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:06.627899+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:06.628196+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:06.774845+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:54.529126+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:06.978995+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:54.529390+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:12.586301+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:12.586252+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:12.733677+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:34:55.140080+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:12.733921+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G912", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:12.733994+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G912", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:12.856875+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:00.801053+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:16.873755+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16680s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:17.199594+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16680s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:17.200563+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16680s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:18.590135+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:18.590204+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:18.769175+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:12.586252+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:18.918296+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:12.733677+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:18.918511+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G918", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:18.918574+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G918", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:19.037303+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:12.733921+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:24.790183+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:24.790145+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:24.926301+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:17.200563+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:25.088145+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:18.590135+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:30.809613+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:30.810039+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:31.011746+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:18.918296+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:31.011949+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G931", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:31.012016+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G931", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:31.172172+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:18.918511+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:36.846131+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:36.846180+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:37.010921+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:24.926301+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:37.157434+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:25.088145+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:37.305770+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:30.809613+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:43.024497+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:43.025138+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:43.183355+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:31.011949+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:46.874463+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16710s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:47.200642+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16710s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:47.201354+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16710s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:48.805068+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:48.805142+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:48.983625+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:37.157434+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:49.160783+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:37.305770+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:49.313278+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:43.024497+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.069970+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.070060+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.209203+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:46.874463+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.358951+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:47.200642+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.359168+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G955", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.359230+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G955", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:35:55.515647+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:47.201354+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:01.425994+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:01.426412+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:01.580768+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:49.313278+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.263737+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.263808+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.436400+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:55.209203+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.599416+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:55.358951+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.599632+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G967", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.599705+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G967", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:07.879264+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:35:55.359168+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:13.558652+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:13.558741+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:13.720403+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:01.580768+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:16.875473+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16740s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:17.201964+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16740s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:17.202714+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16740s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:19.314354+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:19.314465+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:19.452527+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:07.599705+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:25.065005+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:25.065084+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:25.196477+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:13.558741+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:25.343184+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:13.720403+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.058930+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.059467+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.210750+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:17.202714+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.210978+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G991", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.211058+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G991", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.349596+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:19.314354+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:31.493724+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:19.314465+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:37.045622+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:37.045883+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:37.212474+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:25.343184+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:37.372929+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:31.058930+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:43.063150+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:43.063244+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:43.259986+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:31.210978+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:46.876275+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16770s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:47.202988+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16770s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:47.203744+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16770s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:49.083944+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:49.084344+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:49.281467+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:37.212474+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:49.442872+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:37.372929+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:55.061246+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:55.061345+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:55.222442+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:43.259986+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:36:55.370447+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:46.876275+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.157562+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.157641+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.323820+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:49.083944+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.324070+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G021", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.324140+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G021", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.560646+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:49.084344+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.743775+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:49.281467+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:01.928488+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:36:49.442872+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:07.542259+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:07.542335+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:07.692007+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:01.157562+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:07.692331+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G027", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:07.692451+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G027", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:07.854804+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:01.157641+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:08.062096+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:01.323820+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:08.062382+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G028", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:08.062494+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G028", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:08.224278+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:01.324070+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:14.162287+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:14.162385+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:14.366537+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:07.692007+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:14.366967+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G034", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:14.367152+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G034", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:14.522393+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:07.692331+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:16.877070+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16800s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:17.203871+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16800s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:17.204717+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16800s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:20.507187+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:20.507593+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:20.633292+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:14.162385+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:26.300611+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:26.300575+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:26.460697+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:14.367152+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:32.170585+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:32.170627+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:32.337026+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:17.203871+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:32.337260+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G052", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:32.337331+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G052", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:32.490096+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:17.204717+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:38.289543+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:38.289611+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:38.432300+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:26.300575+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:38.610654+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:26.460697+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:38.734519+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:32.170585+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:44.534012+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:44.534650+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:44.667099+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:32.337260+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:46.877464+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16830s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:47.204394+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16830s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:47.205240+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16830s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:50.292855+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:50.292919+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:50.478996+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:38.610654+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:50.634530+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:38.734519+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:56.300803+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:56.300851+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:56.449928+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:44.667099+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:37:56.607029+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:46.877464+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:02.305382+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:02.305694+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:02.476989+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:50.292855+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:08.029293+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:08.029582+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:08.241727+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:50.634530+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.073150+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.073244+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.217824+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:56.449928+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.363236+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:37:56.607029+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.363718+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G094", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.363915+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G094", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.572420+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:02.305382+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:14.716570+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:02.305694+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:16.878015+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16860s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:17.205169+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16860s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:17.206185+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16860s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:20.311840+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:20.311904+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:20.496486+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:14.363236+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:20.496788+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G100", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:20.496909+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G100", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:20.631287+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:14.363718+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:26.284859+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:26.285207+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:26.423511+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:17.205169+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:26.423749+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G106", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:26.423818+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G106", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:26.599069+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:17.206185+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:32.303179+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:32.303264+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:32.439111+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:20.496909+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.024502+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.024593+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.169789+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:26.285207+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.320723+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:26.423511+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.320973+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G118", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.321058+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G118", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:38.463418+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:26.423749+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:44.132588+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:44.132548+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:44.290804+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:32.439111+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:44.429840+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:38.024502+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:44.590806+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:38.024593+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:46.878815+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16890s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:47.205580+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16890s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:47.206662+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16890s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:50.293889+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:50.294168+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:50.432776+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:44.132588+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:50.961282+00:00", "iteration": "0.2.14", "workstream_id": "W2", "event_type": "workstream_start", "source_agent": "claude-code", "target": "W2", "action": "start", "input_summary": "W2 close + sign-off package for 0.2.14", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:56.040793+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:56.040863+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:38:56.206755+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:44.590806+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:01.762164+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:01.762579+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:01.920247+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:47.206662+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:07.542955+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:07.543020+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:07.724955+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:50.432776+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:07.889527+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:50.961282+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": \"W2\", \"event_type\": \"workstream_start\", \"source_agent\": \"claude-code\", \"target\": \"W2\", \"action\": \"start\", \"inp", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:08.069074+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:38:56.040793+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:13.754863+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:13.754939+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:13.911782+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:01.762164+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:13.912011+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G153", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:13.912082+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G153", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:14.044984+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:01.762579+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:14.188312+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:01.920247+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:14.188521+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G154", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:14.188591+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G154", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:14.318645+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:07.542955+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:16.880133+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16920s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:17.206283+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16920s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:17.207551+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16920s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:19.911800+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:19.911880+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.058837+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:14.044984+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.203715+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.209567+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:14.188312+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.209757+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G160", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.209820+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G160", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.220208+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.225102+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.231270+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.337520+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:14.188521+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.514382+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=10 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:20.514588+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:21.891419+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:21.892182+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:21.893664+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:21.907790+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:21.908305+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:26.056191+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:26.056121+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:46.880393+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16950s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:47.206634+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16950s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:47.207850+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16950s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:56.056941+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:39:56.091647+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:20.337520+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:02.110430+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:02.110530+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:16.880924+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16980s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:17.207368+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16980s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:17.208430+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=16980s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:32.111256+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:32.146641+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:21.908305+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"telegram\", \"target\": \"api.telegram.org\", \"action\": \"send\", \"i", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:38.133186+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:38.133294+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:46.881583+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17010s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:47.207918+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17010s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:40:47.208909+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17010s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:08.134516+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:08.162952+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:39:56.091647+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:14.114475+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:14.114566+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:16.882191+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17040s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:17.208446+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17040s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:17.209316+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17040s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:43.596494+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:40:32.146641+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:43.721028+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:40:38.133186+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:46.882470+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17070s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:47.209045+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17070s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:47.209781+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17070s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:49.415866+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:41:49.416185+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:11.249179+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:11.274183+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:11.280130+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:11.286392+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:11.618388+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=10 variant=section_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:11.618775+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:12.980465+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:12.981810+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:12.983740+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:12.999749+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:13.000858+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:16.882928+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17100s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:17.209455+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17100s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:17.210081+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17100s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:19.416514+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:19.436165+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:41:16.882191+00:00\", \"iteration\": \"MISSING_ENV_VAR\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\",", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:25.414735+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:25.414920+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:46.883347+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17130s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:47.210036+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17130s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:47.210496+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17130s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:55.415477+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:42:55.437279+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:42:12.983740+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"qwen-client\", \"target\": \"qwen3.5:9b\", \"action\": \"generate\", \"", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:01.388730+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:01.388850+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:16.884238+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17160s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:17.210887+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17160s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:17.211196+00:00", "iteration": "MISSING_ENV_VAR", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=17160s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:31.389446+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:31.425037+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-13T14:42:19.436165+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "HTTPConnectionPool(host='localhost', port=11434): Read timed out. (read timeout=30)", "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:37.396526+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-13T14:43:37.396489+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:48.592994+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:41.958898+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:48.774682+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:42.130093+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:48.979016+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:42.295111+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.141545+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:42.490028+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.296032+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:42.656747+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.296241+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G289", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.296308+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G289", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.412693+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:42.656959+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.778134+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178324s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:49.812485+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178323s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.088616+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.088654+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.256493+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:48.979016+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.410804+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:49.141545+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.576109+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:49.296032+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.576316+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G295", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.576373+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G295", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:55.699423+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:49.296241+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:24:56.554841+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1920s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.313920+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.314334+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.455596+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:55.088654+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.603306+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:55.256493+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.769847+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:55.410804+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.944795+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:55.576109+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.945027+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G301", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:01.945094+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G301", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:02.100527+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:55.576316+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "Gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:02.100727+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G302", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:02.100797+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G302", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:02.224139+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:24:55.576373+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:07.860358+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:07.860613+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.049210+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:01.769847+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.202662+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:01.944795+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.202962+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G308", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.203076+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G308", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.342505+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:01.945027+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "Gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.342725+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G308", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.342783+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G308", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:08.493653+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:01.945094+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.109724+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.109804+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.285544+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:08.049210+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.436516+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:08.202662+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.436737+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G314", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.436801+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G314", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:14.581024+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:08.202962+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:19.778864+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178354s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:19.813150+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178353s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.313023+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.313434+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.466745+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:14.109804+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.679674+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:14.285544+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.898901+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:14.436516+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.899118+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G320", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:20.899185+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G320", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:21.092669+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:14.436737+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:26.555467+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1950s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:26.888241+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:26.888568+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.050586+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:20.313434+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.204969+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:20.466745+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.356148+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:20.679674+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.523809+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:20.898901+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.524015+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G327", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.524072+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G327", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:27.655821+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:20.899118+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:33.455039+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:33.455110+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:33.604901+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:26.888568+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.391683+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.391653+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.541002+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:27.356148+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.685928+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:27.523809+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.686157+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G339", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.686217+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G339", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:39.833213+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:27.524015+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:45.578829+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:45.578867+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:45.728870+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:33.604901+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:45.867666+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:39.391683+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:49.779761+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178384s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:49.814012+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178383s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:51.593285+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:51.593381+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:51.763717+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:39.686217+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:56.555982+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1980s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:57.390554+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:57.390652+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:57.573480+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:45.728870+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:25:57.712601+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:45.867666+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:03.372517+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:03.372786+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:03.525101+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:51.593285+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:03.670172+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:51.593381+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:09.334881+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:09.334957+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:09.477441+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:57.390554+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:09.619056+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:25:57.390652+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:15.326185+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:15.326268+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:15.474285+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:03.372517+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:19.780499+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178414s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:19.814756+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178413s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:21.122255+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:21.122133+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:21.271441+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:09.334957+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:21.446322+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:09.477441+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:21.598758+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:09.619056+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:26.556836+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2010s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.368818+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.368854+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.518154+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:19.780499+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.680047+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:19.814756+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.680403+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G387", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.680516+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G387", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.842850+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:21.122255+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.843156+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G387", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.843270+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G387", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:27.993370+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:21.122133+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:28.152042+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:21.271441+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:28.311468+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:21.446322+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:28.457116+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:21.598758+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:28.646767+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:26.556836+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:28.804667+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:27.368818+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:34.564802+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:34.565393+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:34.700490+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:27.843156+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:40.335283+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:40.335380+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:40.547294+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:28.152042+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:40.692103+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:28.311468+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:40.830970+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:28.457116+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:40.967498+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:28.646767+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:41.114022+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:28.804667+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:41.281664+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:34.564802+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:46.832078+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:46.832150+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:46.975220+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:40.335283+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:47.129708+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:40.335380+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:49.781410+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178444s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:49.815643+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178443s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:52.906487+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:52.906737+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:53.081122+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:41.114022+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:53.264406+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:41.281664+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:56.557799+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2040s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:58.933335+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:58.933445+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.103503+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:47.129708+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.239360+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:49.781410+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.239578+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G419", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.239637+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G419", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.403993+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:49.815643+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.404220+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G419", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.404293+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G419", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:26:59.542149+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:52.906487+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.188048+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.188443+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.349607+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:59.103503+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.481501+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:59.239360+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.481727+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G425", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.481790+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G425", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:05.618323+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:59.239578+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:11.332828+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:11.332798+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:11.480877+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:26:59.542149+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.104016+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.104276+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.310003+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:05.349607+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.463061+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:05.481501+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.463269+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G437", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.463330+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G437", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:17.591808+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:05.481727+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:19.782123+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178474s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:19.816314+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178473s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.342018+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.342056+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.490786+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:17.104276+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.654612+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:17.310003+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.809452+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:17.463061+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.809664+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G443", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.809731+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G443", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:23.930028+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:17.463269+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:26.558531+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2070s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:29.603904+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:29.604178+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:29.769105+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:23.342056+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:29.938221+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:23.490786+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:30.099683+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:23.654612+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:30.258999+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:23.809452+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:30.259311+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G450", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:30.259448+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G450", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:30.401040+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:23.809664+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.073060+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.073134+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.237521+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:29.604178+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.396006+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:29.769105+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.571738+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:29.938221+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.730596+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:30.099683+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.889298+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:30.258999+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.889513+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G456", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:36.889573+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G456", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:37.038377+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:30.259311+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:42.645535+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:42.645634+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:42.846573+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.237521+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.001801+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.396006+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.195293+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.571738+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.362013+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.730596+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.506495+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.889298+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.507020+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G463", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.507235+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G463", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.692894+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.889513+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "Gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.693115+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G463", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.693204+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G463", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:43.812845+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:36.889573+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.314693+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.314757+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.504264+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:43.362013+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.680534+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:43.506495+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.680762+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G469", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.680826+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G469", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.782934+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178504s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.817017+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178503s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:49.842616+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:43.507020+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.399588+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.399861+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.550948+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:49.314757+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.718997+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:49.504264+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.876789+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:49.680534+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.877048+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G475", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:55.877123+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G475", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:56.016294+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:49.680762+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:27:56.559457+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2100s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:01.598815+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:01.599238+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:01.749164+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:55.399861+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:01.944712+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:55.550948+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:02.093234+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:55.718997+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:02.263781+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:55.876789+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:02.264094+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G482", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:02.264203+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G482", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:02.399630+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:27:55.877048+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.129545+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.129613+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.285169+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:01.599238+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.423148+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:01.749164+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.580616+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:01.944712+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.753957+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:02.093234+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.941279+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:02.263781+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.941579+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G488", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:08.941689+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G488", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:09.067925+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:02.264094+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:14.687037+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:14.687139+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:14.872741+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:08.285169+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.051412+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:08.423148+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.250171+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:08.580616+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.423296+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:08.753957+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.570021+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:08.941279+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.570247+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G495", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.570310+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G495", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:15.692975+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:08.941579+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:19.783437+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178534s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:19.817779+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178533s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.322091+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.322181+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.484195+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:15.250171+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.660532+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:15.423296+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.804432+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:15.570021+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.804636+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G501", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.804696+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G501", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.987399+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:15.570247+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "Gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.987610+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G501", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:21.987674+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G501", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:22.131392+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:15.570310+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:26.560170+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2130s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:27.863982+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:27.864057+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:28.045814+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:21.804432+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:28.046038+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G508", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:28.046116+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G508", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:28.191708+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:21.804636+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:33.850625+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:33.850595+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:34.010183+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:22.131392+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:34.148954+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:26.560170+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:34.149163+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G514", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:34.149229+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G514", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:34.268675+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:27.863982+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:39.869222+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:39.869318+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:40.034753+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:28.191708+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:45.586479+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:45.586900+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:45.749516+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:34.010183+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:45.899901+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:34.148954+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:45.900222+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G525", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:45.900335+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G525", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:46.035290+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:34.149163+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:49.784348+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178564s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:49.818919+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178563s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:51.581350+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:51.581319+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:51.724898+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:45.586900+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:51.890603+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:45.749516+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:52.039409+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:45.899901+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:52.039645+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G532", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:52.039709+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G532", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:52.213826+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:45.900222+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:56.561079+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2160s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:57.821958+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:57.822254+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:57.974849+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:51.581319+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:58.131010+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:51.724898+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:58.283015+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:51.890603+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:58.466099+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:52.039409+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:58.466334+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G538", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:58.466391+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G538", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:28:58.617289+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:52.039645+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:04.337668+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:04.338077+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:04.515908+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:57.822254+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:04.692090+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:57.974849+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:04.859453+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:58.131010+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:05.022629+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:58.283015+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:05.184196+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:58.466099+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:05.184518+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G545", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:05.184627+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G545", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:05.312902+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:28:58.466334+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:10.847749+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:10.847823+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.006352+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:04.515908+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.177981+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:04.692090+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.342864+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:04.859453+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.500292+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:05.022629+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.675459+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:05.184196+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.675672+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G551", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.675731+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G551", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:11.795489+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:05.184518+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:17.342764+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:17.342734+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:17.498956+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:11.006352+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:17.663814+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:11.177981+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:17.808217+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:11.342864+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:17.990509+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:11.500292+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:18.160801+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:11.675459+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:18.161008+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G558", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:18.161068+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G558", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:18.289173+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:11.675672+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:19.785111+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178594s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:19.819583+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178593s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:23.827851+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:23.827890+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:24.011423+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:17.808217+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:24.203422+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:17.990509+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:24.350425+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:18.160801+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:24.350617+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G564", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:24.350675+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G564", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:24.490262+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:18.161008+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:26.561796+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2190s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.114589+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.114545+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.262173+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:23.827890+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.431061+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:24.011423+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.595517+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:24.203422+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.757554+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:24.350425+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.757859+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G570", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.757968+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G570", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:30.905461+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:24.350617+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:36.806387+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:36.806672+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:36.970722+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:30.114545+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.129713+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:30.262173+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.273947+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:30.431061+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.434425+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:30.595517+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.600524+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:30.757554+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.600738+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G577", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.600804+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G577", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:37.716164+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:30.757859+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:43.420129+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:43.420606+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:43.594639+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:36.970722+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:43.785919+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:37.129713+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:43.942188+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:37.273947+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:44.102536+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:37.434425+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:44.274396+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:37.600524+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:44.274734+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G584", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:44.274810+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G584", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:44.421760+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:37.600738+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:49.785865+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178624s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:49.820330+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178623s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.143953+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.143991+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.292816+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:43.942188+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.450910+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:44.102536+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.609871+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:44.274396+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.610103+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G590", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.610169+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G590", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:50.753259+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:44.274734+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:56.353358+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:56.353612+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:56.484076+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:50.143953+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:29:56.562599+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2220s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:02.114896+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:02.114972+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:02.278587+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:50.609871+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:02.278809+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G602", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:02.278878+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G602", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:02.406429+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:50.610103+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:08.101398+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:08.101463+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:08.270555+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:29:56.484076+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:13.844545+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:13.844962+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:14.045464+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:02.114972+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:19.599916+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:19.600321+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:19.745835+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:02.278878+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"harness_proposal\", \"source_agent\": \"harness-agent\", \"target\": \"registry\", \"action\": \"gotc", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:19.786103+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178654s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:19.820639+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178653s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:25.350046+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:25.350123+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:25.482609+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:13.844545+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:26.562887+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2250s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:31.115011+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:31.115304+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:31.334079+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:19.600321+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:31.514927+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:19.745835+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:31.655502+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:19.786103+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:31.820293+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:19.820639+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotch", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:37.364213+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:37.364452+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:37.509203+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:25.482609+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.078837+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.079112+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.234734+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:31.115304+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.396654+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:31.334079+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.564074+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:31.514927+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.725939+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:31.655502+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.928816+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:31.820293+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.929023+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G643", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:43.929089+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G643", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:44.073848+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:37.364213+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:44.222952+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:37.364452+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:49.786505+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178684s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:49.820984+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178683s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:49.913679+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:49.913649+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:50.096861+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:43.725939+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:50.261125+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:43.928816+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:50.261345+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G650", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:50.261404+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G650", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:50.401351+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:43.929023+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.093586+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.093557+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.238010+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:49.820984+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.238265+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G656", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.238333+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G656", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.392638+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:49.913679+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:30:56.563818+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2280s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:02.103005+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:02.103276+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:02.268756+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:50.401351+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:02.390570+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:56.093586+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:08.080302+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:08.080367+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:08.218653+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:56.238265+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:13.817741+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:13.818008+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:13.976790+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:30:56.563818+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:14.110502+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:02.103005+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:19.786751+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178714s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:19.821256+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=178713s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:19.854054+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:19.854090+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:20.013549+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:08.080367+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:20.198624+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:08.218653+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:20.358062+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:13.817741+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.134198+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.134165+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.293153+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:14.110502+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.451206+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:19.786751+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"telegram\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.564523+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=2310s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.616887+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:19.821256+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"openclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.617138+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G686", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.617201+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G686", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:26.752485+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:19.854054+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"event-log\", \"action\": \"watch_star", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:32.321586+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "event-log", "action": "watch_start", "input_summary": "path=/home/kthompson/.local/share/aho/events/aho_event_log.jsonl", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:32.322016+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "harness-watcher", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:32.462768+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:26.134165+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"harness-watcher\", \"target\": \"self\", \"action\": \"heartbeat\", \"", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:32.701897+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:26.293153+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:32.874333+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:26.451206+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:33.025305+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:26.564523+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"heartbeat\", \"source_agent\": \"nemoclaw\", \"target\": \"self\", \"action\": \"heartbeat\", \"input_s", "output_summary": "feature", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:33.190872+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:26.616887+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"llm_call\", \"source_agent\": \"nemotron-client\", \"target\": \"nemotron-mini:4b\", \"action\": \"cl", "output_summary": "gotcha", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:33.191289+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G693", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:33.191421+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "harness_proposal", "source_agent": "harness-agent", "target": "registry", "action": "gotcha_candidate", "input_summary": "", "output_summary": "new gotcha candidate: aho-G693", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-04-21T17:31:33.356489+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "{\"timestamp\": \"2026-04-21T17:31:26.617138+00:00\", \"iteration\": \"0.2.14\", \"workstream_id\": null, \"event_type\": \"agent_msg\", \"source_agent\": \"harness-agent\", \"target\": \"nemotron\", \"action\": \"propose_got", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
 ```
 
 ## §20. File Inventory (sha256_16)
 
 ```
-7f13522df91e9d4b  .aho-checkpoint.json
+abb59dd01c219b2d  .aho-checkpoint.json
 192f04240c85b061  .aho.json
-bbdd24727589e639  .git/COMMIT_EDITMSG
+81be480898fe0cc6  .git/COMMIT_EDITMSG
 28d25bf82af4c0e2  .git/HEAD
 d48a759563bf8481  .git/config
 85ab6c163d43a17e  .git/description
@@ -3879,11 +4257,11 @@ e9ddcaa4189fddd2  .git/hooks/prepare-commit-msg.sample
 a53d0741798b287c  .git/hooks/push-to-checkout.sample
 44ebfc923dc5466b  .git/hooks/sendemail-validate.sample
 8d5f2fa83e103cf0  .git/hooks/update.sample
-e0e69061aaf8e118  .git/index
+6d5d81bf2c9e0138  .git/index
 6671fe83b7a07c89  .git/info/exclude
-9204a8e069c7b80f  .git/logs/HEAD
-9204a8e069c7b80f  .git/logs/refs/heads/main
-411cdce6df9373c3  .git/logs/refs/remotes/origin/main
+ceef5aff31e41275  .git/logs/HEAD
+ceef5aff31e41275  .git/logs/refs/heads/main
+721290d20ec80ec8  .git/logs/refs/remotes/origin/main
 965fea76ce739251  .git/objects/00/0882f018f99fa622329b08dd343580e79ec25e
 de7cfd1d8c470b72  .git/objects/00/2a17f411e27e459d2f93bf4981b24acc618f22
 3484fce390a1754b  .git/objects/00/3adc6671674f8cafdc21cc80f579fef866d369
@@ -3894,12 +4272,14 @@ de7cfd1d8c470b72  .git/objects/00/2a17f411e27e459d2f93bf4981b24acc618f22
 7dbcb015871ea8ba  .git/objects/02/0cbe75c1e128993f75030b04411919346d3173
 ee541202d8cbf489  .git/objects/02/43df8c08a5c0c9d9a60b6d08bf0f1b7ec905cd
 d83b913e7b600613  .git/objects/02/7b8e62409d9b004fa924ebf030639d6d787c4c
+0da47a4bca5c58c9  .git/objects/02/817ce954db38aa70a1dd5faded8ae5603f5691
 ac08f884bd475afd  .git/objects/02/8d65bb9dddd2c43fec95a81fc3bf1959a0da84
 6b60a4888a5ecc30  .git/objects/02/911c4afbcc351d6cf5936a13f2b78b2086ecd9
 bca654d0e8b08aad  .git/objects/02/b776224f36b4a51b3446c061e2dad792f8877e
 784990fc35467c52  .git/objects/03/0ff0c7d13ce7a6d607c340ef9751f666668129
 82312636fa7008a0  .git/objects/03/40ff7a442adb519297e0c0d0870e5c53a07b38
 4ef5efcc31669ab5  .git/objects/03/635aad811202c102b51bb8fbe259d341cb1308
+97344bed69dfeea4  .git/objects/03/7a9467eb678760df8ff0faaba93bb3c9ecbe61
 09ce5815afd91a8a  .git/objects/03/9f8864fcedf1823a33561964782ce418368588
 ef12ef0fa87a8ae0  .git/objects/03/9ffe25e32f0ebb875eb4ca9faf27423c87769d
 4c4116bfba52a078  .git/objects/03/ba3415b9e697e34afc93c180f3835b3ae5f85e
@@ -3954,6 +4334,7 @@ cfaff21861a1139e  .git/objects/0c/78af4b14610ebd6fb3f41b68e0f0f01006f994
 0bc1317369a3988a  .git/objects/0c/db45ba8402b24b353fd0bffc88789db9d63ee5
 0531ff3db869b113  .git/objects/0d/16aa353ecbb0c350eb15937fbb5d8cecd6aecc
 24c86d56db8ed455  .git/objects/0d/2902135caece481a035652d88970c80e29cc7e
+114a574deaa555ad  .git/objects/0d/6cf8a9b0442108b127cec6b77366a7cc8588bf
 a92ccfa88c6ef9bb  .git/objects/0d/9581738dddde40917e01fe1450cfad7bc33882
 ea6c036731565ae2  .git/objects/0d/e23672c6427b857874d57690307764b318949f
 e077e0b3a450dafb  .git/objects/0e/72d87c72e56e1ff4f17b9b5a655accecf68f39
@@ -3969,8 +4350,11 @@ e4139535efe6cf40  .git/objects/0f/ba8b1087369048b536e4274819d1bf0c849eb6
 e246dec46800b00c  .git/objects/0f/ec7f9cc60ed0304a7c9f02829bfbb8e04f2eaf
 097029830c486fe7  .git/objects/10/00b0ef65f06dfd3c523448ab297a433963b807
 bc90db15ccbd67bd  .git/objects/10/231aefc0e91bc52e5debc5e7de0b6aad4d8734
+57a2131ac7d1017e  .git/objects/10/2646ba173e1355e486a38cc4e903455d9bc8fb
 b383fae954a2a941  .git/objects/10/517b5e068f9efeef1c90ede609b0c6b15e8c20
+59c8fa42c73ef40a  .git/objects/10/80972329bbf6a162e8d40f8a9ff94ac6a57fab
 9df1cc7fcd0900ff  .git/objects/10/a184feec5c453860addd766a59da7e968d86a9
+9a7a6656e7c42cf1  .git/objects/11/425e23226635132e74bc020d89bf2510447e4c
 0b1d1c3797e08404  .git/objects/11/5130ccf1f69c1dfb713c65227fb10ec9be13b4
 d7436d33bb9f92fb  .git/objects/11/808190d4b90b20fe074a2dad43af6c0c1427ee
 9d9588f6dd969f0f  .git/objects/11/88ba6279581b447beefc5e9a73d350a82500f3
@@ -4021,8 +4405,10 @@ dece2b20e830d41a  .git/objects/19/697f09c50c34615407a01b3fd90ca17127d64e
 1d72b7ff1a9bcac9  .git/objects/19/c8fd086442d139eea62e287d9f2ae33e0b908e
 37e0913eee004397  .git/objects/19/cf0eb36836e2f3d7d4ba3b5bde6218969b4063
 cd4c166ece16b79e  .git/objects/1a/2db721258703c5c466e59c9b61bccd1623730c
+944d7835af15eac1  .git/objects/1a/3b4eb3a30f4f802edfe8b620c4b106b4a0ced0
 89898192fb7943dd  .git/objects/1a/4b6c79b12cb234c57e5be20d1fbb3af303ef67
 7298da64239038e6  .git/objects/1a/4caab80628151e5109240cc277dc26193bc27d
+0f7069780a96e4f2  .git/objects/1a/6bfaa8b8753295b277fb9edc6bd2edd35f6d99
 55f5763c669ef335  .git/objects/1a/8cccfd9f2d9e5fce2e495f5cd5d911d944e633
 ec71cf32b27b5c00  .git/objects/1a/911310579fa88cefa06e183da1d33a11354a79
 559ffa8a8b1713b5  .git/objects/1a/c6f56a85d993daf96557562624876806041b51
@@ -4037,12 +4423,15 @@ dcc2a79e0a9420ae  .git/objects/1b/9300c4ca7e6c4039b2cd0f7b8b526000300ee7
 c769f8f3509abf93  .git/objects/1c/9f5efa3b9f3dae88df84adee442893180fa4c0
 e27d02bb5adc5ec6  .git/objects/1d/618c4333de2f74ef0d51021c4da61a24970b4d
 370b133bebcb2dfa  .git/objects/1e/43a8393870c0ac0c7175bb59acfc25af732ae4
+efda0bb414603a09  .git/objects/1e/672c7117be78b2299e65dfeb7df87dd064cc9f
 9fca4faf9dd0a42a  .git/objects/1e/a0f1eccad96b24f8e7d2f53a36f85daa3a447d
 19471aa9dca843d8  .git/objects/1e/f7011ed78b60282f60f4c0589c61a62a80e4dc
 8a52172ebdf95049  .git/objects/1f/bdb1e846745f4496f327fb2fd7e3bf31575f88
 7ce54dbd0cf7d08f  .git/objects/1f/f636465c3e12d52b0b1e53f96a3a148d99d287
 558786773cb783a2  .git/objects/20/0a82a5f3b8c86a2bbfd796752ba24819ea7cbd
+76905a25b3ec71ff  .git/objects/20/430e393907aeecfd287c01894f62eb1dd4df5b
 9a3ce128fcb6fcb0  .git/objects/20/47554d695114f434ef4f57b1c03098659507d3
+88cfad20a829043e  .git/objects/20/88a7f035ed631749889ace35cc9d6957a04555
 799f902446dcceab  .git/objects/20/a9afca793d194d419f641192ba2895f6baca26
 1065b1d1b4939c0a  .git/objects/20/b7f67ac12e8aa46a92e768657ed79752e221c4
 5fd70ec176d85832  .git/objects/20/c271eed2f0e19c212edb3f4bf67c1204b2c12c
@@ -4137,18 +4526,23 @@ fe431db52348687d  .git/objects/32/e8d83ad55e9f0e2372f678890561475463e27a
 d1bf1327bdbeb78f  .git/objects/33/7c499040db35cf7a2c5aa0bd598ffe27bb96d0
 1d1b1f329a4501fc  .git/objects/33/b1652d07df49728be5f7f54fad60c9c9d6672a
 538de4e90f853ac7  .git/objects/33/cd637e36749f13b6b15732bcf0cf072e101722
+d30b411f6212a07f  .git/objects/33/d6d5fe45dcd89a00dbffd8f9c9556bb2069805
 c8c6860f06a65480  .git/objects/33/ff4ddbed37982dbbe4243e929433bf643052e6
 38f6ccc14a6480f4  .git/objects/34/304b68aec7a9feda440ace3502543f80d38341
 311b6fd7d0411e41  .git/objects/34/44df963652ff0d254a20d9cd3680c55f0a106f
 3f495061ff5180c5  .git/objects/34/98ff63d68fe2ed670ad0d21767259640cc9857
 be955872272ec5fd  .git/objects/34/d4d31f50d2c851e93d998c24c975cec0f5a759
 a0195ddcb958345e  .git/objects/34/fc8d36330a7de72878833edf8888b6c8e9fcb2
+e555cee14a5c8dfb  .git/objects/35/ad03e90e96d0848ec023d9e6c7b94c6f9edb01
 75a96166b3c516aa  .git/objects/35/c4a122de402eed2f9e27e832663bfdcb0f4634
+006c2d62a21da1e5  .git/objects/36/0cf38c4b2548647fb1e153a5a94e67cc7f2fcc
 00fce1152f2e0538  .git/objects/36/151240eea86ab789685dd590e8b927cc76f4f1
 afe9f379c46cd9ba  .git/objects/36/ad98e5d89e8f60b382a5dfec371729f5c90415
 beece2f1c98ab857  .git/objects/36/b29ef0a8e84c18b409dabb3127c0d09bd1dac5
+52804d4ca7cb32c5  .git/objects/36/b4754b0644c175901a372c32b5f3d795a52c44
 763221f37004d5ee  .git/objects/36/b7488ca68fa5a86d74fa88f83bb53302080175
 0aa34071ae257461  .git/objects/36/d1963dec54addae0479d7f1519ada57fafce84
+2a2e2396ab669a4d  .git/objects/37/07a62299c5d784b0c6be2eab4dd0ec464fc203
 83059fbeb29a4b31  .git/objects/37/36a9674cecf5f353c7b4a651e0499bbb96b4f4
 32006959a1f86c91  .git/objects/37/3cad3f1bea3cd807d96cd8d6b0b8152efb78aa
 a159d12aa21a2341  .git/objects/37/688d8fdaf12a4f0451feaa7ae4ab4892ae773d
@@ -4174,6 +4568,8 @@ ee8c5122c81498e9  .git/objects/3c/10426eac56facc46eb1394c0ff69969a6698f3
 10164cc35b686706  .git/objects/3c/9d8e34fdf8e338518f2f78081285c144a80841
 cdb29e538e3782e6  .git/objects/3d/12a3bdfe3d53e249a9edc33177127e60690c87
 daa4f2e71dbdc526  .git/objects/3d/5484e3af5e8b3ef06eea0a5386f6251e125ff1
+53e687a6701fbc60  .git/objects/3d/7363a698cf57ce7282a07fdc98390cbf7dc297
+c11004b414cd814e  .git/objects/3d/7e0362d868c7ca41fabca6e0e868906771c38e
 29596fb888339edd  .git/objects/3d/dc7eaa9b0764835a05e4757944df3c8dab50c7
 426767f8c30f18ac  .git/objects/3d/fcef509da05de75acfb85fc6dbdbca19a5b83f
 a0f02df12f812b99  .git/objects/3e/2dc720048d34df0ce6547979a8b30e59a998ae
@@ -4201,6 +4597,7 @@ f0a741033dbe6ac7  .git/objects/42/940c7783d479f86af51c1eac0b824a1dd3d07a
 27acfa8c74996747  .git/objects/43/2ee5d3f6e74c625caaeeb84fbac8513aaa588a
 5bf2711395be4222  .git/objects/43/7d0a771e413181d5ebe2ebef215bff4c1719d8
 7534676bcb7bd0e2  .git/objects/43/dc507787ba0ef452eb44ecaf6700d1dca43af1
+b2a8abe0abd83d38  .git/objects/43/eecf50f17ad6e16c0b599bfc876f9ccb21946b
 786f3bedcd7a674f  .git/objects/43/f242e2ba7a65d4f4eb6b857eb93c3d0867fc14
 aa0097a324c51a37  .git/objects/44/0424bc075626789f6816a88af412cd918903de
 ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
@@ -4212,20 +4609,25 @@ d3112f115d51fe44  .git/objects/44/a0eed1e70d5a72b113e541d66dbec1cd306106
 df18492a64700f52  .git/objects/44/b60654db284338c1e5a1e3d98d29770829d684
 6688792d5c3c2fae  .git/objects/45/0f1549c411592dd06e3d94c4ab2feb9d0cde7f
 c58ba4a13d41d1fd  .git/objects/45/164e138d75cefcc1adcfec2817580288eea24f
+d7ac13ee8ad62a09  .git/objects/45/5d0f4e0d9e97dd7540cb1b4ac77c558f4508b4
 bd535ce2e6d287d4  .git/objects/45/6d0930866955ad55b4b6010aad904dfa501bff
 0b35e6db0e4136f6  .git/objects/45/8b182d99dcecf95f21291bacdd828148b32eb0
 4af8f9fb0dea6eb4  .git/objects/45/ce3b7ffd55bd0a1e1c93b9e8535b8db5b57480
 78a9acf3986c6d82  .git/objects/45/d10cd9f8fc582f2d4f9022a535230027c7da37
 db26dbee48ae5e2f  .git/objects/46/474db444f8670ee3b77304db58aba44b655184
 822f063373c4e1db  .git/objects/46/b6cf582a92fa27f3cf8ed82040d427b2e85888
+4744ef2884e40081  .git/objects/47/5b18358bd675406af167b34531bd2c665e3f97
 3c0ba0f13fa7aa72  .git/objects/47/b63030a8810464773ec904e4694c7fc136f7fd
 8cfe3f41c95a490b  .git/objects/48/1360e0f7ad29b85c04924a1ddeadd20d53d4b5
 4a1923be5f8e6cc9  .git/objects/48/a492c921ce20273bbd6b9f9626f0943ace5fed
 4be7ecf218af9586  .git/objects/48/c5e8820f652e19b7a2af44f94dda65a0dec643
 e8cb4831a5ebc90e  .git/objects/48/e100fafbe97c4f61f151167bfe34862dc6961d
+8ef747c05f54573f  .git/objects/49/01ebe47f357776a7c1450abbfeb43c453d6acb
+424660021432f98f  .git/objects/49/8db9536942ed5639b72669760b9d8e878d5b2a
 adcdd32123142709  .git/objects/49/a4722da86fa00ebf9a16017c8f387d9c004024
 99d6a3883d2598eb  .git/objects/49/c0a71e9cb4c090b4366226263d972b4c7349cb
 decd2fea1c5a1eb4  .git/objects/4a/2974561c5470858e84ae67a65260bef421d042
+9d3911be5be83fa9  .git/objects/4a/600c22526f4b5563d79a08b30bcf8bce6b517a
 26d0cdc73e836aee  .git/objects/4a/d9bef34ead4f0f04fa1bac7502d13de603226d
 b3e62e580929a4cd  .git/objects/4a/ff1192cca996eb917a2a6a7e5878f70b1f4319
 dbed168f8d7288aa  .git/objects/4b/37bafef8383bf8a51bbc6b361320d64358928d
@@ -4235,30 +4637,6 @@ b68513fdcdf0c0f6  .git/objects/4b/737766e0b06581114a9422e341ff5ce1ab9aab
 484553ec58e9d089  .git/objects/4c/175b3dc894e0e5822c93d3f4903d74b19a8e32
 ff44e172cc526c0d  .git/objects/4c/3cee72def582c08f916f8d0e43c7e133165a9a
 1ba467632fa8b040  .git/objects/4c/660191e57c49f65d45039119c1bc240f011908
-4cf10eef71f8847e  .git/objects/4c/70dc62594c41be335f9dc4b7b046b34f1910bf
-a02beb0d98526e45  .git/objects/4c/d0ecac0aa7bbcd861e61460d824ec5b98fb3f0
-e620fe6bd7a22940  .git/objects/4d/0cdd184398d3e2a65e40d84942d3329fbea7ca
-2fc58b7b35715d7f  .git/objects/4e/06d8f578f4f545341cfa6251fc612fce43a966
-51e4e1ed38a30512  .git/objects/4e/52c7fc5e0bbe39eff748f339bd375b4b786e28
-48e144333b3c8f0a  .git/objects/4e/a905d70515dff2ec48feedc8ffd60aae10ba53
-c5926c19260c999d  .git/objects/4e/c7df42c278a8d84c26690ecf6d301cea3aef14
-1f63e926d1dfb952  .git/objects/4e/cbc545aa237e42dcda819fb0cfb10def3f65f1
-c7d3fc18963dec42  .git/objects/4f/03124549b4ebef6ed3dac56e119ba15c61f92f
-9756dd3a148a61a8  .git/objects/4f/089a2b38ceb990829fecb82f7ebdb1f8897649
-f0d2c132c07f19fc  .git/objects/4f/4d22d7f5d339160075c33d30e89cd9814ee56e
-09e7a687ec462f97  .git/objects/4f/5f3eedc26676c2071b7c212a30f3e95444cc08
-ef822abcf37c07c6  .git/objects/4f/67c6df66d1d44a4308f4f5dc57dec824f1eecb
-ba4c738b838525fb  .git/objects/4f/7fda1ef89b7e59a0c4c9ad7558e08e0fa59257
-69b070ecb6c07e27  .git/objects/4f/892c013157670ea0a716f506153598180a3e7a
-8edbed4af5c18d5a  .git/objects/4f/9cd356bf34d5c980a2243903f86cfca66c84f0
-1dc40172cb9c0b63  .git/objects/4f/f791380824235c9c68e2f79329dd56b5a61337
-ac461aa9c233fb1c  .git/objects/50/26b607acf91618e08145fd12c4dc1a433111cd
-b7042745b1c7c53f  .git/objects/50/874bf2230c84bfe8e48b1956697f1edf64351a
-b17363dc905ba01e  .git/objects/50/91172c38ba55022840e9d6a59494e83846d369
-d75906235f96c8c7  .git/objects/50/ddcb809815131b0df4c879f002924fbc9c597c
-6e5b511cd7122516  .git/objects/51/75790e74d4b8a3eaff31ab03959b18136cf0d4
-ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
-40cf25c281877eb1  .git/objects/51/cc911e57d475b2a30528a8e98b2a2aa02b46db
 ... (truncated)
 ```
 
@@ -4267,16 +4645,16 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
 ```json
 {
   "python": "3.14.4",
-  "platform": "Linux-6.19.11-1-cachyos-x86_64-with-glibc2.43",
+  "platform": "Linux-7.0.0-1-cachyos-x86_64-with-glibc2.43",
   "node": "NZXTcos",
   "ollama": [
-    "NAME                                ID              SIZE      MODIFIED       ",
-    "llama3.2:3b                         a80c4f17acd5    2.0 GB    29 minutes ago    ",
-    "nomic-embed-text:latest             0a109f422b47    274 MB    43 hours ago      ",
-    "haervwe/GLM-4.6V-Flash-9B:latest    ad2e2e374c6b    8.0 GB    43 hours ago      ",
-    "nemotron-mini:4b                    ed76ab18784f    2.7 GB    43 hours ago      "
+    "NAME                                ID              SIZE      MODIFIED   ",
+    "llama3.2:3b                         a80c4f17acd5    2.0 GB    8 days ago    ",
+    "nomic-embed-text:latest             0a109f422b47    274 MB    9 days ago    ",
+    "haervwe/GLM-4.6V-Flash-9B:latest    ad2e2e374c6b    8.0 GB    9 days ago    ",
+    "qwen3.5:9b                          6488c96fa5fa    6.6 GB    9 days ago    "
   ],
-  "disk": "/dev/nvme0n1p2  912G  130G  736G  15% /"
+  "disk": "/dev/nvme1n1p2  912G  134G  733G  16% /"
 }
 ```
 
@@ -4290,10 +4668,10 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
 | Component | Kind | Status | Owner | Notes |
 |---|---|---|---|---|
 | openclaw | agent | active | soc-foundry | global daemon, systemd user service, Unix socket; activated 0.2.2 W1 |
-| nemoclaw | agent | active | soc-foundry | Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2 |
+| nemoclaw | agent | active | soc-foundry | Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2; classification layer migrated to pipeline.router in 0.2.15 W3 (ADR 0002), session layer retained |
 | telegram | external_service | active | soc-foundry | send-only bridge, systemd user service, age-encrypted secrets; activated 0.2.2 W3 |
 | qwen-client | llm | active | soc-foundry |  |
-| nemotron-client | llm | active | soc-foundry |  |
+| nemotron-client | llm | active | soc-foundry | deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window |
 | glm-client | llm | active | soc-foundry |  |
 | chromadb | external_service | active | soc-foundry |  |
 | ollama | external_service | active | soc-foundry |  |
@@ -4331,6 +4709,8 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
 | pipeline-validate | python_module | active | soc-foundry |  |
 | pipeline-registry | python_module | active | soc-foundry |  |
 | pipeline-pattern | python_module | active | soc-foundry |  |
+| pipeline-dispatcher | python_module | active | soc-foundry | Ollama /api/chat dispatcher; hardened for multi-model in 0.2.15 W2 (stop tokens, typed errors, retry, template leak detection) |
+| pipeline-router | python_module | active | soc-foundry | Classification routing over the hardened dispatcher; supersedes nemotron_client.classify (ADR 0002, 0.2.15 W3) |
 | pf-artifacts-present | python_module | active | soc-foundry |  |
 | pf-build-log-complete | python_module | active | soc-foundry |  |
 | pf-bundle-quality | python_module | active | soc-foundry |  |
@@ -4375,8 +4755,8 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
 | mcp-server-everything | mcp_server | active | soc-foundry | npm global, reference/test server, activated 0.2.3 W1, added to manifest 0.2.8 W7 |
 | component-manifest | python_module | active | soc-foundry | added 0.1.15 W1 |
 
-**Total components:** 85
-**Status breakdown:** 85 active
+**Total components:** 87
+**Status breakdown:** 87 active
 
 ## §24. Infrastructure
 
@@ -4402,32 +4782,21 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
 ### .aho-checkpoint.json
 ```json
 {
-  "iteration": "0.2.14",
+  "iteration": "0.2.15",
   "phase": 0,
   "run_type": "pattern-c-modified",
-  "current_workstream": "W2",
+  "current_workstream": "W4",
   "workstreams": {
     "W0": "workstream_complete",
     "W1": "workstream_complete",
-    "W1.5": "pending_audit",
-    "W_V3_TEST": "workstream_complete",
-    "W_V3_COMBO": "workstream_complete",
-    "W_V2_COMPAT": "workstream_complete",
-    "W_V1_COMPAT": "workstream_complete",
-    "W2": "in_progress",
-    "W3": "in_progress",
-    "W4": "workstream_complete",
-    "W5": "in_progress",
-    "W6": "in_progress",
-    "W_V2_TEST": "workstream_complete",
-    "W_V1_TEST": "workstream_complete",
-    "W_PARSE_TEST": "workstream_complete",
-    "W_V1_DEFAULT": "workstream_complete"
+    "W2": "workstream_complete",
+    "W3": "workstream_complete",
+    "W4": "in_progress"
   },
   "executor": "claude-code",
   "auditor": "gemini-cli",
-  "started_at": "2026-04-13T12:00:00Z",
-  "last_event": "W1.5_pending_audit",
+  "started_at": "2026-04-13T16:43:29Z",
+  "last_event": "W4_pending_audit",
   "status": "active",
   "iteration_status": "active",
   "proceed_awaited": false
@@ -4440,7 +4809,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
   "version": "0.2.14",
   "project_code": "ahomw",
   "files": {
-    ".aho-checkpoint.json": "c881409d22dce88b",
+    ".aho-checkpoint.json": "ec52f53a94772e87",
     ".aho.json": "04c93877ab61cebb",
     ".gitignore": "ddf6629d348fe182",
     ".mcp.json": "5e70df73f4713a20",
@@ -4451,14 +4820,15 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     ".pytest_cache/.gitignore": "803be75bef16fae5",
     ".pytest_cache/CACHEDIR.TAG": "83459a64cf189144",
     ".pytest_cache/README.md": "e1dae87d05c70e1f",
-    ".pytest_cache/v/cache/lastfailed": "b01184f698235376",
-    ".pytest_cache/v/cache/nodeids": "9b168e89b2b065f2",
+    ".pytest_cache/v/cache/lastfailed": "8bae93c83b61db2c",
+    ".pytest_cache/v/cache/nodeids": "1ce01040b1af1ac4",
     "CHANGELOG.md": "e1557770ceca91a2",
-    "CLAUDE.md": "0089aef027a2b711",
+    "CLAUDE.md": "c1822d84c65e614f",
     "COMPATIBILITY.md": "84cdc565a3273482",
-    "GEMINI.md": "54d92ad8d8cc8a4b",
-    "README.md": "a2a99ca79458ce30",
+    "GEMINI.md": "076cf4d103f9748a",
+    "README.md": "dad035a675c6e66f",
     "VERSION": "3927e6d6897f355e",
+    "aho-run-0.2.14.md": "1a2d3bdc0579d25e",
     "app/.gitignore": "2f6e4237a119428d",
     "app/.idea/libraries/Dart_SDK.xml": "5fb084420e84caac",
     "app/.idea/libraries/KotlinJavaRuntime.xml": "1b90dd3baf7b43aa",
@@ -4500,6 +4870,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "app/web/index.html": "fe484de7da235f8a",
     "app/web/manifest.json": "89c7cd59d9e6fa81",
     "artifacts/adrs/0001-phase-a-externalization.md": "f6adb2d10d98bc24",
+    "artifacts/adrs/0002-nemoclaw-decision.md": "e78e952a32f35c10",
     "artifacts/adrs/ahomw-ADR-044.md": "60d88ce81616c64b",
     "artifacts/adrs/ahomw-ADR-045.md": "5dfd12f0c7a74c3d",
     "artifacts/council-models-0.2.14.md": "d75fcb031fb5b133",
@@ -4507,7 +4878,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/harness/aur-packages.txt": "9e93f0a5eac00c0c",
     "artifacts/harness/base.md": "d96eabb0a31f54d4",
     "artifacts/harness/canonical_artifacts.yaml": "38fc9f6372672bbf",
-    "artifacts/harness/components.yaml": "cf564981e0cd6285",
+    "artifacts/harness/components.yaml": "93540e9ef8a4f2ef",
     "artifacts/harness/dashboard-contract.md": "42fa529f82318d9f",
     "artifacts/harness/design-template.md": "92a0bd4b96a0b131",
     "artifacts/harness/global-deployment.md": "3321d6d620b84b50",
@@ -4755,16 +5126,26 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/iterations/0.2.14/NoSQL_DataPipelines_Technical_Manual.pdf": "290ace47953ac912",
     "artifacts/iterations/0.2.14/acceptance/W0.json": "5dbfadc6db59c5e3",
     "artifacts/iterations/0.2.14/acceptance/W1.json": "a64e037c90bcf725",
+    "artifacts/iterations/0.2.14/acceptance/W1_5.json": "7bc1914455d46ad6",
+    "artifacts/iterations/0.2.14/acceptance/W2.json": "1075510332fa1b1b",
+    "artifacts/iterations/0.2.14/aho-bundle-0.2.14.md": "855428f9bdc8ae7f",
     "artifacts/iterations/0.2.14/aho-design-0.2.14.md": "0e3c402efa7b099c",
     "artifacts/iterations/0.2.14/aho-plan-0.2.14.md": "60fbdf378dc62b7b",
+    "artifacts/iterations/0.2.14/aho-run-0.2.14.md": "7d5ecb8c65dd8805",
     "artifacts/iterations/0.2.14/audit/W1.json": "60c651131516f017",
+    "artifacts/iterations/0.2.14/audit/W1_5.json": "aab7958807b53a1b",
+    "artifacts/iterations/0.2.14/audit/W2.json": "49a444ebb7fb9b4b",
+    "artifacts/iterations/0.2.14/carry-forwards.md": "ee5d085c48056fab",
     "artifacts/iterations/0.2.14/council-inventory.md": "e18cc1848b1b4a8d",
     "artifacts/iterations/0.2.14/council-vetting-results.json": "9b3fa1856def34cd",
     "artifacts/iterations/0.2.14/council-vetting-results.md": "f8c50ef1b5375e80",
     "artifacts/iterations/0.2.14/dispatch-decision.md": "ea98a5adf15aaef5",
+    "artifacts/iterations/0.2.14/kyle-notes-0.2.15-planning.md": "1e3c65045607f98e",
+    "artifacts/iterations/0.2.14/llama-3.2-3b-pulled.md": "52547b22004e226a",
     "artifacts/iterations/0.2.14/matrix-docs/nosql-manual-meta.md": "f03af4f6c20e4844",
     "artifacts/iterations/0.2.14/matrix-docs/nosql-manual.txt": "d6aea717e86cc6b5",
     "artifacts/iterations/0.2.14/matrix-docs/source/NoSQL_DataPipelines_Technical_Manual.pdf": "290ace47953ac912",
+    "artifacts/iterations/0.2.14/retrospective-0.2.14.md": "9cb6c00d4856d8b3",
     "artifacts/iterations/0.2.14/smoke-test/role-assignment.md": "66136724200cd0b4",
     "artifacts/iterations/0.2.14/smoke-test/run-1/assessor.json": "9dda37efafe0fc6a",
     "artifacts/iterations/0.2.14/smoke-test/run-1/auditor.json": "751576ac0d5b8a05",
@@ -4772,10 +5153,64 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/iterations/0.2.14/smoke-test/run-1/indexer_out.json": "8bf6b15e4d754a45",
     "artifacts/iterations/0.2.14/smoke-test/run-1/producer.json": "37c0e58f27dd544f",
     "artifacts/iterations/0.2.14/smoke-test/run-1/trace.json": "9794325e26dba592",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/assessor.json": "910eb7e80edf90d0",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/auditor.json": "b48602519f084b94",
     "artifacts/iterations/0.2.14/smoke-test/run-2/indexer_in.json": "2db76d9e965fe672",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/indexer_out.json": "900f090633d5d5ce",
     "artifacts/iterations/0.2.14/smoke-test/run-2/producer.json": "fcdbaafcf45161d9",
+    "artifacts/iterations/0.2.14/smoke-test/run-2/trace.json": "81fd93b8794caaf1",
     "artifacts/iterations/0.2.14/smoke-test/smoke-test-summary.md": "e1fb1cc8a148fe4b",
     "artifacts/iterations/0.2.14/w0-root-cleanup-proposal.md": "dec14f071125d022",
+    "artifacts/iterations/0.2.14/wiring-signoff.md": "43dbc2bfbbee8269",
+    "artifacts/iterations/0.2.15/acceptance/W0.json": "3c6848e968d41142",
+    "artifacts/iterations/0.2.15/acceptance/W1.json": "0eae4ff206d09f43",
+    "artifacts/iterations/0.2.15/acceptance/W2.json": "6041c8d53bffda9b",
+    "artifacts/iterations/0.2.15/acceptance/W3.json": "34866a28b1db5e17",
+    "artifacts/iterations/0.2.15/aho-design-0.2.15.md": "dc544e6902de02d7",
+    "artifacts/iterations/0.2.15/aho-plan-0.2.15.md": "a37954855a5eda6b",
+    "artifacts/iterations/0.2.15/audit/W0.json": "3010422d3052bd2a",
+    "artifacts/iterations/0.2.15/audit/W1.json": "76ee73c297d7edce",
+    "artifacts/iterations/0.2.15/audit/W2.json": "c91fbc68720d9d64",
+    "artifacts/iterations/0.2.15/audit/W3.json": "7d59127e42c5f547",
+    "artifacts/iterations/0.2.15/carry-forwards-0.2.15.md": "7559ae4f13cd5eb4",
+    "artifacts/iterations/0.2.15/cascade/cascade-summary-0.2.15.md": "d3eadee18537031d",
+    "artifacts/iterations/0.2.15/cascade/nosql-manual-text.txt": "d6aea717e86cc6b5",
+    "artifacts/iterations/0.2.15/cascade/run_cross_model_cascade.py": "6b0e17704bb6dd28",
+    "artifacts/iterations/0.2.15/cascade/stage-1-indexer_in.json": "18147845dc7db472",
+    "artifacts/iterations/0.2.15/cascade/stage-2-producer.json": "bdfa7e342b6de56b",
+    "artifacts/iterations/0.2.15/cascade/stage-3-auditor.json": "11e3e31c3f81de18",
+    "artifacts/iterations/0.2.15/cascade/stage-4-indexer_out.json": "84a1d0bbffbc1227",
+    "artifacts/iterations/0.2.15/cascade/stage-5-assessor.json": "be22d63c41413d85",
+    "artifacts/iterations/0.2.15/cascade/stdout.log": "655a9d4555e92e00",
+    "artifacts/iterations/0.2.15/cascade/trace.json": "576a4ea42fe949af",
+    "artifacts/iterations/0.2.15/dispatcher-hardening-notes.md": "5406ea433c78878a",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md": "5bf68b5a44e4c4bb",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/probe.py": "b8dad336f92ddd15",
+    "artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json": "026d9ea24710911c",
+    "artifacts/iterations/0.2.15/ollama-probes/R01-concurrent-model-awareness.json": "c3bde1976dbf47e2",
+    "artifacts/iterations/0.2.15/ollama-probes/R02-clean.json": "b6db28661145f237",
+    "artifacts/iterations/0.2.15/ollama-probes/R02-lru-eviction.json": "792c2504318b5e15",
+    "artifacts/iterations/0.2.15/ollama-probes/R03-explicit-unload.json": "9bf9efea055b744a",
+    "artifacts/iterations/0.2.15/ollama-probes/R04-request-queuing.json": "c3dcbf064816d9ce",
+    "artifacts/iterations/0.2.15/ollama-probes/R05-multi-model-routing.json": "3f0d0877ad428dd0",
+    "artifacts/iterations/0.2.15/ollama-probes/R06-context-preservation.json": "5b6d7a02c591e502",
+    "artifacts/iterations/0.2.15/ollama-probes/R07-error-reporting.json": "35611caa8e92136e",
+    "artifacts/iterations/0.2.15/ollama-probes/R08-timeout-hang.json": "1b2d1b44acfa06fb",
+    "artifacts/iterations/0.2.15/ollama-probes/R09-model-swap-latency.json": "e02b110813478e16",
+    "artifacts/iterations/0.2.15/ollama-probes/R10-stop-token-handling.json": "a2cdc20bd515efac",
+    "artifacts/iterations/0.2.15/ollama-probes/R11-chat-template.json": "5a7105758cff0d99",
+    "artifacts/iterations/0.2.15/ollama-probes/R11-diagnostic.json": "856352c0ac08c778",
+    "artifacts/iterations/0.2.15/ollama-probes/R12-embedding-coexistence.json": "3e031347214fc4b1",
+    "artifacts/iterations/0.2.15/ollama-probes/r2_clean_probe.py": "e614a41a08621c45",
+    "artifacts/iterations/0.2.15/ollama-tier1-fitness-0.2.15.md": "292dc5372eaef857",
+    "artifacts/iterations/0.2.15/retrospective-0.2.15.md": "c8f1da2ba28168f4",
+    "artifacts/iterations/0.2.15/sign-off-0.2.15.md": "f05ddb557a72c4b0",
+    "artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.json": "18f6ac11ef48e303",
+    "artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.md": "9e8e67b7f58261b9",
+    "artifacts/iterations/0.2.15/vetting/glm-4.6v-flash-9b-probe.json": "3c305d0296c06805",
+    "artifacts/iterations/0.2.15/vetting/llama-3.2-3b-probe.json": "3c31af9694b630d2",
+    "artifacts/iterations/0.2.15/vetting/nemotron-mini-4b-probe.json": "e75e25e559f35d52",
+    "artifacts/iterations/0.2.15/vetting/qwen-3.5-9b-probe.json": "ce09f0562fb125b7",
     "artifacts/iterations/0.2.2/aho-build-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-build-log-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-bundle-0.2.2.md": "5d47133beaca242e",
@@ -4784,7 +5219,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/iterations/0.2.2/aho-report-0.2.2.md": "ae555a24b9b5cf59",
     "artifacts/iterations/0.2.2/aho-run-0.2.2.md": "4e8f3602bfccd15d",
     "artifacts/iterations/0.2.3/aho-build-log-0.2.3.md": "4b70d5555b7011af",
-    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "2adfd94a73d01767",
+    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "cebeea2e377a1082",
     "artifacts/iterations/0.2.3/aho-design-0.2.3.md": "d13ae32a9ac21a89",
     "artifacts/iterations/0.2.3/aho-plan-0.2.3.md": "37c8202077386688",
     "artifacts/iterations/0.2.3/aho-report-0.2.3.md": "4f33de71c95bfb58",
@@ -4873,12 +5308,13 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/tests/test_build_log_stub.py": "7e378e6d8b743b4a",
     "artifacts/tests/test_bundle_sections.py": "fa478538426312a7",
     "artifacts/tests/test_components_manifest.py": "2e3b118ad33b3f04",
-    "artifacts/tests/test_conductor.py": "7ea9b719310979ac",
+    "artifacts/tests/test_conductor.py": "d54196a2eed8a4ca",
     "artifacts/tests/test_config_port.py": "4e2add3c1a68afb9",
     "artifacts/tests/test_daemon_healthy.py": "1a9a434b3fe387b3",
     "artifacts/tests/test_dashboard_aggregator.py": "88235ef75f7167e7",
     "artifacts/tests/test_density_check.py": "3b6800874cad39ce",
     "artifacts/tests/test_dispatcher_chat_api.py": "b81f99feb4aa300d",
+    "artifacts/tests/test_dispatcher_hardening.py": "3a097724226ee32e",
     "artifacts/tests/test_doctor.py": "ae125e01e0bf7c15",
     "artifacts/tests/test_doctor_new_checks.py": "f22a8bb359be0ba0",
     "artifacts/tests/test_emit_sibling_preservation.py": "9c132ee33d03eacf",
@@ -4894,7 +5330,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/tests/test_mcp_smoke.py": "70fd5f47efbdc870",
     "artifacts/tests/test_mcp_template.py": "4a2535b7b84467a9",
     "artifacts/tests/test_migrate_config_fish.py": "f6edb9488ba03d82",
-    "artifacts/tests/test_nemoclaw_real.py": "c008a5316a5755c2",
+    "artifacts/tests/test_nemoclaw_real.py": "d061cf1eaaf74bd4",
     "artifacts/tests/test_nemotron_classifier.py": "e335757faaa72398",
     "artifacts/tests/test_openclaw_real.py": "ab1f90ecee42bdba",
     "artifacts/tests/test_orchestrator_config.py": "d35a50f59da4c2c5",
@@ -4902,6 +5338,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "artifacts/tests/test_paths.py": "84ebc1cd20bd8c2c",
     "artifacts/tests/test_pillars_trident.py": "257659ec8d89f848",
     "artifacts/tests/test_pipeline_integration.py": "7bc16f5b68e4ee8f",
+    "artifacts/tests/test_pipeline_router.py": "b37cbcd0c89b0e7e",
     "artifacts/tests/test_pipeline_schemas.py": "31f6d4b0530de648",
     "artifacts/tests/test_postflight_layouts.py": "bfbfd0865fe21e68",
     "artifacts/tests/test_postflight_residuals.py": "0bb04882d969127a",
@@ -4966,7 +5403,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "data/known_hallucinations.json": "aa5f9768e8e84b53",
     "data/mcp_readiness.json": "935bbed5a3ba2b40",
     "docker-compose.otel.yml": "0b6166d7632f23d2",
-    "firebase-debug.log": "b81c8d6a2cce3bb0",
+    "firebase-debug.log": "0031278ab448d06f",
     "install.fish": "290b9afa195927b8",
     "pipeline/README.md": "e72e84ecf50b887a",
     "projects.json": "160afb32b90b60cb",
@@ -4981,7 +5418,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "src/aho/acceptance.py": "a53baf306a8f82fa",
     "src/aho/agents/__init__.py": "3d24c1aff057bc16",
     "src/aho/agents/conductor.py": "04a58a43f832816c",
-    "src/aho/agents/nemoclaw.py": "68a4407f04fa48e3",
+    "src/aho/agents/nemoclaw.py": "ab2e35634dbf2533",
     "src/aho/agents/openclaw.py": "1675cda9a402ae8c",
     "src/aho/agents/roles/__init__.py": "ca34cb44fd66a6c2",
     "src/aho/agents/roles/assistant.py": "21ba8ee182a93fbf",
@@ -4996,7 +5433,7 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "src/aho/artifacts/evaluator.py": "095c8555e9a6e30c",
     "src/aho/artifacts/glm_client.py": "b3d456a330bb070f",
     "src/aho/artifacts/loop.py": "df8183cf01daacb4",
-    "src/aho/artifacts/nemotron_client.py": "d22fc749f68a704c",
+    "src/aho/artifacts/nemotron_client.py": "a59762ab81b0d402",
     "src/aho/artifacts/qwen_client.py": "f6ce4efb91d5d2fb",
     "src/aho/artifacts/repetition_detector.py": "afb5044893a63ed9",
     "src/aho/artifacts/schemas.py": "1630926df2218e96",
@@ -5043,8 +5480,9 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "src/aho/orchestrator_config.py": "f4a3986392470930",
     "src/aho/paths.py": "da359bb27ccac62c",
     "src/aho/pipeline/__init__.py": "a4b65338af829eca",
-    "src/aho/pipeline/dispatcher.py": "7b940a8cec7330ea",
+    "src/aho/pipeline/dispatcher.py": "37a2a1c79090e27c",
     "src/aho/pipeline/orchestrator.py": "30d3c42932c9d4e9",
+    "src/aho/pipeline/router.py": "3ec2e1a2a73cb1f1",
     "src/aho/pipeline/schemas.py": "410b52bb2198eaee",
     "src/aho/pipelines/__init__.py": "9b23bc32afe708da",
     "src/aho/pipelines/pattern.py": "87322ca897d0ee07",
@@ -5084,75 +5522,8 @@ ad2c3c64739ffbfd  .git/objects/51/a82b9abe93a49c098a9bbf9bcfd29b5b7c9099
     "src/aho/secrets/backends/__init__.py": "e4a6a0577479b2b4",
     "src/aho/secrets/backends/age.py": "199d3b7e9cfb3dcf",
     "src/aho/secrets/backends/base.py": "e8956d90318ea739",
-    "src/aho/secrets/backends/fernet.py": "25179ab97089fc85",
-    "src/aho/secrets/backends/keyring_linux.py": "471a0874527698dd",
-    "src/aho/secrets/cli.py": "ecd524bee1d6b25b",
-    "src/aho/secrets/session.py": "271ac99913a4e6d5",
-    "src/aho/secrets/store.py": "10282dedce62c8de",
-    "src/aho/telegram/__init__.py": "7e4ff984fdcb5cde",
-    "src/aho/telegram/inbound.py": "481e968af2d37f54",
-    "src/aho/telegram/notifications.py": "3597cb25d770dd8a",
-    "src/aho/telegram/openclaw_client.py": "78f21d76ace64778",
-    "src/aho/workstream_events.py": "46e8239372226123",
-    "src/aho/workstream_gate.py": "a808f80a7463b55a",
-    "src/iao.egg-info/PKG-INFO": "f488a60934e56a23",
-    "src/iao.egg-info/SOURCES.txt": "8273a764ce657f05",
-    "src/iao.egg-info/dependency_links.txt": "5030c2a8db49e9c6",
-    "src/iao.egg-info/entry_points.txt": "3cdf8f78d86215a6",
-    "src/iao.egg-info/requires.txt": "337c886dc8caf08c",
-    "src/iao.egg-info/top_level.txt": "d01dac5a6cce638c",
-    "templates/otelcol-config.yaml": "c198f8454c19e32b",
-    "templates/systemd/aho-dashboard.service.template": "01c2f335aa4e272a",
-    "templates/systemd/aho-harness-watcher.service.template": "88fcaec7d687ffcd",
-    "templates/systemd/aho-jaeger.service.template": "da31d718ab83bbf4",
-    "templates/systemd/aho-nemoclaw.service.template": "4701a4ca7004dda9",
-    "templates/systemd/aho-openclaw.service.template": "807e7a45a019eb90",
-    "templates/systemd/aho-otel-collector.service.template": "10c2537d4076cb17",
-    "templates/systemd/aho-telegram.service.template": "ef68b2bfdeb63f7e",
-    "tests/integration/test_aho_mcp_cli_e2e.fish": "198c159de198333a",
-    "tests/test_baseline_regression.py": "8828812d239aa72e",
-    "tests/test_council_inventory.py": "04a61ea8c3fa3b63",
-    "tests/test_council_status.py": "f7ab3411a7b6a8c7",
-    "tests/test_dummy.py": "9442b5bc39f0ced5",
-    "tests/test_lego_renderer.py": "074602c4d2c4f0de",
-    "web/claw3d/.gitignore": "2f6e4237a119428d",
-    "web/claw3d/.idea/libraries/Dart_SDK.xml": "5fb084420e84caac",
-    "web/claw3d/.idea/libraries/KotlinJavaRuntime.xml": "1b90dd3baf7b43aa",
-    "web/claw3d/.idea/modules.xml": "d679fb297bc75fc3",
-    "web/claw3d/.idea/runConfigurations/main_dart.xml": "2f402e3349f7ed6b",
-    "web/claw3d/.idea/workspace.xml": "bb30e7134020becd",
-    "web/claw3d/.metadata": "030a323ab4d6763c",
-    "web/claw3d/README.md": "ef0cd846ba216daf",
-    "web/claw3d/analysis_options.yaml": "340b2877c202d756",
-    "web/claw3d/build/web/.last_build_id": "63d98f1af774afdc",
-    "web/claw3d/build/web/assets/AssetManifest.bin": "0374ba70e3bd8f81",
-    "web/claw3d/build/web/assets/AssetManifest.bin.json": "8da0efc708be0f5e",
-    "web/claw3d/build/web/assets/FontManifest.json": "1d8cc36f35ea0e1b",
-    "web/claw3d/build/web/assets/fonts/MaterialIcons-Regular.otf": "091a6571066f7171",
-    "web/claw3d/build/web/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "07b8c30c9ef2d4cc",
-    "web/claw3d/build/web/assets/shaders/ink_sparkle.frag": "da0ee3a170b7188f",
-    "web/claw3d/build/web/assets/shaders/stretch_effect.frag": "899e6c8dcfa336b6",
-    "web/claw3d/build/web/canvaskit/canvaskit.js": "f605251db2aa9dd2",
-    "web/claw3d/build/web/canvaskit/chromium/canvaskit.js": "92b19cbf6b924b36",
-    "web/claw3d/build/web/canvaskit/skwasm.js": "6b8ed0987f8bd547",
-    "web/claw3d/build/web/canvaskit/skwasm_heavy.js": "c1729f496557aa3e",
-    "web/claw3d/build/web/canvaskit/wimp.js": "2501c0865c247a21",
-    "web/claw3d/build/web/flutter.js": "44de7ff17bec5210",
-    "web/claw3d/build/web/flutter_bootstrap.js": "308f04e086be3d1d",
-    "web/claw3d/build/web/flutter_service_worker.js": "e9fb8cfce0e4ce56",
-    "web/claw3d/build/web/index.html": "56490cd6d3763e77",
-    "web/claw3d/build/web/manifest.json": "552874b3be839183",
-    "web/claw3d/build/web/version.json": "040c1363a84f5767",
-    "web/claw3d/claw3d.iml": "4ceac5db253d8a6b",
-    "web/claw3d/index.html.bak": "885f3bc15bd965c9",
-    "web/claw3d/lib/main.dart": "41e34aa38b69b511",
-    "web/claw3d/pubspec.lock": "e1b5cdae1e7bfb03",
-    "web/claw3d/pubspec.yaml": "3f9e49c43ae37211",
-    "web/claw3d/test/widget_test.dart": "9a86bed15ec35d97",
-    "web/claw3d/web/index.html": "b218bd20571794b1",
-    "web/claw3d/web/manifest.json": "552874b3be839183"
-  }
-}
+    
+[truncated, see file]
 ```
 
 ### CHANGELOG.md
@@ -5490,11 +5861,9 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration.** Methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
-
-**Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.14** | **Status: Council Wiring Verification**
+**Phase 0** · **Iteration 0.2.15** · **Status: Tier 1 Partial Install Validation**
 
 ```mermaid
 graph BT
@@ -5506,7 +5875,42 @@ graph BT
     classDef prong fill:#161B22,stroke:#4ADE80,color:#4ADE80
 ```
 
-### The Eleven Pillars of AHO
+aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product. The executing model (Claude, Gemini, Qwen, Llama) is the engine. The harness ships working software without supervision.
+
+---
+
+## Quick start
+
+```fish
+git clone https://github.com/soc-foundry/aho
+cd aho
+./install.fish
+aho doctor
+```
+
+Requires: Arch-family Linux, Python 3.11+, fish shell, Ollama, 8GB+ VRAM for Tier 1 council.
+
+---
+
+## Cascade
+
+Five-stage pipeline. Each stage a distinct role. Handoffs validated.
+
+```
+Document → Indexer-in → Producer → Auditor → Indexer-out → Assessor → Output
+                              │           │
+                              ▼           ▼
+                         deltas      delta-validations
+                              │           │
+                              └─► staging ◄┘
+```
+
+Producer drafts. Indexers propose deltas. Auditor validates. Assessor meta-assesses.
+Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
+
+---
+
+## The Eleven Pillars of AHO
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -5522,96 +5926,176 @@ graph BT
 
 ---
 
-## What aho Does
+## Capabilities
 
-aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
+**Artifact loop.** Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word-count enforcement and 3-retry escalation.
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
-- **`/ws` Streaming** — Telegram commands (`/ws status`, `/ws pause`, `/ws proceed`, `/ws last`) for real-time workstream monitoring and agent pause/proceed control from phone. Auto-push notifications on workstream completion.
-- **Install Surface Architecture** — Three-persona model (pipeline builder, framework host, impromptu assistant). `aho-run` spec'd as the persona 3 entry point for pwd-scoped one-shot work against arbitrary files. Persona 3 discovery in 0.2.9 confirmed the gap exists; install-surface-architecture.md is the scope contract for 0.2.10–0.2.13 implementation.
+**Pre-flight / post-flight gates.** Environment validation before launch, quality gates after execution. Bundle completeness enforced.
+
+**Cascade orchestrator.** 5-stage pipeline (`src/aho/pipeline/`) with trace events, per-stage artifacts, cross-stage delta propagation. Dispatcher supports Ollama `/api/chat` with model-family stop tokens and `num_ctx` up to 32K on 8GB VRAM.
+
+**Pattern C execution.** Claude Code drafts, Gemini CLI audits, human signs. State machine: `in_progress → pending_audit → audit_complete → workstream_complete`. Audit archives are versioned, overwrites forbidden.
+
+**Gotcha registry.** 83+ indexed failure modes with mitigations, queried at iteration start.
+
+**Secrets architecture.** age encryption + OS keyring + fernet bulk storage. No keys, passphrases, or secret material in the repo.
+
+**Multi-agent orchestration.** Qwen for general work, Llama 3.2 for triage, GLM and Nemotron re-test in 0.2.15, OpenClaw as file-bridge wrapper, Nemoclaw as dispatcher.
+
+**Telegram `/ws` streaming.** `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`. Auto-push on workstream completion.
+
+**Install surface.** Three-persona model (pipeline builder, framework host, impromptu assistant). `aho run "task"` for persona 3 pwd-scoped work.
+
+**Observability.** otelcol-contrib + Jaeger as systemd user services. Spans in dispatcher, openclaw, nemoclaw, telegram.
 
 ---
 
-## Canonical Folder Layout (0.1.13+)
+## Folder layout
 
 ```
 aho/
 ├── src/aho/                    # Python package (src-layout)
+│   └── pipeline/               # Cascade: schemas, dispatcher, orchestrator
 ├── bin/                        # CLI entry points and tool wrappers
-├── artifacts/                  # Project-specific artifacts (from docs/, scripts/, etc.)
-│   ├── harness/                # Universal and project-specific harnesses
+├── artifacts/
+│   ├── harness/                # Pillars, ADRs, Pattern C protocol
 │   ├── adrs/                   # Architecture Decision Records
-│   ├── iterations/             # Per-iteration outputs (Design, Plan, Build Log)
+│   ├── iterations/             # Per-iteration design, plan, build, report, bundle
 │   ├── phase-charters/         # Phase objective contracts
 │   ├── roadmap/                # Strategic planning
-│   ├── scripts/                # Utility and instrumentation scripts
-│   ├── templates/              # Scaffolding templates
+│   ├── scripts/                # Utility and instrumentation
+│   ├── templates/              # Scaffolding
 │   ├── prompts/                # LLM generation templates
 │   └── tests/                  # Verification suite
 ├── data/                       # Registries, event log, ChromaDB
-├── app/                        # Consumer application mount point (Phase 1+)
-└── pipeline/                   # Processing pipeline mount point (Phase 1+)
+├── app/                        # Consumer application mount (Phase 1+)
+└── pipeline/                   # Processing pipeline mount (Phase 1+)
 ```
+
+Canonical since 0.1.13. Path-agnostic via `iao_paths.find_project_root()` and `.aho.json` sentinel.
 
 ---
 
-## Iteration Roadmap
+## State machine
+
+Every workstream flows through four states. Claude emits three events. Gemini emits one. Checkpoint advances only after audit archive exists with pass or pass-with-findings.
+
+```
+  in_progress   ──►   pending_audit   ──►   audit_complete   ──►   workstream_complete
+  (Claude)           (Claude done)        (Gemini done)           (Claude emits)
+```
+
+No agent emits `workstream_complete` before `audit_complete` exists. Audit archive overwrites forbidden; re-audits create versioned files.
+
+---
+
+## Roadmap
 
 | Iteration | Theme | Status |
 |---|---|---|
 | 1 (0.1.x) | Build the harness | graduated 2026-04-11 |
-| 2 (0.2.x) | Ship to soc-foundry + P3 | active |
-| 3 (0.3.x) | Alex demo + claw3d + polish | planned |
+| 2 (0.2.x) | Ship to soc-foundry + P3 | active (0.2.15) |
+| 3 (0.3.x) | Alex demo + polish | planned |
 | Phase 1 | Multi-project, multi-machine | planned |
 
-## Phase 0 Status
+**Phase 0 charter:** `artifacts/phase-charters/aho-phase-0.md`
 
-**Phase:** 0 — Clone-to-Deploy
-**Charter:** artifacts/phase-charters/aho-phase-0.md
+Phase 0 is complete when soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.
 
-Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
+---
+
+## Recent iterations
+
+**0.2.15 — Tier 1 Partial Install Validation (in progress).** Wire and ship Tier 1 install package. 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) validated through Ollama on fixed dispatcher. Fair re-test of GLM and Nemotron after 0.2.13 W2.5 compromise findings measured on broken substrate. Ollama Tier 1 capability audit, dispatcher hardening, Nemoclaw decision ADR, cross-model cascade integration test. 5 workstreams.
+
+**0.2.14 — Council Wiring Verification.** 4 workstreams delivered (W0 setup, W1 vet+wire+smoke, W1.5 substrate repair, W2 close). W1 smoke test surfaced two dispatcher bugs: `num_ctx` default 4096 truncating input to ~4K tokens, and `/api/generate` without stop tokens causing chat template leakage. W1.5 repaired the dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens). Run-2 smoke test produced 14,725 chars of substantive cross-stage output vs run-1's 6,901 chars of template-leaked garbage. Council validated as real-but-thin: cascade mechanics work, Pillar 7 violation persists (Qwen-solo), auditor role-prompt bifurcation identified.
+
+**0.2.13 — Dispatch-Layer Repair.** First Pattern C iteration. W1 fixed GLM parser (`GLMParseError` replaces hardcoded `{score:8, ship}` fallback). W2 fixed Nemotron classifier (specific error types replace blanket `except Exception`). W2.5 hard gate: honest parsers exposed that GLM timed out 80% of inputs, Nemotron returned "feature" 80% regardless of content. Rescoped W3-W9. 4 workstreams delivered.
+
+**0.2.12 — Council Activation.** 20 workstreams. Gemini CLI primary executor. Council inventory audit. Five gotchas landed (G078-G083) including foundational G083: exception handlers returning hardcoded positive values, masking real failures. Council health measured at 35.3/100. Strategic rescope at W5.
+
+See [CHANGELOG.md](CHANGELOG.md) for full history back to 0.1.0-alpha.
+
+---
+
+## Core concepts
+
+**Harness.** The versioned set of files that constrain agent behavior. Pillars, ADRs, Pattern C protocol, gotcha registry, prompt conventions, test baseline. Changes at phase or iteration boundaries.
+
+**Cascade.** Five role-bound stages that produce and validate analytical artifacts. Handoffs are traced events. Deltas proposed by Indexers validated by Auditor and Assessor.
+
+**Pattern C.** Execution model where a cloud orchestrator drafts, a second cloud orchestrator audits, and a human signs. Separates generation from evaluation at the orchestrator boundary. Introduced in 0.2.13.
+
+**Council.** The set of local LLMs available to the harness. Members have distinct roles. Pillar 7 requires drafter ≠ reviewer; council composition enables this.
+
+**Gotcha registry.** Structured record of failure modes with mitigations. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+
+**Three personas.** Persona 1 (pipeline builder) runs full iterations against known projects. Persona 2 (framework host) imports aho into another repo. Persona 3 (impromptu assistant) runs pwd-scoped one-shot work via `aho run`.
 
 ---
 
 ## Installation
 
 ```fish
+# 1. Clone
+git clone https://github.com/soc-foundry/aho ~/dev/projects/aho
 cd ~/dev/projects/aho
-pip install -e . --break-system-packages
+
+# 2. Install (idempotent; 9-step orchestrator)
+./install.fish
+
+# 3. Verify
 aho doctor
+aho doctor --deep    # includes Flutter and dart checks
+aho components check # per-kind presence verification
 ```
 
-**Requirements:** Python 3.11+, Ollama with qwen3.5:9b, fish shell (Linux).
+**Requirements:**
+
+- Arch Linux family (CachyOS tested)
+- Python 3.11+ (`pip install -e . --break-system-packages`)
+- fish shell (primary)
+- Ollama (installed via upstream script, not pacman)
+- 8GB+ VRAM for Tier 1 council (Qwen 3.5:9B + Llama 3.2:3B + GLM + Nemotron)
+- systemd user services (linger enabled)
+- Telegram bot token (optional, for `/ws` streaming)
+- Brave Search API token (optional, for search tools)
+
+**Tier 1 install** pulls four chat LLMs and one embedding model. Tier 2 and Tier 3 (Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo) land with 16GB+ machines; see 0.2.15 carry-forwards.
 
 ---
 
-## Iteration Narrative (0.2.12–0.2.14)
+## Configuration
 
-### 0.2.12 — Council Activation (gemini-cli primary)
+**Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
 
-20 workstreams. Gemini CLI took the executor lead for the first time. The iteration audited every declared council member (Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, MCP fleet), built visibility infrastructure (`aho council status`, lego office visualization), and established the delegation/dispatch design. Five gotchas landed (G078–G083), including the foundational G083: exception handlers that return hardcoded positive values, masking real failures. 35 definitive G083 sites identified, 117 ambiguous. Council health measured at 35.3/100. Strategic rescope at W5 after substrate findings revealed that model output quality was the binding constraint — not dispatch architecture.
+**MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. 9 MCP servers smoke-tested via `bin/aho-mcp smoke`.
 
-### 0.2.13 — Dispatch-Layer Repair (Pattern C trial)
+**Secrets** via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
 
-First iteration under Pattern C: Claude Code drafts, Gemini CLI audits, Kyle signs. 11 workstreams planned, 4 delivered, 7 skipped per rescope.
+**Per-machine systemd user services:** openclaw, nemoclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard.
 
-W1 fixed the GLM parser — `GLMParseError` replaced the hardcoded `{score: 8, recommendation: ship}` fallback that had been lying about evaluation quality. W2 fixed the Nemotron classifier — `NemotronParseError` and `NemotronConnectionError` replaced blanket `except Exception` with specific error types. Both parsers now fail honestly instead of returning manufactured success.
+---
 
-W2.5 was the hard gate. With honest parsers in place, the models were tested: GLM-4.6V-Flash-9B at Q4_K_M timed out 80% of inputs at 180s and produced wrong-schema JSON the other 20%. Nemotron-mini:4b returned "feature" 80% of the time regardless of input. The parsers are honest. The models cannot produce usable signal through honest parsers. W3–W9 were skipped — fixing exception handlers around non-functional models was not a productive use of the iteration.
+## Related work
 
-### Where we are
+**[karpathy/llm-council](https://github.com/karpathy/llm-council).** Conceptual reference for multi-LLM cross-review pattern. Three-stage architecture (first opinions → review → chairman) differs from aho's five-stage role-bound cascade. OpenRouter cloud APIs vs aho's local Ollama inference. Karpathy's description: "99% vibe coded as a fun Saturday hack." Value is conceptual, not implementation.
 
-The council as a wired system has never been verified end-to-end. Two iterations of parser fixes and individual model invocations. Zero iterations of "Producer → Indexer → Auditor → Indexer → Assessor cascade actually runs." 9 of 17 council members claimed-operational, 6 unknown, 2 substrate-compromised. No agent-to-agent handoff in cascade architecture has ever been exercised.
+**[ruvnet/ruflo](https://github.com/ruvnet/ruflo).** Claude Code orchestration platform with swarm coordination, WASM policy engine, plugin system. Much larger scope than aho; different architectural premises (swarm-per-task vs role-bound cascade, dynamic agent spawning vs fixed council composition). Structural reference for OSS project organization.
 
-### 0.2.14 — Council Wiring Verification (current)
+aho's focus is narrower than either: harness-governed iterations with durable state transitions, honest substrate measurement, and supervised-free software delivery. Local-first, 8-24GB VRAM tier, Arch Linux family, fish shell.
 
-0.2.14 verifies wiring. Every declared council member gets invoked (W1 vetting). The 5-stage cascade orchestrator gets built and run end-to-end against the NoSQL manual (201-page test document). Sign-off package presented to Kyle. No measurement of model quality, no architecture decisions, no matrix testing, no dashboard — those are 0.2.15+ after wiring is signed off.
+---
+
+## Status
+
+**Phase 0 active.** Second-machine clone target: ThinkStation P3 (tsP3-cos). Third-machine (A8cos) reframed as orchestration/daily-driver after integrated GPU constraint. Luke's machine (24GB) is candidate Tier 3 clone for 0.2.17.
+
+**Council:** Qwen 3.5:9B operational. Llama 3.2:3B integration in 0.2.15 W0. GLM-4.6V-Flash-9B and Nemotron-mini:4b substrate-compromise re-test in 0.2.15 W0. Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo planned for 16GB+ machines.
+
+**Testing:** 302 passing, 12-13 known baseline failures (daemon-dependent), 0 new regressions across recent iterations.
+
+**Gotcha registry:** 83+ entries.
 
 ---
 
@@ -5621,16 +6105,16 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.14 — aho.run — Phase 0 — April 2026*
+*aho v0.2.15 · aho.run · Phase 0 · April 2026*
 
-*README last reviewed: 2026-04-13 by 0.2.14 W0*
+*README last reviewed: 2026-04-13 by 0.2.15 W0 work session*
 ```
 
 ### CLAUDE.md
 ```markdown
-# CLAUDE.md — aho 0.2.14
+# CLAUDE.md — aho 0.2.15
 
-You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.15 under Pattern C (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -5660,15 +6144,19 @@ You are Claude Code, primary drafter for aho 0.2.14 under Pattern C (modified). 
 
 Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Numbers honest to substance, not regex. "Clean close," "landed beautifully," "all green" are banned (G081).
 
-## Pattern C Role — Primary Drafter (Modified for 0.2.14)
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1). Acceptance checks must include raw-response inspection, not just parsed-structure validity.
+
+**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions.
+
+## Pattern C Role — Primary Drafter (Modified for 0.2.15)
 
 For each workstream N:
-1. Emit `workstream_start` at workstream begin (**REQUIRED — 0.2.13 fired zero**).
-2. Execute scope per `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`.
-3. Write `artifacts/iterations/0.2.14/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.15** (0.2.14 W0 lesson — firing pre-env-set caused null iteration logging).
+2. Execute scope per `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`.
+3. Write `artifacts/iterations/0.2.15/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 4. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
 5. Stop. Gemini audits.
-6. After Gemini writes `artifacts/iterations/0.2.14/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
+6. After Gemini writes `artifacts/iterations/0.2.15/audit/W{N}.json` with `audit_result: "pass"` or `"pass_with_findings"`, you return in a **fresh session**, read the audit, and emit `workstream_complete`. Checkpoint advances.
 7. If audit is `"fail"`, correct and rewrite the acceptance archive. Do not advance.
 
 ## State Machine (authoritative)
@@ -5691,38 +6179,55 @@ For each workstream N:
 - `baseline_regression_check()` is the backstop, not regex counts (G079)
 - No `except Exception` blocks in new code
 
-## Current Iteration: 0.2.14
+## Cross-Project Contamination Vigilance (new for 0.2.15)
 
-**Theme:** Council wiring verification + cascade smoke test.
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14: kjtcom bundle version label (v10.66) bled into aho W2 prompt; "10 IAO Pillars" proposed instead of "11 aho Pillars" in 0.2.15 design drafting.
+
+When working with version labels, ADR numbers, pillar lists, bundle sections, or harness conventions:
+- Verify against aho canonical references (`artifacts/harness/base.md`, `README.md`, ADR index, this file) before use
+- Do not fabricate version numbers or ADR numbers to fill prompts — look them up
+- If memory suggests a structural convention, confirm it's aho-native before embedding it in artifacts
+- "10 IAO Pillars" is a kjtcom construct. aho has 11 pillars (verbatim above).
+
+## Current Iteration: 0.2.15
+
+**Theme:** Tier 1 Partial Install Validation & Ship.
 **Executor role:** You draft. Gemini audits. Kyle signs.
-**Success:** Council exists as verifiable wired system. Sign-off on member operational status. NoSQL manual smoke test executes 5-stage cascade end-to-end.
-**Workstreams:** 3 (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
+**Success:** Tier 1 install.fish is shippable. All 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) wired through Ollama on fixed dispatcher, vetted with fixed-dispatcher evidence. Dispatcher hardened for multi-model use. Nemoclaw decision evidence-based (ADR published). Cross-model cascade proven.
+**Workstreams:** 5 (W0 setup + roster re-vet, W1 Ollama capability audit, W2 dispatcher hardening, W3 Nemoclaw + ADR, W4 integration + close).
+
+**Hard gate blocker for iteration close:** All 4 LLMs wired through Ollama, all 4 vetted with fixed-dispatcher evidence, cross-model cascade test completes successfully. No shipping without all 4 wired.
 
 ## Reference Reading (consult at diligence)
 
-- `artifacts/iterations/0.2.14/aho-design-0.2.14.md`
-- `artifacts/iterations/0.2.14/aho-plan-0.2.14.md`
+- `artifacts/iterations/0.2.15/aho-design-0.2.15.md`
+- `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0
+- `artifacts/harness/pattern-c-protocol.md` — patched in 0.2.14 W0, raw-response-ground-truth rule added at 0.2.14 close
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/council-models-0.2.14.md` — model docs review
-- `artifacts/iterations/0.2.14/council-inventory.md` — W1 vetting target
+- `artifacts/iterations/0.2.14/retrospective-0.2.14.md` — substrate findings, auditor bifurcation, carry-forwards
+- `artifacts/iterations/0.2.14/carry-forwards.md` — what 0.2.15 inherits
+- `artifacts/iterations/0.2.14/kyle-notes-0.2.15-planning.md` — fleet topology, tiered install, cross-project contamination
 
-## Findings Carried Forward
+## Findings Carried Forward from 0.2.14
 
-- Do not grow `test-baseline.json` to paper over breakage. Additions require justification and Kyle sign-off.
-- Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity — this file is authoritative going forward.
-- Acceptance criteria drift gets flagged in findings, not quietly redefined.
-- `emit_workstream_complete()` must only modify the named workstream's state in the checkpoint. Sibling corruption was the 0.2.13 side-effect bug — patched in 0.2.14 W0.
-- `workstream_start` must be emitted at workstream begin. 0.2.13 fired zero — 0.2.14 establishes the discipline.
+- **Dispatcher repaired** — `/api/chat` with messages array, `num_ctx=32768`, Qwen stop tokens. W1.5 verified. 0.2.15 extends to 4 LLMs.
+- **Cascade architecture works end-to-end** when dispatcher configured correctly. Producer → Indexer-in → Auditor → Indexer-out → Assessor with cross-stage handoff validated on 247K-char document.
+- **Pillar 7 violated throughout 0.2.14** (Qwen-solo across all 5 roles, only viable option per vetting). 0.2.15 attempts Pillar 7 restoration via cross-model assignment after GLM/Nemotron re-test.
+- **Auditor role-prompt bifurcation** — validations rubber-stamp, critique in `additional_findings`. Deferred to later iteration; 0.2.15 does not fix this.
+- **GLM and Nemotron substrate findings (0.2.13 W2.5)** were measured on broken dispatcher. 0.2.15 W0 re-tests both with clean-slate methodology. Original removal decisions are not final until re-test evidence lands.
+- **Do not grow `test-baseline.json` to paper over breakage.** Additions require justification and Kyle sign-off.
+- **`emit_workstream_complete()` side-effect root cause** unresolved from 0.2.14. Symptomatic fix applied. Investigate if recurs.
+- **Checkpoint corruption from `test_workstream_events.py`** — doesn't mock `find_project_root`. Caused checkpoint resets in 0.2.14 W1. Fix in 0.2.15 if time or carry.
+- **Gotcha registry location** — W0 couldn't find canonical file in 0.2.14. Locate or create in 0.2.15.
 ```
 
 ### GEMINI.md
 ```markdown
-# GEMINI.md — aho 0.2.13
+# GEMINI.md — aho 0.2.15
 
-You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. You audit. Kyle signs.
+You are Gemini CLI, auditor for aho 0.2.15 under Pattern C. Claude Code drafts. You audit. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -5750,21 +6255,24 @@ You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. 
 
 ## Operating Stance
 
-Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.12 trajectory (45 → 25 → 20min per workstream) is your baseline — bring the same skepticism auditing Claude.
+Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.14 audit trajectory (42 min W1, 25 min W1.5, 35 min W2) is your baseline — bring the same skepticism and budget discipline to 0.2.15.
+
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1 where Claude characterized stages as "honest empty" and "working mechanically" based on parsed JSON while raw responses leaked chat template tokens and ran hallucinated conversation turns). Before trusting any executor claim about output quality or substrate behavior, read the raw response field of relevant artifacts yourself.
 
 ## Pattern C Role — Auditor
 
 For each workstream N:
-1. Claude writes `artifacts/iterations/0.2.13/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
+1. Claude writes `artifacts/iterations/0.2.15/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 2. Read it. Read `artifacts/harness/pattern-c-protocol.md` if unclear.
 3. Lightweight audit — **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
    - Spot-check 1-2 high-risk claims independently.
+   - **Raw artifact inspection** — if executor claims output quality, verify by reading raw response fields, not just parsed JSON.
    - Gotcha scan: G083, G078, G079, G081, G082 reintroduction?
    - Baseline check: if it grew, is each addition genuinely environmental, or a hidden failure?
    - Drift check: acceptance-criteria drift between plan and archive?
-4. Write `artifacts/iterations/0.2.13/audit/W{N}.json` with `audit_result` and detailed findings.
+4. Write `artifacts/iterations/0.2.15/audit/W{N}.json` with `audit_result` and detailed findings.
 5. **Stop. You do not advance the checkpoint. You do not emit `workstream_complete`.** Claude returns, reads your audit, and emits the terminal event.
 
 ## State Machine (authoritative)
@@ -5773,11 +6281,10 @@ For each workstream N:
 
 **Gemini emits:** `audit_complete` only.
 **Gemini does NOT emit:** `workstream_complete`, checkpoint advance, `current_workstream` bump.
-**W0 correction:** W0 audit closed with you advancing the checkpoint. That was a role crossing. Do not repeat it for W1+.
 
 ## Budget
 
-15-25 min per audit. >40min means you're re-executing — stop, write what you have, flag to Kyle.
+15-35 min per audit. Compound-scope workstreams (W0 with 4-model re-vet) may reach 45 min. >50 min means you're re-executing — stop, write what you have, flag to Kyle.
 
 ## Audit Archive Schema
 
@@ -5808,32 +6315,57 @@ For each workstream N:
 - Baseline growth without genuine justification
 - Schema drift from AgentInvolvement model
 - Protocol violation (Claude fires `workstream_complete` pre-audit)
+- Output quality claims made on parsed JSON only without raw response inspection
 
 ## Hard Rules
 
 - No git commits or pushes (Pillar 11)
-- Never `cat ~/.config/fish/config.fish` — secrets leak (your incident; established rule)
+- Never `cat ~/.config/fish/config.fish` — secrets leak (established rule)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22)
 - No reading secrets under any circumstance
 - Canonical resolvers only (G075, G082)
 
+## Cross-Project Contamination Vigilance
+
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14 W2 drafting: kjtcom bundle version label (v10.66) and "10 IAO Pillars" (kjtcom construct) bled into aho 0.2.15 design drafting. aho has 11 pillars (above). aho ADR numbers, bundle section specs, and structural conventions may differ from kjtcom's.
+
+When auditing artifacts, treat any structural or numerical claim (ADR number, pillar count, bundle section count, version label) as verifiable against aho canonicals — do not accept "looks right" without verification.
+
+## Current Iteration: 0.2.15
+
+**Theme:** Tier 1 Partial Install Validation & Ship.
+**Workstreams:** 5 (W0 setup + roster re-vet, W1 Ollama capability audit, W2 dispatcher hardening, W3 Nemoclaw + ADR, W4 integration + close).
+
+**Hard gate blocker for iteration close:** All 4 LLMs wired through Ollama, all 4 vetted with fixed-dispatcher evidence, cross-model cascade test completes successfully.
+
+**Specific audit focus for 0.2.15 workstreams:**
+- **W0:** GLM and Nemotron re-test methodology — are they genuinely retested on fixed dispatcher, or did executor recycle 0.2.13 W2.5 findings? Raw response inspection required to distinguish.
+- **W1:** Ollama capability audit — is each requirement probed with actual evidence, or are some marked "pass" without verification? The 8GB VRAM constraint is hot — LRU eviction claims in particular need live testing.
+- **W2:** Dispatcher hardening — stop tokens per model family must be verified against each model's actual tokenizer spec, not guessed. Unit tests must test actual HTTP payload structure.
+- **W3:** Nemoclaw re-vet + ADR — ADR number must not be fabricated; executor must read `artifacts/adrs/` index and use next actual available number. Dispatcher choice rationale must rest on measured evidence.
+- **W4:** Cross-model cascade — raw response inspection per stage. Assessor quality_score is self-assessment, not objective. Compare run artifacts to 0.2.14 W1.5 Qwen-solo baseline.
+
 ## Reference Reading (consult at diligence)
 
-- `artifacts/iterations/0.2.13/aho-design-0.2.13.md`
-- `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`
+- `artifacts/iterations/0.2.15/aho-design-0.2.15.md`
+- `artifacts/iterations/0.2.15/aho-plan-0.2.15.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
 - `artifacts/harness/pattern-c-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- Gotcha registry
+- `artifacts/iterations/0.2.14/retrospective-0.2.14.md` — substrate findings, auditor bifurcation, lessons
+- `artifacts/iterations/0.2.14/smoke-test/run-2/` — W1.5 baseline for cross-model cascade comparison
+- Gotcha registry (locate canonical file; 0.2.14 W0 couldn't find it)
 
 ## Failure Modes to Avoid
 
 - Re-executing instead of auditing (budget blowout)
 - Rubber-stamping without spot-check (G083 in human form)
+- Accepting output quality claims without raw response inspection (0.2.14 W1 lesson)
 - Scope creep — asking Claude to fix things outside the workstream
 - Missing drift because the archive is well-formatted (substance over form)
-- Advancing the checkpoint yourself (W0 mistake — do not repeat)
+- Advancing the checkpoint yourself (0.2.13 W0 mistake)
+- Accepting fabricated ADR numbers, version labels, or pillar counts without canonical verification (cross-project contamination)
 ```
 
 ### install.fish
@@ -7181,7 +7713,7 @@ components:
     path: src/aho/agents/nemoclaw.py
     status: active
     owner: soc-foundry
-    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2"
+    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2; classification layer migrated to pipeline.router in 0.2.15 W3 (ADR 0002), session layer retained"
 
   - name: telegram
     kind: external_service
@@ -7202,6 +7734,7 @@ components:
     path: src/aho/artifacts/nemotron_client.py
     status: active
     owner: soc-foundry
+    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window"
 
   - name: glm-client
     kind: llm
@@ -7433,6 +7966,21 @@ components:
     path: src/aho/pipelines/pattern.py
     status: active
     owner: soc-foundry
+
+  # === Pipeline (cascade dispatch) ===
+  - name: pipeline-dispatcher
+    kind: python_module
+    path: src/aho/pipeline/dispatcher.py
+    status: active
+    owner: soc-foundry
+    notes: "Ollama /api/chat dispatcher; hardened for multi-model in 0.2.15 W2 (stop tokens, typed errors, retry, template leak detection)"
+
+  - name: pipeline-router
+    kind: python_module
+    path: src/aho/pipeline/router.py
+    status: active
+    owner: soc-foundry
+    notes: "Classification routing over the hardened dispatcher; supersedes nemotron_client.classify (ADR 0002, 0.2.15 W3)"
 
   # === Postflight gates ===
   - name: pf-artifacts-present
@@ -7738,7 +8286,7 @@ components:
     path: src/aho/agents/nemoclaw.py
     status: active
     owner: soc-foundry
-    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2"
+    notes: "Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2; classification layer migrated to pipeline.router in 0.2.15 W3 (ADR 0002), session layer retained"
 
   - name: telegram
     kind: external_service
@@ -7759,6 +8307,7 @@ components:
     path: src/aho/artifacts/nemotron_client.py
     status: active
     owner: soc-foundry
+    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window"
 
   - name: glm-client
     kind: llm
@@ -7990,6 +8539,21 @@ components:
     path: src/aho/pipelines/pattern.py
     status: active
     owner: soc-foundry
+
+  # === Pipeline (cascade dispatch) ===
+  - name: pipeline-dispatcher
+    kind: python_module
+    path: src/aho/pipeline/dispatcher.py
+    status: active
+    owner: soc-foundry
+    notes: "Ollama /api/chat dispatcher; hardened for multi-model in 0.2.15 W2 (stop tokens, typed errors, retry, template leak detection)"
+
+  - name: pipeline-router
+    kind: python_module
+    path: src/aho/pipeline/router.py
+    status: active
+    owner: soc-foundry
+    notes: "Classification routing over the hardened dispatcher; supersedes nemotron_client.classify (ADR 0002, 0.2.15 W3)"
 
   # === Postflight gates ===
   - name: pf-artifacts-present

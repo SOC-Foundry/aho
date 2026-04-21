@@ -1,0 +1,36 @@
+{
+  "workstream_id": "W1",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-04-13T19:15:00Z",
+  "audit_duration_min": 35,
+  "audit_result": "pass",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "R02-clean.json step 3 CUDA OOM verification",
+    "R11-diagnostic.json 4-probe stop-token verification",
+    "journalctl log search for 1704.17 MiB allocation failure",
+    "ollama-tier1-fitness-0.2.15.md internal consistency check",
+    "src/aho/pipeline/dispatcher.py mtime check (no premature changes)",
+    "checkpoint state verification (W1 pending_audit)"
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [],
+  "findings": {
+    "correction_validation": "The revision of W1 findings is grounded in empirical retesting (R2, R11) on clean Ollama state. Retest artifacts properly invalidate the initial '3362 MiB base overhead' misattribution while confirming the real hardware constraint.",
+    "hardware_constraint_verification": "The GLM CUDA OOM crash is verified via journalctl logs (Apr 13 11:50:00: cudaMalloc failed allocating 1704.17 MiB). The math (5539 MiB model buffer + 1704 MiB failed allocation + ~1.2 GiB CUDA runtime) confirms a total requirement of ~8.4 GiB, exceeding the 8192 MiB physical VRAM of the test hardware. The finding is evidence-based, not narrative.",
+    "num_gpu_workaround": "The num_gpu=30 workaround for GLM is verified in R02-clean.json (Step 7: 200 response, 'ok' content, 7239 MiB VRAM). Shippability on 8GB hardware is preserved via partial offload.",
+    "stop_token_diagnostic": "R11-diagnostic.json demonstrates a thorough 4-probe approach. The finding that GLM template leak is stop-token fixable (Probe 4: <|end_of_box|> stop + prefix strip) is solid and provides a clear path for W2 dispatcher hardening.",
+    "orphan_runner_finding": "The orphan runner finding is accepted as a documented observational fact in the correction narrative. While the specific PIDs (2348076, 2348219) were from the preceding diagnostic turn, the consequence (VRAM contention) is visible in the initial W1 artifacts compared to clean-state retests.",
+    "w2_scope_alignment": "W2 scope additions (per-model stop tokens, GLM prefix strip, state hygiene, num_gpu handling) are correctly identified and flow logically from W1 findings.",
+    "pattern_c_discipline": "Protocol maintained. No checkpoint advance, no workstream_complete emitted by executor. No src/aho code changes made during audit/revision phase."
+  },
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ]
+}

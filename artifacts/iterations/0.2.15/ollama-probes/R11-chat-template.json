@@ -1,0 +1,49 @@
+{
+  "requirement_id": "R11",
+  "requirement": "Chat template application",
+  "scope": "per-model",
+  "critical": true,
+  "classification": "partial",
+  "probe_method": "Send /api/chat request with system + user messages. Inspect raw response for template token leakage. For GLM: attempt diagnostic with GLM-specific stop tokens to distinguish stop-token issue from structural issue.",
+  "probes": [
+    {
+      "model": "qwen3.5:9b",
+      "system": "You are a helpful assistant.",
+      "user": "List 3 colors.",
+      "raw_response": "",
+      "template_tokens_checked": ["<|im_start|>", "<|im_end|>", "<|endoftext|>"],
+      "leaks_found": [],
+      "result": "pass",
+      "note": "Empty response due to thinking-mode with low num_predict. No template tokens visible. Separate test with concise prompt confirmed clean output."
+    },
+    {
+      "model": "llama3.2:3b",
+      "system": "You are a helpful assistant.",
+      "user": "List 3 colors.",
+      "raw_response": "Here are three colors:\n\n1. Blue\n2. Red\n3. Yellow",
+      "template_tokens_checked": ["<|begin_of_text|>", "<|end_of_text|>", "<|start_header_id|>", "<|end_header_id|>", "<|eot_id|>"],
+      "leaks_found": [],
+      "result": "pass"
+    },
+    {
+      "model": "nemotron-mini:4b",
+      "system": "You are a helpful assistant.",
+      "user": "List 3 colors.",
+      "raw_response": " Sure, here are three colors: red, blue and green.",
+      "template_tokens_checked": ["<extra_id_0>", "<extra_id_1>", "<|end_of_text|>"],
+      "leaks_found": [],
+      "result": "pass"
+    },
+    {
+      "model": "haervwe/GLM-4.6V-Flash-9B:latest",
+      "result": "untestable",
+      "error": "HTTP 500: llama runner process has terminated",
+      "diagnostic_attempted": true,
+      "diagnostic_stop_tokens": ["<|begin_of_box|>", "<|end_of_box|>"],
+      "note": "GLM cannot load — template diagnostic impossible. W0 showed template token leakage (<|begin_of_box|>/<|end_of_box|>). Cannot determine if stop-token fix resolves it (W2 scope) or if issue is structural."
+    }
+  ],
+  "glm_template_verdict": "INDETERMINATE. GLM fails to load, making the critical W1 diagnostic (stop-token fix vs structural issue) impossible. W0 evidence showed template leakage was the only defect. If GLM becomes loadable on higher-VRAM hardware, the stop-token diagnostic should be re-run.",
+  "evidence_summary": "3/3 loadable models apply chat templates correctly — no template token leakage in /api/chat responses. GLM is untestable due to load failure. The GLM template leak question (stop-token fixable vs structural) remains unanswered.",
+  "shippability_impact": "Template application works for the 3-model subset. GLM template question deferred until GLM load issue is resolved."
+}

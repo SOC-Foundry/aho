@@ -1,0 +1,151 @@
+{
+  "workstream_id": "W2",
+  "iteration": "0.2.15",
+  "title": "Dispatcher Protocol Hardening",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-20T00:30:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-6"
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "check": "AHO_ITERATION env confirmed before workstream_start",
+      "result": "pass",
+      "evidence": "AHO_ITERATION=0.2.15 set before emit_workstream_start. Event logged at 2026-04-20T00:24:39Z with iteration=0.2.15."
+    },
+    {
+      "check": "Checkpoint advanced to W2",
+      "result": "pass",
+      "evidence": "Checkpoint shows current_workstream=W2, W2=in_progress. W0=workstream_complete, W1=workstream_complete preserved."
+    },
+    {
+      "check": "Model-family stop tokens dispatched per family",
+      "result": "pass",
+      "evidence": "MODEL_FAMILY_CONFIG registry with 4 families: qwen (endoftext/im_end), llama3 (eot_id/end_of_text), glm (endoftext/end_of_box), nemotron (endoftext/im_end). Tests TestFamilyStopTokens 4/4 pass. Payload inspection confirms correct tokens per model."
+    },
+    {
+      "check": "GLM template leak addressed",
+      "result": "pass",
+      "evidence": "<|end_of_box|> added as GLM stop token. _postprocess_response strips <|begin_of_box|> prefix. Tests TestGLMConfig::test_glm_strips_begin_box_prefix passes. Confirmed via W1 R11-diagnostic.json probe 4 methodology."
+    },
+    {
+      "check": "GLM num_gpu=30 in dispatch payload",
+      "result": "pass",
+      "evidence": "GLM family config sets num_gpu=30. TestGLMConfig::test_glm_num_gpu_30 passes. Payload options include num_gpu=30 for GLM models."
+    },
+    {
+      "check": "Qwen num_predict=2000 for thinking-mode budget",
+      "result": "pass",
+      "evidence": "Qwen family config sets num_predict=2000. TestQwenConfig::test_qwen_num_predict_2000 passes. Other families do not set num_predict."
+    },
+    {
+      "check": "No new except Exception blocks (G083)",
+      "result": "pass",
+      "evidence": "Five specific exception types: DispatchError, MalformedResponseError, TemplateLeakError, ModelUnavailableError, DispatchTimeoutError. Error handling catches urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError — all specific types."
+    },
+    {
+      "check": "Retry with exponential backoff implemented",
+      "result": "pass",
+      "evidence": "Configurable max_retries (default 2) with exponential backoff (base * 2^(attempt-1)). Retries on connection errors and timeouts. No retry on template leak (systemic), 404 (permanent), or malformed response. Tests TestRetryBackoff 3/3 pass."
+    },
+    {
+      "check": "Per-stage timeout enforcement",
+      "result": "pass",
+      "evidence": "timeout parameter passed through to urllib.request.urlopen. Caller controls per-stage timeout. DispatchTimeoutError raised on exhaustion when raise_on_error=True."
+    },
+    {
+      "check": "Model-swap handling (model management helpers)",
+      "result": "pass",
+      "evidence": "unload_model() sends keep_alive=0. list_loaded_models() queries /api/ps. ensure_model_ready() evicts specified models then probes target. Tests TestModelManagement 3/3 pass."
+    },
+    {
+      "check": "Client-side num_ctx validation (R7 workaround)",
+      "result": "pass",
+      "evidence": "_validate_num_ctx clamps to [256, 262144]. ValueError on non-positive or non-integer. Tests TestParameterValidation 6/6 pass."
+    },
+    {
+      "check": "Template leak detection on post-processed output",
+      "result": "pass",
+      "evidence": "_check_template_leak scans for 8 known template tokens. Template leak sets error but returns content (for inspection). No retry on leak. Tests TestTemplateLeak 5/5 pass."
+    },
+    {
+      "check": "Backward compatibility preserved",
+      "result": "pass",
+      "evidence": "STOP_TOKENS and DEFAULT_NUM_CTX module constants still exist. All 6 existing test_dispatcher_chat_api.py tests pass. dispatch() signature backward compatible (new params have defaults)."
+    },
+    {
+      "check": "Unit tests cover all hardening concerns",
+      "result": "pass",
+      "evidence": "46 new tests in test_dispatcher_hardening.py across 12 test classes. Plus 6 existing tests. Total: 52 dispatcher tests, all passing."
+    },
+    {
+      "check": "baseline_regression_check clean",
+      "result": "pass",
+      "evidence": "10 failed, 351 passed, 1 skipped (650.93s). W1 baseline: 11 failed, 304 passed. Delta: one fewer failure, 47 more passes (46 new W2 tests + 1 resolved). No new failures introduced. All 10 failures are pre-existing in test-baseline.json."
+    },
+    {
+      "check": "Design decisions documented",
+      "result": "pass",
+      "evidence": "dispatcher-hardening-notes.md written with 8 design decisions (D1-D8), evidence references, tradeoffs, and test coverage table."
+    },
+    {
+      "check": "__pycache__ cleared after src/aho/ touch (G070)",
+      "result": "pass",
+      "evidence": "find + rm -rf __pycache__ executed after dispatcher.py write."
+    },
+    {
+      "check": "No git operations performed",
+      "result": "pass",
+      "evidence": "Pillar 11 respected throughout W2."
+    },
+    {
+      "check": "Cross-project contamination check",
+      "result": "pass",
+      "evidence": "No cross-project references. All model family configs derived from aho W0 vetting probes and W1 fitness report. Stop tokens from model-specific documentation. No kjtcom constructs."
+    }
+  ],
+  "deliverables": [
+    "src/aho/pipeline/dispatcher.py",
+    "artifacts/tests/test_dispatcher_hardening.py",
+    "artifacts/iterations/0.2.15/dispatcher-hardening-notes.md"
+  ],
+  "findings": [
+    {
+      "id": "F001",
+      "severity": "info",
+      "description": "Nemotron stop tokens assumed ChatML-compatible (same as Qwen). W0 probe showed no template leakage with Qwen stops. If Nemotron has native stop tokens that differ, W3/W4 testing will surface this."
+    },
+    {
+      "id": "F002",
+      "severity": "info",
+      "description": "Unknown model family falls back to Qwen config. This is safe (ChatML is widely compatible) but verbose — unrecognized models won't have optimized stop tokens."
+    },
+    {
+      "id": "F003",
+      "severity": "info",
+      "description": "Template leak detection is post-hoc — it fires after receiving the full response. For streaming dispatch (future), leak detection would need per-chunk scanning."
+    }
+  ],
+  "test_results": {
+    "new_tests": 46,
+    "existing_tests": 6,
+    "total_dispatcher_tests": 52,
+    "all_passing": true,
+    "baseline_regression": {
+      "failed": 10,
+      "passed": 351,
+      "skipped": 1,
+      "duration_seconds": 650.93,
+      "new_failures_introduced": 0,
+      "delta_vs_w1": "one fewer failure, 47 more passes"
+    }
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "All stop tokens and model configs derived from aho-native W0/W1 evidence artifacts."
+  }
+}
