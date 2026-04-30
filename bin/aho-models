@@ -1,7 +1,12 @@
 #!/usr/bin/env fish
 # aho-models — Declarative Ollama model fleet wrapper.
 # Reads from artifacts/harness/model-fleet.txt.
-# Subcommands: list, status, install, doctor
+# Subcommands: list, status, install, vet, doctor
+#
+# Tier 1 finalized 0.2.16 W0 per 0.2.15 tier1-roster-validation:
+#   qwen3.5:9b (operational), llama3.2:3b (operational),
+#   haervwe/GLM-4.6V-Flash-9B:latest (partial, retain),
+#   nemotron-mini:4b (compromised, classifier-role only).
 
 set -g script_name "aho-models"
 set -g project_root (dirname (dirname (realpath (status filename))))
@@ -37,9 +42,32 @@ function _check_ollama
         return 1
     end
     if not curl -s http://localhost:11434/api/tags >/dev/null 2>&1
+        # Ollama runs as SYSTEM-level systemd (/etc/systemd/system/ollama.service),
+        # not user. Restart requires sudo. (0.2.15 W1 F008 / E2 — documented at
+        # Tier 1.)
         _gap "Ollama daemon not reachable at localhost:11434. Start it: sudo systemctl start ollama"
         return 1
     end
+    return 0
+end
+
+function _check_vram
+    # Tier 1 requires a GPU with >=8GB VRAM. GLM-4.6V-Flash-9B needs num_gpu=30
+    # partial offload at 8GB (0.2.15 W1 R2); full 41-layer offload OOMs.
+    if not command -q nvidia-smi
+        _gap "nvidia-smi not found. Tier 1 requires an NVIDIA GPU with 8GB+ VRAM."
+        return 1
+    end
+    set -l total_mib (nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 | string trim)
+    if test -z "$total_mib"
+        _gap "Could not read nvidia-smi memory.total. Driver installed?"
+        return 1
+    end
+    if test "$total_mib" -lt 8000
+        _gap "GPU VRAM $total_mib MiB below Tier 1 minimum (8000 MiB). Halt."
+        return 1
+    end
+    _info "GPU VRAM $total_mib MiB meets Tier 1 minimum."
     return 0
 end
 
@@ -80,13 +108,14 @@ function _cmd_status
 end
 
 function _cmd_install
+    _check_vram; or return 1
     _check_ollama; or return 1
     set -l models (_parse_fleet)
     if test (count $models) -eq 0
         _info "No models declared."
         return 0
     end
-    _info "Pulling "(count $models)" models..."
+    _info "Pulling "(count $models)" Tier 1 models..."
     for m in $models
         _info "Pulling $m..."
         ollama pull $m
@@ -95,7 +124,49 @@ function _cmd_install
             return 1
         end
     end
-    _info "Model fleet pull complete."
+    _info "Tier 1 model pull complete. Deferred (not-installed) roster in"
+    _info "artifacts/harness/model-fleet.txt; see comments for rationale."
+    _info "Next step: run 'aho-models vet' to smoke-probe each model."
+end
+
+function _cmd_vet
+    # Minimal per-model smoke probe: /api/chat with a one-line user prompt,
+    # expect non-empty response. Diagnoses gross dispatch regressions at
+    # clone-to-deploy time. Not a substitute for 0.2.15 W0 per-model vetting
+    # (tier1-roster-validation) which ran three probes per model and classified
+    # operational/partial/compromised.
+    _check_ollama; or return 1
+    set -l models (_parse_fleet)
+    set -l failures 0
+    for m in $models
+        _info "Vet $m ..."
+        # num_predict=256 leaves budget for Qwen thinking-mode (which can
+        # consume 150-200 tokens on a short response) plus a brief content
+        # reply. 32 tokens is too small — 0.2.16 W0 vet run saw Qwen emit
+        # 0-char content with num_predict=32 because thinking exhausted the
+        # budget.
+        set -l body '{"model":"'$m'","messages":[{"role":"user","content":"Reply with the single word: OK"}],"stream":false,"options":{"num_predict":256}}'
+        set -l resp (curl -s -X POST http://localhost:11434/api/chat \
+            -H 'Content-Type: application/json' \
+            -d "$body" 2>&1)
+        set -l chars (echo "$resp" | python -c 'import sys,json
+try:
+    d=json.loads(sys.stdin.read())
+    print(len((d.get("message") or {}).get("content","")))
+except Exception:
+    print(0)' 2>/dev/null)
+        if test -z "$chars"; or test "$chars" = "0"
+            _warn "  $m emitted 0-char content — FAIL"
+            set failures (math $failures + 1)
+        else
+            _info "  $m emitted $chars chars — ok"
+        end
+    end
+    if test $failures -gt 0
+        _error "$failures of "(count $models)" models failed vet."
+        return 1
+    end
+    _info "All "(count $models)" Tier 1 models passed smoke vet."
 end
 
 function _cmd_doctor
@@ -130,9 +201,11 @@ switch "$argv[1]"
         _cmd_status
     case install
         _cmd_install
+    case vet
+        _cmd_vet
     case doctor
         _cmd_doctor
     case '*'
-        echo "Usage: $script_name {list|status|install|doctor}"
+        echo "Usage: $script_name {list|status|install|vet|doctor}"
         exit 1
 end

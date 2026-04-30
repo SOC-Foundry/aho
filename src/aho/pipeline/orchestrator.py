@@ -15,7 +15,7 @@ from aho.pipeline.schemas import (
     RoleAssignment, PipelineTrace, HandoffEvent,
     DeltaProposal, DeltaValidation, DeltaItem,
 )
-from aho.pipeline.dispatcher import dispatch
+from aho.pipeline.dispatcher import dispatch, EmptyContentError
 from aho.logger import log_event
 
 
@@ -95,7 +95,8 @@ def _build_stage_prompt(stage: str, document: str,
 def run_cascade(document_path: str, role_assignment: RoleAssignment,
                 output_dir: Optional[str] = None,
                 stage_timeout: int = 3600,
-                document_text: Optional[str] = None) -> PipelineTrace:
+                document_text: Optional[str] = None,
+                workstream_id: str = "W0") -> PipelineTrace:
     """Execute the 5-stage cascade pipeline.
 
     Args:
@@ -104,9 +105,15 @@ def run_cascade(document_path: str, role_assignment: RoleAssignment,
         output_dir: Directory for per-stage output artifacts. Created if needed.
         stage_timeout: Max seconds per stage (default 3600 = 60 min).
         document_text: Pre-loaded document text. If None, reads from document_path.
+        workstream_id: Workstream label for emitted handoff events.
 
     Returns:
         PipelineTrace with full execution record.
+
+    Raises:
+        EmptyContentError: a stage returned error=None with 0-char content
+            (halt-on-empty semantics; the cascade does not propagate a silent
+            empty-string to downstream stages).
     """
     run_id = uuid.uuid4().hex[:12]
     trace = PipelineTrace(
@@ -145,7 +152,7 @@ def run_cascade(document_path: str, role_assignment: RoleAssignment,
             target=stage,
             action="dispatch",
             input_summary=f"run={run_id} stage={stage} model={model_id} input_chars={len(user_prompt)}",
-            workstream_id="W1",
+            workstream_id=workstream_id,
         )
 
         result = dispatch(model_id, user_prompt, system=system_prompt,
@@ -195,8 +202,18 @@ def run_cascade(document_path: str, role_assignment: RoleAssignment,
             target=stage,
             action="complete",
             output_summary=f"run={run_id} stage={stage} chars={len(response_text)} elapsed={stage_elapsed:.1f}s error={error}",
-            workstream_id="W1",
+            workstream_id=workstream_id,
         )
+
+        # Halt-on-empty: stage returned cleanly with 0-char content.
+        # Stage artifact and completion event already written above so the
+        # forensic trail is preserved; raise to the caller before continuing.
+        if error is None and not response_text:
+            raise EmptyContentError(
+                f"Stage {stage!r} (model={model_id}) emitted 0-char content "
+                f"with no error (run_id={run_id}). Halting cascade; downstream "
+                f"stages will not be dispatched."
+            )
 
     pipeline_elapsed = time.monotonic() - pipeline_start
     trace.total_wall_clock_seconds = round(pipeline_elapsed, 2)

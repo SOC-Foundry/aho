@@ -9,12 +9,32 @@ History:
 - 0.2.14 W1.5: switched from /api/generate to /api/chat (template fix)
 - 0.2.15 W2: multi-model hardening — per-family config, error types,
   retry/backoff, timeout enforcement, GLM template strip, model-swap handling
+- 0.2.16 W2: W3C TRACEPARENT propagation — child span off parent if
+  TRACEPARENT env var is present, root span otherwise
 """
 import json
+import os
 import time
 import urllib.request
 import urllib.error
 from typing import Optional
+
+# OTEL tracer — module-level. logger.py configures the global TracerProvider
+# with the OTLP exporter; here we just obtain a named tracer. If the SDK is
+# unavailable (AHO_OTEL_DISABLED=1, package missing) the ProxyTracer becomes a
+# no-op and every `start_as_current_span` call is a cheap context manager.
+try:
+    from opentelemetry import trace as _otel_trace
+    from opentelemetry.trace import Status, StatusCode
+    from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
+    _tracer = _otel_trace.get_tracer("aho.pipeline.dispatcher")
+    _propagator = TraceContextTextMapPropagator()
+except ImportError:
+    _otel_trace = None
+    Status = None
+    StatusCode = None
+    _tracer = None
+    _propagator = None
 
 
 # ---------------------------------------------------------------------------
@@ -39,6 +59,17 @@ class ModelUnavailableError(DispatchError):
 
 class DispatchTimeoutError(DispatchError):
     """Request exceeded configured timeout."""
+
+
+class EmptyContentError(DispatchError):
+    """Dispatcher returned cleanly (error=None) but with 0-char content.
+
+    0.2.15 W4 measured this failure mode: Qwen thinking-mode consumed the full
+    num_predict budget on cascade-scale prompts, yielding message.content=""
+    with done_reason="length" and no error surfaced. The cascade orchestrator
+    raises this so the empty content does not propagate silently to downstream
+    stages as "[stage X failed: None]" markers.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +113,12 @@ TEMPLATE_LEAK_TOKENS = [
 MODEL_FAMILY_CONFIG = {
     "qwen": {
         "stop_tokens": ["<|endoftext|>", "<|im_end|>"],
-        "num_predict": 2000,  # thinking-mode consumes ~150-200 internal tokens (W1 F001)
+        # 0.2.15 W4 measured thinking-mode consuming the full 2000 budget on
+        # cascade-scale prompts (247K-char doc at 32K context): eval_count=2000,
+        # content_chars=0, done_reason="length". 8000 gives thinking headroom
+        # plus visible output. Contingency levers if still insufficient:
+        # /no_think prefix, non-thinking variant, Producer pre-summarization.
+        "num_predict": 8000,
         "num_gpu": None,      # full GPU offload
         "strip_prefix": None,
     },
@@ -159,15 +195,18 @@ def _postprocess_response(content: str, family_config: dict) -> str:
     return content
 
 
-def _check_template_leak(content: str) -> str | None:
+def _check_template_leak(content: str) -> "str | bool":
     """Check for residual template tokens in post-processed output.
 
-    Returns the first leaked token found, or None if clean.
+    Returns the leaked token string if found, False if clean. Callers that
+    want a bool field for JSON emission use bool() on the result — False
+    stays False, non-empty string becomes True. Never returns None so
+    stage JSON writers never emit null for this field (AF002 closure).
     """
     for token in TEMPLATE_LEAK_TOKENS:
         if token in content:
             return token
-    return None
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -189,6 +228,38 @@ def _validate_num_ctx(num_ctx: int) -> int:
 
 
 # ---------------------------------------------------------------------------
+# TRACEPARENT propagation (0.2.16 W2)
+# ---------------------------------------------------------------------------
+
+def _resolve_span_parent_context():
+    """Resolve the parent context for a new dispatcher span.
+
+    Precedence: if an in-process span is already active (e.g., dispatch
+    called from inside router.classify_task), use the active Python context
+    so the new span nests under that caller. Only fall back to env
+    TRACEPARENT at the outermost entry, where no in-process span exists yet.
+
+    Returns an OTEL Context to pass to start_as_current_span, or None to
+    signal "use default active context."
+    """
+    if _otel_trace is None:
+        return None
+    current = _otel_trace.get_current_span()
+    if current.get_span_context().is_valid:
+        return None  # nest under the active span
+    if _propagator is None:
+        return None
+    traceparent = os.environ.get("TRACEPARENT")
+    if not traceparent:
+        return None
+    return _propagator.extract(carrier={"traceparent": traceparent})
+
+
+# Back-compat alias — external callers (tests) used the previous name.
+_extract_parent_context = _resolve_span_parent_context
+
+
+# ---------------------------------------------------------------------------
 # Core dispatch
 # ---------------------------------------------------------------------------
 
@@ -197,7 +268,8 @@ def dispatch(model_id: str, prompt: str, system: Optional[str] = None,
              num_ctx: int = DEFAULT_NUM_CTX,
              max_retries: int = DEFAULT_MAX_RETRIES,
              backoff_base: float = DEFAULT_BACKOFF_BASE,
-             raise_on_error: bool = False) -> dict:
+             raise_on_error: bool = False,
+             stage: Optional[str] = None) -> dict:
     """Send a prompt to an Ollama model via /api/chat and return the response.
 
     Uses the chat API with proper message structure to ensure the model's
@@ -219,138 +291,187 @@ def dispatch(model_id: str, prompt: str, system: Optional[str] = None,
         raise_on_error: If True, raise typed exceptions instead of returning error dicts
 
     Returns dict with keys: response, total_duration_ms, model, error,
-    wall_clock_seconds, family, retries_used.
+    wall_clock_seconds, family, retries_used, tokens_eval, tokens_prompt.
+
+    When TRACEPARENT is set on the process environment, emits an
+    `aho.dispatch.{family}` span as a child of that parent context; when
+    absent, emits it as a root span (preserving non-OTEL caller behavior).
     """
     num_ctx = _validate_num_ctx(num_ctx)
     family_config = get_family_config(model_id)
-
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
-
-    options = {
-        "num_ctx": num_ctx,
-        "stop": family_config["stop_tokens"],
-    }
-    if family_config.get("num_predict") is not None:
-        options["num_predict"] = family_config["num_predict"]
-    if family_config.get("num_gpu") is not None:
-        options["num_gpu"] = family_config["num_gpu"]
-
-    payload = {
-        "model": model_id,
-        "messages": messages,
-        "stream": False,
-        "options": options,
-    }
-
-    data = json.dumps(payload).encode("utf-8")
     family = resolve_family(model_id)
-    last_error = None
 
-    for attempt in range(max_retries + 1):
-        if attempt > 0:
-            delay = backoff_base * (2 ** (attempt - 1))
-            time.sleep(delay)
+    def _run_dispatch():
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
 
-        req = urllib.request.Request(
-            f"{OLLAMA_BASE}/api/chat",
-            data=data,
-            headers={"Content-Type": "application/json"},
-        )
+        options = {
+            "num_ctx": num_ctx,
+            "stop": family_config["stop_tokens"],
+        }
+        if family_config.get("num_predict") is not None:
+            options["num_predict"] = family_config["num_predict"]
+        if family_config.get("num_gpu") is not None:
+            options["num_gpu"] = family_config["num_gpu"]
 
-        start = time.monotonic()
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                raw_body = resp.read()
-                elapsed = time.monotonic() - start
+        payload = {
+            "model": model_id,
+            "messages": messages,
+            "stream": False,
+            "options": options,
+        }
 
+        data = json.dumps(payload).encode("utf-8")
+        last_error = None
+        elapsed = 0.0
+
+        for attempt in range(max_retries + 1):
+            if attempt > 0:
+                delay = backoff_base * (2 ** (attempt - 1))
+                time.sleep(delay)
+
+            req = urllib.request.Request(
+                f"{OLLAMA_BASE}/api/chat",
+                data=data,
+                headers={"Content-Type": "application/json"},
+            )
+
+            start = time.monotonic()
             try:
-                body = json.loads(raw_body)
-            except (json.JSONDecodeError, ValueError) as e:
-                err = MalformedResponseError(
-                    f"JSON decode failed: {e} (first 200 chars: {raw_body[:200]!r})"
-                )
-                if raise_on_error:
-                    raise err
-                return _error_result(model_id, family, str(err), elapsed, attempt)
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    raw_body = resp.read()
+                    elapsed = time.monotonic() - start
 
-            message = body.get("message")
-            if not isinstance(message, dict) or "content" not in message:
-                err = MalformedResponseError(
-                    f"Missing message.content in response body keys: {list(body.keys())}"
-                )
-                if raise_on_error:
-                    raise err
-                return _error_result(model_id, family, str(err), elapsed, attempt)
+                try:
+                    body = json.loads(raw_body)
+                except (json.JSONDecodeError, ValueError) as e:
+                    err = MalformedResponseError(
+                        f"JSON decode failed: {e} (first 200 chars: {raw_body[:200]!r})"
+                    )
+                    if raise_on_error:
+                        raise err
+                    return _error_result(model_id, family, str(err), elapsed, attempt)
 
-            content = message["content"]
-            content = _postprocess_response(content, family_config)
+                message = body.get("message")
+                if not isinstance(message, dict) or "content" not in message:
+                    err = MalformedResponseError(
+                        f"Missing message.content in response body keys: {list(body.keys())}"
+                    )
+                    if raise_on_error:
+                        raise err
+                    return _error_result(model_id, family, str(err), elapsed, attempt)
 
-            leaked = _check_template_leak(content)
-            if leaked is not None:
-                err = TemplateLeakError(
-                    f"Template token {leaked!r} found in output after post-processing"
-                )
-                # Template leak is systemic — do NOT retry
-                if raise_on_error:
-                    raise err
+                content = message["content"]
+                content = _postprocess_response(content, family_config)
+
+                leaked = _check_template_leak(content)
+                if leaked:
+                    err = TemplateLeakError(
+                        f"Template token {leaked!r} found in output after post-processing"
+                    )
+                    # Template leak is systemic — do NOT retry
+                    if raise_on_error:
+                        raise err
+                    return {
+                        "response": content,
+                        "total_duration_ms": body.get("total_duration", 0) / 1e6,
+                        "model": body.get("model", model_id),
+                        "error": f"template_leak: {leaked}",
+                        "wall_clock_seconds": round(elapsed, 2),
+                        "family": family,
+                        "retries_used": attempt,
+                        "tokens_eval": body.get("eval_count"),
+                        "tokens_prompt": body.get("prompt_eval_count"),
+                    }
+
                 return {
                     "response": content,
                     "total_duration_ms": body.get("total_duration", 0) / 1e6,
                     "model": body.get("model", model_id),
-                    "error": f"template_leak: {leaked}",
+                    "error": None,
                     "wall_clock_seconds": round(elapsed, 2),
                     "family": family,
                     "retries_used": attempt,
+                    "tokens_eval": body.get("eval_count"),
+                    "tokens_prompt": body.get("prompt_eval_count"),
                 }
 
-            return {
-                "response": content,
-                "total_duration_ms": body.get("total_duration", 0) / 1e6,
-                "model": body.get("model", model_id),
-                "error": None,
-                "wall_clock_seconds": round(elapsed, 2),
-                "family": family,
-                "retries_used": attempt,
-            }
+            except urllib.error.HTTPError as e:
+                elapsed = time.monotonic() - start
+                if e.code == 404:
+                    err = ModelUnavailableError(
+                        f"Model {model_id!r} not found (HTTP 404)"
+                    )
+                    # Model missing is not transient — do NOT retry
+                    if raise_on_error:
+                        raise err
+                    return _error_result(model_id, family, str(err), elapsed, attempt)
+                # Other HTTP errors — retry
+                last_error = f"http_{e.code}: {e.reason}"
 
-        except urllib.error.HTTPError as e:
-            elapsed = time.monotonic() - start
-            if e.code == 404:
-                err = ModelUnavailableError(
-                    f"Model {model_id!r} not found (HTTP 404)"
-                )
-                # Model missing is not transient — do NOT retry
-                if raise_on_error:
-                    raise err
-                return _error_result(model_id, family, str(err), elapsed, attempt)
-            # Other HTTP errors — retry
-            last_error = f"http_{e.code}: {e.reason}"
+            except urllib.error.URLError as e:
+                elapsed = time.monotonic() - start
+                last_error = f"connection_error: {e}"
+                # Transient — will retry
 
-        except urllib.error.URLError as e:
-            elapsed = time.monotonic() - start
-            last_error = f"connection_error: {e}"
-            # Transient — will retry
+            except (TimeoutError, OSError) as e:
+                elapsed = time.monotonic() - start
+                if isinstance(e, TimeoutError):
+                    last_error = f"timeout after {timeout}s"
+                else:
+                    last_error = f"os_error: {e}"
+                # Transient — will retry
 
-        except (TimeoutError, OSError) as e:
-            elapsed = time.monotonic() - start
-            if isinstance(e, TimeoutError):
-                last_error = f"timeout after {timeout}s"
-            else:
-                last_error = f"os_error: {e}"
-            # Transient — will retry
+        # All retries exhausted
+        if raise_on_error:
+            if "timeout" in str(last_error):
+                raise DispatchTimeoutError(last_error)
+            if "connection_error" in str(last_error):
+                raise ModelUnavailableError(last_error)
+            raise DispatchError(last_error)
 
-    # All retries exhausted
-    if raise_on_error:
-        if "timeout" in str(last_error):
-            raise DispatchTimeoutError(last_error)
-        if "connection_error" in str(last_error):
-            raise ModelUnavailableError(last_error)
-        raise DispatchError(last_error)
+        return _error_result(model_id, family, last_error, elapsed, max_retries)
 
-    return _error_result(model_id, family, last_error, elapsed, max_retries)
+    if _tracer is None:
+        return _run_dispatch()
+
+    parent_ctx = _resolve_span_parent_context()
+    span_kwargs = {"context": parent_ctx} if parent_ctx is not None else {}
+
+    span_start = time.monotonic()
+    with _tracer.start_as_current_span(f"aho.dispatch.{family}", **span_kwargs) as span:
+        span.set_attribute("aho.model", model_id)
+        span.set_attribute("aho.family", family)
+        span.set_attribute("dispatch.num_ctx", num_ctx)
+        if family_config.get("num_predict") is not None:
+            span.set_attribute("dispatch.num_predict", family_config["num_predict"])
+        if stage is not None:
+            span.set_attribute("aho.stage", stage)
+
+        try:
+            result = _run_dispatch()
+        except DispatchError as exc:
+            span.record_exception(exc)
+            span.set_status(Status(StatusCode.ERROR, type(exc).__name__))
+            span.set_attribute(
+                "dispatch.duration_ms",
+                round((time.monotonic() - span_start) * 1000.0, 2),
+            )
+            raise
+
+        span.set_attribute(
+            "dispatch.duration_ms",
+            float(result.get("wall_clock_seconds") or 0.0) * 1000.0,
+        )
+        if result.get("tokens_eval") is not None:
+            span.set_attribute("dispatch.tokens_eval", result["tokens_eval"])
+        if result.get("tokens_prompt") is not None:
+            span.set_attribute("dispatch.tokens_prompt", result["tokens_prompt"])
+        if result.get("error"):
+            span.set_status(Status(StatusCode.ERROR, str(result["error"])[:200]))
+        return result
 
 
 def _error_result(model_id: str, family: str, error: str,

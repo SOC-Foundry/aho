@@ -1,0 +1,273 @@
+{
+  "workstream_id": "W1",
+  "iteration": "0.2.16",
+  "title": "Pillar 8 cost + token dashboard — aho-dashboard extension, not standalone Grafana",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-23T18:25:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-7[1m]"
+    }
+  ],
+  "scope_notes": {
+    "approach_redirect": "aho-plan-0.2.16.md §W1 calls for a standalone Grafana JSON dashboard. Kyle's W1 brief redirected execution to extending the existing aho-dashboard (Flutter + Python stdlib http.server on :7800) rather than building a fresh Grafana. Design doc §W1 bullet 'extend existing aho dashboard if live' accommodates both paths. Treated as scope clarification, not deviation. Mercor-facing Grafana reference implementation lives in a separate claude-otel repo and is out of scope for this workstream.",
+    "bucket_1_backend": "In scope — new src/aho/dashboard/otel_aggregator.py module, /api/otel and /api/otel/workstream/W{N} endpoints added to DashboardHandler, dashboard daemon restarted.",
+    "bucket_2_flutter": "In scope — new OTEL banner + Workstream Telemetry panel appended to web/claw3d/lib/main.dart. Dedicated 2s polling timer for /api/otel (existing /api/state timer remains at 5s). Built via flutter build web --release.",
+    "bucket_3_tests": "In scope — 14 unit tests in artifacts/tests/test_otel_aggregator.py (target was 8-12; expanded to cover TTL-via-monkeypatched-clock, malformed-JSONL resilience, PII scrubbing as dedicated tests).",
+    "bucket_4_error_classification": "In scope — internal_error events classified by error_name. 32 historical events across logs.jsonl: 30 'AbH' (minified JS class name from Claude Code's bundled build; likely AbortError/network), 1 'Error' generic, 1 'AxiosError' with ERR_BAD_REQUEST. No systemic failure pattern. Treated as informational-only in aggregator output; real-time alerting on rate spikes is W3 scope (ClaudeAPIErrorSpike rule).",
+    "bucket_5_validation": "In scope — full pytest, /api/otel fixture capture, one dashboard screenshot."
+  },
+  "acceptance_checks": [
+    {
+      "check": "/api/otel endpoint returns structured per-workstream + iteration-rollup data from real Claude Code OTEL emissions",
+      "result": "pass",
+      "evidence": "curl -s http://127.0.0.1:7800/api/otel returns HTTP 200 with JSON shape: {generated_at, source_files, iteration, workstreams{W0, W1}, iteration_rollup}. Each workstream record has cost_usd, tokens{input, output, cacheRead, cacheCreation, total}, cache_vs_new_ratio{cache_read, new_content, ratio}, active_time_seconds, api_request_count, api_error_count, api_retries_exhausted_count, tool_result_count, tool_decision_count, mcp_server_connection_count, user_prompt_count, internal_error_count, top_error_names[{name,count}], first_event_ts, last_event_ts, wall_clock_duration_s. Source is ~/.local/share/aho/logs/logs.jsonl + ~/.local/share/aho/metrics/metrics.jsonl. Sample at archive-write time: W0 cost=$15.97 / 18.74M tokens / 20.6x cache ratio; W1 cost=$7.75 / 12.02M tokens / 98x cache ratio; iteration rollup cost=$23.73 / 30.75M tokens / 29.6x ratio. Fixture snapshot persisted to artifacts/iterations/0.2.16/dashboards/api-otel-sample.json."
+    },
+    {
+      "check": "/api/otel/workstream/W{N} single-workstream endpoint with 404 on unknown",
+      "result": "pass",
+      "evidence": "curl -s http://127.0.0.1:7800/api/otel/workstream/W1 returns HTTP 200 with {iteration, generated_at, workstream: <single-workstream record>}. curl -s http://127.0.0.1:7800/api/otel/workstream/WXX returns HTTP 404. 404 path exercised via dashboard and via unit test test_get_workstream_detail_returns_none_for_unknown."
+    },
+    {
+      "check": "OTEL spot-check — /api/otel response matches independent grep of logs.jsonl (raw response ground truth per operating stance)",
+      "result": "pass",
+      "evidence": "Independent Python walk of logs.jsonl produced event counts per (workstream, event_name). Compared against /api/otel workstream records for 6 event names × 2 workstreams = 12 comparison pairs: api_request, tool_result, tool_decision, mcp_server_connection, user_prompt, internal_error. All 12 matched exactly (W0: 207/192/192/133/16/27, W1 at check time: 30/30/30/10/1/1). Script reproducible from the Python one-liner in the W1 brief Bucket 4 section. Raw jsonl files are ground truth; /api/otel is a faithful aggregation, not a summarization drift."
+    },
+    {
+      "check": "Flutter claw3d panel renders with real data — functional proof of end-to-end flow",
+      "result": "pass",
+      "evidence": "Screenshot captured at artifacts/iterations/0.2.16/dashboards/claw3d-w1-telemetry-panel.png via playwright MCP headless Chrome (1440x1000 viewport). Panel components visible: (1) OTEL banner above existing sections — 'iter 0.2.16 | cost $21.68 | tokens 27.15M | cache:new 26.6x (26.16M / 982.7K) | workstreams 2' at screenshot capture time; (2) Workstream Telemetry section with 2 cards — W0 ($15.9722, 18.74M tokens, 4-segment token bar showing in/out/cache-r/cache-c proportions, count pills turns 16/tools 192/api 207/mcp 133/err 27) and W1 ($5.7126 at capture time, 8.41M tokens, same layout, turns 2/tools 56/api 58/mcp 10/err 2). Existing claw3d sections (system banner, component coverage, daemon health, recent traces, MCP fleet, model fleet) unchanged below. Figures continued growing post-capture; screenshot is a moment-in-time snapshot not a baseline. flutter build web --release completed clean (~17s, tree-shakes CupertinoIcons and MaterialIcons from >1.9MB to 7.8KB)."
+    },
+    {
+      "check": "Cache-vs-new-content ratio visible in dashboard",
+      "result": "pass",
+      "evidence": "OTEL banner (iteration level) shows 'cache:new 26.6x (26.16M / 982.7K)' cell. Per-workstream cards include 4-segment token bar with distinct colors for cacheRead (orange/kUnknown) and cacheCreation (red/kMissing) alongside input (kAccent) and output (kShaft), making the cache-vs-new proportion visually distinct. Numeric cache_vs_new_ratio dict with {cache_read, new_content, ratio} is in every workstream record and the rollup — computed as cacheRead / (input + output + cacheCreation). Iteration-level rollup ratio at capture was 26.6x; at archive write time 29.6x (both are dominated by cached context reuse, expected for session-heavy workstreams)."
+    },
+    {
+      "check": "2s TTL cache actually caches and force=True busts it",
+      "result": "pass",
+      "evidence": "test_cache_ttl_caches_and_force_busts (append event to log between calls; non-forced call returns cached count, forced call returns fresh count). test_cache_ttl_expires_after_2s (monkeypatched time.time; within-TTL returns cached, past-TTL returns fresh). Both tests pass. Cache keyed by (iteration, logs_path, metrics_path) tuple so different path combinations cannot accidentally share state."
+    },
+    {
+      "check": "PII scrubbing — aggregator output contains no user.*/organization.id/session.id fields (F-W0-003 response)",
+      "result": "pass",
+      "evidence": "src/aho/dashboard/otel_aggregator.py reads only aho.* resource attrs for filtering and metric numeric values + event.name + event.timestamp + error_name for aggregation. User/org/session attrs are present on every input record and deliberately never propagate to output. test_pii_attrs_never_appear_in_output writes log + metric lines contaminated with user.email='scrub@me.test', user.id='USER_HASH', organization.id='ORG_UUID', session.id='SESSION_UUID' as attrs on both the event and the cost.usage datapoint; asserts none of those fragments appear in json.dumps(aggregator_output). Test passes. F-W0-003's 'scrub PII attrs in W1 dashboard regardless' requirement satisfied by design."
+    },
+    {
+      "check": "Unit tests — 14 new, all passing (target was 8-12; expanded scope)",
+      "result": "pass",
+      "evidence": "artifacts/tests/test_otel_aggregator.py: 14 tests covering cost+token math, event count aggregation, placeholder+wrong-iteration filtering, cache_vs_new ratio (populated + None-when-no-new-tokens), iteration rollup sums, 2s TTL cache (both force-bust and time-based expiry), missing source files, malformed JSONL resilience, top_error_names cap at 3, PII scrubbing, wall_clock_duration from ISO timestamps, get_workstream_detail 404. pytest run: 14 passed in 0.03s. All tests use tmp_path fixtures with synthetic OTEL jsonl; none touch real logs/metrics files."
+    },
+    {
+      "check": "Baseline regression — no new failures attributable to W1",
+      "result": "pass",
+      "evidence": "Full pytest run after all W1 changes: 12 failed / 408 passed / 1 skipped / 0 deselected in 637.65s. All 12 failures match entries in artifacts/harness/test-baseline.json (14 documented baseline failures; 2 flake to pass). +13 passed delta vs W0 close (395 → 408) is +14 new test_otel_aggregator tests minus 1 flake (test_gate_verbosity::test_run_quality_emits_checks which passed in W0's flake variance is failing again this run — in the W0 acceptance check it was flagged as 'environmental variance, not deliberate fix'). test_daemon_healthy::test_healthy_unit_passes still flake-passing (not in failed list this run). Zero new failures attributable to W1 scope. .aho-checkpoint.json post-pytest verified intact: iteration=0.2.16, current_workstream=W1, W0=workstream_complete, W1=in_progress, W2-W4=not_started."
+    },
+    {
+      "check": "G45 avoidance — no new TextField/TextInput/TextEditing widgets added to claw3d (Flutter flutter_code_editor migration open on kjtcom side)",
+      "result": "pass",
+      "evidence": "grep -c 'TextField\\|TextInput\\|TextEditing' /home/kthompson/dev/projects/aho/web/claw3d/lib/main.dart returns 0. New OTEL banner + workstream telemetry panel uses Container, Text, Row, Column, Wrap, ClipRRect, SizedBox, Expanded, Icon — all read-only display widgets. Existing claw3d had no TextField surface; my additions preserve that state. G45 perimeter unchanged on the aho side of the TextField deprecation track."
+    },
+    {
+      "check": "G083 self-audit — no except Exception blocks in new code",
+      "result": "pass",
+      "evidence": "Initial draft of get_active_iteration() in otel_aggregator.py carried an 'except Exception: return \"\"' block around find_project_root(). Caught by pre-commit grep during W1 self-audit. Narrowed to 'except AhoProjectNotFound' (the only declared exception type from aho.paths.find_project_root, per src/aho/paths.py:14). Re-greped otel_aggregator.py + server.py + test_otel_aggregator.py: zero 'except Exception' occurrences. Dashboard daemon restarted after fix (systemctl --user restart aho-dashboard.service); /api/otel endpoint returned HTTP 200 post-restart."
+    },
+    {
+      "check": "__pycache__ cleared after src/aho/ edits (G070); daemon restarted (G071)",
+      "result": "pass",
+      "evidence": "`find src -name __pycache__ -type d -exec rm -rf {} +` executed after each dispatcher/server/aggregator edit cycle. aho-dashboard.service restarted twice — once after initial server.py integration, once after G083 narrowing edit — both returned to active state within 1s. G071 compliance: dashboard daemon imports src/aho/dashboard/* so restart was mandatory after each Python-side change."
+    },
+    {
+      "check": "OTEL resource attrs correctly tagged on emitted events (Pattern C step 2)",
+      "result": "pass",
+      "evidence": "Verified at session-resume immediately after .claude/settings.json edit to use literal aho.workstream=W1 (see F-W1-001 below). ~/.local/share/aho/logs/logs.jsonl last record resource attrs at resume: service.name=claude-code, aho.iteration=0.2.16, aho.workstream=W1, aho.role=drafter. Tally across logs.jsonl: W0=179 records (historical), W1=3 records at resume (growing), placeholder='${AHO_WORKSTREAM}'=32 records (dead pre-restart residue; filtered by aggregator). workstream_start event for W1 emitted via `aho iteration workstream start W1` post-verification, checkpoint transitioned W1=in_progress."
+    },
+    {
+      "check": "Bucket 4 error classification — internal_error events classified before aggregator field design",
+      "result": "pass",
+      "evidence": "Python enumeration of all internal_error events across logs.jsonl produced: AbH=30 (minified JS class, no error_message/error_code/error_stack; most likely AbortError or similar network-abort class from Claude Code's bundled/minified build), Error=1 (no detail), AxiosError=1 (error_code=ERR_BAD_REQUEST; HTTP 400-class). Temporal spread: 32 events across ~24 hours of activity, no clustering except natural churn during active sessions. Conclusion: no systemic failure pattern; minified class names are a property of Claude Code's production build and expected. W1 treatment: expose internal_error_count + top-3 error_name classes as informational fields (not alert triggers). Rate-spike alerting is W3 scope (ClaudeAPIErrorSpike rule per aho-plan-0.2.16.md §W3). No finding to file."
+    },
+    {
+      "check": "No git operations performed (Pillar 11)",
+      "result": "pass",
+      "evidence": "No git add/commit/push/merge/branch/reset/checkout performed by the agent at any point during W1. `git status` at session end reflects only local working-tree changes: modified src/aho/dashboard/server.py, web/claw3d/lib/main.dart (plus build/ artifacts from flutter build web), .claude/settings.json (pre-restart edit); new files src/aho/dashboard/otel_aggregator.py, artifacts/tests/test_otel_aggregator.py, artifacts/iterations/0.2.16/dashboards/api-otel-sample.json, artifacts/iterations/0.2.16/dashboards/claw3d-w1-telemetry-panel.png, artifacts/iterations/0.2.16/acceptance/W1.json. Kyle's prerogative whether and when to commit. Pillar 11 respected."
+    },
+    {
+      "check": "No celebratory framing (G081)",
+      "result": "pass",
+      "evidence": "Acceptance archive uses direct characterization. Dashboard panel described as 'renders with real data — functional proof of end-to-end flow' not 'landed' or 'shipped'. F-W0-003 response labeled 'satisfied by design' not 'solved cleanly'. F-W1-001 acknowledged as 'real finding' with carry-forward proposal rather than papered over. Banned phrases ('clean close', 'landed beautifully', 'all green') absent from acceptance archive, test names, code comments, commit messages (no commits made anyway — Pillar 11)."
+    },
+    {
+      "check": "Cross-project contamination check",
+      "result": "pass",
+      "evidence": "No ADRs authored in W1 (W0 left 0003 and 0004; next available ADR number for W2 will be 0005, determined at W2 execution time from artifacts/adrs/ enumeration — not fabricated here). Pillar count 11 verified against CLAUDE.md verbatim. Bundle section count (9) not referenced in W1 artifacts (no bundle writing; that's W4). 'kjtcom G45' reference in scope_notes is tagged with project origin to avoid ambiguity. No v10.66 / '10 IAO Pillars' / kjtcom construct drift into W1 artifacts."
+    },
+    {
+      "check": "Raw response field inspected on key artifacts",
+      "result": "pass",
+      "evidence": "OTEL resource attrs directly inspected on ~/.local/share/aho/logs/logs.jsonl last record to confirm literal 'W1' values after .claude/settings.json restart (not trusting only Python env inspection). Fixture file /api/otel response inspected directly via curl and saved verbatim — numeric values cross-checked against independent jsonl grep per 'raw response ground truth' operating stance. Dashboard panel screenshot captured from actual rendered Flutter output via playwright headless Chrome — not trusting that the code 'should render' based on code review alone."
+    }
+  ],
+  "deliverables": [
+    "src/aho/dashboard/otel_aggregator.py (new, 352 lines)",
+    "src/aho/dashboard/server.py (modified — /api/otel + /api/otel/workstream/W{N} endpoints added)",
+    "web/claw3d/lib/main.dart (modified — OTEL banner + Workstream Telemetry panel + _fetchOtel 2s polling timer; file grew from 378 to 602 lines)",
+    "web/claw3d/build/web/ (rebuilt via flutter build web --release)",
+    "artifacts/tests/test_otel_aggregator.py (new, 493 lines, 14 tests)",
+    "artifacts/iterations/0.2.16/dashboards/api-otel-sample.json (fixture snapshot at one moment in time)",
+    "artifacts/iterations/0.2.16/dashboards/claw3d-w1-telemetry-panel.png (playwright full-page screenshot)",
+    "artifacts/iterations/0.2.16/acceptance/W1.json",
+    ".claude/settings.json (modified — OTEL_RESOURCE_ATTRIBUTES now carries literal aho.iteration=0.2.16, aho.workstream=W1 instead of ${VAR} placeholders; see F-W1-001)"
+  ],
+  "findings": [
+    {
+      "id": "F-W1-001",
+      "severity": "important",
+      "title": "Managed-settings env values with ${VAR} placeholders are not shell-expanded by Claude Code's OTEL emitter",
+      "description": "At W1 session start, ~/.local/share/aho/logs/logs.jsonl records showed aho.iteration=${AHO_ITERATION} and aho.workstream=${AHO_WORKSTREAM} as literal unexpanded strings in resource attrs. Root cause: .claude/settings.json env block had `\"OTEL_RESOURCE_ATTRIBUTES\": \"service.name=claude-code,aho.iteration=${AHO_ITERATION},aho.workstream=${AHO_WORKSTREAM},aho.role=drafter\"` — Claude Code passes the string verbatim to the OTEL SDK without shell-style variable expansion. Parent-shell AHO_ITERATION / AHO_WORKSTREAM env vars are not consulted for substitution. Also confirmed: managed settings are read at Claude Code process start, not re-read mid-session, so the literal-value fix takes effect only after restart. W0 acceptance (line 44 'Literal attr values — maintenance cost noted as carry-to-retro for env-expansion verification') flagged this risk; between W0 close and W1 start someone or something rewrote settings.json to the ${VAR} form that doesn't work. Dead residue: 32 log records and 34 metric records tagged with the literal ${AHO_WORKSTREAM} string — these are filtered by the aggregator via a ws.startswith('${') check but they persist in the raw jsonl files.",
+      "action_taken_in_w1": "Halted before emitting workstream_start. Surfaced to Kyle with three-option triage. Kyle chose option 1: edit .claude/settings.json to literal 'aho.iteration=0.2.16,aho.workstream=W1,aho.role=drafter'; Kyle restarted Claude Code via `claude --continue`; new session's emissions landed with correct literal values. Aggregator filters out placeholder-tagged records by design.",
+      "proposed_fix": "Long-term fix requires one of: (a) a wrapper that rewrites .claude/settings.json at workstream_start based on shell env (moves the maintenance burden from manual editing to an aho bin wrapper — fits Pillar 4 surface); (b) confirm whether Claude Code respects OTEL_RESOURCE_ATTRIBUTES set in the parent shell env (independent of settings.json) and remove the key from settings.json entirely if so; (c) upstream feature request to Claude Code to support ${VAR} expansion in managed settings env values. Cleanest short-term is (a) — a pre-workstream-start wrapper `aho workstream init W{N}` that writes the literal values and either prompts Kyle to restart or uses a feature gate. Candidate for 0.2.17 harness hygiene or a 0.2.16 W3 adjunct if desired. Document in retrospective.",
+      "scope": "Not in W1 item list. Logged for inclusion in carry-forwards."
+    }
+  ],
+  "test_results": {
+    "new_tests_added": 14,
+    "new_tests_all_pass": true,
+    "new_test_files": [
+      "artifacts/tests/test_otel_aggregator.py (14 tests: cost+token math, event counts, filtering, cache ratio x2, rollup, cache TTL x2, missing files, malformed JSONL, top errors cap, PII scrub, wall clock, workstream-detail 404)"
+    ],
+    "baseline_regression": {
+      "failed": 12,
+      "passed": 408,
+      "skipped": 1,
+      "deselected": 0,
+      "duration_seconds": 637.65,
+      "baseline_reference_failed_count": 14,
+      "baseline_reference_source": "artifacts/harness/test-baseline.json (14 documented baseline failures)",
+      "new_failures_attributable_to_w1": 0,
+      "w0_close_baseline_for_comparison": {"failed": 11, "passed": 395, "skipped": 1},
+      "delta_vs_w0": "+1 failed (test_gate_verbosity::test_run_quality_emits_checks flake returned; was passing in W0 via env variance), +13 passed (+14 new test_otel_aggregator minus the 1 returned-to-failing flake), +0 skipped",
+      "previously_failing_still_flake_passing": [
+        "artifacts/tests/test_daemon_healthy.py::test_healthy_unit_passes"
+      ],
+      "failures_list_matches_baseline": true,
+      "failures_list": [
+        "artifacts/tests/test_build_log_stub.py::test_generate_stub",
+        "artifacts/tests/test_gate_verbosity.py::test_run_quality_emits_checks",
+        "artifacts/tests/test_postflight_residuals.py::test_readme_current_utc_comparison",
+        "artifacts/tests/test_postflight_run_types.py::test_run_type_mixed_pass",
+        "artifacts/tests/test_postflight_run_types.py::test_run_type_mixed_fail",
+        "artifacts/tests/test_report_builder.py::test_report_filters_events_by_iteration",
+        "artifacts/tests/test_report_builder.py::test_report_risk_register_captures_warnings",
+        "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_reads_last_complete_event",
+        "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_no_events",
+        "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_no_log_file",
+        "artifacts/tests/test_telegram_ws_commands.py::TestAutoPush::test_auto_push_detects_new_complete",
+        "artifacts/tests/test_ws_fixes.py::test_planned_ws_count_reads_plan_doc"
+      ]
+    },
+    "checkpoint_state_post_pytest": {
+      "iteration": "0.2.16",
+      "phase": 0,
+      "current_workstream": "W1",
+      "workstreams": {
+        "W0": "workstream_complete",
+        "W1": "in_progress",
+        "W2": "not_started",
+        "W3": "not_started",
+        "W4": "not_started"
+      },
+      "integrity": "clean — no spurious entries from test fixtures; W0 conftest allowlist held"
+    }
+  },
+  "otel_telemetry_evidence": {
+    "pillar_8_dogfood_note": "W1 is the cost dashboard. This acceptance archive records the cost of building the cost dashboard, read directly from the dashboard it built. Pillar 8 ground truth — measured instrumentation, not parsed-log estimation.",
+    "pipeline": "Claude Code OTEL → otelcol-contrib (gRPC :4317) → file exporters → ~/.local/share/aho/{metrics,logs}/{metrics,logs}.jsonl → otel_aggregator.py → /api/otel → claw3d Flutter panel",
+    "w1_session_at_archive_write_time": {
+      "cost_usd": 7.754228250000001,
+      "tokens": {
+        "input": 101,
+        "output": 51160,
+        "cacheRead": 11880309,
+        "cacheCreation": 85531,
+        "total": 12017101
+      },
+      "cache_vs_new_ratio": 98.24,
+      "api_request_count": 80,
+      "tool_result_count": 79,
+      "tool_decision_count": 79,
+      "mcp_server_connection_count": 10,
+      "user_prompt_count": 2,
+      "internal_error_count": 3,
+      "top_error_names_observed": ["AbH", "McpToolCallError"],
+      "first_event_ts": "2026-04-23T17:51:30.023Z",
+      "last_event_ts_at_archive_write": "2026-04-23T18:22:51.397Z",
+      "wall_clock_duration_s_at_archive_write": 1881.374,
+      "note_on_user_prompt_count": "Claude Code emits user_prompt once per API-level prompt submission, which correlates to session turns but not 1:1 with shell-visible messages. 2 turns = roughly the W1 brief turn + 'go' turn + resumed 'we're back' turn; Claude Code may batch differently than shell-visible inputs."
+    },
+    "iteration_rollup_at_archive_write": {
+      "cost_usd": 23.7264043,
+      "total_tokens": 30754650,
+      "cache_vs_new_ratio": 29.63
+    },
+    "pii_scrubbing_applied": true,
+    "pii_attrs_never_in_api_output": [
+      "user.id", "user.email", "user.account_id", "user.account_uuid",
+      "organization.id", "session.id"
+    ],
+    "f_w0_003_response": "F-W0-003 'OTEL_METRICS_INCLUDE_SESSION_ID=false did not suppress session.id' — aggregator addresses the downstream concern by never propagating session.id (or any user/org attr) to /api/otel output. The flag-behavior question upstream of the aggregator remains F-W0-003's responsibility to investigate."
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "No fabricated ADR numbers (none authored in W1). Pillar count 11 verified against CLAUDE.md. kjtcom 'G45' reference in scope_notes carries explicit project attribution. No v10.66 / '10 IAO Pillars' constructs drifted into W1 artifacts."
+  },
+  "pillar_11_compliance": {
+    "git_operations_performed": 0,
+    "secrets_read": 0,
+    "unsanctioned_state_writes": 0,
+    "notes": "No git add/commit/push/merge/reset/checkout. No ~/.config/fish/config.fish read. .claude/settings.json edit was explicitly authorized by Kyle (option 1 triage path). Dashboard daemon restarts were G071-mandatory after Python edits, not unsanctioned state changes. .aho-checkpoint.json transitioned via `aho iteration workstream start W1` wrapper — state write via sanctioned bin wrapper, not direct file edit."
+  },
+  "deviations_from_brief": [
+    {
+      "deviation": "Unit test count 14 vs target 8-12",
+      "reason": "Target was 8-12; ended at 14. PII scrubbing, TTL-via-monkeypatched-clock (separate from TTL-via-force-bust), and malformed-JSONL resilience each earned dedicated tests during implementation. Brief allowed the range with 'target 8-12 new tests'; going 2 over to capture important coverage gaps is additive, not drift."
+    },
+    {
+      "deviation": "Flutter polling at 2s but existing /api/state polling remains at 5s",
+      "reason": "Brief specified '2s cadence, same as rest of dashboard' but existing _fetchState timer is 5s (server-side cache TTL is 2s per server.py comment; the Flutter side chose 5s). Kept existing /api/state at 5s to avoid scope creep into unrelated polling rate changes; dedicated _otelTimer at 2s matches brief for OTEL specifically. If unified cadence is preferred, that's a single-line change (5 → 2) outside W1 scope."
+    },
+    {
+      "deviation": "Grafana JSON dashboard path replaced with aho-dashboard extension",
+      "reason": "Kyle-approved scope clarification in W1 brief — design doc §W1 already accommodates 'extend existing aho dashboard if live'. Mercor-facing Grafana reference lives in a separate claude-otel repo and is out of scope for W1."
+    }
+  ],
+  "carry_forward_candidates": [
+    {
+      "item": "F-W1-001 OTEL_RESOURCE_ATTRIBUTES env expansion wrapper",
+      "severity": "important",
+      "target": "0.2.16 W3 adjunct OR 0.2.17 harness hygiene",
+      "rationale": "Manual settings.json editing + Claude Code restart at each workstream boundary is load-bearing and error-prone. Pillar 4 (wrappers are the tool surface) suggests a bin wrapper — `aho workstream init W{N}` — that writes literal values is the right long-term answer."
+    },
+    {
+      "item": "W0 F-W0-004 conftest allowlist brittleness",
+      "severity": "important",
+      "target": "0.2.17 test isolation iteration",
+      "rationale": "Carried from W0. Unchanged by W1; my new test module test_otel_aggregator.py does not call emit_workstream_start/complete, so the allowlist doesn't apply. But the underlying fragility persists for any future test author."
+    },
+    {
+      "item": "Historical trend graphs (time series of cost/tokens)",
+      "severity": "info",
+      "target": "0.2.17 or W1.5",
+      "rationale": "Requires a metric backend that retains data points over time (Prometheus remote_write from otelcol, or Grafana direct scrape). /api/otel currently returns point-in-time aggregates only. Mercor Grafana reference implementation may offer the template."
+    },
+    {
+      "item": "Dashboard polling cadence unification (/api/state at 5s vs /api/otel at 2s)",
+      "severity": "info",
+      "target": "0.2.17 dashboard polish",
+      "rationale": "Not functionally problematic but asymmetric. Server-side caches are 2s on both; the Flutter-side 5s for /api/state is probably a stale-era choice. One-line tweak, not in W1 scope."
+    }
+  ]
+}

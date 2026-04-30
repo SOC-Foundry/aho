@@ -145,12 +145,14 @@ class TestGLMConfig(unittest.TestCase):
 class TestQwenConfig(unittest.TestCase):
 
     @patch("aho.pipeline.dispatcher.urllib.request.urlopen")
-    def test_qwen_num_predict_2000(self, mock_urlopen):
-        """Qwen must set num_predict=2000 for thinking-mode budget (W1 F001)."""
+    def test_qwen_num_predict_8000(self, mock_urlopen):
+        """Qwen must set num_predict=8000 — 0.2.16 W0 raised from 2000 after
+        W4 measured thinking-mode exhausting the 2000 budget on cascade-scale
+        prompts (247K-char doc at 32K context)."""
         mock_urlopen.return_value = _chat_response("ok", "qwen3.5:9b")
         dispatch("qwen3.5:9b", "test")
         payload = json.loads(mock_urlopen.call_args[0][0].data)
-        self.assertEqual(payload["options"]["num_predict"], 2000)
+        self.assertEqual(payload["options"]["num_predict"], 8000)
 
     @patch("aho.pipeline.dispatcher.urllib.request.urlopen")
     def test_llama_no_num_predict(self, mock_urlopen):
@@ -170,7 +172,9 @@ class TestTemplateLeak(unittest.TestCase):
         self.assertEqual(_check_template_leak("<|im_start|>system"), "<|im_start|>")
 
     def test_clean_output(self):
-        self.assertIsNone(_check_template_leak("just normal text"))
+        # 0.2.16 W0 AF002: returns False (not None) on clean content so stage
+        # JSON writers emit `"template_leak_detected": false` not `null`.
+        self.assertIs(_check_template_leak("just normal text"), False)
 
     @patch("aho.pipeline.dispatcher.urllib.request.urlopen")
     def test_template_leak_sets_error_no_retry(self, mock_urlopen):

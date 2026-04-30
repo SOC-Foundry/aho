@@ -73,13 +73,13 @@ Severity scale: **critical** (blocks a downstream iteration), **important** (mea
 
 ---
 
-**Total items:** 25.
+**Total items:** 27.
 
-**By severity:** 2 critical, 13 important, 10 nice-to-have.
+**By severity:** 2 critical, 14 important, 11 nice-to-have.
 
 **By target:**
-- 0.2.16: 20 items (substrate hygiene, cascade improvements, install.fish, documentation, W4 cascade-specific fixes)
-- 0.2.17+: 5 items (fleet bootstrap, roster expansion, RAG, Firestore)
+- 0.2.16: 23 items (substrate hygiene, cascade improvements, install.fish, documentation, W4 cascade-specific fixes)
+- 0.2.17+: 4 items (fleet bootstrap, roster expansion, RAG, Firestore)
 
 **Two critical items:**
 1. `install.fish` Tier 1 section finalization — blocks the "Tier 1 shippable" claim.

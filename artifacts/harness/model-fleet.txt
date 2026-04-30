@@ -1,8 +1,28 @@
 # aho model fleet — declarative list for clone-to-deploy
 # Read by bin/aho-models. One model tag per line. Comments and blank lines ignored.
-# Locked during 0.2.5 W0. Must match model-fleet.md architectural spec.
+# Tier 1 finalized in 0.2.16 W0 per 0.2.15 tier1-roster-validation.
+# Tier 1 host assumption: 8-16GB VRAM, Arch-family, x86_64.
+
+# ─────────────────────────────────────────────────────────────────────────
+# Tier 1 — installed at clone-to-deploy
+# ─────────────────────────────────────────────────────────────────────────
+# qwen3.5:9b              classification: operational   role: Producer/Assessor
+# llama3.2:3b             classification: operational   role: Indexer (fast triage)
+# haervwe/GLM-4.6V-Flash-9B:latest  classification: partial (retain)
+#                         role: Auditor (num_gpu=30 partial offload at Tier 1)
+# nemotron-mini:4b        classification: compromised (retain w/ caveat)
+#                         role: Classifier/Triage ONLY; non-substantive roles
 
 qwen3.5:9b
-nemotron-mini:4b
+llama3.2:3b
 haervwe/GLM-4.6V-Flash-9B:latest
-nomic-embed-text:latest
+nemotron-mini:4b
+
+# ─────────────────────────────────────────────────────────────────────────
+# Not installed at Tier 1 (deferred or out-of-scope; do not uncomment)
+# ─────────────────────────────────────────────────────────────────────────
+# nomic-embed-text:latest        — RAG stack; deferred to 0.2.17 per 0.2.15 carry-forward.
+#                                  Endpoint coexistence validated in 0.2.15 W1 R12, retrieval plumbing not wired.
+# gemma2:9b                      — Tier 2+; requires >8GB VRAM. Waits on Luke's machine or P3 clones.
+# deepseek-coder-v2:16b-lite     — Tier 2+; requires >8GB VRAM.
+# mistral-nemo:12b               — Tier 2+; requires >8GB VRAM.

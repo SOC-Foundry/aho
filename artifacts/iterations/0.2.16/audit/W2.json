@@ -1,0 +1,50 @@
+{
+  "workstream_id": "W2",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-04-24T01:15:00Z",
+  "audit_duration_min": 25,
+  "audit_result": "pass_with_findings",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "End-to-end trace hierarchy (artifacts/iterations/0.2.16/traces/end-to-end-sample.json)",
+    "Baseline test collection count (pytest artifacts/tests/ --collect-only)",
+    "G083 code audit (src/aho/pipeline/dispatcher.py, src/aho/pipeline/router.py)",
+    "ADR enumeration (artifacts/adrs/)",
+    "Probe script static inspection (artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py)",
+    "G071 import/service audit (aho-nemoclaw restart verification)",
+    "Pillar 11 monitored invariant (git log + metrics.jsonl check)"
+  ],
+  "otel_spot_checks": [
+    "Trace hierarchy check: trace_id d4c162ab018f5f65d83b06fb65a125c8 shared across all 5 sample spans. nemotron (5c5fe9cc) correctly parents to classify (5a10d326). Hierarchy matches archive claims exactly.",
+    "Pillar 11 metrics check: claude_code.commit.count sum=0, claude_code.pull_request.count sum=0 in metrics.jsonl. No agent commits since W1 close.",
+    "Duration check: dispatch.duration_ms (7430) vs probe stdout (7430.11) shows <1ms delta (measurement noise)."
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [
+    "AF003: Baseline count-coherence drift. W1 close reported 421 collected tests. W2 close baseline also reports 421 collected tests, despite adding 6 net-new traceparent tests. Independent probe shows total collection is 427 (with ignores) or 421 (with standard W2 ignores). This suggests the W1 archive's 421 claim already included the 6 traceparent tests (likely because the files were on disk during the W1 run but not yet deliverables) or was misreported. Corrected baseline for W2 is 427 total / 421 filtered."
+  ],
+  "count_coherence_check": "AF003 mismatch noted; 12F/408P/1S counts are consistent across W1/W2 runs, but the underlying collection set has shifted by +6.",
+  "findings": {
+    "AF003": {
+      "severity": "important",
+      "title": "Baseline count-coherence drift (421 vs 427)",
+      "description": "W1 and W2 both report 421 tests collected in their baseline runs. However, W2 added 6 new tests (3 in test_dispatcher_traceparent.py, 3 in test_router_traceparent.py). Independent audit collection finds 427 total tests. The '421' figure in W2 (and potentially W1) appears to use a stale collection count or an implicit ignore that wasn't updated. The zero-new-failures signal holds, but the numeric baseline is mis-labeled in the archive.",
+      "action_required": "None for W2 close; update test-baseline.json counts in W3/W4 to reflect the 427 total."
+    },
+    "AF004": {
+      "severity": "info",
+      "title": "dispatch.duration_ms measurement-site gap on error paths",
+      "description": "On success, duration is sourced from result['wall_clock_seconds']. On DispatchError, it is sourced from a span-local monotonic delta. While acceptable for initial instrumentation, this introduces a theoretical drift between the event log (wall-clock) and the span (monotonic) on error paths. Happy-path drift was measured at 0.11ms; error-path drift is unmeasured.",
+      "target": "0.2.17 test coverage for error-path duration consistency."
+    }
+  },
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ]
+}

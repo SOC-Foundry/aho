@@ -14,6 +14,7 @@ from pathlib import Path
 from aho.paths import find_project_root
 from aho.config import get_dashboard_port
 from aho.dashboard.aggregator import get_state
+from aho.dashboard.otel_aggregator import get_otel_state, get_workstream_detail
 from aho.council.status import collect_status
 from aho.dashboard.lego.renderer import render_council_svg
 
@@ -39,6 +40,15 @@ def create_handler(project_root: Path):
                     "traces": state.get("traces", []),
                     "count": len(state.get("traces", [])),
                 })
+            elif self.path == "/api/otel":
+                self._json_response(get_otel_state())
+            elif self.path.startswith("/api/otel/workstream/"):
+                ws_id = self.path[len("/api/otel/workstream/"):]
+                detail = get_workstream_detail(ws_id)
+                if detail is None:
+                    self.send_error(404, f"Unknown workstream: {ws_id}")
+                else:
+                    self._json_response(detail)
             elif self.path == "/api/council":
                 # Convert the pydantic model to a dict so _json_response can dump it
                 # Or just return its model_dump()

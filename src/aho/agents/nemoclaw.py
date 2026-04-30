@@ -74,7 +74,12 @@ class NemoClawOrchestrator:
             matching_session = next((s for s in self.sessions if s.role == role), self.sessions[0])
             try:
                 result = matching_session.chat(task)
-            except Exception as e:
+            except (json.JSONDecodeError, UnicodeDecodeError,
+                    TimeoutError, ConnectionError, OSError) as e:
+                # Observed failure modes: HTTP transport (connection, timeout,
+                # pipe), response body decode (json/unicode). F003 0.2.16 W0
+                # narrowing — broader Exception would have masked programmer
+                # errors and classification failures.
                 span.set_attribute("status", "error")
                 span.record_exception(e)
                 return f"[error] {e}"
@@ -131,8 +136,24 @@ class NemoClawHandler(socketserver.StreamRequestHandler):
                 role = req.get("role")
                 result = orch.dispatch(task, role=role)
                 self._reply({"ok": True, "response": result})
-            except Exception as e:
-                self._reply({"ok": False, "error": str(e)})
+            except ClassificationError as e:
+                # Propagates from orch.dispatch → self.route(task) when
+                # classifier fails before dispatch-layer try/except is reached.
+                self._reply({
+                    "ok": False,
+                    "error": str(e),
+                    "error_type": "classification_error",
+                    "raw_response": e.raw_response,
+                })
+            except (DispatchError, json.JSONDecodeError, TypeError, OSError) as e:
+                # DispatchError from router, JSONDecodeError/TypeError from
+                # malformed req parsing, OSError for socket/I/O. F003 0.2.16 W0
+                # narrowing — mirrors the already-narrow route-branch pattern.
+                self._reply({
+                    "ok": False,
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                })
         elif cmd == "route":
             task = req.get("task", "")
             try:

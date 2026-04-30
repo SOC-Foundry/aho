@@ -1,0 +1,303 @@
+{
+  "workstream_id": "W0",
+  "iteration": "0.2.16",
+  "title": "0.2.15 close-out residue + substrate closure + OTEL scaffolding",
+  "audit_status": "pending_audit",
+  "timestamp": "2026-04-21T23:45:00Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "primary_drafter",
+      "model": "claude-opus-4-7[1m]"
+    }
+  ],
+  "scope_notes": {
+    "bucket_1_0215_closeout": "Out of scope for this session per Kyle's brief — checkpoint had already advanced to 0.2.16 before session start.",
+    "bucket_2_substrate": "In scope — dispatcher num_predict, template_leak normalization, EmptyContentError halt, workstream_id parameterization, conftest checkpoint-isolation, nemoclaw G083 narrowing, install.fish Tier 1 finalization + dry-run.",
+    "bucket_3_otel": "In scope — .claude/settings.json managed env block, collector pipeline extension for metrics + logs, synthetic and real Claude Code signal verification, ADR-0003.",
+    "bonus": "F-W0-002 (close-confirm stub) filed + ADR-0004 design; in-place fixes deferred to W4 per scope triage."
+  },
+  "acceptance_checks": [
+    {
+      "check": "OTEL pipeline verification — synthetic probe with aho.* resource attrs",
+      "result": "pass",
+      "evidence": "Python OTEL SDK emitted aho.w0.synthetic_probe_count metric + log body 'aho W0 pipeline verification marker' via gRPC OTLP to :4317. Both landed in ~/.local/share/aho/metrics/metrics.jsonl and ~/.local/share/aho/logs/logs.jsonl with resource attrs service.name=aho-w0-synthetic-probe, aho.iteration=0.2.16, aho.workstream=W0, aho.role=drafter preserved end-to-end. Pipeline plumbing independently proven before Claude Code SDK is in the picture."
+    },
+    {
+      "check": "OTEL pipeline verification — real Claude Code emission with aho.* resource attrs",
+      "result": "pass",
+      "evidence": "Post-.claude/settings.json write, this Claude Code session emits to the collector. Observed records across metrics.jsonl and logs.jsonl: 1 claude_code.session.count, 2 claude_code.cost.usage, 2 claude_code.token.usage; 17 claude_code.mcp_server_connection, 8 claude_code.api_request, 4 claude_code.tool_decision, 4 claude_code.tool_result, 1 claude_code.user_prompt. All carry service.name=claude-code, aho.iteration=0.2.16, aho.workstream=W0, aho.role=drafter. Log records carry prompt.id (UUID v4) and session.id — turn reconstruction by prompt.id works. Pattern C step 2 satisfied."
+    },
+    {
+      "check": "AHO_ITERATION env confirmed, workstream_start emitted after OTEL verification",
+      "result": "pass",
+      "evidence": "AHO_ITERATION=0.2.16 verified in parent shell env (already set by Kyle prior to session). AHO_WORKSTREAM=W0 passed inline to `aho iteration workstream start W0` invocation. Event logged at 2026-04-21T23:25:33Z with iteration=0.2.16, workstream_id=W0, event_type=workstream_start. Checkpoint transitioned current_workstream=W0, workstreams.W0=in_progress. Emission occurred AFTER Bucket 3 collector and settings.json work completed and pipeline verification passed — protocol order corrected from the brief's sequence."
+    },
+    {
+      "check": "Collector pipeline config extended for W0-scope metrics + logs",
+      "result": "pass",
+      "evidence": "~/.config/aho/otel-collector.yaml extended with file/metrics and file/logs exporters writing to ~/.local/share/aho/{metrics,logs}/{metrics,logs}.jsonl; metrics and logs pipelines routed otlp receiver → batch processor → file exporter. Pre-W0 backup preserved at ~/.config/aho/otel-collector.yaml.bak-pre-0.2.16-w0. aho-otel-collector.service restarted clean, all three pipelines initialized per journal. Existing traces pipeline untouched (file + otlp/jaeger exporters both preserved); W2 trace work can drop in without further collector changes."
+    },
+    {
+      "check": ".claude/settings.json env block written with full W0 capture surface",
+      "result": "pass",
+      "evidence": ".claude/settings.json env block: CLAUDE_CODE_ENABLE_TELEMETRY=1, OTEL_METRICS_EXPORTER=otlp, OTEL_LOGS_EXPORTER=otlp, OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317, OTEL_EXPORTER_OTLP_PROTOCOL=grpc, OTEL_LOG_USER_PROMPTS=1, OTEL_LOG_TOOL_CONTENT=1, OTEL_LOG_TOOL_DETAILS=1, OTEL_LOG_RAW_API_BODIES=file:/home/kthompson/.local/share/aho/api-bodies/, OTEL_METRICS_INCLUDE_SESSION_ID=false, OTEL_RESOURCE_ATTRIBUTES=service.name=claude-code,aho.iteration=0.2.16,aho.workstream=W0,aho.role=drafter. OTEL_TRACES_EXPORTER intentionally unset per W0/W2 boundary. Literal attr values — maintenance cost noted as carry-to-retro for env-expansion verification."
+    },
+    {
+      "check": "Qwen Producer probe on 247K-char NoSQL manual — hard gate pass",
+      "result": "pass",
+      "evidence": "artifacts/iterations/0.2.16/qwen-num-predict-probe.json. Hard gate: content_chars=2705 ≥500, done_reason='stop' (not 'length'), error=null, template_leak_detected=false. eval_count=2828 well under 8000 cap — natural stop. Wall clock 192.77s. Baseline comparison to 0.2.15 W4: content 0→2705, thinking 8026→9181, done_reason length→stop, eval_count 2000→2828. Raw response inspected (first 400 + last 200 chars): real NoSQL technical analysis prose with section structure, module discussion, architecture patterns — not empty thinking-mode artifact. Producer substrate fix validated."
+    },
+    {
+      "check": "EmptyContentError + cascade halt semantics landed with tests (F005 closure)",
+      "result": "pass",
+      "evidence": "src/aho/pipeline/dispatcher.py +EmptyContentError(DispatchError) class with docstring citing 0.2.15 W4 measurement. src/aho/pipeline/orchestrator.py run_cascade raises EmptyContentError when a stage returns response_text=='' with error is None, AFTER writing stage artifact and emitting completion event (forensic trail preserved). artifacts/tests/test_orchestrator_halt.py — 4 unit tests all pass: empty+no-error→raises, empty+error→existing path, normal→no raise, stage artifact written before halt."
+    },
+    {
+      "check": "Orchestrator workstream_id parameterization (F006 closure)",
+      "result": "pass",
+      "evidence": "src/aho/pipeline/orchestrator.py run_cascade(workstream_id: str = 'W0') default. Both log_event call sites at lines 148 and 205 (orchestrator dispatch + complete handoff) take the parameter instead of hardcoded 'W1'. artifacts/tests/test_orchestrator_workstream_id.py — 3 unit tests all pass: default W0, explicit W4, dispatch+complete events agree per stage."
+    },
+    {
+      "check": "template_leak_detected normalization — None becomes False (AF002 closure)",
+      "result": "pass",
+      "evidence": "src/aho/pipeline/dispatcher.py _check_template_leak returns False (not None) on clean content; returns the token string on leak. Call site at line 292 updated from `if leaked is not None:` to `if leaked:`. Stage JSON writers emit bool(leak) → 'true'/'false', never 'null'. artifacts/tests/test_dispatcher_template_leak.py — 7 unit tests all pass covering clean content, empty content, leak tokens, bool coercion, return-type-never-None contract. test_dispatcher_hardening.py::test_clean_output updated from assertIsNone to assertIs False."
+    },
+    {
+      "check": "tests/conftest.py checkpoint isolation fixture — three iterations required",
+      "result": "pass_with_finding",
+      "evidence": "artifacts/tests/conftest.py autouse fixture patches aho.paths.find_project_root → tmp_path for the allowlisted modules {test_workstream_events, test_workstream_events_v2, test_schema_v3, test_ws_fixes}. Two full test suite runs executed after the final conftest shape: both returned 11 failed / 395 passed / 1 skipped / 0 deselected in ~10m 44s, with the real .aho-checkpoint.json unmodified in both cases. Recurrence pattern actually broken this time.",
+      "finding": "Three iterations on the conftest were required before the bug was actually fixed. (1) First attempt: autouse unconditional (excluding test_paths). Broke 15+ previously-passing tests that read real project files (test_evaluator, test_run_pillars, test_components_manifest, test_postflight_*, etc.) — 35 failures vs 10 baseline. (2) Second attempt: allowlist limited to {test_workstream_events, test_workstream_events_v2}. Ran the full suite; got 11 failed / 395 passed — initially appeared clean. Only discovered post-pytest by directly reading .aho-checkpoint.json that the file was POLLUTED with W_V3_TEST / W_V3_COMBO / W_V2_COMPAT / W_V1_COMPAT entries. This was the FOURTH recurrence of the bug (0.2.13 → 0.2.14 → 0.2.15 W3 → 0.2.15 W4 → this) — my 'pattern broken' interim claim was premature. Root cause: I had not enumerated ALL test files that call emit_workstream_start/complete. test_schema_v3.py and test_ws_fixes.py both do, neither patches find_project_root inline. (3) Third attempt: expanded allowlist to {test_workstream_events, test_workstream_events_v2, test_schema_v3, test_ws_fixes}. Full re-run: 11 failed / 395 passed / 1 skipped, checkpoint verified intact post-run. LESSON: raw state verification is ground truth per operating stance; 'exit 0' from pytest and a summary count are not sufficient evidence that a state-corruption fix worked. Must directly read the shared state. CARRY-FORWARD CANDIDATE: the allowlist is brittle — any future test file that calls emit_workstream_* without inline patching reintroduces the bug silently. Proper architectural fix is a source-level change to workstream_events.py so checkpoint path is explicitly overridable (module-level _CHECKPOINT_PATH or a kwarg). Out of W0 scope; candidate for a 0.2.16 hygiene workstream or 0.2.17."
+    },
+    {
+      "check": "nemoclaw.py G083 narrowing at :77 and :134 (F003 closure)",
+      "result": "pass",
+      "evidence": "src/aho/agents/nemoclaw.py:77 (NemoClawOrchestrator.dispatch inner try) narrowed from `except Exception` to `(json.JSONDecodeError, UnicodeDecodeError, TimeoutError, ConnectionError, OSError)`. nemoclaw.py:134 (NemoClawHandler.handle dispatch branch) split: ClassificationError → structured reply with error_type/raw_response, (DispatchError, json.JSONDecodeError, TypeError, OSError) → structured reply with error_type. Programmer errors (AttributeError, ValueError) now propagate instead of being swallowed. artifacts/tests/test_nemoclaw_f003_narrowing.py — 7 unit tests all pass including specific error-propagation assertions."
+    },
+    {
+      "check": "Qwen num_predict 2000 → 8000 in MODEL_FAMILY_CONFIG",
+      "result": "pass",
+      "evidence": "src/aho/pipeline/dispatcher.py:85 MODEL_FAMILY_CONFIG['qwen']['num_predict']=8000 with inline comment citing 0.2.15 W4 measurement and contingency levers (/no_think prefix, non-thinking variant, Producer pre-summarization). test_dispatcher_hardening.py::test_qwen_num_predict_8000 asserts new value (renamed from _2000)."
+    },
+    {
+      "check": "__pycache__ cleared after src/aho/ edits (G070)",
+      "result": "pass",
+      "evidence": "Full cache clear after dispatcher + orchestrator + nemoclaw edits: `find src -name __pycache__ -type d -exec rm -rf {} +` succeeded. Daemons that import edited modules restarted per G071: aho-nemoclaw.service restarted after dispatcher edits and again after nemoclaw.py edits; both restarts returned to active state within 1s."
+    },
+    {
+      "check": "install.fish Tier 1 finalization + NZXTcos dry-run",
+      "result": "pass",
+      "evidence": "artifacts/harness/model-fleet.txt finalized — Tier 1 set is qwen3.5:9b, llama3.2:3b, haervwe/GLM-4.6V-Flash-9B:latest, nemotron-mini:4b per 0.2.15 tier1-roster-validation; nomic-embed-text moved to 'not installed at Tier 1' comments per 0.2.15 carry-forward. bin/aho-models adds _check_vram precondition (≥8GB VRAM, nvidia-smi readable), new `vet` subcommand (per-model smoke probe via /api/chat), Ollama systemd docnote (system-level not user — sudo required). Dry-run on NZXTcos: `aho-models list`=4 models, `status`=4/4 pulled, `doctor`=All present, `vet`=4/4 passed (with one real finding surfaced: initial num_predict=32 too small for Qwen thinking; raised to 256 in-place). Full evidence: artifacts/iterations/0.2.16/install-fish-dryrun.md."
+    },
+    {
+      "check": "OTEL scaffolding notes + ADRs present with index-derived numbering",
+      "result": "pass",
+      "evidence": "artifacts/adrs/ enumerated at execution time before ADR creation — highest aho-internal was 0002 (nemoclaw). Next available 0003 used for OTEL scaffolding posture; 0004 used for bonus close-confirm redesign design. ADR-0003 covers managed-settings choice, env block verbatim, resource-attr taxonomy, capture surface, turn-reconstruction approach (logs-correlated in W0, trace-native in W2+), three privacy profiles for Mercor reference pack (minimal/standard/full), cardinality posture, known limitations (thinking redaction, W0-vs-W2 turn structure, Gemini asymmetry), carry-forward obligations. ADR-0004 covers close-confirm redesign (design only; implementation deferred to W4). artifacts/iterations/0.2.16/otel-scaffold-notes.md records substrate state before W0, deviations from plan phrasing, and carry-to-retro items."
+    },
+    {
+      "check": "Baseline regression clean — no new failures attributable to W0",
+      "result": "pass",
+      "evidence": "Full pytest run after all changes: 11 failed / 395 passed / 1 skipped in 658.65s. All 11 failures match entries in artifacts/harness/test-baseline.json (13 documented baseline failures). 2 previously-failing baseline tests now pass in this run (test_daemon_healthy::test_healthy_unit_passes, test_gate_verbosity::test_run_quality_emits_checks) — attributed to environmental flake variance, not deliberate W0 fixes. +21 passed delta matches the 21 new unit tests added (test_orchestrator_halt 4 + test_orchestrator_workstream_id 3 + test_dispatcher_template_leak 7 + test_nemoclaw_f003_narrowing 7). test_workstream_events.py + test_workstream_events_v2.py ran with autouse fixture active — no checkpoint corruption observed this run (third-recurrence pattern broken). .aho-checkpoint.json verified intact post-pytest: iteration=0.2.16, current_workstream=W0, W0=in_progress, W1-W4=not_started — no spurious W_V3_TEST / W_V1_COMPAT etc. entries."
+    },
+    {
+      "check": "No G083 sites introduced in new code",
+      "result": "pass",
+      "evidence": "Grep `except Exception` on the 4 new test files + conftest + 3 edited src files returns 2 matches — both in comments/docstrings (test_nemoclaw_f003_narrowing.py docstring line 3 cites the historical F003 description; dispatcher.py line 21 comment says 'G083: no blanket except Exception'). Zero actual except-Exception code introduced."
+    },
+    {
+      "check": "No git operations performed (Pillar 11)",
+      "result": "pass",
+      "evidence": "Pillar 11 respected throughout W0. No git add, commit, push, merge, branch, reset, checkout — status. `git status` output at session end reflects only local working-tree changes, unstaged. Kyle's prerogative whether and when to commit."
+    },
+    {
+      "check": "No celebratory framing (G081)",
+      "result": "pass",
+      "evidence": "Acceptance archive, scaffold notes, install-fish-dryrun, and ADRs use direct characterization. Qwen probe result described as 'clean pass against hard gate' not 'landed' or 'shipped'. Substrate issues (harness-watcher crash loop, collector traces-only, close-confirm stub) described with numbers and root causes, not rhetoric. No banned phrases ('clean close', 'landed beautifully', 'all green') appear in any 0.2.16 W0 artifact."
+    },
+    {
+      "check": "Cross-project contamination check",
+      "result": "pass",
+      "evidence": "ADR numbers (0003, 0004) verified via artifacts/adrs/ enumeration at execution time — 0001 (phase-a-externalization), 0002 (nemoclaw-decision) were the aho-internal priors. ahomw-ADR-044 and ahomw-ADR-045 are the separate universal-methodology series and were not used for counting. Pillar count 11 verified against CLAUDE.md and GEMINI.md verbatim sections. Bundle section count references (9) verified against 0.2.15 bundle before being used in ADR-0004. No kjtcom constructs, no v10.66 / 10-pillar labels, no fabricated ADR numbers."
+    },
+    {
+      "check": "Raw response field inspected on key artifacts",
+      "result": "pass",
+      "evidence": "Qwen probe raw response inspected directly: first 400 chars ('Based on the technical documentation provided (Sections 71 through 100), here is a summary of the architecture, constraints, and optimization logic established for the Multi-LLM data pipeline integration: ### 1. Scope and Coverage The documentation outlines 30 distinct technical modules...') and last 200 chars ('... based on the partial failure handling studies mentioned in the concluding sections? I am ready to apply these constraints and optimization logic to your specific data engineering tasks.') show real NoSQL technical analysis prose, not empty/padded output. template_leak_detected=false confirmed against raw body. OTEL metrics+logs jsonl files inspected directly — resource attrs confirmed on both synthetic probe and real Claude Code emission records."
+    }
+  ],
+  "deliverables": [
+    ".claude/settings.json",
+    "~/.config/aho/otel-collector.yaml (modified; backup at .bak-pre-0.2.16-w0)",
+    "src/aho/pipeline/dispatcher.py",
+    "src/aho/pipeline/orchestrator.py",
+    "src/aho/agents/nemoclaw.py",
+    "artifacts/tests/conftest.py",
+    "artifacts/tests/test_orchestrator_halt.py",
+    "artifacts/tests/test_orchestrator_workstream_id.py",
+    "artifacts/tests/test_dispatcher_template_leak.py",
+    "artifacts/tests/test_nemoclaw_f003_narrowing.py",
+    "artifacts/tests/test_dispatcher_hardening.py (2 tests updated for 8000 + False)",
+    "artifacts/harness/model-fleet.txt",
+    "bin/aho-models",
+    "artifacts/iterations/0.2.16/probes/qwen_num_predict_probe.py",
+    "artifacts/iterations/0.2.16/qwen-num-predict-probe.json",
+    "artifacts/iterations/0.2.16/otel-scaffold-notes.md",
+    "artifacts/iterations/0.2.16/install-fish-dryrun.md",
+    "artifacts/adrs/0003-otel-scaffolding-posture.md",
+    "artifacts/adrs/0004-iteration-close-confirm-redesign.md",
+    "artifacts/iterations/0.2.16/acceptance/W0.json"
+  ],
+  "findings": [
+    {
+      "id": "F-W0-001",
+      "severity": "important",
+      "title": "aho-harness-watcher.service crash loop (service stopped + disabled)",
+      "description": "At start of W0 session, `aho-harness-watcher.service` was in state `activating (auto-restart)` with restart counter at 31,263. Root cause: `src/aho/agents/roles/harness_agent.py:27` calls the legacy `aho.artifacts.nemotron_client.classify` (deprecated in 0.2.15 W3 with migration window through 0.2.16). Nemotron returning empty content raises `NemotronParseError` from `nemotron_client.py:96`. The call has no exception handling — the error bubbles up through `watch()` and kills the process. systemd restarts it every 5-6s. Measurable CPU waste: ~491ms per crash × 31,263 restarts ≈ 4.3 wall CPU hours accumulated.",
+      "action_taken_in_w0": "Service stopped (`systemctl --user stop aho-harness-watcher.service`) on Kyle's approval, then disabled (`systemctl --user disable`) to prevent auto-start on reboot. `mask` attempted first but failed because the unit file exists at `~/.config/systemd/user/aho-harness-watcher.service`; disable removes the wants-symlink which is sufficient.",
+      "proposed_fix": "Two-part: (1) defensive try/except around the classify call at harness_agent.py:27 catching NemotronParseError and logging a skip instead of killing the process; (2) migrate the classify call from legacy `aho.artifacts.nemotron_client.classify` to canonical `aho.pipeline.router.classify_task` per 0.2.15 W3 deprecation path. Unit tests for each harness_agent classify path.",
+      "scope": "Not in W0 item list; candidate for a 0.2.16 substrate hygiene workstream or folded into W4 as substrate debt closure. Deferred."
+    },
+    {
+      "id": "F-W0-002",
+      "severity": "important",
+      "title": "aho iteration close --confirm is a stub; .aho.json current_iteration is drifted",
+      "description": "`src/aho/cli.py:229-237` — the `--confirm` branch of `aho iteration close` reads `current_iteration` from `.aho.json`, validates signoff checkbox state, prints `f'Iteration {iteration} confirmed and closed.'`, and exits. No checkpoint mutation, no `.aho.json` update, no event emission, no state transition. The real close sequence (tests, bundle, report, postflight, `.aho.json.last_completed_iteration` update, checkpoint status=closed) lives in the else branch (cli.py:238-326) — inverted semantics. `.aho.json` observed with current_iteration='0.2.14', last_completed_iteration='0.2.13' — both drifted by ≥2 iterations from reality. Kyle's observation 'prints 0.2.14 confirmed regardless' is exactly this behavior.",
+      "action_taken_in_w0": "Root-cause analysis and design document written. No in-place code fix — the redesign touches state-machine semantics and is larger than W0 scope.",
+      "proposed_fix": "Full design in artifacts/adrs/0004-iteration-close-confirm-redesign.md. Summary: invert --confirm to be the commit verb; read acceptance/audit archives directly instead of checkbox validation; sign-off sheet becomes a post-close record; emit iteration_complete event with canonical carry-forward count. Pillar 1 delegation (mechanical verification) and Pillar 11 preservation (Kyle still triggers the command). Implementation target: 0.2.16 W4 close package (close command is exercised anyway).",
+      "scope": "Deferred to W4 per ADR-0004 implementation plan."
+    },
+    {
+      "id": "F-W0-004",
+      "severity": "important",
+      "title": "conftest allowlist is brittle — proper fix requires source-level change to workstream_events.py",
+      "description": "The 0.2.16 W0 conftest autouse fixture uses a module-name allowlist to scope which tests get a patched find_project_root. Three iterations were required before the allowlist caught all offenders (see acceptance check detail). The allowlist will re-fail silently if any future test file calls emit_workstream_start / emit_workstream_complete without inline patching. This is load-bearing only as long as contributors know to update the list.",
+      "action_taken_in_w0": "Current 4-module allowlist works and is documented inline. Carry-forward logged here.",
+      "proposed_fix": "Source-level change to src/aho/workstream_events.py: introduce a module-level _CHECKPOINT_PATH = None (or similar) that emit_workstream_start/complete check before falling back to find_project_root(). Tests patch _CHECKPOINT_PATH to a tmp directory and never touch find_project_root. Allowlist goes away. Unit tests assert the override works.",
+      "scope": "Not in W0 item list. Candidate for a 0.2.16 substrate hygiene workstream or 0.2.17 test isolation iteration."
+    },
+    {
+      "id": "F-W0-003",
+      "severity": "info",
+      "title": "OTEL_METRICS_INCLUDE_SESSION_ID=false did not suppress session.id on metric datapoints this session",
+      "description": "Env block sets OTEL_METRICS_INCLUDE_SESSION_ID=false. Observed claude_code.cost.usage and claude_code.token.usage data points carry session.id attribute anyway, plus user.email / user.id / user.account_id / user.account_uuid / organization.id. Possible causes: (a) env var read at session start and settings.json was written mid-session, so this session's metric emitter may not have picked it up; (b) flag name documented differently than applied; (c) flag scope differs from expectation.",
+      "action_taken_in_w0": "Observed and documented in otel-scaffold-notes.md §Observation. Not blocking — resource-attr verification (aho.iteration, aho.workstream, aho.role) succeeded regardless.",
+      "proposed_fix": "Revisit on next fresh Claude Code session start. If the flag still doesn't suppress as documented, reconcile with Claude Code docs, either fix the env var name or update ADR-0003 to reflect actual behavior. Scrub PII attrs in W1 dashboard regardless — user.* and organization.id should not appear on public-facing panels.",
+      "scope": "W1 dashboard scope absorption, or recheck on next session start."
+    }
+  ],
+  "test_results": {
+    "new_tests_added": 21,
+    "new_tests_all_pass": true,
+    "new_test_files": [
+      "artifacts/tests/test_orchestrator_halt.py (4)",
+      "artifacts/tests/test_orchestrator_workstream_id.py (3)",
+      "artifacts/tests/test_dispatcher_template_leak.py (7)",
+      "artifacts/tests/test_nemoclaw_f003_narrowing.py (7)"
+    ],
+    "baseline_regression": {
+      "failed": 11,
+      "passed": 395,
+      "skipped": 1,
+      "deselected": 0,
+      "duration_seconds": 658.65,
+      "baseline_reference_failed_count": 13,
+      "baseline_reference_source": "artifacts/harness/test-baseline.json (13 documented baseline failures)",
+      "new_failures_attributable_to_w0": 0,
+      "previously_failing_now_pass": [
+        "artifacts/tests/test_daemon_healthy.py::test_healthy_unit_passes",
+        "artifacts/tests/test_gate_verbosity.py::test_run_quality_emits_checks"
+      ],
+      "previously_failing_now_pass_note": "Attributed to environmental variance; not deliberate W0 fixes.",
+      "failures_list_matches_baseline": true,
+      "failures_list": [
+        "artifacts/tests/test_build_log_stub.py::test_generate_stub",
+        "artifacts/tests/test_postflight_residuals.py::test_readme_current_utc_comparison",
+        "artifacts/tests/test_postflight_run_types.py::test_run_type_mixed_pass",
+        "artifacts/tests/test_postflight_run_types.py::test_run_type_mixed_fail",
+        "artifacts/tests/test_report_builder.py::test_report_filters_events_by_iteration",
+        "artifacts/tests/test_report_builder.py::test_report_risk_register_captures_warnings",
+        "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_reads_last_complete_event",
+        "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_no_events",
+        "artifacts/tests/test_telegram_ws_commands.py::TestWsLast::test_no_log_file",
+        "artifacts/tests/test_telegram_ws_commands.py::TestAutoPush::test_auto_push_detects_new_complete",
+        "artifacts/tests/test_ws_fixes.py::test_planned_ws_count_reads_plan_doc"
+      ],
+      "test_workstream_events_corruption_recurrence": "Observed a fourth-recurrence mid-W0 when the conftest allowlist was incomplete. After expanding the allowlist to {test_workstream_events, test_workstream_events_v2, test_schema_v3, test_ws_fixes} and re-running the full suite, the .aho-checkpoint.json was verified intact (iteration=0.2.16, current_workstream=W0, W0=in_progress, W1-W4=not_started, last_event=workstream_start, no spurious W_V*_TEST/COMPAT entries). Pattern broken this run. See acceptance_checks['tests/conftest.py checkpoint isolation fixture — three iterations required'] for the full honest history."
+    },
+    "checkpoint_state_post_pytest": {
+      "iteration": "0.2.16",
+      "phase": 0,
+      "current_workstream": "W0",
+      "workstreams": {
+        "W0": "in_progress",
+        "W1": "not_started",
+        "W2": "not_started",
+        "W3": "not_started",
+        "W4": "not_started"
+      },
+      "integrity": "clean — no spurious entries from test fixtures"
+    }
+  },
+  "otel_telemetry_evidence": {
+    "pipeline_verification_path": "collector file-exporter output (not Jaeger; see Deviation 1 in otel-scaffold-notes.md)",
+    "files": {
+      "metrics_jsonl": "/home/kthompson/.local/share/aho/metrics/metrics.jsonl",
+      "logs_jsonl": "/home/kthompson/.local/share/aho/logs/logs.jsonl",
+      "api_bodies_dir": "/home/kthompson/.local/share/aho/api-bodies/"
+    },
+    "synthetic_probe": {
+      "metric_name": "aho.w0.synthetic_probe_count",
+      "log_body": "aho W0 pipeline verification marker probe_run=pipeline-verify-1",
+      "resource_attrs_preserved": ["service.name", "aho.iteration", "aho.workstream", "aho.role"]
+    },
+    "claude_code_emission_sample": {
+      "metrics_observed": {
+        "claude_code.session.count": 1,
+        "claude_code.cost.usage": 2,
+        "claude_code.token.usage": 2
+      },
+      "logs_observed": {
+        "claude_code.mcp_server_connection": 17,
+        "claude_code.api_request": 8,
+        "claude_code.tool_decision": 4,
+        "claude_code.tool_result": 4,
+        "claude_code.user_prompt": 1
+      },
+      "resource_attrs_confirmed": {
+        "service.name": "claude-code",
+        "aho.iteration": "0.2.16",
+        "aho.workstream": "W0",
+        "aho.role": "drafter"
+      },
+      "turn_reconstruction_attrs_confirmed": ["prompt.id (UUID v4)", "session.id"]
+    }
+  },
+  "cross_project_contamination": {
+    "instances_caught": 0,
+    "notes": "ADR 0003 and 0004 numbered via artifacts/adrs/ directory enumeration at execution time; prior aho-internal was 0002 (nemoclaw). Pillar count 11 verified against CLAUDE.md + GEMINI.md verbatim sections. Bundle section count (9) verified against 0.2.15 bundle. No kjtcom constructs referenced; no v10.66 / '10 IAO Pillars' tokens appear in any 0.2.16 W0 artifact."
+  },
+  "pillar_11_compliance": {
+    "git_operations_performed": 0,
+    "secrets_read": 0,
+    "unsanctioned_state_writes": 0,
+    "notes": "No git add/commit/push/merge/reset/checkout. No ~/.config/fish/config.fish read. Service stop+disable for aho-harness-watcher.service was explicitly authorized by Kyle. Collector config overwrite was explicitly authorized; backup preserved. No agent wrote to git. No agent held keys to secrets."
+  },
+  "deviations_from_brief": [
+    {
+      "deviation": "Verification via collector file exporter, not Jaeger",
+      "reason": "Jaeger accepts traces only; W0 emits metrics + logs. Physically incorrect to verify in Jaeger. Full explanation in otel-scaffold-notes.md §Deviations."
+    },
+    {
+      "deviation": "Collector pipeline config extended (not just verified)",
+      "reason": "Pre-W0 config was traces-only. Bucket 3's env block would have sent metrics + logs signals that the collector would drop. Extension is scope-fitting because Bucket 3 has no verification path without it. Kyle approved."
+    },
+    {
+      "deviation": "Protocol-first ordering (OTEL scaffolding before workstream_start)",
+      "reason": "CLAUDE.md Pattern C step 2 requires OTEL verification before real work; the user brief's sequence put workstream_start first. Kyle confirmed CLAUDE.md Pattern C is authoritative and reordered before execution."
+    },
+    {
+      "deviation": "aho-harness-watcher.service stopped + disabled",
+      "reason": "Crash loop with 31,263 accumulated restarts surfaced during initial inspection. Kyle approved stop + disable. F-W0-001 filed with root cause and proposed fix."
+    }
+  ]
+}

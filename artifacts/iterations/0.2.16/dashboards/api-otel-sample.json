@@ -1,0 +1,115 @@
+{
+    "generated_at": "2026-04-23T18:10:40Z",
+    "source_files": {
+        "logs": "/home/kthompson/.local/share/aho/logs/logs.jsonl",
+        "metrics": "/home/kthompson/.local/share/aho/metrics/metrics.jsonl"
+    },
+    "iteration": "0.2.16",
+    "workstreams": {
+        "W0": {
+            "workstream_id": "W0",
+            "cost_usd": 15.97217605,
+            "tokens": {
+                "input": 16817,
+                "output": 117757,
+                "cacheRead": 17870378,
+                "cacheCreation": 732597,
+                "total": 18737549
+            },
+            "cache_vs_new_ratio": {
+                "cache_read": 17870378,
+                "new_content": 867171,
+                "ratio": 20.60767484152491
+            },
+            "active_time_seconds": 1964.4540000000002,
+            "api_request_count": 207,
+            "api_error_count": 27,
+            "api_retries_exhausted_count": 0,
+            "tool_result_count": 192,
+            "tool_decision_count": 192,
+            "mcp_server_connection_count": 133,
+            "user_prompt_count": 16,
+            "internal_error_count": 27,
+            "top_error_names": [
+                {
+                    "name": "AbH",
+                    "count": 25
+                },
+                {
+                    "name": "Error",
+                    "count": 1
+                },
+                {
+                    "name": "AxiosError",
+                    "count": 1
+                }
+            ],
+            "first_event_ts": "2026-04-21T22:03:15.234Z",
+            "last_event_ts": "2026-04-23T17:26:01.433Z",
+            "wall_clock_duration_s": 156166.199
+        },
+        "W1": {
+            "workstream_id": "W1",
+            "cost_usd": 6.040367750000001,
+            "tokens": {
+                "input": 85,
+                "output": 46537,
+                "cacheRead": 8840298,
+                "cacheCreation": 73019,
+                "total": 8959939
+            },
+            "cache_vs_new_ratio": {
+                "cache_read": 8840298,
+                "new_content": 119641,
+                "ratio": 73.89020486288145
+            },
+            "active_time_seconds": 651.612,
+            "api_request_count": 61,
+            "api_error_count": 2,
+            "api_retries_exhausted_count": 0,
+            "tool_result_count": 60,
+            "tool_decision_count": 60,
+            "mcp_server_connection_count": 10,
+            "user_prompt_count": 2,
+            "internal_error_count": 2,
+            "top_error_names": [
+                {
+                    "name": "AbH",
+                    "count": 1
+                },
+                {
+                    "name": "McpToolCallError",
+                    "count": 1
+                }
+            ],
+            "first_event_ts": "2026-04-23T17:51:30.023Z",
+            "last_event_ts": "2026-04-23T18:10:32.065Z",
+            "wall_clock_duration_s": 1142.042
+        }
+    },
+    "iteration_rollup": {
+        "cost_usd": 22.0125438,
+        "tokens": {
+            "input": 16902,
+            "output": 164294,
+            "cacheRead": 26710676,
+            "cacheCreation": 805616,
+            "total": 27697488
+        },
+        "cache_vs_new_ratio": {
+            "cache_read": 26710676,
+            "new_content": 986812,
+            "ratio": 27.06764409026238
+        },
+        "active_time_seconds": 2616.0660000000003,
+        "api_request_count": 268,
+        "api_error_count": 29,
+        "api_retries_exhausted_count": 0,
+        "tool_result_count": 252,
+        "tool_decision_count": 252,
+        "mcp_server_connection_count": 143,
+        "user_prompt_count": 18,
+        "internal_error_count": 29,
+        "workstream_count": 2
+    }
+}

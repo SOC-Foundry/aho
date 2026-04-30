@@ -1,0 +1,457 @@
+{
+  "metadata": {
+    "iteration": "0.2.16",
+    "workstream": "W2",
+    "probe_script": "artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py",
+    "exported_at": "2026-04-24T00:30:46.521960+00:00",
+    "trace_id": "d4c162ab018f5f65d83b06fb65a125c8",
+    "probe_tool_execution_span": "f547485b93ccf097",
+    "spans_captured": 5,
+    "total_spans_in_trace": 109,
+    "note": "Subtree extracted from ~/.local/share/aho/traces/traces.jsonl. Full trace spans the entire Claude Code session; this document captures the probe tool invocation and its aho descendants. Full session root span is included as the ancestor of the probe's tool span.",
+    "hierarchy_summary": [
+      "claude_code.tool (session root child)",
+      "  claude_code.tool.execution  (probe bash invocation)",
+      "    aho.dispatch.qwen  (direct dispatch, stage=w2-probe-producer)",
+      "    aho.route.classify  (router entry)",
+      "      aho.dispatch.nemotron  (dispatch called from inside classify_task)"
+    ]
+  },
+  "resources": [
+    [
+      {
+        "key": "service.name",
+        "value": {
+          "stringValue": "claude-code"
+        }
+      },
+      {
+        "key": "aho.iteration",
+        "value": {
+          "stringValue": "0.2.16"
+        }
+      },
+      {
+        "key": "aho.workstream",
+        "value": {
+          "stringValue": "W2"
+        }
+      },
+      {
+        "key": "aho.role",
+        "value": {
+          "stringValue": "drafter"
+        }
+      },
+      {
+        "key": "host.arch",
+        "value": {
+          "stringValue": "amd64"
+        }
+      },
+      {
+        "key": "os.type",
+        "value": {
+          "stringValue": "linux"
+        }
+      },
+      {
+        "key": "os.version",
+        "value": {
+          "stringValue": "7.0.0-1-cachyos"
+        }
+      },
+      {
+        "key": "service.version",
+        "value": {
+          "stringValue": "2.1.118"
+        }
+      }
+    ],
+    [
+      {
+        "key": "telemetry.sdk.language",
+        "value": {
+          "stringValue": "python"
+        }
+      },
+      {
+        "key": "telemetry.sdk.name",
+        "value": {
+          "stringValue": "opentelemetry"
+        }
+      },
+      {
+        "key": "telemetry.sdk.version",
+        "value": {
+          "stringValue": "1.40.0"
+        }
+      },
+      {
+        "key": "service.name",
+        "value": {
+          "stringValue": "claude-code"
+        }
+      },
+      {
+        "key": "aho.iteration",
+        "value": {
+          "stringValue": "0.2.16"
+        }
+      },
+      {
+        "key": "aho.workstream",
+        "value": {
+          "stringValue": "W2"
+        }
+      },
+      {
+        "key": "aho.role",
+        "value": {
+          "stringValue": "drafter"
+        }
+      }
+    ]
+  ],
+  "spans": [
+    {
+      "resource_idx": 0,
+      "scope": {
+        "name": "com.anthropic.claude_code.tracing",
+        "version": "1.0.0"
+      },
+      "span": {
+        "traceId": "d4c162ab018f5f65d83b06fb65a125c8",
+        "spanId": "9d9d648c63c48da7",
+        "parentSpanId": "35e3d81506c70c65",
+        "flags": 257,
+        "name": "claude_code.tool",
+        "kind": 1,
+        "startTimeUnixNano": "1776990546053000000",
+        "endTimeUnixNano": "1776990566989262941",
+        "attributes": [
+          {
+            "key": "user.id",
+            "value": {
+              "stringValue": "c8c13e116abf874909ab2a89eaa9d382d1d0307677b237b25934a98dd2964844"
+            }
+          },
+          {
+            "key": "organization.id",
+            "value": {
+              "stringValue": "e8f2c8ff-6a63-4b1c-a7e2-a50099583868"
+            }
+          },
+          {
+            "key": "user.email",
+            "value": {
+              "stringValue": "kylejeromethompson@gmail.com"
+            }
+          },
+          {
+            "key": "user.account_uuid",
+            "value": {
+              "stringValue": "19820a76-4ef6-4eac-a91f-ecc3f94359e2"
+            }
+          },
+          {
+            "key": "user.account_id",
+            "value": {
+              "stringValue": "user_0149h3FCXfh5xzW7b9x9ceZP"
+            }
+          },
+          {
+            "key": "terminal.type",
+            "value": {
+              "stringValue": "ssh-session"
+            }
+          },
+          {
+            "key": "span.type",
+            "value": {
+              "stringValue": "tool"
+            }
+          },
+          {
+            "key": "tool_name",
+            "value": {
+              "stringValue": "Bash"
+            }
+          },
+          {
+            "key": "full_command",
+            "value": {
+              "stringValue": "echo \"BEFORE_TRACEPARENT=$TRACEPARENT\"; python3 artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py 2>&1"
+            }
+          },
+          {
+            "key": "duration_ms",
+            "value": {
+              "intValue": "20936"
+            }
+          }
+        ],
+        "events": [
+          {
+            "timeUnixNano": "1776990566989186266",
+            "name": "tool.output",
+            "attributes": [
+              {
+                "key": "bash_command",
+                "value": {
+                  "stringValue": "echo \"BEFORE_TRACEPARENT=$TRACEPARENT\"; python3 artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py 2>&1"
+                }
+              },
+              {
+                "key": "output",
+                "value": {
+                  "stringValue": "BEFORE_TRACEPARENT=00-d4c162ab018f5f65d83b06fb65a125c8-f547485b93ccf097-01\nTRACEPARENT=00-d4c162ab018f5f65d83b06fb65a125c8-f547485b93ccf097-01\ndispatch.result.error=None\ndispatch.result.wall_clock_seconds=7.43\ndispatch.result.tokens_eval=167\ndispatch.internal_timing_ms=7430.11\nclassify.category=prose\nclassify.internal_timing_ms=1332.93"
+                }
+              }
+            ]
+          }
+        ],
+        "status": {}
+      }
+    },
+    {
+      "resource_idx": 0,
+      "scope": {
+        "name": "com.anthropic.claude_code.tracing",
+        "version": "1.0.0"
+      },
+      "span": {
+        "traceId": "d4c162ab018f5f65d83b06fb65a125c8",
+        "spanId": "f547485b93ccf097",
+        "parentSpanId": "9d9d648c63c48da7",
+        "flags": 257,
+        "name": "claude_code.tool.execution",
+        "kind": 1,
+        "startTimeUnixNano": "1776990546055000000",
+        "endTimeUnixNano": "1776990566989203849",
+        "attributes": [
+          {
+            "key": "user.id",
+            "value": {
+              "stringValue": "c8c13e116abf874909ab2a89eaa9d382d1d0307677b237b25934a98dd2964844"
+            }
+          },
+          {
+            "key": "organization.id",
+            "value": {
+              "stringValue": "e8f2c8ff-6a63-4b1c-a7e2-a50099583868"
+            }
+          },
+          {
+            "key": "user.email",
+            "value": {
+              "stringValue": "kylejeromethompson@gmail.com"
+            }
+          },
+          {
+            "key": "user.account_uuid",
+            "value": {
+              "stringValue": "19820a76-4ef6-4eac-a91f-ecc3f94359e2"
+            }
+          },
+          {
+            "key": "user.account_id",
+            "value": {
+              "stringValue": "user_0149h3FCXfh5xzW7b9x9ceZP"
+            }
+          },
+          {
+            "key": "terminal.type",
+            "value": {
+              "stringValue": "ssh-session"
+            }
+          },
+          {
+            "key": "span.type",
+            "value": {
+              "stringValue": "tool.execution"
+            }
+          },
+          {
+            "key": "duration_ms",
+            "value": {
+              "intValue": "20934"
+            }
+          },
+          {
+            "key": "success",
+            "value": {
+              "boolValue": true
+            }
+          }
+        ],
+        "status": {}
+      }
+    },
+    {
+      "resource_idx": 1,
+      "scope": {
+        "name": "aho.pipeline.dispatcher"
+      },
+      "span": {
+        "traceId": "d4c162ab018f5f65d83b06fb65a125c8",
+        "spanId": "80de4ed8d2b69aca",
+        "parentSpanId": "f547485b93ccf097",
+        "flags": 768,
+        "name": "aho.dispatch.qwen",
+        "kind": 1,
+        "startTimeUnixNano": "1776990546184502568",
+        "endTimeUnixNano": "1776990553614472444",
+        "attributes": [
+          {
+            "key": "aho.model",
+            "value": {
+              "stringValue": "qwen3.5:9b"
+            }
+          },
+          {
+            "key": "aho.family",
+            "value": {
+              "stringValue": "qwen"
+            }
+          },
+          {
+            "key": "dispatch.num_ctx",
+            "value": {
+              "intValue": "2048"
+            }
+          },
+          {
+            "key": "dispatch.num_predict",
+            "value": {
+              "intValue": "8000"
+            }
+          },
+          {
+            "key": "aho.stage",
+            "value": {
+              "stringValue": "w2-probe-producer"
+            }
+          },
+          {
+            "key": "dispatch.duration_ms",
+            "value": {
+              "doubleValue": 7430
+            }
+          },
+          {
+            "key": "dispatch.tokens_eval",
+            "value": {
+              "intValue": "167"
+            }
+          },
+          {
+            "key": "dispatch.tokens_prompt",
+            "value": {
+              "intValue": "28"
+            }
+          }
+        ],
+        "status": {}
+      }
+    },
+    {
+      "resource_idx": 1,
+      "scope": {
+        "name": "aho.pipeline.router"
+      },
+      "span": {
+        "traceId": "d4c162ab018f5f65d83b06fb65a125c8",
+        "spanId": "5a10d32601925680",
+        "parentSpanId": "f547485b93ccf097",
+        "flags": 768,
+        "name": "aho.route.classify",
+        "kind": 1,
+        "startTimeUnixNano": "1776990565633783145",
+        "endTimeUnixNano": "1776990566966056229",
+        "attributes": [
+          {
+            "key": "aho.classifier_model",
+            "value": {
+              "stringValue": "nemotron-mini:4b"
+            }
+          },
+          {
+            "key": "aho.input_excerpt",
+            "value": {
+              "stringValue": "Write a Python function that computes fibonacci numbers."
+            }
+          },
+          {
+            "key": "aho.category",
+            "value": {
+              "stringValue": "prose"
+            }
+          },
+          {
+            "key": "aho.duration_ms",
+            "value": {
+              "doubleValue": 1332.69
+            }
+          }
+        ],
+        "status": {}
+      }
+    },
+    {
+      "resource_idx": 1,
+      "scope": {
+        "name": "aho.pipeline.dispatcher"
+      },
+      "span": {
+        "traceId": "d4c162ab018f5f65d83b06fb65a125c8",
+        "spanId": "5c5fe9cc4458d354",
+        "parentSpanId": "5a10d32601925680",
+        "flags": 256,
+        "name": "aho.dispatch.nemotron",
+        "kind": 1,
+        "startTimeUnixNano": "1776990565633985602",
+        "endTimeUnixNano": "1776990566966022900",
+        "attributes": [
+          {
+            "key": "aho.model",
+            "value": {
+              "stringValue": "nemotron-mini:4b"
+            }
+          },
+          {
+            "key": "aho.family",
+            "value": {
+              "stringValue": "nemotron"
+            }
+          },
+          {
+            "key": "dispatch.num_ctx",
+            "value": {
+              "intValue": "2048"
+            }
+          },
+          {
+            "key": "dispatch.duration_ms",
+            "value": {
+              "doubleValue": 1330
+            }
+          },
+          {
+            "key": "dispatch.tokens_eval",
+            "value": {
+              "intValue": "2"
+            }
+          },
+          {
+            "key": "dispatch.tokens_prompt",
+            "value": {
+              "intValue": "64"
+            }
+          }
+        ],
+        "status": {}
+      }
+    }
+  ]
+}

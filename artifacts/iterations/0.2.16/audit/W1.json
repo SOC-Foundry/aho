@@ -1,0 +1,62 @@
+{
+  "workstream_id": "W1",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-04-23T22:05:00Z",
+  "audit_duration_min": 25,
+  "audit_result": "pass_with_findings",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "Dashboard API check (/api/otel)",
+    "Raw log verification (logs.jsonl count vs api/otel)",
+    "PII scrub verification (regex grep on API output)",
+    "G083 narrowed exception verification (src inspection)",
+    "Baseline count coherence (harness/test-baseline.json comparison)",
+    "G45 widget check (claw3d source grep)",
+    "Pillar 11 git log check",
+    "OTEL temporality check (metrics.jsonl raw inspection)"
+  ],
+  "otel_spot_checks": [
+    "curl http://127.0.0.1:7800/api/otel returned 200 with non-synthetic workstream data.",
+    "W1 api_request count (135) matched raw logs.jsonl grep exactly.",
+    "metrics.jsonl inspection confirmed aggregationTemporality=1 (DELTA) for cost and token usage metrics, validating the aggregator's summation logic."
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [],
+  "count_coherence_check": "AF003: W1.json archive claims 14 documented baseline failures, but artifacts/harness/test-baseline.json on disk contains only 13 entries.",
+  "findings": {
+    "AF001": {
+      "severity": "info",
+      "title": "0.2.15 sign-off drift repaired",
+      "description": "W0 successfully updated sign-off-0.2.15.md and carry-forwards-0.2.15.md counts to match actual 0.2.15 close state."
+    },
+    "AF002": {
+      "severity": "info",
+      "title": "template_leak_detected normalization verified",
+      "description": "src/aho/pipeline/dispatcher.py now returns False instead of None for clean results, ensuring stage JSON artifacts emit 'false' instead of 'null'."
+    },
+    "AF003": {
+      "severity": "important",
+      "title": "Baseline failure count mismatch in W1.json",
+      "description": "The W1 acceptance archive claims there are 14 documented baseline failures in artifacts/harness/test-baseline.json. However, inspection of the file on disk shows only 13 entries. The current 12 failures observed in W1 are consistent with a 13-entry baseline (11 persistent + 1 returned-to-failing flake = 12 failed). The number '14' in the archive appears to be a typo."
+    },
+    "AF004": {
+      "severity": "info",
+      "title": "api_error_count is an alias for internal_error_count",
+      "description": "In src/aho/dashboard/otel_aggregator.py, api_error_count is only incremented within the internal_error event block. Both fields in the /api/otel output will always be identical in the current implementation."
+    },
+    "AF005": {
+      "severity": "info",
+      "title": "api_retries_exhausted_count is a dead field",
+      "description": "api_retries_exhausted_count is initialized and rolled up by the aggregator but never incremented at any event ingestion site. It will always return 0."
+    }
+  },
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ]
+}

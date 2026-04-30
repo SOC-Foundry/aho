@@ -1,0 +1,57 @@
+{
+  "workstream_id": "W0",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-04-21T23:55:00Z",
+  "audit_duration_min": 35,
+  "audit_result": "pass",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "artifacts/iterations/0.2.16/qwen-num-predict-probe.json (substance + gate check)",
+    "~/.local/share/aho/metrics/metrics.jsonl (last 50 lines attribute check)",
+    "~/.local/share/aho/logs/logs.jsonl (last 50 lines attribute check)",
+    "git log --since='2026-04-21' --oneline (Pillar 11 compliance)",
+    "git status (working tree inspection)",
+    ".aho-checkpoint.json (integrity check)",
+    "artifacts/adrs/ enumeration (ADR sequential numbering check)",
+    "src/aho/pipeline/dispatcher.py (num_predict=8000, template_leak normalization, EmptyContentError definition)",
+    "src/aho/pipeline/orchestrator.py (workstream_id parameterization, EmptyContentError halt logic)",
+    "src/aho/agents/nemoclaw.py (G083 narrowing at :77 and :134)",
+    "artifacts/tests/conftest.py (checkpoint isolation allowlist check)"
+  ],
+  "otel_spot_checks": [
+    {
+      "query": "tail -n 50 metrics.jsonl",
+      "result": "Resource attributes aho.iteration=0.2.16, aho.workstream=W0, aho.role=drafter present on metrics including claude_code.session.count and claude_code.cost.usage."
+    },
+    {
+      "query": "tail -n 50 logs.jsonl",
+      "result": "Resource attributes preserved. Log records for api_request and tool_result carry correct attributes. prompt.id (UUID v4) and session.id are visible."
+    }
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [],
+  "count_coherence_check": "clean",
+  "findings": {
+    "AF001": {
+      "severity": "info",
+      "description": "Verification of W0 gate confirmed Qwen Producer substrate fix. content_chars=2705 well above 500 threshold; eval_count=2828 shows significant headroom under 8000 cap. Thinking process (9181 chars) remains the dominant token consumer for complex cascade prompts."
+    },
+    "AF002": {
+      "severity": "info",
+      "description": "Acceptance archive's finding F-W0-004 honestly captures the fourth recurrence of the checkpoint corruption bug and the three iterations required for the fix. Auditor confirms .aho-checkpoint.json was intact after the final W0 test run."
+    },
+    "AF003": {
+      "severity": "info",
+      "description": "Pillar 11 monitoring (alerting) implementation confirmed as W3 scope; W0 successfully established the capture surface for these metrics."
+    }
+  },
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ]
+}

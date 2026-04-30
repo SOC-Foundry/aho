@@ -1,0 +1,4 @@
+[     423ms] [WARNING] [.WebGL-0x11dc0155ea00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:7800/:0
+[     435ms] [WARNING] [.WebGL-0x11dc0155ea00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:7800/:0
+[     450ms] [WARNING] [.WebGL-0x11dc0155ea00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels @ http://127.0.0.1:7800/:0
+[     461ms] [WARNING] [.WebGL-0x11dc0155ea00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat) @ http://127.0.0.1:7800/:0
