@@ -1,55 +1,38 @@
 # aho
 
-**Agentic Harness Orchestration.** Methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.
+## Origin
 
-**Phase 0** · **Iteration 0.2.15** · **Status: Tier 1 Partial Install Validation**
+TachTech builds data and SIEM migration pipelines for customers — moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
 
-```mermaid
-graph BT
-    AHO["<b>A H O</b><br/><i>Agentic Harness Orchestration</i>"]:::shaft
-    AHO --- COST["◆ Minimal cost"]:::prong
-    AHO --- SPEED["◆ Speed of delivery"]:::prong
-    AHO --- PERF["◆ Optimized performance"]:::prong
-    classDef shaft fill:#0D9488,stroke:#0D9488,color:#fff
-    classDef prong fill:#161B22,stroke:#4ADE80,color:#4ADE80
-```
+Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects — using the same multi-modal models — produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline — the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture — was doing the work. The pipeline was useful, but the harness was load-bearing.
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product. The executing model (Claude, Gemini, Qwen, Llama) is the engine. The harness ships working software without supervision.
+aho is the extraction of that harness from pipeline-specific contexts into general-purpose governed agentic engineering infrastructure. The thesis: richer harnesses produce smarter behavior from the same models. Same Claude, same Gemini, materially different output, because the scaffolding around them is structured rather than vibes-based.
 
----
+## What aho is
 
-## Quick start
+aho is governance infrastructure for LLM-driven engineering. The four properties that make it that, rather than another agent framework:
 
-```fish
-git clone https://github.com/soc-foundry/aho
-cd aho
-./install.fish
-aho doctor
-```
+- **Drafter/auditor separation as a structural constraint.** Pattern C: the agent that produces work cannot bless it. The drafter drafts; a separate auditor audits; a human signs.
+- **Provable lineage of every dispatch.** W3C TRACEPARENT propagation through the stack means every LLM call is attributable to its workstream, iteration, drafter session, and parent operation. Cost, tokens, errors, decisions all traceable.
+- **Monitored invariants enforced as policy.** Pillar 11 (no agent git operations) is the prototype. Future invariants extend the same pattern. Policy as gate, not dashboard.
+- **Sealed acceptance and audit archives, immutable event log.** The artifacts are the record. They cannot be retroactively edited. Disputes resolve by reading the archive, not by re-asking the agent.
 
-Requires: Arch-family Linux, Python 3.11+, fish shell, Ollama, 8GB+ VRAM for Tier 1 council.
+The combination — and the compliance-shaped framing — is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
----
+## Why aho — cost and token utilization
 
-## Cascade
+Token cost matters. Claude and Gemini API spend at scale is the dominant operating cost of LLM-driven engineering, and single-agent execution wastes it in characteristic ways:
 
-Five-stage pipeline. Each stage a distinct role. Handoffs validated.
+- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model — fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints — turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
+- **No model-cost gradient.** Single-agent execution sends every decision to the same expensive model. Routing decisions, classification, triage, substantive reasoning, and architectural decisions all priced identically. aho's council pattern routes triage and classification to small local models (Nemotron-class), substantive work to mid-tier (Qwen, GLM), premium dispatches to Claude or Gemini. The cost gradient is visible per-workstream.
+- **Re-execution waste from undetected drift.** Single-agent failure modes — hallucinated state, stale assumptions, lost context, mid-task looping — are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
+- **Scope creep priced as features.** Single-agent execution under "do this large complex thing" expands scope as it works. aho's no-mid-flight-scope-amendment rule keeps tokens on the requested scope, not on the agent's interpretation of what it should also fix.
 
-```
-Document → Indexer-in → Producer → Auditor → Indexer-out → Assessor → Output
-                              │           │
-                              ▼           ▼
-                         deltas      delta-validations
-                              │           │
-                              └─► staging ◄┘
-```
+These are mechanism claims, not benchmark claims. The mechanisms compound across iterations.
 
-Producer drafts. Indexers propose deltas. Auditor validates. Assessor meta-assesses.
-Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
+## The 11 Pillars
 
----
-
-## The Eleven Pillars of AHO
+aho's operating principles. Numbered, named, and binding.
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -63,187 +46,227 @@ Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
 10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt.
 11. **The human holds the keys.** No agent writes to git or manages secrets.
 
----
+Each pillar is enforced by tooling, registry entries, or both. Pillar violations are findings; repeated violations are gotcha registry entries with mitigations.
 
-## Capabilities
+## Architecture — current shape
 
-**Artifact loop.** Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word-count enforcement and 3-retry escalation.
+aho today runs as a single-machine local loop. One human, one workstation, one project at a time.
 
-**Pre-flight / post-flight gates.** Environment validation before launch, quality gates after execution. Bundle completeness enforced.
+Components on the workstation:
 
-**Cascade orchestrator.** 5-stage pipeline (`src/aho/pipeline/`) with trace events, per-stage artifacts, cross-stage delta propagation. Dispatcher supports Ollama `/api/chat` with model-family stop tokens and `num_ctx` up to 32K on 8GB VRAM.
+- **aho harness** — Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
+- **ollama** — local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
+- **OTEL collector** — custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
+- **aho-dashboard** — claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
+- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** — daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
+- **age + fernet secret store** — age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
 
-**Pattern C execution.** Claude Code drafts, Gemini CLI audits, human signs. State machine: `in_progress → pending_audit → audit_complete → workstream_complete`. Audit archives are versioned, overwrites forbidden.
+State on disk:
 
-**Gotcha registry.** 83+ indexed failure modes with mitigations, queried at iteration start.
+- **`.aho-checkpoint.json`** — Pattern C state machine, single source of truth for iteration progression.
+- **`artifacts/iterations/{version}/`** — sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
+- **`artifacts/adrs/`** — versioned architectural decision records, enumerated from disk.
+- **`~/.local/share/aho/events/aho_event_log.jsonl`** — immutable append-only event ledger.
 
-**Secrets architecture.** age encryption + OS keyring + fernet bulk storage. No keys, passphrases, or secret material in the repo.
+Distribution today is fish-shell-driven install scripts. This is a known limitation; see Target shape.
 
-**Multi-agent orchestration.** Qwen for general work, Llama 3.2 for triage, GLM and Nemotron re-test in 0.2.15, OpenClaw as file-bridge wrapper, Nemoclaw as dispatcher.
+## Architecture — target shape
 
-**Telegram `/ws` streaming.** `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`. Auto-push on workstream completion.
+aho deployment scales across three tiers. The harness lives at the edge with each engineer; the heavy compute lives centrally; the truth layer is managed storage.
 
-**Install surface.** Three-persona model (pipeline builder, framework host, impromptu assistant). `aho run "task"` for persona 3 pwd-scoped work.
+### Tier 1: engineer workstation (containerized)
 
-**Observability.** otelcol-contrib + Jaeger as systemd user services. Spans in dispatcher, openclaw, nemoclaw, telegram.
+Runs locally on every aho user's machine. Distributed as signed container images.
 
----
+- **aho-harness** — Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
+- **ollama-edge** — minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
+- **otel-collector-edge** — local OTEL collector, ships to central observability tier.
+- **aho-dashboard-local** — claw3d for this engineer's iterations. Optional; org dashboard exists separately.
+- **aho-harness-watcher** — daemon monitoring local harness state, emitting events.
+- **engineer-local secret store** — age identity for this engineer, fernet-encrypted local secret bundle.
 
-## Folder layout
+The engineer container is a workstation tool, not a Kubernetes pod. Stateful per iteration, identity-bound to the engineer, not fungible.
+
+### Tier 2: pod-deployed serving plane (GCP / Kubernetes)
+
+Runs centrally; engineer workstations consume via HTTPS. Pod-based, horizontally scaled with HPA, GPU-aware where applicable.
+
+- **inference-gateway** — the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
+- **vllm-{qwen, glm, nemotron, ...}** — high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
+- **api-proxy-{anthropic, google, openai}** — egress with per-tenant key vaulting, rate limiting, retry handling.
+- **audit-dispatcher** — stateless service handing drafter outputs to the auditor agent.
+- **embedding-service** — nomic-embed-text or equivalent containerized for retrieval at scale.
+- **batch-worker-pool** — Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
+- **registry-api** — Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
+- **archive-api** — GCS-fronted API for sealed acceptance and audit archive reads and writes.
+- **aho-dashboard-org** — team-level org-wide view, separate deployment from engineer-local dashboards.
+- **otel-collector-central** — DaemonSet ingestion tier.
+
+### Tier 3: managed storage and state services
+
+Not pods. The truth layer.
+
+- **Firestore** — checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
+- **GCS** — sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
+- **Cloud Trace (or Tempo)** — OTEL trace storage.
+- **Cloud Monitoring (or Mimir)** — OTEL metric storage.
+- **Cloud Logging (or Loki)** — OTEL log storage.
+- **Secret Manager (or Vault)** — per-engineer and per-tenant identity vaulting.
+- **Pub/Sub** — event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
+- **Workload Identity** — engineer-container to GCP authentication.
+
+### Why this shape
+
+Three independent scaling axes:
+
+- **Dispatch volume** scales pods in Tier 2 via HPA and cluster autoscaling on GPU node pools. This is the canonical Kubernetes-with-GPU workload.
+- **Engineer count and deployment count** scales by deployment multiplication: more engineers means more workstation containers, each producing load on Tier 2 services. Engineer-side does not pod-scale.
+- **Storage and archive volume** scales via Tier 3 service capacity, independent of pod count.
+
+Putting the harness or registries in pods would couple these axes and break the independence. The boundary — harness and registries at the edge or behind APIs, model compute in pods, truth in managed services — preserves it.
+
+## Components in detail
+
+### The harness
+
+The harness is the contract between human, drafter agent, and auditor agent. It enforces Pattern C state transitions, validates dispatch parameters, parses TRACEPARENT, creates spans, writes acceptance and audit archives, and refuses operations that violate Pillars (notably 11). The harness is not a library called from agent code; the harness invokes agents.
+
+### The registries
+
+Three registries form the harness's memory:
+
+- **Gotcha registry** — indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
+- **Script registry** — sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
+- **ADR index** — architectural decision records numbered sequentially from disk enumeration, never fabricated.
+
+In current shape, registries are version-controlled files in the repo. In target shape, registries are Firestore-backed APIs with Pub/Sub fan-out for change notification.
+
+### The dispatcher and router
+
+The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing — typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
+
+In current shape, dispatcher routes to local Ollama. In target shape, dispatcher routes through the inference-gateway, which bridges to local Ollama for edge work, vLLM pods for substantive council dispatches, or API proxies for premium dispatches.
+
+### Pattern C state machine
+
+Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 — the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
+
+### OTEL telemetry and TRACEPARENT propagation
+
+Every dispatch produces traces, metrics, and logs tagged with iteration, workstream, and role. TRACEPARENT propagates through the dispatch chain so a Claude Code `tool_use` span parents to the `aho.dispatch` span which parents to the inferred-model span. Cost and token attribution is per-span; the Pillar 8 dashboard aggregates by workstream.
+
+### The Pillar 8 cost and token dashboard
+
+claw3d-fronted Flutter dashboard reads from the OTEL aggregator and serves per-workstream and per-iteration cost rollups, token totals, cache:new ratios, turn counts, tool-call counts, MCP event counts, and error counts. The cost gradient is visible directly: substantive dispatches priced higher than triage dispatches, audit dispatches priced separately from drafter dispatches.
+
+### Pattern C drafter and auditor
+
+Drafter is typically Claude Code; auditor is typically Gemini CLI. They run in separate sessions with separate identity. The drafter writes the acceptance archive and stops; a fresh auditor session reads the archive and writes the audit archive; a fresh drafter session reads the audit archive and emits `workstream_complete`. Three sessions, three role boundaries, no agent able to bless its own work.
+
+## Roadmap
+
+aho deployment scales in phases:
+
+- **Phase A (current):** single-machine local loop. Working, refined through 0.2.x iterations.
+- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only — no central cloud yet. The data-gathering phase.
+- **Phase C:** cloud coordination layer informed by Phase B telemetry. Endpoints for registry sync, harness contribution, shared event log, and central observability backend. Specific shape determined by what Phase B telemetry reveals.
+- **Phase D:** customer-facing deployment. Multi-tenant. Compliance-shaped.
+
+Phase A is shipping. Phase B is the next several iterations of architectural work. Phase C and D are not yet designed in detail.
+
+## Repo layout
 
 ```
 aho/
 ├── src/aho/                    # Python package (src-layout)
-│   └── pipeline/               # Cascade: schemas, dispatcher, orchestrator
-├── bin/                        # CLI entry points and tool wrappers
+│   ├── pipeline/               # Cascade: dispatcher, router, orchestrator, schemas
+│   ├── agents/                 # Drafter/auditor agent integrations (nemoclaw, openclaw)
+│   ├── council/                # Local model fleet wiring
+│   ├── dashboard/              # Pillar 8 dashboard server + OTEL aggregator
+│   ├── harness.py              # Pattern C state machine entry point
+│   ├── acceptance.py           # Sealed acceptance archive writer
+│   ├── workstream_events.py    # Workstream lifecycle event emitter
+│   ├── workstream_gate.py      # State transition gating
+│   ├── preflight/              # Pre-launch environment validation
+│   ├── postflight/             # Post-execution quality gates
+│   ├── registry.py             # Gotcha and script registry access
+│   ├── secrets/                # age + fernet secret store wiring
+│   ├── telegram/               # Notification fan-out
+│   ├── integrations/           # External tool integrations
+│   ├── rag/                    # Retrieval (nomic-embed-text, ChromaDB)
+│   ├── install/                # Install-time orchestration logic
+│   └── components/             # Component coverage tracking
+├── bin/                        # CLI entry points and tool wrappers (Pillar 4)
 ├── artifacts/
-│   ├── harness/                # Pillars, ADRs, Pattern C protocol
-│   ├── adrs/                   # Architecture Decision Records
-│   ├── iterations/             # Per-iteration design, plan, build, report, bundle
+│   ├── harness/                # Pillars (base.md), Pattern C protocol, prompt conventions
+│   ├── adrs/                   # Architectural Decision Records (sequential)
+│   ├── iterations/             # Per-iteration: design, plan, build, acceptance, audit, bundle
 │   ├── phase-charters/         # Phase objective contracts
 │   ├── roadmap/                # Strategic planning
 │   ├── scripts/                # Utility and instrumentation
-│   ├── templates/              # Scaffolding
 │   ├── prompts/                # LLM generation templates
+│   ├── templates/              # Scaffolding
 │   └── tests/                  # Verification suite
-├── data/                       # Registries, event log, ChromaDB
-├── app/                        # Consumer application mount (Phase 1+)
-└── pipeline/                   # Processing pipeline mount (Phase 1+)
+├── data/                       # Registries, event log, ChromaDB stores
+├── templates/                  # Project bootstrap templates
+├── tests/                      # Top-level test suite
+├── web/                        # Dashboard web assets
+├── app/                        # Consumer application mount (Phase B+)
+├── pipeline/                   # Processing pipeline mount (Phase B+)
+├── CLAUDE.md                   # Drafter (Claude Code) operating instructions
+├── GEMINI.md                   # Auditor (Gemini CLI) operating instructions
+├── CHANGELOG.md                # Iteration history
+├── COMPATIBILITY.md            # Supported environments
+├── MANIFEST.json               # Repo-level manifest
+└── install.fish                # 9-step install orchestrator
 ```
 
-Canonical since 0.1.13. Path-agnostic via `iao_paths.find_project_root()` and `.aho.json` sentinel.
+Path-agnostic via `aho.paths.find_project_root()` and the `.aho.json` sentinel.
 
----
-
-## State machine
-
-Every workstream flows through four states. Claude emits three events. Gemini emits one. Checkpoint advances only after audit archive exists with pass or pass-with-findings.
-
-```
-  in_progress   ──►   pending_audit   ──►   audit_complete   ──►   workstream_complete
-  (Claude)           (Claude done)        (Gemini done)           (Claude emits)
-```
-
-No agent emits `workstream_complete` before `audit_complete` exists. Audit archive overwrites forbidden; re-audits create versioned files.
-
----
-
-## Roadmap
-
-| Iteration | Theme | Status |
-|---|---|---|
-| 1 (0.1.x) | Build the harness | graduated 2026-04-11 |
-| 2 (0.2.x) | Ship to soc-foundry + P3 | active (0.2.15) |
-| 3 (0.3.x) | Alex demo + polish | planned |
-| Phase 1 | Multi-project, multi-machine | planned |
-
-**Phase 0 charter:** `artifacts/phase-charters/aho-phase-0.md`
-
-Phase 0 is complete when soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.
-
----
-
-## Recent iterations
-
-**0.2.15 — Tier 1 Partial Install Validation (in progress).** Wire and ship Tier 1 install package. 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) validated through Ollama on fixed dispatcher. Fair re-test of GLM and Nemotron after 0.2.13 W2.5 compromise findings measured on broken substrate. Ollama Tier 1 capability audit, dispatcher hardening, Nemoclaw decision ADR, cross-model cascade integration test. 5 workstreams.
-
-**0.2.14 — Council Wiring Verification.** 4 workstreams delivered (W0 setup, W1 vet+wire+smoke, W1.5 substrate repair, W2 close). W1 smoke test surfaced two dispatcher bugs: `num_ctx` default 4096 truncating input to ~4K tokens, and `/api/generate` without stop tokens causing chat template leakage. W1.5 repaired the dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens). Run-2 smoke test produced 14,725 chars of substantive cross-stage output vs run-1's 6,901 chars of template-leaked garbage. Council validated as real-but-thin: cascade mechanics work, Pillar 7 violation persists (Qwen-solo), auditor role-prompt bifurcation identified.
-
-**0.2.13 — Dispatch-Layer Repair.** First Pattern C iteration. W1 fixed GLM parser (`GLMParseError` replaces hardcoded `{score:8, ship}` fallback). W2 fixed Nemotron classifier (specific error types replace blanket `except Exception`). W2.5 hard gate: honest parsers exposed that GLM timed out 80% of inputs, Nemotron returned "feature" 80% regardless of content. Rescoped W3-W9. 4 workstreams delivered.
-
-**0.2.12 — Council Activation.** 20 workstreams. Gemini CLI primary executor. Council inventory audit. Five gotchas landed (G078-G083) including foundational G083: exception handlers returning hardcoded positive values, masking real failures. Council health measured at 35.3/100. Strategic rescope at W5.
-
-See [CHANGELOG.md](CHANGELOG.md) for full history back to 0.1.0-alpha.
-
----
-
-## Core concepts
-
-**Harness.** The versioned set of files that constrain agent behavior. Pillars, ADRs, Pattern C protocol, gotcha registry, prompt conventions, test baseline. Changes at phase or iteration boundaries.
-
-**Cascade.** Five role-bound stages that produce and validate analytical artifacts. Handoffs are traced events. Deltas proposed by Indexers validated by Auditor and Assessor.
-
-**Pattern C.** Execution model where a cloud orchestrator drafts, a second cloud orchestrator audits, and a human signs. Separates generation from evaluation at the orchestrator boundary. Introduced in 0.2.13.
-
-**Council.** The set of local LLMs available to the harness. Members have distinct roles. Pillar 7 requires drafter ≠ reviewer; council composition enables this.
-
-**Gotcha registry.** Structured record of failure modes with mitigations. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
-
-**Three personas.** Persona 1 (pipeline builder) runs full iterations against known projects. Persona 2 (framework host) imports aho into another repo. Persona 3 (impromptu assistant) runs pwd-scoped one-shot work via `aho run`.
-
----
-
-## Installation
+## Getting started
 
 ```fish
-# 1. Clone
 git clone https://github.com/soc-foundry/aho ~/dev/projects/aho
 cd ~/dev/projects/aho
-
-# 2. Install (idempotent; 9-step orchestrator)
 ./install.fish
-
-# 3. Verify
 aho doctor
-aho doctor --deep    # includes Flutter and dart checks
-aho components check # per-kind presence verification
 ```
 
-**Requirements:**
+Optional deeper checks:
+
+```fish
+aho doctor --deep        # includes Flutter and dart checks
+aho components check     # per-kind component presence verification
+```
+
+Requirements:
 
 - Arch Linux family (CachyOS tested)
-- Python 3.11+ (`pip install -e . --break-system-packages`)
-- fish shell (primary)
+- Python 3.14
+- fish shell (primary; non-fish shells are not supported)
 - Ollama (installed via upstream script, not pacman)
-- 8GB+ VRAM for Tier 1 council (Qwen 3.5:9B + Llama 3.2:3B + GLM + Nemotron)
-- systemd user services (linger enabled)
+- 8GB+ VRAM for the local council (Qwen 3.5:9b, GLM-4.6V-Flash-9B, Nemotron-mini:4b, nomic-embed-text)
+- systemd user services with linger enabled
 - Telegram bot token (optional, for `/ws` streaming)
 - Brave Search API token (optional, for search tools)
 
-**Tier 1 install** pulls four chat LLMs and one embedding model. Tier 2 and Tier 3 (Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo) land with 16GB+ machines; see 0.2.15 carry-forwards.
+Distribution today is the fish install script. Container distribution is Phase B; do not assume signed images exist yet.
 
----
+Configuration:
 
-## Configuration
+- **Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
+- **MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. Smoke-tested via `bin/aho-mcp smoke`.
+- **Secrets** initialized via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
+- **Per-machine systemd user services:** `aho-openclaw`, `aho-nemoclaw`, `aho-telegram`, `aho-harness-watcher`, `aho-otel-collector`, `aho-dashboard`.
 
-**Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
+## Contributing
 
-**MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. 9 MCP servers smoke-tested via `bin/aho-mcp smoke`.
+Pillar 11 governs: agents do not write to git. All commits are human-authored. PRs are welcome from human contributors. Agent-assisted drafting is expected and encouraged; agent-direct git operations are not.
 
-**Secrets** via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
+## Changelog
 
-**Per-machine systemd user services:** openclaw, nemoclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard.
-
----
-
-## Related work
-
-**[karpathy/llm-council](https://github.com/karpathy/llm-council).** Conceptual reference for multi-LLM cross-review pattern. Three-stage architecture (first opinions → review → chairman) differs from aho's five-stage role-bound cascade. OpenRouter cloud APIs vs aho's local Ollama inference. Karpathy's description: "99% vibe coded as a fun Saturday hack." Value is conceptual, not implementation.
-
-**[ruvnet/ruflo](https://github.com/ruvnet/ruflo).** Claude Code orchestration platform with swarm coordination, WASM policy engine, plugin system. Much larger scope than aho; different architectural premises (swarm-per-task vs role-bound cascade, dynamic agent spawning vs fixed council composition). Structural reference for OSS project organization.
-
-aho's focus is narrower than either: harness-governed iterations with durable state transitions, honest substrate measurement, and supervised-free software delivery. Local-first, 8-24GB VRAM tier, Arch Linux family, fish shell.
-
----
-
-## Status
-
-**Phase 0 active.** Second-machine clone target: ThinkStation P3 (tsP3-cos). Third-machine (A8cos) reframed as orchestration/daily-driver after integrated GPU constraint. Luke's machine (24GB) is candidate Tier 3 clone for 0.2.17.
-
-**Council:** Qwen 3.5:9B operational. Llama 3.2:3B integration in 0.2.15 W0. GLM-4.6V-Flash-9B and Nemotron-mini:4b substrate-compromise re-test in 0.2.15 W0. Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo planned for 16GB+ machines.
-
-**Testing:** 302 passing, 12-13 known baseline failures (daemon-dependent), 0 new regressions across recent iterations.
-
-**Gotcha registry:** 83+ entries.
-
----
+See [CHANGELOG.md](CHANGELOG.md) for full iteration history back to 0.1.0-alpha.
 
 ## License
 
 License to be determined before v0.6.0 release.
-
----
-
-*aho v0.2.15 · aho.run · Phase 0 · April 2026*
-
-*README last reviewed: 2026-04-13 by 0.2.15 W0 work session*
