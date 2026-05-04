@@ -1,0 +1,50 @@
+{
+  "workstream_id": "W0",
+  "auditor": "gemini-cli",
+  "role": "auditor",
+  "timestamp": "2026-05-02T14:35:00Z",
+  "audit_duration_min": 25,
+  "audit_result": "pass_with_findings",
+  "scope_matches_plan": true,
+  "substance_matches_scope": true,
+  "spot_checks_performed": [
+    "src/aho/dashboard/otel_aggregator.py — verified AF004/AF005 logic",
+    "src/aho/workstream_events.py — verified TestIsolationError guard",
+    "src/aho/workstream_init.py — verified settings.json rewrite logic",
+    "CLAUDE.md / GEMINI.md — verified Adversarial Authorship rename",
+    "aho:hello — verified image exists and runs version 0.2.14",
+    "regression suite — 116 passed, 1 deselected",
+    "logs.jsonl — spot-checked 0.2.17/W0 attribution"
+  ],
+  "otel_spot_checks": [
+    "~/.local/share/aho/logs/logs.jsonl spot-checked: resource.attributes correctly contains aho.iteration=0.2.17 and aho.workstream=W0. No ${VAR} residue."
+  ],
+  "baseline_delta_validated": true,
+  "gotcha_reintroduction_check": "clean",
+  "drift_findings": [
+    "AF001: F-0.2.17-W0-003 (GitHub Packages delete behavior) mentioned in drafter prompt and B2.5 notes but missing from formal carry_forwards_added list. Minor process drift.",
+    "AF002: Plan §B4 narrative contains 'Pattern C' residues. Accepted per drafter disposition as intentional announcement context."
+  ],
+  "count_coherence_check": "clean (26 items in carry-forwards-0.2.16.md matches retrospective 22 + 4 new)",
+  "findings": {
+    "AF001": {
+      "severity": "info",
+      "description": "F-0.2.17-W0-003 missing from formal carry-forwards list despite being identified as a candidate in prose. Recorded here for traceability."
+    },
+    "AF002": {
+      "severity": "info",
+      "description": "Rename residues in plan §B4 narrative match grep probes but are non-normative. Audit accepts as-is."
+    },
+    "AF003": {
+      "severity": "important",
+      "description": "B2.3 GPU passthrough deferred across reboot boundary. Acceptable for 0.2.17 W0/W3 (hybrid mode uses host), but gates 0.3.x production readiness. ADR 0007 updated with deferral rationale."
+    }
+  },
+  "agents_involved": [
+    {
+      "agent": "gemini-cli",
+      "role": "auditor"
+    }
+  ],
+  "acceptance_archive_sha256": "cd4e3f96b6d4217f275a946be964d38ff78b8acff7cbd683002f84f4463dfebc"
+}

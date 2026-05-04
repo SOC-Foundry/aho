@@ -1,0 +1,57 @@
+# aho 0.2.16 W3 — Pillar 11 violation rules
+#
+# Format: Prometheus alerting rules YAML (loaded via `rule_files` in prometheus.yml).
+# Rule expressions match plan §W3 table verbatim.
+#
+# Status: rule expressions written, NOT yet evaluated against a running engine.
+# Engine selection is a deferred design decision — see pillar-11-monitoring-notes.md
+# §"Deferred verification" and the future engine-selection ADR.
+#
+# Metric name translation: the plan refers to these as `claude_code.commit.count` and
+# `claude_code.pull_request.count` in OTel dot-notation. Once Claude Code metrics flow
+# through an OTel→Prometheus exporter, the standard translation is dots→underscores.
+# Whether `_total` is appended to monotonic counters depends on exporter version
+# (older Prometheus exporter appended; newer versions are configurable). The rules
+# below assume bare names (no `_total`); if the chosen exporter appends `_total`,
+# update both `expr` references at engine wire-up time.
+
+groups:
+  - name: aho.pillar-11
+    interval: 30s
+    rules:
+
+      - alert: Pillar11CommitViolation
+        expr: increase(claude_code_commit_count[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          pillar: "11"
+          aho_iteration: "0.2.16"
+        annotations:
+          summary: "Pillar 11 violation: claude_code.commit.count delta > 0"
+          description: >-
+            An agent-attributable git commit was observed in the last minute.
+            Pillar 11 is absolute: no agent writes to git. This alert fires on any
+            non-zero increase, indicating either an unintended agent-side commit or
+            a misconfigured wrapper that surfaced `git commit` to a role.
+            Investigate immediately. Root-cause the wrapper or session that produced
+            the increment; if a synthetic probe (W3 bucket 5 deferred) is the source,
+            confirm via the corresponding `pillar_11_violation` event in
+            ~/.local/share/aho/events/aho_event_log.jsonl.
+          runbook: "artifacts/iterations/0.2.16/pillar-11-monitoring-notes.md"
+
+      - alert: Pillar11PullRequestViolation
+        expr: increase(claude_code_pull_request_count[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          pillar: "11"
+          aho_iteration: "0.2.16"
+        annotations:
+          summary: "Pillar 11 violation: claude_code.pull_request.count delta > 0"
+          description: >-
+            An agent-attributable pull-request creation was observed in the last
+            minute. Pillar 11 forbids agent PR operations. This alert fires on any
+            non-zero increase. Investigate the originating session and wrapper;
+            confirm whether intentional probe or unintended agent operation.
+          runbook: "artifacts/iterations/0.2.16/pillar-11-monitoring-notes.md"

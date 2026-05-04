@@ -408,8 +408,39 @@ def cmd_iteration(args, parser):
                 print(msg)
             else:
                 print(f"{args.ws_id} already completed (idempotent skip)")
+        elif ws_cmd == "init":
+            from aho.workstream_init import init_settings_for_workstream
+            iteration = args.iteration or os.environ.get("AHO_ITERATION")
+            if not iteration:
+                print(
+                    "ERROR: --iteration not given and AHO_ITERATION env var not set. "
+                    "Cannot determine iteration label."
+                )
+                sys.exit(1)
+            try:
+                changed = init_settings_for_workstream(
+                    iteration=iteration,
+                    workstream_id=args.ws_id,
+                    settings_path=args.settings_path,
+                )
+            except FileNotFoundError as exc:
+                print(f"ERROR: {exc}")
+                sys.exit(1)
+            except (json.JSONDecodeError, ValueError) as exc:
+                print(f"ERROR: settings.json malformed: {exc}")
+                sys.exit(1)
+            if changed:
+                print(
+                    f"settings.json updated: aho.iteration={iteration}, "
+                    f"aho.workstream={args.ws_id}"
+                )
+            else:
+                print(
+                    f"settings.json already at aho.iteration={iteration}, "
+                    f"aho.workstream={args.ws_id} (no-op)"
+                )
         else:
-            print("Usage: aho iteration workstream {start|complete} <ws_id>")
+            print("Usage: aho iteration workstream {start|complete|init} <ws_id>")
         return
     if sub == "graduate":
         from aho.artifacts.loop import run_graduation_analysis
@@ -661,6 +692,21 @@ def main():
     pit_ws_complete.add_argument("--token-count", type=int, default=None, help="Rough total tokens")
     pit_ws_complete.add_argument("--harness-contributions", default=None, help="Comma-separated harness contributions")
     pit_ws_complete.add_argument("--forensics-minutes", type=int, default=None, help="Minutes spent on ad-hoc forensics")
+    pit_ws_init = pit_ws_sub.add_parser(
+        "init",
+        help="Write literal AHO_ITERATION + workstream values into .claude/settings.json env block",
+    )
+    pit_ws_init.add_argument("ws_id", help="Workstream ID (e.g. W0, W1)")
+    pit_ws_init.add_argument(
+        "--iteration",
+        default=None,
+        help="Iteration label (defaults to AHO_ITERATION env var)",
+    )
+    pit_ws_init.add_argument(
+        "--settings-path",
+        default=None,
+        help="Override settings.json path (default <project_root>/.claude/settings.json)",
+    )
 
     pit_grad = pits.add_parser("graduate", help="Analyze iteration for phase graduation")
     pit_grad.add_argument("iteration")
@@ -672,6 +718,49 @@ def main():
     pc_status.add_argument("--json", action="store_true", help="Output machine-readable JSON")
     pc_status.add_argument("--member", help="Detail on one member")
     pc_status.add_argument("--verbose", action="store_true", help="Include G083 scan summary and routing activity")
+
+    # --- aho serve (0.2.17 W1 — container ready-and-waiting mode) ---
+    sub.add_parser("serve", help="Container ready-and-waiting mode (W1 entrypoint default)")
+
+    # --- aho tier-detect (0.2.17 W1 D2) ---
+    sub.add_parser("tier-detect", help="Detect VRAM tier (base/partial/full); print to stdout")
+
+    # --- aho secrets-test (0.2.17 W1 D3 — test-only round-trip via broker) ---
+    pst = sub.add_parser(
+        "secrets-test",
+        help="W1 test-only: round-trip get_secret via host broker socket",
+    )
+    pst.add_argument("project", help="Project label (must match broker registration)")
+    pst.add_argument("name", help="Secret name")
+
+    # --- aho host (0.2.17 W1 D3 — host-side broker + run-container wrapper) ---
+    phost = sub.add_parser("host", help="Host-side primitives (secrets broker, run-container)")
+    phosts = phost.add_subparsers(dest="host_cmd")
+    phost_brk = phosts.add_parser(
+        "secrets-broker",
+        help="Start/inspect/stop the secrets broker on $XDG_RUNTIME_DIR/aho-secrets.sock",
+    )
+    phost_brk.add_argument("--socket", default=None,
+                           help="Override socket path (default $XDG_RUNTIME_DIR/aho-secrets.sock)")
+    phost_brk_grp = phost_brk.add_mutually_exclusive_group(required=True)
+    phost_brk_grp.add_argument("--start", action="store_true", help="Start broker (foreground)")
+    phost_brk_grp.add_argument("--status", action="store_true", help="Print registration table")
+    phost_brk_grp.add_argument("--shutdown", action="store_true", help="Request broker shutdown")
+
+    phost_run = phosts.add_parser(
+        "run-container",
+        help="Register UID with broker, podman run, unregister on exit",
+    )
+    phost_run.add_argument("--project", required=True, help="Project label to register")
+    phost_run.add_argument("--image", required=True, help="Container image tag")
+    phost_run.add_argument("--uid", type=int, default=None,
+                           help="Host-visible UID (default os.getuid())")
+    phost_run.add_argument("--socket", default=None,
+                           help="Broker socket path (default $XDG_RUNTIME_DIR/aho-secrets.sock)")
+    phost_run.add_argument("--podman-flag", action="append", default=[],
+                           help="Extra flag for podman run (repeatable)")
+    phost_run.add_argument("container_cmd", nargs=argparse.REMAINDER,
+                           help="Container command (after --)")
 
     args = p.parse_args()
     if args.cmd:
@@ -915,6 +1004,116 @@ def main():
                 print(format_human(status, verbose=args.verbose))
         else:
             pcouncil.print_help()
+    elif args.cmd == "serve":
+        from aho.serve import serve_main
+        sys.exit(serve_main())
+    elif args.cmd == "tier-detect":
+        from aho import tier_detect as _td
+        try:
+            tier = _td.detect_and_persist()
+        except _td.TierDetectError as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(2)
+        print(tier)
+        sys.exit(0)
+    elif args.cmd == "secrets-test":
+        # Hash-fingerprint round-trip: emit SHA-256 first 8 hex + length on
+        # stdout. Decrypted value is never printed (Pillar 11 closure of
+        # F-0.2.17-W1-001 / -003). Operator runs a parallel host-side
+        # get_secret() and compares the same fingerprint to verify
+        # broker-vs-host equivalence.
+        import hashlib as _hashlib
+        from aho.secrets_client import (
+            get_secret as _client_get_secret,
+            SecretsBrokerAuthError,
+            SecretsBrokerError,
+            SecretsBrokerUnreachable,
+        )
+        try:
+            value = _client_get_secret(args.project, args.name)
+        except SecretsBrokerAuthError as exc:
+            print(f"AUTH_FAIL: {exc}", file=sys.stderr)
+            sys.exit(4)
+        except SecretsBrokerUnreachable as exc:
+            print(f"UNREACHABLE: {exc}", file=sys.stderr)
+            sys.exit(2)
+        except SecretsBrokerError as exc:
+            print(f"BROKER_ERROR: {exc}", file=sys.stderr)
+            sys.exit(3)
+        if value is None:
+            print(json.dumps({
+                "project": args.project,
+                "name": args.name,
+                "status": "missing",
+            }))
+            sys.exit(5)
+        fingerprint = _hashlib.sha256(value.encode("utf-8")).hexdigest()[:8]
+        print(json.dumps({
+            "project": args.project,
+            "name": args.name,
+            "fingerprint": fingerprint,
+            "length": len(value),
+            "status": "ok",
+        }))
+        sys.exit(0)
+    elif args.cmd == "host":
+        if args.host_cmd == "secrets-broker":
+            from aho.host.secrets_broker import SecretsBroker, default_socket_path
+            sock_path = Path(args.socket) if args.socket else None
+            if args.start:
+                broker = SecretsBroker(socket_path=sock_path)
+                try:
+                    broker.serve_forever()
+                except KeyboardInterrupt:
+                    broker.stop()
+                sys.exit(0)
+            else:
+                # status / shutdown — connect as client
+                import json as _json
+                import socket as _socket
+                target = sock_path or default_socket_path()
+                if not target.exists():
+                    print(f"broker socket not present at {target}", file=sys.stderr)
+                    sys.exit(2)
+                op = "shutdown" if args.shutdown else "status"
+                s = _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM)
+                s.settimeout(3.0)
+                try:
+                    s.connect(str(target))
+                    s.sendall((_json.dumps({"op": op}) + "\n").encode("utf-8"))
+                    buf = bytearray()
+                    while True:
+                        chunk = s.recv(4096)
+                        if not chunk:
+                            break
+                        buf.extend(chunk)
+                        if b"\n" in buf:
+                            break
+                    line = buf.split(b"\n", 1)[0]
+                    print(line.decode("utf-8"))
+                finally:
+                    s.close()
+                sys.exit(0)
+        elif args.host_cmd == "run-container":
+            from aho.host.run_container import run_container_cli as _rc_main
+            argv = [
+                "--project", args.project,
+                "--image", args.image,
+            ]
+            if args.uid is not None:
+                argv += ["--uid", str(args.uid)]
+            if args.socket:
+                argv += ["--socket", args.socket]
+            for flag in args.podman_flag:
+                argv += ["--podman-flag", flag]
+            cmd = list(args.container_cmd or [])
+            if cmd and cmd[0] == "--":
+                cmd = cmd[1:]
+            if cmd:
+                argv += ["--"] + cmd
+            sys.exit(_rc_main(argv))
+        else:
+            phost.print_help()
     elif args.cmd in ("eval", "registry"):
         cmd_stub(args)
     else:

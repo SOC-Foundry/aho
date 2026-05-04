@@ -212,6 +212,36 @@ def test_event_count_aggregation(tmp_path):
     assert w1["mcp_server_connection_count"] == 1
 
 
+def test_api_error_and_retries_exhausted_mapping(tmp_path):
+    """0.2.17 W0 Bucket 1 — AF004/AF005 closure.
+
+    api_error_count counts api_error events (not internal_error).
+    api_retries_exhausted_count counts api_retries_exhausted events.
+    internal_error events do NOT bump api_error_count any more.
+    """
+    logs = tmp_path / "logs.jsonl"
+    metrics = tmp_path / "metrics.jsonl"
+    _write_jsonl(
+        logs,
+        [
+            _log_line("0.2.17", "W0", "api_error", "2026-05-02T10:00:00Z"),
+            _log_line("0.2.17", "W0", "api_error", "2026-05-02T10:00:01Z"),
+            _log_line("0.2.17", "W0", "api_error", "2026-05-02T10:00:02Z"),
+            _log_line("0.2.17", "W0", "api_retries_exhausted", "2026-05-02T10:00:03Z"),
+            _log_line(
+                "0.2.17", "W0", "internal_error", "2026-05-02T10:00:04Z",
+                extra_attrs=[{"key": "error_name", "value": {"stringValue": "FooError"}}],
+            ),
+        ],
+    )
+    _write_jsonl(metrics, [])
+    state = oa.aggregate(iteration="0.2.17", logs_path=logs, metrics_path=metrics, force=True)
+    w0 = state["workstreams"]["W0"]
+    assert w0["api_error_count"] == 3
+    assert w0["api_retries_exhausted_count"] == 1
+    assert w0["internal_error_count"] == 1
+
+
 def test_filters_placeholder_and_wrong_iteration(tmp_path):
     logs = tmp_path / "logs.jsonl"
     metrics = tmp_path / "metrics.jsonl"

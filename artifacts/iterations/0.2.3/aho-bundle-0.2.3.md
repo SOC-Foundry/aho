@@ -1,6 +1,6 @@
 # aho - Bundle 0.2.3
 
-**Generated:** 2026-04-24T00:35:52.489158Z
+**Generated:** 2026-05-04T03:59:16.027499Z
 **Iteration:** 0.2.3
 **Project code:** ahomw
 **Project root:** /home/kthompson/dev/projects/aho
@@ -1735,6 +1735,2503 @@ This ADR is superseded when any of the following become true:
   clock record; current ground truth for Gemini invocation timing.
 ```
 
+### ADR: 0006-iteration-deliverable-discipline.md (0006-iteration-deliverable-discipline.md)
+```markdown
+# ADR 0006 — Iteration Deliverable + Graduation Criterion Discipline
+
+**Status:** Accepted
+**Date:** 2026-05-01
+**Iteration of record:** aho 0.2.16 W4
+**Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
+**Context surface:** aho project-internal — iteration-plan-doc structure;
+binds every iteration plan from 0.2.17 onward.
+
+---
+
+## Context
+
+aho's workstreams have crisp deliverables. Every workstream plan section in
+`aho-plan-{iter}.md` lists files produced, acceptance gates, and a budget;
+every workstream closes against an `acceptance/W{N}.json` archive whose shape
+is harness-enforced.
+
+aho's iterations have not. What an iteration delivers — what *exists* at
+iteration close that did not exist at iteration start — has been emergent
+across 0.2.x. The iteration's *theme* is captured in design and plan docs,
+but the binary "did this iteration ship" question has no canonical artifact;
+sign-off ticks five workstreams and the close command rolls forward.
+
+Two consequences of that gap surfaced in 0.2.x:
+
+1. **Iteration scope drifted mid-flight without a structural alarm.** 0.2.16
+   originally scoped W4 to a Mercor export pack assembly. Mid-iteration the
+   scope was deprioritized to ADRs and plan-outline work. That is a
+   reasonable scope decision — but at the workstream level a comparable
+   mid-flight scope change (a new file added to an in-progress workstream's
+   deliverable list, say) would land as a hard meta-rule violation. At the
+   iteration level there is no equivalent guardrail because there is no
+   crisp iteration-level contract to violate.
+
+2. **The retrospective inherits the emergent shape.** "What did 0.2.16 ship"
+   has to be reconstructed by re-reading per-workstream summaries at
+   close-out. Future iterations consult that retrospective and inherit a
+   pattern of describing iteration deliverables narratively rather than as
+   a single-paragraph contract.
+
+This conflicts with aho's own governance thesis. The harness-as-IQ pillar
+(2) states that the harness *is* the contract — and aho has applied that
+discipline to workstream contracts but not to iteration contracts. Pillar 6
+(transitions are durable) and pillar 8 (efficacy is measured in cost delta)
+both presuppose that "did this iteration succeed" is a question with a
+defined answer. Today the answer is constructed at close-out from
+per-workstream evidence rather than asserted at plan time and verified at
+close.
+
+The richer-harness, smarter-behavior pattern says: when a meta-rule keeps
+producing emergent rather than designed behavior, the fix is to lift the
+contract one level. This ADR lifts the deliverable contract from workstream
+to iteration.
+
+## Decision
+
+Every `aho-plan-{iter}.md` MUST open with two artifacts before the
+workstream summary table:
+
+### (1) Iteration deliverable paragraph
+
+A single plain-language paragraph stating what exists at iteration close
+that did not exist at iteration start. The paragraph is written at
+plan-doc creation time (before W0), names concrete artifacts (files,
+commands, dashboards, alert rules — whatever the iteration produces), and
+is the canonical answer to "did this iteration ship."
+
+The paragraph is a contract, not an aspiration. Workstream amendments do
+not amend it. The paragraph can only be amended by the same hard meta-rule
+exception that governs workstream-scope amendments — kyle-explicit, halt
+the iteration, surface the change as a first-class scope decision.
+
+### (2) Graduation criterion
+
+A binary test that must pass for the iteration to be considered shipped.
+Forms in order of preference:
+
+1. **Runnable test.** A single command (or short script) that exits 0 when
+   the iteration deliverable is met and non-zero otherwise. Preferred form
+   when the deliverable is software.
+
+2. **Observable artifact existence + content check.** A list of files that
+   must exist and a short content assertion (regex, key presence, count
+   range) for each. Acceptable form when the deliverable is documentation
+   or design output.
+
+3. **Manual verification checklist with acceptance evidence.** A numbered
+   list of human-verifiable conditions, each with a named evidence artifact
+   that records the verification. Form of last resort — used only when (1)
+   and (2) genuinely do not apply.
+
+The graduation criterion lives at the top of the plan doc immediately
+after the deliverable paragraph. At iteration close, the drafter verifies
+the criterion and records the verification in the retrospective. If the
+criterion fails, the iteration does not close — it stays open until the
+criterion passes or until the criterion itself is amended (same hard
+meta-rule treatment as above).
+
+### Drafter responsibility at iteration close
+
+Before emitting the final `iteration_complete` event (or its post-ADR-0004
+equivalent), the drafter:
+
+1. Re-reads the iteration deliverable paragraph and graduation criterion
+   from the plan doc.
+2. Asserts each condition of the graduation criterion against current
+   repo state.
+3. Records the assertion (PASS/FAIL with evidence references) in the
+   retrospective under a §Graduation criterion section.
+4. If FAIL: halts close, surfaces to Kyle, does not advance.
+
+Sign-off from Kyle remains Pillar 11 work — the drafter validates, Kyle
+commits.
+
+## Rationale
+
+> Workstream scope amendments are a hard meta-rule violation. Iteration
+> scope amendments — i.e., changing the iteration deliverable mid-iteration
+> — are now the same class of violation.
+
+aho's governance signal is consistent across scope levels or it is not
+consistent at all. Workstream scope is fixed at workstream-start; that
+discipline produced the bucket-by-bucket explicitness that 0.2.16's
+workstreams shipped against. The same discipline at iteration boundary
+produces an iteration plan doc that asserts what the iteration is *for*
+in a single paragraph. Future iteration owners (and future Kyles auditing
+in retrospect) read the deliverable paragraph and get the contract; they
+do not have to re-derive it from five workstream summaries.
+
+The graduation criterion adds the binary "shipped" question. Today aho's
+answer to "did 0.2.16 ship" is "five workstreams have audit_result ∈
+{pass, pass_with_findings}". That is a workstream-level success aggregation,
+not an iteration-level success assertion. With this ADR, "did 0.2.16
+ship" is "the graduation criterion in `aho-plan-0.2.16.md` evaluates true"
+— a single question with a single answer.
+
+The runnable-test preference for the criterion mirrors the workstream
+acceptance archive's preference for measured evidence over rhetorical
+claim. A binary test is harder to fudge than a paragraph of prose. When
+the deliverable is software, the test is the contract; when the
+deliverable is documentation, the existence-and-content check approximates
+the test.
+
+## Consequences
+
+### Positive
+
+- Iterations gain a single-paragraph contract written at plan time, not
+  reconstructed at close.
+- "Did the iteration ship" becomes a binary question with a defined answer.
+- The retrospective has a structurally-required §Graduation criterion
+  section, which forces a measurement step that has been emergent in 0.2.x.
+- Mid-iteration scope drift surfaces as a deliverable-paragraph amendment,
+  which trips the same hard meta-rule that workstream-scope amendments
+  trip. Drift becomes detectable at the iteration level.
+- The Adversarial Authorship protocol (renamed in 0.2.17 W0 from
+  "Pattern C") now has a corresponding pattern at the iteration
+  level — drafter writes contract → drafter executes → drafter verifies →
+  Kyle signs — paralleling the workstream protocol. Governance signal is
+  consistent.
+- 0.3.x and onward inherit a uniform iteration-plan-doc opening shape,
+  which makes the iteration-bundle archive shape across phases more
+  comparable.
+
+### Negative
+
+- Plan-doc creation cost increases. Drafting a deliverable paragraph and a
+  graduation criterion at plan time requires more thought than emergent
+  scope; the cost shows up at iteration-open rather than iteration-close.
+  This is a feature (front-loaded clarity) but an increase nonetheless.
+- Some iterations have genuinely exploratory scope where the deliverable
+  is hard to specify in advance. The graduation criterion forms (1)–(3)
+  cover most cases, but for an iteration whose entire purpose is "decide
+  what to do next," the criterion may degrade to (3) and provide weaker
+  signal than for an execution-focused iteration. Acceptable; flagged.
+- Retroactive application is impossible for closed iterations. 0.2.x prior
+  iterations stay narratively-described in their own retrospectives. The
+  0.2.16 retrospective applies the discipline retroactively to *itself* —
+  the deliverable paragraph and graduation criterion are written at
+  retrospective time and the criterion is evaluated against repo state.
+
+### Neutral
+
+- The iteration-plan-doc template grows two top sections. Existing
+  workstream summary tables are unchanged.
+- The retrospective template grows a §Graduation criterion section. Other
+  sections unchanged.
+- ADR 0004's `aho iteration close --confirm` redesign is unaffected; the
+  archive-reading commit path is the same. A future enhancement could
+  surface graduation-criterion verification through the close command, but
+  that is out of scope for this ADR.
+
+## Examples
+
+### Example 1 — 0.2.16 (retroactive)
+
+**Iteration deliverable (retroactive):**
+
+> At 0.2.16 close, Claude Code sessions in aho emit cost / token / event /
+> trace signals to a managed otelcol-contrib pipeline; Pillar 11
+> violations and four anomaly conditions have rule files ready for live
+> wire-up; a per-workstream cost-and-token dashboard is rendering;
+> distributed traces propagate W3C `TRACEPARENT` from Claude Code through
+> `src/aho/pipeline/dispatcher.py` and `router.py` into Ollama leaf calls;
+> three new aho-internal ADRs (0006 iteration discipline, 0007
+> containerization, 0008 dispatcher missing-model) are recorded; the
+> 0.2.17 plan and 0.3 phase plan are seeded.
+
+**Graduation criterion (retroactive — form 2, observable artifact
+existence + content check):**
+
+```
+1. .claude/settings.json env block contains CLAUDE_CODE_ENABLE_TELEMETRY=1,
+   OTEL_METRICS_EXPORTER=otlp, OTEL_LOGS_EXPORTER=otlp, OTEL_TRACES_EXPORTER=otlp,
+   CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1, and OTEL_RESOURCE_ATTRIBUTES with
+   aho.iteration / aho.workstream / aho.role keys.
+2. ~/.local/share/aho/{logs,metrics,traces}/*.jsonl all show non-zero size and
+   contain at least one record tagged aho.iteration=0.2.16.
+3. artifacts/iterations/0.2.16/dashboards/pillar-8-cost-tokens.json exists
+   with five panels (cost-by-workstream, tokens-by-type, cost-per-1K,
+   active-time, cost-delta).
+4. artifacts/iterations/0.2.16/alerts/{pillar-11-violations,anomaly-rules}.yaml
+   both exist with five rules total.
+5. src/aho/pipeline/dispatcher.py and src/aho/pipeline/router.py both read
+   TRACEPARENT and emit child spans (verified by tests/test_*_traceparent.py
+   passing).
+6. artifacts/adrs/{0006,0007,0008}-*.md exist.
+7. artifacts/iterations/0.2.17/aho-plan-0.2.17.md exists with iteration
+   deliverable paragraph + graduation criterion at top.
+8. artifacts/iterations/0.3-phase-plan.md (or repo-convention equivalent)
+   exists with phase-deliverable paragraph + per-iteration outline.
+```
+
+The 0.2.16 retrospective evaluates each numbered condition against current
+repo state and records PASS/FAIL.
+
+### Example 2 — 0.2.17 (proposed, drafted in 0.2.16 W4)
+
+**Iteration deliverable (proposed):**
+
+> At 0.2.17 close, aho ships as a base-tier signed container image in a
+> registry, pullable and runnable on NZXTcos as a base-tier host.
+> install.fish detects GPU capacity and pulls the appropriate model bundle
+> at install time. The harness runs end-to-end inside the container — `aho`
+> CLI works, telemetry pipelines emit, dashboard renders, dispatcher routes
+> correctly per ADR 0008's hybrid-mode dispatch behavior.
+
+**Graduation criterion (proposed — form 1, runnable test):**
+
+```
+podman pull <registry>/aho:0.2.17-base \
+  && podman run --rm aho:0.2.17-base aho --version \
+  && podman run --rm \
+       -e AHO_DISPATCH_HYBRID_MODE=1 \
+       aho:0.2.17-base aho dispatch --family nemotron --prompt 'hello' \
+  && exit 0
+```
+
+Exit 0 on a clean working directory on NZXTcos = iteration shipped.
+
+### Example 3 — 0.3.1 (proposed, drafted in 0.2.16 W4)
+
+**Iteration deliverable (proposed):**
+
+> At 0.3.1 close, the partial-tier aho container image exists in the
+> registry, pulls cleanly on tsP3 (16GB-class discrete GPU host),
+> install.fish detects partial tier and pulls the partial model bundle
+> (base + qwen3.5:9b + GLM-4.6V-Flash-9B), and a paired-Auditor cascade
+> runs end-to-end inside the container with full Jaeger trace.
+
+**Graduation criterion (proposed — form 1, runnable test):**
+
+```
+On tsP3:
+podman pull <registry>/aho:0.3.1-partial \
+  && podman run --rm aho:0.3.1-partial aho --version \
+  && podman run --rm aho:0.3.1-partial \
+       aho cascade run --scenario nosql-paired-auditor \
+  && exit 0
+```
+
+Exit 0 on tsP3 = iteration shipped. Trace artifact is captured by the
+cascade command; existence-check is folded into the runner's exit code.
+
+## Out of Scope
+
+- **Specific graduation-criterion templates per iteration class**
+  (substrate iteration, design iteration, integration iteration, etc.).
+  The three forms above (runnable test / artifact-existence-and-content /
+  manual checklist) cover the spectrum; per-class templates are a future
+  refinement once 0.2.17 / 0.3.1 generate enough examples to extract a
+  pattern. Candidate ADR for late 0.3 or 0.4.
+
+- **Automation of graduation-criterion verification.** Today the drafter
+  reads the criterion and asserts it manually at retrospective time. A
+  future enhancement is `aho iteration graduate --check` that parses a
+  structured graduation block and runs the test. Out of scope for this
+  ADR; potentially folds into ADR 0004's close-command redesign as that
+  ADR's implementation lands.
+
+- **Integration with `aho iteration` CLI.** ADR 0004 covers the
+  close-command redesign; this ADR does not amend it. Once 0004's
+  implementation lands, a follow-on ADR can extend the close path to
+  read and assert the graduation criterion. Pre-emptive integration here
+  would couple two design decisions that should stay independent until
+  both have landed in code.
+
+- **Phase-level deliverable paragraphs and graduation criteria.** This
+  ADR governs iteration plan docs. Phase plans (e.g., the 0.3 phase plan
+  drafted in W4) inherit a similar discipline informally — the 0.3
+  phase plan opens with a phase-deliverable paragraph by analogy — but
+  this ADR does not formally bind phase plans. Candidate for a separate
+  ADR if Phase 0 close (whenever 0.x → 1.0 transitions) reveals the
+  same emergent-vs-designed gap at the phase level.
+
+- **Backfilling deliverable paragraphs and criteria onto closed
+  iterations.** 0.1.x and 0.2.x prior iterations stay as they are. Their
+  retrospectives are durable as written. Backfill would consume drafter
+  time on closed work for limited gain; not adopted.
+
+## Alternatives Considered
+
+### Treat workstream acceptance aggregate as the iteration contract
+
+Today's de facto position: an iteration ships when all workstreams have
+`audit_result ∈ {pass, pass_with_findings}`.
+
+**Rejected.** Workstream success aggregation is structurally weaker than
+iteration deliverable assertion. Five workstreams can each pass against
+their individual gates while the iteration as a whole has drifted from
+its original purpose; aggregating successes does not detect drift. Also,
+"did the iteration ship" should be answerable without reading five
+workstream archives.
+
+### Require a deliverable paragraph but not a graduation criterion
+
+Optional graduation criterion would be a softer enforcement.
+
+**Rejected.** Without a binary test, the deliverable paragraph drifts
+into aspiration. The graduation criterion is the part that distinguishes
+contract from prose. Form (3) (manual checklist) accommodates iterations
+where forms (1) and (2) genuinely do not apply, so the requirement is
+not infeasibly strict.
+
+### Require the criterion to be runnable (form 1) only
+
+Strictest version: every iteration must have a runnable test.
+
+**Rejected.** Documentation- or design-heavy iterations (this iteration,
+arguably) cannot reduce their deliverable to a single runnable test
+without contortion. Forcing form 1 in those cases produces synthetic
+tests that pass trivially and provide weak signal. Form 2 with explicit
+content-check assertions is honestly stronger for those iterations.
+
+### Put the deliverable + criterion in the design doc, not the plan doc
+
+`aho-design-{iter}.md` already opens with §Charter — argued the
+deliverable and criterion belong there.
+
+**Rejected.** §Charter is narrative-scoping; the deliverable paragraph
+and graduation criterion are contract artifacts. Mixing them with
+narrative produces a charter that is half prose and half assertion. The
+plan doc is where workstream-level contracts live; the iteration-level
+contract belongs alongside, not in the design's narrative section. The
+charter can summarize them, but the contract location is the plan doc.
+
+## Revisit Triggers
+
+This ADR is superseded or amended when any of the following become true:
+
+1. **Two iterations in a row produce graduation criteria of form 3
+   (manual checklist) without a forcing reason.** Signal that the form-1
+   / form-2 framework is too restrictive for aho's actual iteration mix
+   and the framework needs revision.
+
+2. **A future ADR extends `aho iteration close --confirm` to verify the
+   graduation criterion programmatically.** That ADR likely amends this
+   one to formalize the criterion's machine-readable shape.
+
+3. **An iteration is forced open (graduation criterion fails) for more
+   than two close-attempts.** Signal that the criterion shape is wrong
+   for that iteration class — either it is encoding aspirations the
+   iteration cannot deliver, or the iteration is genuinely failing.
+   Either way, the experience generates a refinement.
+
+## References
+
+- `artifacts/harness/base.md` §The Eleven Pillars — pillar 2 (harness is
+  the contract), pillar 6 (transitions are durable), pillar 8 (efficacy
+  in cost delta).
+- `artifacts/harness/adversarial-authorship-protocol.md` — workstream-level
+  analog of the discipline this ADR lifts to iteration. (Renamed from
+  `pattern-c-protocol.md` in 0.2.17 W0.)
+- `artifacts/adrs/0004-iteration-close-confirm-redesign.md` — the close
+  command redesign that a future ADR may couple with this one.
+- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` — example of an
+  iteration plan doc *without* the discipline (pre-this-ADR shape).
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` — first iteration
+  plan doc *with* the discipline (post-this-ADR shape; drafted in
+  0.2.16 W4 alongside this ADR).
+- `artifacts/iterations/0.2.16/retrospective-0.2.16.md` §Graduation
+  criterion — first retroactive application; drafted in 0.2.16 W4
+  alongside this ADR.
+```
+
+### ADR: 0007-containerization-architecture.md (0007-containerization-architecture.md)
+```markdown
+# ADR 0007 — Containerization Architecture
+
+**Status:** Accepted
+**Date:** 2026-05-01
+**Iteration of record:** aho 0.2.16 W4
+**Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
+**Context surface:** aho project-internal — packaging and deployment shape
+for 0.2.17 onward. Inherits in 0.3.x for partial- and full-tier deployment;
+informs Phase B/C architectural decisions.
+
+---
+
+## Context
+
+Through 0.1.x and 0.2.x aho has run on NZXTcos via `install.fish` and
+per-machine drift management. The harness, the pipeline, the dispatcher,
+the dashboard, and the model bundle live as a colocated single-machine
+deployment. Migrating to a second machine (tsP3, A8cos, Luke's box)
+requires re-running install.fish and absorbing whatever drift the target
+machine introduces — Arch family detection, VRAM tier, GPU vendor
+peculiarities, ollama service hygiene, Python virtualenv shape.
+
+The future-state architecture (per Kyle's strategic direction) places
+aho's harness at the edge — engineer workstations, both local and remote
+— with the heavy model compute at the center, on a Tier 2 cloud serving
+plane. Bridging today's single-machine local loop to tomorrow's
+distributed deployment requires a portable artifact that:
+
+1. Encapsulates the harness + middleware + project layers in a form
+   that pulls and runs on any compatible host without per-machine
+   install.fish drift.
+2. Adapts its model bundle to the host's GPU capacity at install time,
+   rather than baking a single fat-or-skinny bundle into the image.
+3. Preserves Pillar 11's secrets posture — secrets stay on the host,
+   never in the image, never in the registry.
+4. Targets a runtime that fits the CachyOS-posture local hosts and a
+   Linux-on-cloud-VM serving target without runtime-hopping.
+
+The container is the artifact. This ADR specifies its shape.
+
+## Decision
+
+### Single image, tier-conditional model bundle
+
+aho ships as **one** image: `aho`. The image contains the harness, the
+middleware, the project layers, the Python virtualenv, the `aho` CLI,
+and Ollama itself. The image does **not** contain model weights.
+
+The image's tier is determined at install time, not at build time, by
+`install.fish` running on the host. install.fish polls
+`nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits`,
+classifies the host into a tier, and pulls the tier-appropriate model
+set into a host-volume that the container mounts:
+
+| Tier | VRAM threshold | Model bundle | Target hosts |
+|---|---|---|---|
+| **base** | < 12 GB or no nvidia-smi | nemotron-mini:4b (~2.7 GB), nomic-embed-text (~274 MB), llama3.2:3b (~2.0 GB) — total ~5 GB | iGPU hosts, NZXTcos (8 GB), integrated-only laptops |
+| **partial** | 12 GB to < 32 GB | base bundle + qwen3.5:9b (~6.6 GB), haervwe/GLM-4.6V-Flash-9B (~8.0 GB) and any future ≤16-GB-fit models | tsP3 (16 GB), mid-tier discrete-GPU workstations |
+| **full** | ≥ 32 GB | partial bundle + Nemotron Super (~42 GB) and future large-model additions | A100/H100-class cloud GPU pools (GCP intranet target) |
+
+Models are stored in a host-mounted volume (e.g.,
+`~/.local/share/aho/models/`) that Ollama inside the container reads from
+via bind-mount. Pulling a model is host-side; loading a model is
+container-side. The image's disk footprint stays bounded.
+
+### NZXTcos categorization
+
+NZXTcos (8 GB VRAM) is **base tier**. The threshold ≤ 12 GB places it
+unambiguously in base; no caveat applies.
+
+The historical NZXTcos behavior — running partial-tier models on the
+bare host with `num_gpu` partial-CPU-offload workarounds — is
+**out of scope for containerized deployment**. Those workarounds remain
+available to the operator on the bare host (the legacy install.fish
+path through 0.2.x close), but they are not what the container ships
+or supports. Within the container, NZXTcos serves the base-tier bundle
+and only the base-tier bundle.
+
+Operational consequence: 0.2.17 development on NZXTcos validates the
+base-tier container's harness pipeline against base-tier models inside
+the container. Partial-tier work on NZXTcos during 0.2.17 development
+is handled by ADR 0008's hybrid-mode dispatcher (host's native Ollama
+serves partial-tier dispatches; container's bundled Ollama serves
+base-tier dispatches). The hybrid mode is gated on an environment
+variable so it cannot leak into production deployment.
+
+### install.fish behavior
+
+install.fish gains a tier-detection block that runs before model pulls:
+
+```
+function detect_tier
+    if not command -q nvidia-smi
+        echo base
+        return 0
+    end
+    set vram (nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits | head -n1)
+    if test $vram -lt 12000
+        echo base
+    else if test $vram -lt 32000
+        echo partial
+    else
+        echo full
+    end
+end
+```
+
+The detected tier maps to a model-bundle list (literal
+`ollama pull <model>` invocations per tier). install.fish runs the
+appropriate pulls into the host-mounted models directory. Re-running
+install.fish on a host with an unchanged tier is a no-op for already-
+pulled models; tier changes (e.g., GPU upgrade) trigger additional
+pulls without re-pulling the existing base.
+
+Fallback: hosts without nvidia-smi default to base tier. AMD ROCm and
+Apple Metal hosts are explicitly out of scope for the tier detection in
+this ADR; they fall to base tier and are unblocked when ROCm/Metal
+support is folded into a later iteration.
+
+### Secrets model
+
+Per Pillar 11, secrets do not live in the image, in the registry, or in
+the container's writable layer. The container reads secrets from a
+host-mounted path via bind-mount:
+
+| Secret | Host path (default) | Container mount | Access |
+|---|---|---|---|
+| age identity (per-machine) | `~/.local/share/aho/age/identity.txt` | `/opt/aho/secrets/age/identity.txt` (read-only) | container reads, host owns |
+| fernet-encrypted bulk secret bundle | `~/.local/share/aho/secrets/bundle.enc` | `/opt/aho/secrets/bundle.enc` (read-only) | container decrypts at runtime, host owns |
+
+The container's user inside the image has read permission on the
+mounted secret paths and no write permission. The age identity stays
+per-machine — moving aho to a new host requires the operator to mint a
+new age identity on that host and re-encrypt the bulk bundle for it.
+
+The image itself ships with **zero** secrets baked in. The image is
+therefore safe to publish to a registry without per-host
+re-encryption.
+
+### Registry choice
+
+Starting decision: **local-first registry**. Either a local Harbor (or
+equivalent) on the home network or a workspace/personal namespace on
+GitHub Container Registry (e.g., `ghcr.io/socfoundry/aho`). The
+specific local registry is decided in 0.2.17 W0; this ADR records the
+deferral.
+
+Cloud-side registry (the GCP intranet deployment target) is **not**
+decided in this ADR. Phase C work selects the cloud registry once
+serving-plane infrastructure decisions are firmer. Until then, the
+cloud-tier full image is built and stored in the local registry; it
+moves to the cloud registry whenever Phase C lands.
+
+Multi-engineer pull sync (synchronizing image versions across
+engineers' workstations from a shared registry) is also deferred.
+0.2.17 ships single-operator (Kyle); Phase B work introduces a second
+engineer and at that point the registry choice is revisited with
+multi-engineer access semantics.
+
+### Runtime choice
+
+Starting preference: **Podman**. Rationale:
+
+- Rootless by default. Aligns with the principle of least privilege
+  for a single-operator workstation deployment.
+- Daemonless. No persistent root-owned process; container lifetimes
+  are tied to the operator's session.
+- CachyOS first-class support. NZXTcos and other CachyOS hosts in the
+  fleet ship with podman in the package mirrors and the systemd-user
+  integration is mature.
+- Drop-in `docker` CLI compatibility (`alias docker=podman` works for
+  the surface we use). Migration cost from docker-based examples is
+  near-zero.
+- OCI-compliant. Images built by podman pull and run under docker; no
+  vendor lock.
+
+Docker is the **fallback** runtime — supported when Podman is not
+available on a host (e.g., a future macOS or Windows engineer
+workstation where Docker Desktop is the path of least resistance), but
+not the recommended runtime for the Linux fleet that the 0.2.17 / 0.3
+deployment targets.
+
+The decision is **soft-deferred** — 0.2.17 W0 confirms Podman runs
+cleanly on NZXTcos before locking the choice. If Podman surfaces a
+blocker in W0 (e.g., GPU passthrough fragility under rootless mode),
+the fallback to Docker is a one-decision pivot with no architectural
+cascade.
+
+### Runtime choice — 0.2.17 W0 confirmation (Podman engaged)
+
+**Outcome: Podman, as originally preferred.** 0.2.17 W0 Bucket 2
+confirmed Podman runs cleanly on NZXTcos. `podman 5.8.2` installed
+via pacman, `podman run --rm hello-world` returned cleanly after a
+one-time fix for the rootless overlay-storage backing (installed
+`fuse-overlayfs`, ran `podman system reset --force` to clear stale
+storage state, re-ran hello-world successfully). `nvidia-container-toolkit
+1.19.0-1.1` and `libnvidia-container 1.19.0-1.1` installed alongside.
+
+The soft-deferral resolves positively to Podman. Docker remains the
+documented fallback per §Runtime choice above, available without
+architectural cascade if a future host fails Podman.
+
+**Mid-bucket detour worth recording.** Initial attempts to install
+Podman via pacman failed at the network layer with corrupted CachyOS
+package databases. Investigation surfaced the root cause as Tailscale
+split-DNS hijacking specific CachyOS mirror domains and returning
+incorrect IPs — not aho-introduced, not CachyOS-mirror-broken.
+Resolved by Kyle's host-side split-DNS fix excluding the mirror
+domains from Tailscale's resolver. The detour included a tentative
+flip to Docker (already installed on NZXTcos at 29.4.1) under the
+working assumption that the package-management failure was unrecoverable;
+this section was originally drafted with "Docker engaged" before the
+DNS root cause was identified. Reverted to Podman in the same W0
+Bucket 2 once `pacman -S podman` succeeded post-DNS-fix.
+
+The Tailscale-DNS-hijack incident is captured separately under
+F-host-001 in `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
+(re-targeted from "fix CachyOS infrastructure" to "document split-DNS
+exclusions for package-mirror domains").
+
+**Container-level deliverables in W0–W4 are unchanged from the
+original plan.** Image build (W1), tier manifest (W2), hybrid-mode
+dispatcher (W3), and telemetry wiring (W4) proceed under Podman as
+originally scoped. `host.containers.internal` (Podman default) is
+the hybrid-mode network address per ADR 0008.
+
+### GPU passthrough deferral — 0.2.17 W0
+
+**B2.3 (rootless Podman + NVIDIA Container Runtime end-to-end probe)
+is deferred across the post-W0 reboot boundary.** The deferral is
+explicit and bounded; it is not a verification skip.
+
+**Empirical state at deferral:**
+- `podman 5.8.2` installed and rootless hello-world verified (B2.1
+  passing).
+- `nvidia-container-toolkit 1.19.0-1.1` and `libnvidia-container
+  1.19.0-1.1` installed (B2.2 passing).
+- `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`
+  fails with `failed to initialize NVML: Driver/library version
+  mismatch`. Root cause: pacman update brought userspace libraries
+  to `595.71.05` (`/usr/lib/libnvidia-ml.so.595.71.05`) while the
+  running kernel still has the prior NVIDIA module loaded
+  (`595.58.03`-class per `nvidia-smi` reporting before the upgrade).
+  Standard fix is host reboot; module reload (`modprobe -r nvidia*
+  && modprobe nvidia`) virtually always fails on an active desktop
+  session because the modules are in use by Plasma/Wayland/X.
+
+**Why deferral is acceptable for 0.2.17 W0/W3:**
+ADR 0008's hybrid-mode dispatcher routes partial-tier dispatches
+to `host.containers.internal:11434` — the host's *native* Ollama,
+which uses the host GPU directly with no container in the path.
+0.2.17 development on NZXTcos exercises that hybrid path; the
+container does not need GPU passthrough for any 0.2.17 deliverable.
+Container GPU passthrough becomes load-bearing for production-tier
+(0.3.x) deployment, where the container's bundled Ollama serves
+all dispatches and must reach the host GPU through NVIDIA Container
+Runtime.
+
+**Post-reboot validation — one-command exercise:**
+
+```fish
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml \
+  && podman run --rm --device nvidia.com/gpu=all \
+       docker.io/nvidia/cuda:12.0-base nvidia-smi
+```
+
+Expected: `nvidia-smi` output from inside the container showing the
+host's GPU (RTX 2080 SUPER, 8 GB VRAM) and the post-update driver
+version (595.71.05). If both lines exit zero with that output, B2.3
+passes. If either fails post-reboot, the failure is real (not
+transient pre-reboot mismatch) and gets a follow-up surface.
+
+**This validation is a 0.3.x deliverable gate, not a 0.2.17 gate.**
+It can land at any point between this W0 close and 0.3.x W0 — the
+W0 acceptance archive notes the deferral with this command as the
+post-reboot verification step. Until validated, the
+production-tier-on-base-host scenario is unsupported (ADR 0007's
+§NZXTcos categorization already says NZXTcos's role inside the
+container is base-tier-only; production tier is cloud or partial
+host).
+
+A reasonable layer order — non-normative, included so 0.2.17 W1's
+Dockerfile work has a starting point:
+
+1. base layer: minimal Debian/Ubuntu/CachyOS base + Python runtime +
+   ollama binary.
+2. system-deps layer: apt/pacman packages aho needs (curl, git,
+   build-essential, NVIDIA container toolkit if applicable).
+3. python-deps layer: aho's pyproject.toml dependencies via uv or pip.
+4. aho-source layer: `src/aho/`, `bin/`, `artifacts/harness/` mounted
+   into `/opt/aho/`.
+5. entrypoint layer: container entrypoint that respects host secrets
+   mount, host models mount, and `AHO_DISPATCH_HYBRID_MODE` env (per
+   ADR 0008).
+
+Models are **not** a layer. Models are host-volume content.
+
+### Council roles
+
+**Added in 0.2.17 W5** — consolidating four iterations (W0/W1/W2/W3/W4)
+of in-container council deployment work into the ADR that owns the
+container's runtime shape. The chat-side architecture artifact
+`aho-base-container-architecture.md` §Seat assignments / §Auditor
+contract / §Anti-rubber-stamp hardening sections are the source; this
+subsection makes those decisions repo-resident and authoritative.
+
+Five seats compose the council. Two are external (drafter, executor —
+both run on operator's chat / CLI surfaces, not in the container).
+Three are in-container (auditor, triage, retrieval). Each seat has a
+named locus, a fixed model at base tier, and a contract surface.
+
+| Seat | Locus | Base-tier model | Contract surface |
+|---|---|---|---|
+| **Drafter** | external (Claude web) | n/a — chat-resident | Plans, plan-doc authoring, drafter arbitration of audit findings, gap-net for what auditor cannot catch by design. Persistent across chat sessions. |
+| **Executor** | external (Claude Code or Gemini CLI) | n/a — workstation-resident | Per-iteration; codified per iteration in plan doc. Implements deliverables; emits acceptance archive; emits OTEL telemetry; never invokes git. |
+| **Auditor** | in-container | `llama3.2:3b` | Structural spot-check: claim-vs-artifact verification, contract-shape validation, invariant resolution. Confidence floor 0.85 structurally enforced. Disposition shape `clean | halt | surface_to_drafter` with `clean` unreachable below threshold. Deterministic post-hoc filter on RAG-aware findings (`aho.council.audit_finding_filter`, W4 D1) suppresses fake-ID-on-registered-anchor failure mode. Partial-tier and full-tier auditor models deferred to 0.3.x roadmap. |
+| **Triage** | in-container | `nemotron-mini:4b` | Classification only. Raise-on-malformed (no `categories[-1]` fallback per G083). |
+| **Retrieval** | in-container | `nomic-embed-text` + ChromaDB host-mounted volume | Recency-weighted query; sole embedding source; feeds context to triage and audit. |
+
+#### Role-collapse trip-wire
+
+`executor_model_family ≠ auditor_model_family` enforced as an OTEL
+invariant at base tier. The trip-wire fires if executor and auditor
+share a model family — Llama (Meta) vs. Claude/Gemini (Anthropic /
+Google) is the cross-family separation that holds at 0.2.17 base tier.
+The trip-wire surface lives at `src/aho/dashboard/lego/role_collapse_brick.py`
+and reads OTEL resource attributes `aho.role` plus model-family
+metadata; brick turns red if executor and auditor resolve to the same
+family on the same workstream's events.
+
+Pillar 7 ("generation and evaluation are separate roles") is the
+binding constraint. The trip-wire makes the separation falsifiable
+and observable at runtime.
+
+#### Anti-rubber-stamp hardening
+
+Three failure modes have been closed across the 0.2.17 audit-seat
+work; together they form the base-tier anti-rubber-stamp posture:
+
+1. **G083 raise-on-malformed.** Triage and audit primitives raise on
+   malformed model output (missing fields, schema violations, unknown
+   severity vocabulary outside `SEVERITY_SYNONYMS`). No silent fallback
+   to a default category or default disposition. Implemented in
+   `src/aho/council/triage.py` and `src/aho/council/audit.py`.
+
+2. **GLM removed from auditor candidacy at base tier.** GLM's OOM
+   behavior under co-resident loading on 8GB-VRAM hosts kills all
+   loaded models. At base tier (NZXTcos, < 12GB VRAM) GLM is not in
+   the auditor candidate set. Llama3.2:3b is the canonical base-tier
+   auditor; GLM moves into the partial-tier candidate set on tsP3
+   (16GB VRAM) under 0.3.x roadmap.
+
+3. **Llama confidence-floor lock + W4 deterministic post-hoc filter.**
+   Llama3.2:3b at 32K context cannot fit the full carry-forwards file
+   + ADRs + gotcha registry alongside an audit target. Without
+   reference-resolution context, the model systematically flags
+   carry-forward IDs that match its placeholder-syntax heuristic as
+   "looks fake." Two layers close the gap: (a) RAG enrichment via
+   `aho.council.audit_ref_lookup` retrieves "is this ID registered?"
+   from ChromaDB and inlines the answer into the audit prompt's
+   `## Registered references` section (W3 D4); (b) deterministic
+   post-hoc filter (`aho.council.audit_finding_filter`, W4 D1)
+   inspects each finding for a registered anchor in description AND a
+   fake-ID phrase from the canonical set, suppressing only when both
+   match. Filter is deterministic and does not bet the architecture on
+   small-model prompt-following — the model can ignore the
+   registered-references rule and the failure mode is still contained.
+
+Confidence-floor lock: the `clean` disposition is structurally
+unreachable below the 0.85 confidence threshold. Below the floor, the
+disposition collapses to `surface_to_drafter` so the drafter
+arbitrates rather than the model rubber-stamping. Implementation lives
+inside `aho.council.audit` disposition resolution.
+
+#### Cross-references (sealed archives)
+
+- W2 acceptance archive (in-container llama auditor first deployment;
+  baseline materiality counter wiring): sha256
+  `4a5ab02b8b831de1df3c5f45bf8578d9f641fd2a5ee6de9eed9a0b6fb213a2dd`.
+- W3 acceptance archive (RAG enrichment landing; W0 false-positive
+  closed; W2 self-audit false-positive persisted under same prompt
+  rule): sha256
+  `9ed9a88a5382d89f116083a1cf87de586ddd997da975ef8cd5091aa748c81790`.
+- W4 acceptance archive (deterministic post-hoc filter landing;
+  fake-ID-on-registered-anchor failure mode structurally contained;
+  F-0.2.17-W2-006 + F-0.2.17-W3-001 closed via W4 D1): sha256
+  `949908ffd933cfd9e5121432c5fd7294b060a39e17e4a2259d3a4cdc040c8300`.
+- W4 audit archive (llama self-audit verbatim disposition
+  `surface_to_drafter`; drafter-arbitrated to `pass_with_findings`):
+  sha256 `9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`.
+
+These archives are **sealed** — modifications post-emit forbidden.
+Re-audits create `audit/W{N}-v2.json`, `v3`, etc. per Adversarial
+Authorship convention.
+
+### k8s-readiness
+
+The 0.2.17 image is built to be k8s-deployable in principle, even though
+0.2.17 does not ship Kubernetes manifests. 0.3.x adds k8s manifests; 0.2.17
+ensures the image they will reference does not bake in single-host
+assumptions.
+
+Five properties bind the image build:
+
+1. Configuration via environment variables, not in-image config files.
+   Volume-mountable config supports k8s ConfigMaps.
+2. Secrets read from filesystem paths inside the container; k8s Secrets
+   are volume-mounted as files.
+3. Logs to stdout/stderr; OTEL telemetry sinks (host-mounted today) are
+   not in scope here — that is signal export, not log output.
+4. Graceful SIGTERM handling within 30s default
+   terminationGracePeriodSeconds.
+5. HTTP health-check endpoints at `GET /healthz` (liveness, no deps) and
+   `GET /readyz` (readiness, tier+secrets+models reachable). Default port
+   8080, env-configurable.
+
+These are W1 acceptance gates. Out of scope for this iteration: actual
+k8s manifests, Helm charts, Kustomize overlays, multi-replica behavior.
+Those are 0.3.x work.
+
+## Rationale
+
+> The container's tier reflects what the host can support cleanly,
+> not what workarounds enable.
+
+Three forces shape this architecture:
+
+1. **Portability is the goal, not image fatness.** A single image with
+   a tier-conditional model bundle pulled at install time is dramatically
+   smaller than three tier-specific images, and the install.fish-driven
+   tier detection puts the right models on the right host without a
+   build-time variant explosion. The cost is that install.fish runs once
+   per host; the benefit is that the registry stores one image instead
+   of three and image-version skew across tiers becomes impossible.
+
+2. **Pillar 11 demands secrets stay host-side.** A container that bakes
+   secrets in is a container that cannot be safely published to a
+   registry. The host-volume secrets model preserves the existing
+   per-machine age identity convention with zero change to the
+   harness's secret-read path; the only new behavior is the bind-mount
+   shape declared at container start.
+
+3. **Production hard-edge separates from dev hybrid.** ADR 0008 covers
+   what happens when the dispatcher is asked for a model the host's
+   tier doesn't have. This ADR's job is to make the tier classification
+   itself unambiguous: NZXTcos is base-tier *as a container host*. The
+   partial-tier work the operator does on NZXTcos during 0.2.17
+   development uses the host's native Ollama via the hybrid-mode env
+   gate; that mode never leaks into production base-tier deployments
+   because production deployments do not set the env var.
+
+The Podman default and the local-registry-first deferral both follow
+the same logic: pick the choice that fits the current host fleet and
+the current operator count, document the deferral, revisit when the
+fleet or operator count changes. Pre-deciding the cloud registry or
+forcing a Docker default would optimize for a future state that hasn't
+materialized.
+
+## Consequences
+
+### Positive
+
+- aho gains a portable artifact that pulls cleanly across the host
+  fleet. Onboarding a new host (Luke's box, a new tsP3 partition, a
+  cloud VM) reduces to install.fish run + image pull + container run.
+- Per-machine drift compresses to "what tier is the host" plus host
+  secret materials. install.fish becomes lighter — no Python
+  virtualenv setup, no pip install, no CachyOS-vs-Ubuntu branching at
+  the harness level.
+- Image versioning becomes a registry concern; local installs pin a
+  tag, upgrades are explicit `podman pull` operations.
+- Pillar 11 stays uncompromised. Secrets continue to live on the host;
+  the registry is publish-safe.
+- The cloud-side full-tier deployment (Phase C target) inherits this
+  same image with a different tier classification. The architectural
+  shape stays one-image-many-tiers; the cloud serving plane is a
+  full-tier installation, not a separate artifact.
+- ADR 0008's dispatch hybrid mode has a clean surface to bind to —
+  the env var is read at container start and the dispatcher's
+  routing decision flows from it.
+
+### Negative
+
+- install.fish gains a new responsibility (tier detection + model
+  pull) that a single source-of-truth must own. Bug surface is real:
+  mis-detection on an unusual GPU, mis-mapping of VRAM thresholds, or
+  failure to fall back to base tier on a non-NVIDIA host all become
+  failure modes. Mitigation: 0.2.17 W2 explicitly tests tier
+  detection on NZXTcos and at minimum a non-NVIDIA fallback path.
+- Image build adds a CI surface that does not exist today. Local
+  podman build on Kyle's machine is the 0.2.17 starting point; multi-
+  engineer image build coordination is a Phase B problem. Mitigation:
+  pin the build to one host (NZXTcos) for 0.2.17 and 0.3.1, formalize
+  later.
+- Container abstraction adds a debugging layer. Failures inside the
+  container can be harder to diagnose than failures on the bare host.
+  Mitigation: aho's existing event log and OTEL pipelines emit from
+  inside the container as well as outside; the harness-watcher's
+  diagnostic surface is preserved.
+- GPU passthrough configuration (NVIDIA Container Toolkit) is a
+  per-host install step that lives outside aho's repo. Mitigation:
+  install.fish documents the dependency; failure to configure
+  passthrough surfaces as a clear container-start error rather than
+  a silent fallback to CPU.
+- The hybrid-mode env var (per ADR 0008) is a development-only
+  affordance. Risk that it leaks into a production deployment.
+  Mitigation: image entrypoint logs the hybrid-mode state at startup;
+  production deployments add a startup assertion that the var is
+  unset.
+
+### Neutral
+
+- The image stays runnable under Docker as a fallback; OCI compliance
+  means the artifact is not tied to Podman.
+- Existing `install.fish` behavior on the bare host is preserved as a
+  legacy path through 0.2.x close. 0.2.17 introduces the container
+  path alongside; deprecating the bare-host path is not in this
+  ADR's scope.
+- Phase C cloud registry choice stays deferred. The local registry
+  acts as the single source of truth until Phase C lands, at which
+  point image promotion (local → cloud) is a registry-mirror or
+  re-tag operation, not a re-build.
+- The model bundle's per-tier list is data, not architecture. Model
+  upgrades (qwen3.5 → qwen-next, llama3.2 → llama4 if it exists) are
+  amendments to the tier-bundle table, not amendments to this ADR.
+
+## Out of Scope
+
+- **Multi-engineer registry sync.** Coordinating image versions across
+  multiple engineer workstations pulling from a shared registry is
+  Phase B work. 0.2.17 / 0.3.1 ship single-operator.
+- **Signed-image policy and SBOM emission.** Cosign signing,
+  SLSA-style provenance attestations, SBOM generation — these become
+  load-bearing when external consumers (Mercor, future customers,
+  enterprise audit) require them. Phase B candidate.
+- **Cloud-side registry choice.** GCP Artifact Registry vs. self-hosted
+  Harbor on a GCP VM vs. another option — Phase C work, decided when
+  serving-plane infrastructure decisions are firmer.
+- **Kubernetes manifests for full-tier cloud deployment.** Single-pod
+  vs. multi-pod-with-sidecar-Ollama, ConfigMap shape for tier
+  designation, Secret shape for the age identity rotation, Service
+  exposure for the harness-watcher dashboard — all 0.3.x work, not
+  this ADR's scope.
+- **AMD ROCm and Apple Metal tier detection.** install.fish's tier
+  detection in 0.2.17 covers NVIDIA only. Non-NVIDIA hosts default to
+  base. ROCm and Metal support, when added, are tier-detection
+  amendments, not architectural changes — folded into a later iteration.
+- **Container-internal ollama hot-reload of newly-pulled models.**
+  When install.fish pulls a new model post-container-start, the
+  running container needs to either restart or trigger an Ollama
+  reload. Behavior is a 0.2.17 W3 implementation question; this ADR
+  does not pre-decide it.
+- **Image promotion automation.** Tag promotion from `aho:0.2.17-rc1`
+  to `aho:0.2.17-base` is operator-driven in 0.2.17. Automation lands
+  when CI lands.
+- **Telemetry pipeline running inside the container vs. on the host.**
+  aho's otelcol-contrib service is presumed to stay host-side in
+  0.2.17 (the container emits to `host.containers.internal:4317` or
+  equivalent). A container-internal collector deployment is a
+  later choice.
+
+## Alternatives Considered
+
+### Three tier-specific images
+
+Build three images: `aho-base`, `aho-partial`, `aho-full`. Each bakes
+its tier's models in. Operator pulls the right image for their host.
+
+**Rejected.** Image fatness explosion (full-tier ~42+ GB image) and
+image-version skew across tiers (partial gets bumped to 0.2.17.1
+while full stays on 0.2.17 because of pull cost) make the registry
+operationally painful. Single-image-with-host-volume-models is
+strictly simpler.
+
+### Build-time model bundling via build-arg
+
+Single Dockerfile, three builds with `--build-arg TIER=base|partial|full`
+that include or exclude model layers conditionally.
+
+**Rejected.** Same fatness problem, plus a build-arg matrix that
+multiplies CI cost. The host-volume model store is the right place
+for ~50 GB of weights regardless of containerization.
+
+### Docker as the default runtime
+
+Adopt Docker as the default; document Podman as an alternative.
+
+**Rejected for Linux fleet.** Docker daemon's root-owned process
+contradicts the principle-of-least-privilege posture aho has held
+through 0.2.x. Daemonless Podman aligns with the harness's
+single-operator-on-CachyOS deployment shape. Docker stays as a
+fallback for hosts where Podman is not the path of least resistance
+(future Windows / macOS engineer onboarding).
+
+### Bake an age identity into the image at build time
+
+Generate a per-image age identity, bake it into the image, encrypt
+the bulk secret bundle for that identity.
+
+**Rejected.** The image becomes per-host (one image per identity)
+and registry publishability collapses. The point of containerizing
+is portability; per-image identity defeats portability.
+
+### Skip containerization entirely; rely on install.fish + Ansible/Salt
+
+Stay with bare-host install.fish, layer a configuration-management
+tool on top for multi-host orchestration.
+
+**Rejected.** Configuration management does not solve the per-host
+drift problem at the harness level — Python virtualenv state,
+Ollama service hygiene, dispatcher cache state all stay per-host
+under any CM tool. Containers absorb that surface into one artifact.
+
+### A single fat image with all models
+
+Build one image at full-tier and let base-tier hosts pull-and-only-
+load the small ones.
+
+**Rejected.** ~50 GB image pulls on a base-tier host. Bandwidth
+cost on first pull is unacceptable for engineer workstation onboard.
+
+### Helm chart starting point
+
+Skip the local-podman path and start with a Helm chart targeting
+Kubernetes.
+
+**Rejected for 0.2.17.** The local-loop is base-tier on NZXTcos.
+Kubernetes is full-tier on GCP. Starting with the Helm chart
+optimizes for the destination state when the source state is what
+0.2.17 needs to ship. Helm chart is a 0.3.x deliverable when the
+full-tier deployment is the iteration's focus.
+
+## Revisit Triggers
+
+This ADR is amended (not necessarily replaced) when any of the
+following become true:
+
+1. **A second engineer is onboarded to the aho fleet.** Multi-engineer
+   image build coordination, registry access semantics, and image
+   version pinning policy all need decisions — those amendments
+   live in a follow-on ADR or a Phase B amendment to this ADR.
+
+2. **External consumers (Mercor, customers) require signed images
+   with SBOM.** Cosign + SLSA + SBOM tooling lands; this ADR's
+   build/publish section is amended with the signing convention.
+
+3. **A non-NVIDIA host (ROCm or Metal) joins the fleet.** Tier
+   detection and the GPU passthrough section are amended with the
+   new vendor's classification rules.
+
+4. **A cloud-tier deployment lands (Phase C).** The cloud registry
+   choice is decided; the soft deferral becomes a hard pick;
+   container-internal vs. host-side collector becomes a real
+   question.
+
+5. **0.2.17 W0 surfaces a Podman blocker.** Runtime preference flips
+   to Docker; this ADR's §Runtime choice section is amended with
+   the empirical reason.
+
+## References
+
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` — first iteration
+  to consume this ADR; W0/W1/W2/W3/W4 outline aligns to it.
+- `artifacts/adrs/0008-dispatcher-missing-model.md` — the dispatch-
+  side counterpart to this ADR's tier classification; together they
+  define what a tier means at runtime.
+- `install.fish` — tier-detection block lives here once 0.2.17 W2
+  lands.
+- `artifacts/iterations/0.3-phase-plan.md` — phase-level
+  consumption; partial- and full-tier deployments inherit this ADR.
+- `artifacts/harness/base.md` §The Eleven Pillars — pillar 11
+  (human holds the keys / secrets-on-host) is the binding constraint
+  on the secrets model.
+- 0.2.15 W0 install.fish work — the bare-host predecessor of the
+  containerized install path.
+```
+
+### ADR: 0008-dispatcher-missing-model.md (0008-dispatcher-missing-model.md)
+```markdown
+# ADR 0008 — Dispatcher Behavior on Missing Model Family
+
+**Status:** Accepted
+**Date:** 2026-05-01
+**Iteration of record:** aho 0.2.16 W4
+**Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
+**Context surface:** aho project-internal — dispatcher routing semantics
+under tiered containerized deployment. Binds 0.2.17 W3 dispatcher work.
+
+---
+
+## Context
+
+ADR 0007 establishes that aho ships as a single tier-aware container
+image whose model bundle is determined at install time by host GPU
+capacity. A base-tier host has nemotron-mini, nomic-embed-text, and
+llama3.2:3b. A partial-tier host adds qwen3.5:9b and GLM-4.6V-Flash-9B.
+A full-tier host adds Nemotron Super.
+
+Today's dispatcher (`src/aho/pipeline/dispatcher.py`) operates under an
+implicit assumption that every request maps to a model the host has
+loaded. That assumption holds in 0.2.x because aho runs on one
+machine with all five model families pulled. It stops holding the
+moment 0.2.17 ships a base-tier container to NZXTcos: a request for
+`family=qwen` on a base-tier host has no local model to dispatch to.
+
+The dispatcher needs a defined behavior for this case. Four options
+are on the table:
+
+**Option A — Hard error.**
+Dispatcher refuses the request and raises `ModelNotAvailableError`
+(new typed exception, G083-compliant). The caller decides how to
+recover.
+
+**Option B — Local fallback.**
+Dispatcher routes the request to the nearest-available local model
+(by some defined nearness metric), logs a degradation warning, and
+returns the fallback's output to the caller.
+
+**Option C — Cloud route.**
+Dispatcher routes the request to a configured remote endpoint that
+hosts the missing model (a cloud-tier serving plane). The caller is
+unaware that the dispatch went off-host.
+
+**Option D — Hybrid (development affordance).**
+On the host running aho's container, base-tier dispatches go to the
+container's bundled Ollama. Partial- or full-tier dispatches escape
+the container via the host network and reach the host's *native*
+Ollama (which has the partial- or full-tier models). The development
+operator can do partial-tier work on a base-tier-classified container
+host.
+
+Each option is operationally distinct and has different failure-mode
+characteristics; they are not freely substitutable.
+
+A second forcing constraint: 0.2.17 development happens on NZXTcos,
+which is a base-tier *container host* but has historically run
+partial-tier models on the bare host. That bare-host capability does
+not vanish when the container is introduced — the operator still
+wants to do partial-tier development work on NZXTcos. If the
+container can only ever dispatch to base-tier models, partial-tier
+development requires leaving the container, which defeats the
+container's value during the iteration that introduces it.
+
+## Decision
+
+### Production deployment: Option A (hard error)
+
+In production deployment — i.e., the container is running on a host
+where `AHO_DISPATCH_HYBRID_MODE` is **unset** — the dispatcher
+hard-errors on a request for a model family the host's tier bundle
+does not include.
+
+Specifically:
+
+1. A new typed exception `ModelNotAvailableError(DispatchError)` is
+   added to `src/aho/pipeline/dispatcher.py`.
+2. At dispatcher entry, the requested family is validated against
+   the host's tier bundle (read from the tier manifest at the
+   host-mounted path described in §Tier manifest contract below).
+3. If the family is not in the bundle and `AHO_DISPATCH_HYBRID_MODE`
+   is unset, raise `ModelNotAvailableError` with the requested
+   family, the host's tier, and the bundle contents in the
+   exception payload.
+4. Caller-side error handling decides whether to retry against a
+   different family, escalate to a remote endpoint, or surface to
+   the operator. The dispatcher does not silently substitute.
+
+### Development: Option D (hybrid)
+
+When `AHO_DISPATCH_HYBRID_MODE=1` is set on the container's
+environment, the dispatcher's family-not-in-bundle branch routes
+the request to the *host's* Ollama at a configured network address
+(`AHO_DISPATCH_HYBRID_HOST_URL`, default
+`http://host.containers.internal:11434` for Podman; equivalent
+docker-host alias for Docker). Specifically:
+
+1. If `AHO_DISPATCH_HYBRID_MODE=1` and the requested family is not
+   in the container's tier bundle: dispatch to
+   `${AHO_DISPATCH_HYBRID_HOST_URL}/api/chat` with the same
+   request payload that would normally go to the container's
+   bundled Ollama.
+2. The dispatcher logs an event (`dispatch_hybrid_routed`) with
+   the requested family, the routing decision, and a clear
+   `aho.dispatch.hybrid=true` span attribute. The Pillar 8 cost
+   dashboard is unaffected (these are local Ollama calls, no
+   token cost), but the trace surface explicitly shows the
+   off-container hop.
+3. If hybrid mode is set but the host's Ollama also lacks the
+   family, the dispatcher hard-errors with `ModelNotAvailableError`
+   the same as production behavior — hybrid mode is not a magic
+   wand, it is a development affordance for operator-configured
+   host state.
+
+### Override knob: explicit per-call parameter
+
+Both behaviors above can be overridden at the dispatch call site
+via an explicit parameter:
+
+- `dispatch(..., on_missing="error")` — production semantics
+  regardless of env var.
+- `dispatch(..., on_missing="fallback")` — opt into Option B
+  (local fallback, future work — not implemented in 0.2.17, see
+  carry-forward below).
+- `dispatch(..., on_missing="cloud")` — opt into Option C (cloud
+  route, future work — not implemented in 0.2.17, see
+  carry-forward below).
+- `dispatch(..., on_missing="hybrid")` — opt into Option D
+  regardless of env var (used in tests to assert hybrid-mode
+  routing).
+- Default (no parameter): respect `AHO_DISPATCH_HYBRID_MODE` env
+  var as described above.
+
+The parameter is the explicit override; the env var is the
+deployment-mode default. Tests pin the parameter; production
+deployments pin the env var (unset).
+
+### Tier manifest contract
+
+`install.fish` writes the tier manifest to `~/.config/aho/tier.json`
+**on the host** at install time. The container mounts
+`~/.config/aho/` as a read-only volume and reads `tier.json` from
+the mount point inside the container.
+
+Manifest shape:
+
+```json
+{
+  "tier": "base",
+  "vram_mb": 8192,
+  "bundle": ["nemotron-mini:4b", "nomic-embed-text", "llama3.2:3b"],
+  "families": ["nemotron", "nomic", "llama3"],
+  "host_id": "NZXTcos",
+  "deployment_mode": "development",
+  "installed_at": "2026-05-15T12:00:00Z"
+}
+```
+
+The `deployment_mode` field is set by install.fish based on context:
+`development` when run on a developer workstation, `production` when
+run in a CI/registry-build context (see §Deployment-mode resource
+attribute below). The dispatcher reads this field on startup and
+emits it as a resource attribute on every span and event.
+
+Rationale for host-side manifest path: host-side
+`cat ~/.config/aho/tier.json` shows the current tier without
+`podman exec` ceremony. Observability tools that aren't
+container-aware (a dashboard reading the host filesystem, a
+post-install self-check script) can consume the manifest without
+crossing the container boundary. The container's read-only mount
+preserves the install.fish-as-sole-writer contract.
+
+Dispatcher reads the manifest on startup; caches in-process; re-reads
+on SIGHUP or container restart. Family-resolution logic
+(longest-prefix match against `MODEL_FAMILY_CONFIG`) consumes the
+`families` list.
+
+### Deployment-mode resource attribute
+
+Every span and event emitted by the harness inside the container
+carries a new resource attribute `aho.deployment.mode` with values
+in `{development, production}`. The value flows from the tier
+manifest's `deployment_mode` field, which install.fish populates:
+
+- **development** — install.fish was invoked on a developer
+  workstation (interactive shell, hybrid mode permitted, base- or
+  partial-tier host). NZXTcos and tsP3 fall in this category for
+  0.2.17 / 0.3.x.
+- **production** — install.fish was invoked in a CI/registry-build
+  context (non-interactive, `AHO_INSTALL_PRODUCTION=1` set, or run
+  from a deployment automation harness). Cloud-tier hosts and any
+  host that ships customer-facing workflows fall in this category.
+
+The attribute exists specifically so the production-leak
+monitoring rule (referenced in §Safety guard against env-var leak
+and §Out of Scope below) has a way to distinguish dev hybrid use
+(expected) from prod hybrid use (the violation). Without the
+attribute the rule has no signal to fire on; with it the rule is
+the conjunction
+`aho.dispatch.hybrid=true AND aho.deployment.mode=production`.
+
+install.fish self-detection logic for development vs. production is
+out of this ADR's scope — likely a combination of
+`AHO_INSTALL_PRODUCTION=1` env, TTY check, and an explicit
+`--production` flag. The contract this ADR fixes is the
+**resource-attribute taxonomy** and the **manifest field name**;
+the detection mechanism lands in 0.2.17 W2 alongside the
+install.fish tier-detection block.
+
+### Safety guard against env-var leak
+
+Three layers of defense against `AHO_DISPATCH_HYBRID_MODE` leaking
+into a production deployment:
+
+1. **Startup logging.** The container entrypoint logs the value of
+   `AHO_DISPATCH_HYBRID_MODE` at startup — visible in the
+   container's stdout and in OTEL events.
+
+2. **Production deployment runbook assertion.** Production deployment
+   procedures include an assertion that the env var is unset before
+   declaring the deployment ready.
+
+3. **Resource-attribute–based monitoring rule (carry-forward).** The
+   `aho.deployment.mode` resource attribute (per §Deployment-mode
+   resource attribute above) lets a Pillar 11–style alert rule fire
+   on the conjunction
+   `aho.dispatch.hybrid=true AND aho.deployment.mode=production`.
+   The rule itself is a follow-on deliverable (carried forward;
+   candidate for the engine-selection iteration's rule set, see
+   §Out of Scope), but the attribute that makes it implementable
+   is shipped in 0.2.17 W2.
+
+A hybrid-mode-enabled container running in production is therefore
+detectable by inspection (layer 1), gated by procedure (layer 2),
+and ready to be alertable (layer 3) — no silent failure path.
+
+## Rationale
+
+> Production base-tier hosts hard-error on partial dispatches because
+> silent fallback hides architectural mistakes.
+
+The hard-error production posture is a Pillar 8 / Pillar 9 alignment.
+A base-tier production host getting a partial-tier dispatch request
+is, in production, a real incident — a workflow has been deployed
+to the wrong host or a workflow is requesting capability the host
+class is not provisioned for. Silently falling back to the
+nearest-available local model substitutes a quietly-wrong answer
+for a cleanly-loud failure; quiet wrong answers are how the gotcha
+registry grows.
+
+Option B (silent local fallback) was on the table; the operational
+risk of substituting a smaller model for a larger one without the
+caller knowing is the same class of risk that the harness
+explicitly rejects in its acceptance discipline. A 4B model
+classifying as a 9B model would breach Pillar 7's
+generation-vs-evaluation separation in subtle ways — for example,
+an Auditor request silently routed to a Producer-class model
+because the Auditor model is missing.
+
+Option C (cloud route) is the right answer in production *eventually*
+— Phase C / 0.3.x — but it requires a cloud serving plane that does
+not exist today. Pre-implementing the cloud-route option in 0.2.17
+would require either mocking the cloud endpoint (which adds
+complexity for zero deployment value) or pretending the option
+exists in code without a backing service (which contradicts pillar
+8's measure-not-estimate posture). The carry-forward below tracks
+this option for revisit when Phase C lands.
+
+Option D (hybrid) earns its keep specifically because 0.2.17
+development happens on a host that is base-tier-as-container but
+partial-tier-as-bare-host. Without the hybrid mode, partial-tier
+development work in 0.2.17 has to leave the container, which
+either (a) defeats the iteration's central deliverable (the
+container as the harness's primary surface) or (b) forces the
+operator to context-switch between containerized and bare-host
+workflows for routine work. Either is a worse outcome than an
+explicit, env-var-gated, log-visible hybrid mode whose
+production-leak risk is mitigated by startup assertion.
+
+The override parameter (`on_missing=...`) is the test surface and
+the future-extensibility surface in one. Tests pin the desired
+behavior explicitly; future ADRs adding fallback or cloud-route
+implementations land on the parameter values that are already
+reserved.
+
+## Consequences
+
+### Positive
+
+- Dispatcher behavior on missing models is *defined* — currently
+  the question has no documented answer.
+- Production base-tier deployments fail loudly when asked for
+  capability they don't have. Loud failures land in the gotcha
+  registry; silent substitutions don't.
+- 0.2.17 development on NZXTcos is unblocked for partial-tier work
+  via the hybrid mode, without the iteration's central deliverable
+  (the container) being a barrier to routine development.
+- Pillar 7 (generation vs. evaluation separation) is preserved
+  without runtime ambiguity — a missing Auditor model is a hard
+  error, not a quiet swap to a Producer model.
+- Future fallback (Option B) and cloud-route (Option C)
+  implementations have a parameter slot pre-reserved; adding them
+  is an extension, not a redesign.
+- Tier manifest at `/opt/aho/tier.json` becomes a first-class
+  artifact that other parts of the harness (dashboard, alerting,
+  installer self-test) can also consume — single source of truth
+  for "what tier am I."
+
+### Negative
+
+- Hybrid mode is a development affordance with a real production-leak
+  risk if the env var is mis-set. Mitigation (startup logging +
+  assertion) reduces but does not eliminate the risk. A future
+  Pillar 11 alert rule could surface
+  `aho.dispatch.hybrid_active=true` events in production-tier
+  deployments as a real-time anomaly.
+- Operators developing on NZXTcos must mentally track which Ollama
+  serves which dispatch (container's bundled vs. host's native).
+  Mitigation: the `dispatch_hybrid_routed` event log entry and
+  the `aho.dispatch.hybrid=true` span attribute make the routing
+  decision observable per-call.
+- Container needs network reachability to the host's Ollama on the
+  bare host (port 11434 by default). On Podman this is
+  `host.containers.internal`; on Docker it is platform-dependent.
+  Mitigation: the hybrid host URL is env-configurable
+  (`AHO_DISPATCH_HYBRID_HOST_URL`).
+- Tier manifest file becomes a new failure mode (corrupt manifest,
+  missing manifest, mis-classified tier). Mitigation: dispatcher
+  startup validates the manifest shape and refuses to start on
+  invalid manifest, with a clear error message pointing to the
+  install.fish self-check command.
+- `ModelNotAvailableError` is a new typed exception that callers
+  need to handle. Existing callers either don't catch it (and
+  surface to the operator, which is the desired production
+  behavior) or get updated to handle it (in iterations where
+  cascade-orchestrator-level fallback decisions live).
+
+### Neutral
+
+- Override parameter (`on_missing=...`) is implemented as a
+  no-op for `fallback` and `cloud` values in 0.2.17 — they raise
+  `NotImplementedError` and are reserved for future ADRs that
+  define their behavior. Test coverage asserts the
+  `NotImplementedError` to lock the contract.
+- The tier manifest format is a new contract. Future ADRs can
+  amend it; the manifest version field is reserved (not added in
+  0.2.17, but the dispatcher's manifest-load is forward-compatible
+  with an optional `version` key).
+- Hybrid mode does not change Pillar 11 — the dispatcher still
+  does not write secrets, still does not commit, still does not
+  push. Hybrid is a routing decision, not a privilege escalation.
+
+## Out of Scope
+
+- **Option B implementation (local fallback with degradation
+  warning).** Reserved for a future ADR that defines the
+  nearness metric and the warning protocol. The override
+  parameter slot is reserved.
+- **Option C implementation (cloud route).** Reserved for Phase C
+  / 0.3.x once the cloud serving plane exists. The override
+  parameter slot is reserved.
+- **Per-family fallback policy.** A future ADR may define
+  family-specific fallback rules (e.g., "qwen falls back to
+  llama3 for chat tasks; nemotron has no fallback because its
+  classifier role is uniquely structured"). 0.2.17 ships
+  uniform hard-error.
+- **Dispatcher-side tier upgrade detection.** If install.fish
+  pulls a new model post-container-start, the dispatcher
+  re-reads the manifest on SIGHUP — but there is no automatic
+  notification from install.fish to the container. That
+  interaction is a 0.2.17 W3 implementation detail, not an
+  architectural decision; this ADR does not pre-decide it.
+- **Multi-host Ollama load balancing.** A future deployment
+  shape where multiple hosts run different model bundles and
+  the dispatcher load-balances across them. Phase C / 0.3.x
+  candidate.
+- **Pillar 11 monitoring rule for hybrid-mode-in-production.**
+  Worthy of a follow-on alert rule; out of this ADR's scope but
+  carried as a candidate for the engine-selection iteration's
+  rule set. The rule is the conjunction
+  `aho.dispatch.hybrid=true AND aho.deployment.mode=production`.
+  This ADR ships the `aho.deployment.mode` attribute so the rule
+  is implementable when it lands; the rule itself is not in
+  0.2.17 scope.
+
+## Alternatives Considered
+
+### Pure Option A — hard error in all modes
+
+Drop the hybrid affordance entirely; dispatcher always
+hard-errors on missing models. Operators developing partial-tier
+work on NZXTcos run aho outside the container.
+
+**Rejected.** 0.2.17's deliverable is the container as a usable
+harness surface. Forcing operators outside the container for
+routine partial-tier work undermines the iteration. Explicit
+hybrid mode with leak mitigation is strictly better than a
+silent context-switch convention.
+
+### Pure Option B — silent local fallback
+
+Dispatcher routes to nearest-available family with a logged
+warning; never hard-errors.
+
+**Rejected.** Silent substitution breaks Pillar 7 boundary
+guarantees. A future engineer who launches an Auditor-role
+cascade on a base-tier host and gets a Producer-class model
+back without the warning being visible at the harness level
+ships a broken Pillar 7 result without knowing it.
+
+### Pure Option C — always cloud-route
+
+Dispatcher always routes to a remote endpoint; local Ollama is
+a build-only optimization.
+
+**Rejected.** Local-loop is the 0.2.x deployment shape.
+Cloud-only dispatcher would discard the bare-metal harness
+posture that 0.2.x has held and require a cloud serving plane
+that does not exist. Folds back to phase C work.
+
+### Hybrid mode without env-var gate (always-on)
+
+Dispatcher always tries the host's Ollama for missing-model
+requests; production hosts have no host Ollama so the call
+fails the same way as the hard-error path.
+
+**Rejected.** Implicit behavior that varies by host
+configuration is harder to reason about than explicit
+env-var-gated behavior. The startup-log assertion is cheap and
+removes ambiguity.
+
+### Auto-detect host Ollama on container start
+
+Dispatcher probes `host.containers.internal:11434` at start;
+if Ollama responds, enables hybrid mode automatically.
+
+**Rejected.** Auto-enabled hybrid mode is exactly the
+production-leak risk this ADR mitigates. Explicit env var keeps
+the operator in the decision.
+
+### Make `on_missing` parameter the only surface; no env var
+
+Drop the env var entirely; require every caller to pass
+`on_missing="hybrid"` explicitly when in development mode.
+
+**Rejected.** Threading a parameter through every dispatch
+call site for a development-mode toggle is per-call ceremony for
+a deployment-mode decision. Env var is the right level of
+abstraction for the deployment mode; parameter is the right
+level for explicit overrides (tests, edge cases).
+
+## Revisit Triggers
+
+This ADR is amended (not necessarily replaced) when any of the
+following become true:
+
+1. **A cloud serving plane exists.** Option C is implemented;
+   `on_missing="cloud"` becomes a real code path; production
+   deployment may pivot from hard-error default to cloud-route
+   default. Phase C work.
+
+2. **Local-fallback policy becomes desirable.** A future iteration
+   defines a nearness metric and a degradation-acceptance posture;
+   `on_missing="fallback"` is implemented. Likely follows the
+   Auditor role-prompt bifurcation iteration.
+
+3. **A second engineer onboards and routinely needs hybrid mode.**
+   The env-var-gate posture may need to evolve into a per-user
+   shell init or a workspace setting; the deployment-mode
+   abstraction may need refinement.
+
+4. **Pillar 11 monitoring rule for hybrid-in-production lands.** A
+   follow-up rule fires when `aho.dispatch.hybrid=true` events
+   show up on a tier=production-tagged host; this ADR is amended
+   to cite the rule as the production-leak monitoring control.
+
+## References
+
+- `artifacts/adrs/0007-containerization-architecture.md` — tier
+  classification this ADR's behavior depends on.
+- `artifacts/adrs/0006-iteration-deliverable-discipline.md` — the
+  0.2.17 graduation criterion explicitly invokes
+  `AHO_DISPATCH_HYBRID_MODE=1` to validate this ADR's hybrid
+  branch.
+- `src/aho/pipeline/dispatcher.py` — implementation site for
+  `ModelNotAvailableError`, manifest read, hybrid-mode branch.
+  0.2.17 W3 work.
+- `install.fish` — produces `/opt/aho/tier.json` or its host-path
+  equivalent. 0.2.17 W2 work.
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` §W3 — calls
+  this ADR's behavior as the W3 acceptance.
+- 0.2.15 dispatcher work — `MODEL_FAMILY_CONFIG`, longest-prefix
+  family resolution; the manifest's `families` list maps to
+  `MODEL_FAMILY_CONFIG` keys.
+- `artifacts/harness/base.md` §The Eleven Pillars — pillar 7
+  (generation vs. evaluation separation) is the primary
+  constraint that motivates the hard-error production posture.
+```
+
+### ADR: 0009-secrets-broker-boundary.md (0009-secrets-broker-boundary.md)
+```markdown
+# ADR 0009 — Secrets Broker Boundary
+
+**Status:** Accepted
+**Date:** 2026-05-03
+**Iteration of record:** aho 0.2.17 W5 (consolidating 0.2.17 W1 D3 implementation)
+**Decision owner:** Kyle Thompson (signs), Claude web (drafted), Claude Code (executed at W1 D3), llama3.2 + RAG + filter (audits at W5)
+**Context surface:** aho project-internal — credential boundary between
+container and host under tiered containerized deployment. Binds 0.2.17
+W1 D3, W2 broker test redesign, F-0.2.17-W1-001 subcommand removal,
+F-0.2.17-W1-003 token rotation. Inherits in 0.3.x for partial- and
+full-tier deployment.
+
+---
+
+## Context
+
+ADR 0007 establishes that aho ships as a single tier-aware container
+image with secrets stored host-side and bind-mounted into the
+container. ADR 0007 §Secrets model fixes the *what* — secrets do not
+live in the image, in the registry, or in the container's writable
+layer — but does not fix the *how*: the mechanism by which the
+container reads those secrets at runtime, the authentication
+boundary between container and host, and the per-engineer onboarding
+shape.
+
+Three forces shape the boundary mechanism:
+
+1. **Pillar 11 invariant.** No credential material in image layers,
+   ever. The image must be safe to publish to a registry without
+   per-host re-encryption. The container itself must have no git
+   write capability under any identity, including its own.
+
+2. **Per-engineer onboarding scales beyond two operators.** A
+   secret-mixing keystore (one fernet store shared across operators,
+   one age identity that every operator decrypts with) collapses the
+   moment a second engineer joins. The broker must work in a shape
+   where each engineer runs their own broker against their own
+   fernet store with their own age identity, and the image is
+   bit-identical across all engineers' workstations.
+
+3. **Authentication binds to the operating-system boundary, not to a
+   credential the container holds.** Any credential the container
+   holds for the broker is a credential that lives in image layers
+   or in container runtime config — both Pillar 11 violations.
+   Authentication must instead derive from the host kernel's process
+   identity (UID, project label) at the socket layer.
+
+The 0.2.17 W1 D3 implementation landed the broker with these
+properties; this ADR is the repo-resident authoritative spec.
+
+## Decision
+
+### Three rules
+
+The boundary is governed by three rules. These are **verbatim** from
+the chat-side architecture artifact `aho-base-container-architecture.md`
+§Pillar 11 / Secrets boundary; this ADR makes them repo-resident and
+authoritative:
+
+1. **No credential material in image layers ever.** The image is
+   bit-identical across operators and across hosts. The image is
+   safe to publish to any registry without per-host re-encryption.
+   No age identity, no fernet key, no project secrets, no API
+   tokens are baked into any layer.
+
+2. **Per-user secret access via host-side broker.** Each operator
+   runs their own broker against their own fernet store with their
+   own age identity. The broker authenticates the connecting peer
+   via SO_PEERCRED, validates the project label the peer requested,
+   and returns a single decrypted value per request. No shared
+   keystore; no broker-to-broker crosstalk.
+
+3. **No SSH agent socket forwarded.** The container has no path to
+   any host-side identity that could push, commit, or merge under
+   any user's name. SSH agent forwarding (`SSH_AUTH_SOCK`) is
+   excluded from the container's mount set. The container literally
+   cannot push under anyone's identity, including its own.
+
+These three rules are jointly Pillar 11. Each rule independently
+closes one failure mode the other two leave open; together they make
+the failure-mode space empty under the operator-count and trust
+posture aho holds.
+
+### Mechanism
+
+**Host-side broker (`src/aho/host/secrets_broker.py`).** A unix-socket
+service bound to `${XDG_RUNTIME_DIR}/aho-secrets.sock` (default
+`/run/user/<uid>/aho-secrets.sock`) with mode `0600`. The broker:
+
+- Authenticates the connecting peer via `SO_PEERCRED` (Linux
+  `struct ucred`).
+- Restricts control operations (register UID, unregister UID) to the
+  broker-owner UID.
+- Restricts data operations (`get`) to UIDs registered by the broker
+  owner with a project label match.
+- Returns a single decrypted value per request, JSON line
+  request/response.
+- Logs request shape (`op`, `uid`, `project`, `name`, `outcome`) but
+  never logs the secret value.
+- Reads from the host's age-fernet store; the operator's age identity
+  is read by the broker once at start-time and held in process
+  memory; never persisted to a writable filesystem location the
+  container can reach.
+
+**Container-side client (`src/aho/secrets_client.py`).** Connects to
+the bind-mounted socket (`AHO_SECRETS_SOCKET`, default
+`/run/host-services/aho-secrets.sock`), JSON line request/response,
+no caching across container restarts, no on-disk persistence. The
+client authenticates as the in-container UID (mapped through podman's
+user namespace); the broker-side `SO_PEERCRED` check resolves to the
+host-side UID the container's UID maps to, which must be in the
+broker's registered set.
+
+**Wrapper (`src/aho/host/run_container.py`).** The
+`aho host run-container` wrapper registers the calling UID with the
+broker before invoking `podman run`, mounts the broker socket
+read-only at `/run/host-services/aho-secrets.sock`, and unregisters on
+exit. The wrapper is the canonical surface; raw `podman run`
+invocations bypass the registration step and the SO_PEERCRED check
+fails closed (correct behavior — the container cannot reach secrets
+if launched outside the wrapper).
+
+### Per-engineer onboarding
+
+Each engineer runs `aho host install` once on their workstation:
+
+1. Generates their own age identity via the age binary.
+2. Populates their own fernet store with project secrets (encrypted
+   under the age identity).
+3. Starts their own broker (systemd-user service, or foreground for
+   debugging) against their own socket path.
+
+The image is identical across engineers. Mounts differ per host:
+each engineer's container mounts that engineer's
+`${XDG_RUNTIME_DIR}/aho-secrets.sock`. The broker authenticates only
+that engineer's registered UIDs. There is no shared keystore between
+engineers; there is no broker-to-broker secret exchange.
+
+Cross-engineer secret sharing — when two engineers need access to the
+same upstream credential — is solved out-of-band by the upstream
+provider (each engineer holds their own copy of the credential under
+their own age identity). aho does not synchronize secrets across
+engineers and does not need to, because the same upstream credential
+encrypted to two age identities under two fernet stores resolves
+identically when the container asks the broker for it.
+
+### Implementation evidence
+
+W1 D3 implementation landed at acceptance archive sha256
+`e4d076eec6c1e703635e9befb98bc46c7bf171c7fec3a4c3f64161ec60725a6e`.
+Modules and shas at W1 D3 close (recorded in W1 acceptance archive
+`changed_files` block):
+
+| Module | Path | sha256 (W1 close) |
+|---|---|---|
+| Host broker | `src/aho/host/secrets_broker.py` | `4cff78274f587e4781663f0755407a4eb8b4a96d839c8a481bdc5273d6171019` |
+| Container client | `src/aho/secrets_client.py` | `e9b305f7db831a267fd8a013185ae2549a1b6cc88cdd6b4fe0f5327043f5a04e` |
+| Run-container wrapper | `src/aho/host/run_container.py` | `036a267f43772f2da2c5995b0d5c233d8af319fca90505ae254b9963b6856bfd` |
+
+W1 D3 acceptance gates:
+
+- **Gate 1 (round-trip, correct project):** pass — broker returns
+  decrypted value to authorized container, exit 0.
+- **Gate 2 (project mismatch):** pass — broker rejects with
+  `AUTH_FAIL: project_mismatch`, exit 4.
+- **Gate 3 (missing key):** pass — broker returns `MISSING`, exit 5.
+- **Gate 4 (unregistered UID, SO_PEERCRED):** pass — broker rejects
+  with `AUTH_FAIL: uid_not_registered`, exit 4. Verified via
+  `podman run --userns=keep-id` mapping the in-container UID to a
+  host-visible subuid (~100999) the broker has not registered.
+- **Gate 5 (broker log inspection):** operator-pending at W1 close —
+  broker writes only request shape by design, never the value, but
+  only the operator can confirm on the foreground broker terminal.
+
+### F-0.2.17-W1-003 — worked example
+
+The W1 plan-doc specified a Gate-1 implementation that printed the
+decrypted value to stdout to verify broker round-trip equivalence
+with direct host-side `get_secret()`. Executing this gate caused the
+agent (Claude Code) to read the bytes of `ahomw:telegram_bot_token`
+via Bash tool stdout — a direct contradiction of CLAUDE.md hard rule
+"No reading secrets."
+
+This is the **worked example of why the hash-fingerprint contract
+exists**. The plan-doc design was wrong on Pillar 11 grounds: any
+acceptance gate that surfaces a decrypted secret to any agent stdout
+is a Pillar 11 violation by construction, regardless of how
+short-lived the surface is or how careful the agent is about not
+reproducing the value downstream.
+
+The remediation pattern — generalizing from the W2 broker test
+redesign work — is that broker round-trip equivalence is verified
+**without** the value crossing the agent boundary. Two designs are
+acceptable:
+
+1. **Hash-fingerprint comparison.** Host-side caller computes
+   `sha256(get_secret(project, name))`; broker independently computes
+   `sha256(decrypt(broker-side-store[project][name]))`; both hashes
+   are compared. The hashes are non-secret; the values never leave
+   their respective process spaces.
+
+2. **Broker-side equality boolean.** Broker accepts a hash from the
+   caller, computes its own value's hash, returns only the boolean
+   match result across the socket. Even more conservative: no hash
+   is exposed; only `true` / `false`.
+
+The W2 plan-doc pinned the final design (hash-fingerprint per option
+1). F-0.2.17-W1-003 carries operator-side token rotation as a hard
+gate before any 0.3.x work begins; F-0.2.17-W1-001 carries the
+production-image subcommand removal (W6 scope).
+
+The drafter's plan-doc design was the root-cause defect (chat-side
+design responsibility, not executor implementation). The drafter-side
+gotcha that prevents recurrence: any acceptance gate that surfaces a
+decrypted secret to any agent stdout is a Pillar 11 violation by
+construction. This ADR makes that gotcha repo-resident and binding
+on future broker work.
+
+## Rationale
+
+> Authentication binds to the operating-system boundary, not to a
+> credential the container holds.
+
+The unix-socket + SO_PEERCRED design is the simplest mechanism that
+achieves the three rules without giving the container any credential
+that could leak through registry publishing or container runtime
+config. Three forces drive the choice:
+
+1. **The container holds nothing.** Any credential the container
+   holds is a credential that either ships in image layers (Pillar
+   11 violation) or is wired in at runtime via env or mount config
+   (broader leak surface, harder to enumerate). SO_PEERCRED's check
+   reads the connecting peer's kernel-side UID; nothing the
+   container can lie about.
+
+2. **Per-engineer onboarding is symmetric.** The image is
+   bit-identical across engineers; the host-side broker is per-host;
+   the registered-UID set is per-broker. Adding an engineer is `aho
+   host install` on their workstation. Removing an engineer is
+   stopping their broker — their fernet store and age identity stay
+   on their workstation, never replicated.
+
+3. **No SSH agent forward closes the git write surface entirely.**
+   Pillar 11's binding constraint ("no agent writes to git") is
+   structurally enforced by the absence of any host-side identity
+   the container could borrow. The container has no SSH key, no git
+   credential helper, no token. It cannot write to git because the
+   primitive is unreachable, not because the container chooses not
+   to use it.
+
+The alternative — a long-lived bearer token in the container,
+authenticated against the broker — would require either baking the
+token into image layers (Pillar 11 violation) or generating it at
+container start and passing it via env (env-based credential, harder
+to audit, leaks through process inspection on shared hosts). The
+unix-socket + SO_PEERCRED design has neither of those surfaces.
+
+## Consequences
+
+### Positive
+
+- Pillar 11's "no credential material in image layers" invariant
+  becomes structurally enforced. The image is bit-identical across
+  hosts and engineers; the registry is publish-safe.
+- Per-engineer onboarding scales: each engineer's workstation is
+  self-contained; no shared keystore; no operator-cross-pollution.
+- Authentication is OS-grounded: SO_PEERCRED resolves the connecting
+  peer's UID at the kernel layer; nothing the container can spoof.
+- Container has zero git write capability. SSH agent socket is not
+  forwarded; no host-side credential is reachable. The Pillar 11
+  invariant ("no agent writes to git") is mechanically true, not
+  policy-true.
+- The broker socket lives in `${XDG_RUNTIME_DIR}` (host-volatile,
+  per-user, mode 0600) — no concerns about world-readable socket
+  paths or socket persistence across reboots.
+- The hash-fingerprint contract (W2 redesign) keeps the
+  round-trip-equivalence acceptance gate exercisable by an agent
+  without surfacing the secret value, generalizing the F-0.2.17-W1-003
+  lesson into a reusable pattern.
+
+### Negative
+
+- The wrapper (`aho host run-container`) becomes load-bearing for
+  any container invocation that needs secrets. Raw `podman run`
+  invocations cannot reach the broker; the registration step is
+  wrapper-only. Mitigation: documented in the wrapper's help text
+  and in the deployment doc; bypass produces a clean SO_PEERCRED
+  rejection rather than a silent fallback.
+- Each engineer holding their own copy of upstream credentials
+  shifts the cross-engineer secret-sharing problem to the upstream
+  provider (each engineer needs their own copy provisioned). For
+  shared-credential cases (e.g., a single shared external API key
+  used by multiple engineers' aho instances), the upstream provider
+  must mint per-engineer credentials or the engineers coordinate
+  out-of-band. aho does not solve this and does not need to.
+- The W1 incident (F-0.2.17-W1-003) burned one Telegram bot token —
+  operator-side rotation is the hard gate for closure. Drafter-side
+  process gotcha (any acceptance gate surfacing decrypted secrets to
+  agent stdout violates Pillar 11) is documented here as
+  authoritative.
+- The broker is a per-host single point of failure: if the broker is
+  down, the container cannot fetch secrets. Mitigation: the broker
+  is a systemd-user service with restart-on-failure; container-side
+  client returns clean error rather than hanging.
+
+### Neutral
+
+- The image is identical across operators and across hosts; container
+  registries do not need per-host artifact mirroring.
+- 0.3.x partial-tier and full-tier deployment inherits this ADR
+  unchanged. The broker shape is independent of GPU tier; only the
+  container's bundled model surface changes per tier.
+- Cloud-tier deployment (Phase C, GCP intranet target) substitutes a
+  cloud-native secret store (e.g., GCP Secret Manager via Workload
+  Identity) for the host-side broker. The container-side client
+  abstraction is the same; the broker's transport changes from
+  unix-socket to Workload-Identity-backed REST. Out of scope for
+  this ADR.
+
+## Out of Scope
+
+- **Cloud-tier broker substitution.** GCP Secret Manager via Workload
+  Identity (or analogous) for cloud deployment is Phase C work.
+- **Cross-engineer secret sharing.** Any shared-credential case
+  resolves out-of-band; aho does not orchestrate cross-operator
+  secret distribution.
+- **Hardware-backed identity (TPM, YubiKey).** Each engineer's age
+  identity is a software file on their workstation today.
+  Hardware-backed identity is a future hardening pass, not in scope
+  for the boundary mechanism this ADR fixes.
+- **Secret rotation automation.** The 0.2.17 incident
+  (F-0.2.17-W1-003) requires Kyle to manually rotate the burned
+  Telegram bot token. Automated rotation infrastructure is post-0.3.x.
+- **Audit log retention for broker requests.** Broker logs request
+  shape but does not persist logs to a durable surface beyond
+  operator-skim of foreground stdout or systemd-user journal.
+  Long-term audit retention is post-0.3.x.
+
+## Alternatives Considered
+
+### Bearer token in image at build time
+
+Bake a long-lived bearer token into image layers; broker authenticates
+against the token.
+
+**Rejected.** Token in image layers is a Pillar 11 violation. Image
+publishing requires per-host re-encryption or per-image rebuild.
+Per-engineer onboarding collapses (every engineer gets the same
+baked-in token, or every engineer needs a different image).
+
+### Bearer token at runtime via env
+
+Container is launched with the bearer token in `--env`; broker
+authenticates against the env value.
+
+**Rejected.** Env-based credentials leak through `/proc/<pid>/environ`
+on shared hosts, complicate logging hygiene, and require runtime
+config to be distinct per host. The SO_PEERCRED mechanism achieves
+the same authentication outcome with no credential material at all.
+
+### Mount the host's age identity directly into the container
+
+Read-only bind-mount of `~/.local/share/aho/age/identity.txt` into the
+container; container-side `aho.secrets_client` decrypts directly.
+
+**Rejected.** Container becomes per-engineer (each engineer's
+identity is mounted; bypassing the broker means the container has the
+key material in its filesystem view, which is recoverable from a
+running container's process memory). The broker keeps the age
+identity in the broker process's memory only, never reachable from
+the container.
+
+### TLS over a TCP socket on localhost
+
+Broker listens on `127.0.0.1:NNNN` with mTLS; container connects with
+its own client cert.
+
+**Rejected.** Client cert in image layers is a Pillar 11 violation;
+client cert at runtime via env or mount has the same leak surface as
+bearer tokens. SO_PEERCRED on a unix socket achieves the same
+authentication property with no transport credential at all.
+
+### Forward SSH agent into container for "convenience"
+
+Bind-mount `$SSH_AUTH_SOCK` into the container so the container can
+sign for the operator's SSH identity.
+
+**Rejected. Hard.** This is the canonical Pillar 11 violation. Any
+agent inside the container with access to `$SSH_AUTH_SOCK` can sign
+git pushes under the operator's identity. The container must not
+have this surface, ever. Rule 3 ("no SSH agent socket forwarded") is
+absolute, not soft-deferred.
+
+## Revisit Triggers
+
+This ADR is amended (not necessarily replaced) when any of the
+following become true:
+
+1. **Cloud-tier deployment lands (Phase C).** The broker substitution
+   for GCP Secret Manager via Workload Identity is decided; the
+   container-side client abstraction is preserved but the broker
+   transport changes. Amendment captures the cloud-side decision.
+
+2. **A second engineer onboards.** The per-engineer onboarding shape
+   gets exercised under operator-count-of-two; any unanticipated
+   friction surfaces a small amendment to the onboarding section.
+
+3. **Hardware-backed identity (TPM, YubiKey) lands.** The age
+   identity moves from a file to a hardware-backed signer; the
+   broker reads from the hardware signer rather than from a file.
+   Amendment captures the file → hardware transition.
+
+4. **An additional rule becomes binding.** If a future iteration
+   surfaces a fourth Pillar 11 invariant the present three rules
+   don't cover, the rule list is amended explicitly. Until then,
+   the three rules are exhaustive of the boundary.
+
+## References
+
+- `artifacts/adrs/0007-containerization-architecture.md` §Secrets
+  model — the *what* (host-side, never in image); this ADR fixes
+  the *how*.
+- `artifacts/adrs/0007-containerization-architecture.md` §Council
+  roles — describes the in-container model fleet that consumes the
+  broker for project secrets when needed.
+- `artifacts/iterations/0.2.17/W1-plan-doc.md` line 63 — the
+  plan-doc design defect that surfaced as F-0.2.17-W1-003 (the
+  drafter-side gotcha on agent-stdout-surfacing-secret-values).
+- `artifacts/iterations/0.2.17/acceptance/W1.json` (sha256
+  `e4d076eec6c1e703635e9befb98bc46c7bf171c7fec3a4c3f64161ec60725a6e`)
+  D3 evidence block — gates 1–4 pass, gate 5 operator-pending at W1
+  close.
+- `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
+  F-0.2.17-W1-003 entry — operator-side token rotation as
+  pre-0.3.x hard gate.
+- `artifacts/harness/base.md` §Pillar 11 ("the human holds the keys")
+  — binding constraint on the boundary.
+- `src/aho/host/secrets_broker.py` — host-side broker implementation
+  (W1 D3 close sha
+  `4cff78274f587e4781663f0755407a4eb8b4a96d839c8a481bdc5273d6171019`).
+- `src/aho/secrets_client.py` — container-side client (W1 D3 close
+  sha
+  `e9b305f7db831a267fd8a013185ae2549a1b6cc88cdd6b4fe0f5327043f5a04e`).
+- `src/aho/host/run_container.py` — wrapper that registers the
+  calling UID before invoking `podman run` (W1 D3 close sha
+  `036a267f43772f2da2c5995b0d5c233d8af319fca90505ae254b9963b6856bfd`).
+```
+
+### ADR: 0010-materiality-measurement.md (0010-materiality-measurement.md)
+```markdown
+# ADR 0010 — Materiality Measurement Protocol
+
+**Status:** Accepted (qualified validation; full validation deferred)
+**Date:** 2026-05-03
+**Iteration of record:** aho 0.2.17 W5 (consolidating 0.2.17 W2/W3/W4 evidence build)
+**Decision owner:** Kyle Thompson (signs), Claude web (drafted), Claude Code (executed at W2/W3/W4), llama3.2 + RAG + filter (audits at W5)
+**Context surface:** aho project-internal — falsifiability protocol for
+the architecture's "harness-as-IQ" claim. Binds 0.2.17 W2 D12 (counter
+landing), W3 (RAG enrichment partial closure), W4 D1 (deterministic
+post-hoc filter structural closure), 0.3.x materiality validation
+runway.
+
+---
+
+## Context
+
+The architecture's load-bearing claim — "the harness produces better
+project outcomes than a single-agent executor on the same work" — is
+a claim about output quality across iterations. Token-spend reduction
+(an early framing hypothesis) is a *downstream artifact* of better
+outcomes, not the design driver. A harness that costs more tokens but
+produces structurally honest acceptance dispositions, surfaces
+defects auditor-side rather than escaping to retrospectives, and
+resolves carry-forwards within bounded windows is the harness that
+beats the single-agent baseline.
+
+Three forces shape the requirement for falsifiable evidence:
+
+1. **The claim must be falsifiable.** Without a measurement protocol,
+   "harness produces better outcomes" is unfalsifiable handwaving. A
+   protocol that defines (a) what counts as a defect, (b) where a
+   defect was caught, and (c) what the resolution-time distribution
+   looks like, gives the architecture a falsifiable surface.
+
+2. **The measurement must run continuously, not just at retrospective
+   time.** Counter telemetry recorded per-event during workstream
+   execution captures the catch-locus distribution at the moment it
+   happens. Retrospective enumeration is necessary but
+   reconstructive; the counters are the durable record.
+
+3. **The evidence build must accrue over multiple iterations before
+   the threshold is exercised.** N=1 measurement is anecdote. The
+   threshold is defined for N≥8; until then, the protocol is
+   recording data, not validating the claim.
+
+0.2.17 W2 landed the counter primitive (D12). 0.2.17 W3 wired RAG
+enrichment and observed partial false-positive closure. 0.2.17 W4
+landed the deterministic post-hoc filter and structurally closed the
+fake-ID-on-registered-anchor failure mode. Three iterations of
+evidence now span the auditor-seat work, recorded honestly with the
+N=4 caveat below.
+
+## Decision
+
+### Four-bucket OTEL counter telemetry
+
+The protocol records four counters over the global OTEL
+MeterProvider, with resource attributes `aho.iteration`,
+`aho.workstream`, `aho.tier`, `aho.role` and a per-event
+`aho.materiality.severity` attribute. Counter names match the
+`src/aho/materiality.py` implementation verbatim:
+
+| Bucket | OTEL counter name | Catch locus | Wired by |
+|---|---|---|---|
+| **caught-by-llama** | `aho.materiality.claim_vs_artifact_mismatches.caught_by_llama` | In-container llama auditor surfaces a claim/artifact mismatch during audit pass. | W2 D12 (real flow inside `aho.council.audit`). |
+| **caught-by-drafter** | `aho.materiality.claim_vs_artifact_mismatches.caught_by_drafter` | Drafter (gap-net) flags a defect that auditor dispositioned `clean` on the prior planning turn. | W2 D12 wires placeholder (`gap_carry_forward_writer`); W3 wires real-flow integration. |
+| **escaped** | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Defect surfaces retrospectively — neither auditor nor drafter caught it during sealing. | W2 D12 placeholder; W3 wires retrospective-fold-in increment path. |
+| **carry-forward resolution rate** | `aho.materiality.carry_forward_resolution_rate` | Carry-forward explicitly closed by reference in a workstream output. | W2 D12 placeholder; W3 wires `carry_forwards_closed` inside acceptance archive emit. |
+
+Counter primitives are created at module-import time in
+`src/aho/materiality.py` (W4-close sha
+`0ef021e3ee85d5c4390a7d40b19523d874ea84d6bdaeeb56b3f0a31fcac912b8`).
+Each counter exposes a record function (`record_caught_by_llama`,
+`record_caught_by_drafter`, `record_escaped`,
+`record_carry_forward_resolution`) that the consuming primitives call
+with severity and an extras dict. The OTEL Counter instruments are
+non-functional under `_otel_available=False` (e.g., import failure
+or no MeterProvider) — the record functions fail closed (no-op) so
+materiality wiring does not block iteration execution under degraded
+telemetry.
+
+Baseline extraction lives at `src/aho/materiality_baseline_extract.py`
+(W4-close sha
+`0fecabc9c73de9148478517e03cc402d8145acd33951a33c7bd654bd76722030`)
+and parses the OTEL metrics jsonl stream into per-iteration buckets
+for the dashboard surfaces.
+
+### Falsifiability threshold
+
+The falsification surface is exercised when **N ≥ 8 iterations** have
+completed under the protocol. Below N=8 the counters record honest
+data but the threshold is not yet validated. At N ≥ 8:
+
+1. **≥30% reduction in escaped defects vs the baseline window.** The
+   baseline window is the per-iteration mean of the `escaped` bucket
+   over the first three iterations under the protocol (0.2.17 W2 →
+   the third iteration after the protocol activates). Subsequent
+   per-iteration `escaped` counts must average ≥30% lower than the
+   baseline window. A higher escape rate falsifies the claim.
+
+2. **Non-zero `caught_by_llama` and `caught_by_drafter` buckets.**
+   Both buckets must have non-zero values across the protocol window.
+   A protocol that records only `caught_by_llama=0` or
+   `caught_by_drafter=0` is not generating evidence about the
+   architecture; it is generating evidence about a single seat's
+   behavior. Both buckets non-zero means both seats are catching
+   defects, which is what the architecture predicts.
+
+3. **Carry-forward resolution rate ≥60% within 2 iterations of
+   flagging.** Carry-forwards opened in workstream W{N} must reach a
+   `closed` state in the carry-forwards file within iteration W{N+2}
+   at a ≥60% rate. Items that persist beyond 2 iterations without
+   closure are evidence of unbounded flagging — the carry-forward
+   register becomes append-only-with-no-resolution and the protocol
+   degrades to a logging surface rather than a feedback surface.
+
+If any of (1), (2), (3) fail at N=8, the architecture's
+"harness-as-IQ" claim is falsified at the protocol level and the
+ADR is amended (or replaced) with the empirical finding.
+
+### Three-iteration evidence build (qualified validation)
+
+0.2.17 produced three iterations of evidence on the auditor seat's
+contribution to the materiality protocol. Recorded honestly, the
+build is:
+
+#### W2 (baseline) — auditor without enhancement
+
+W2 deployed the in-container llama3.2:3b auditor for the first time
+(D11 self-audit), with counter wiring landing in D12 verification
+probe. Self-audit produced a **false positive**: F-0.2.17-W1-003
+flagged as "looks placeholder" despite being sealed-real and
+registered in the carry-forwards file. The counter
+`claim_vs_artifact_mismatches.caught_by_llama` incremented for this
+finding — counted in the bucket, but the increment recorded a defect
+the model fabricated, not a defect the artifact contained.
+
+W2 acceptance archive sha256:
+`4a5ab02b8b831de1df3c5f45bf8578d9f641fd2a5ee6de9eed9a0b6fb213a2dd`.
+
+The materiality protocol was active and recording; the
+auditor-as-deployed at W2 had a known capability gap
+(F-0.2.17-W2-006 — reference-resolution gap; small-model
+pattern-matching on ID syntax without registry access).
+
+#### W3 (partial fix) — RAG enrichment
+
+W3 wired `aho.council.audit_ref_lookup` (W3 D2) and
+`aho.council.audit_ref_extract` (W3 D2) into the audit prompt
+construction in `aho.council.audit`. The audit primitive now
+retrieves "is this ID registered?" via ChromaDB query before flagging
+reference-resolution issues, inlining the answer into the prompt's
+`## Registered references` section.
+
+W3 D4 RAG-vs-non-RAG comparison closed **1 of 2** demonstrated false
+positives:
+
+- W0 replay: F-W0-004 false positive **closed** under RAG
+  enrichment (W0 self-audit replay no longer flags the registered
+  ID).
+- W2 self-audit replay: F-0.2.17-W1-003 false positive
+  **persisted** under same prompt rule, same context shape, same
+  model. Small-model prompt-following inconsistency at base tier —
+  llama3.2:3b honors the registered-references rule on some prompts
+  but not others. Mechanism: the rule is paragraph-form text at
+  the end of a large system prompt, and the model selectively
+  attends.
+
+W3 acceptance archive sha256:
+`9ed9a88a5382d89f116083a1cf87de586ddd997da975ef8cd5091aa748c81790`.
+
+W3 surfaced F-0.2.17-W3-001 (residual prompt-following
+inconsistency); F-0.2.17-W2-006 stays open until W4 closes both via
+structural fix.
+
+#### W4 (structural closure) — deterministic post-hoc filter
+
+W4 D1 landed `aho.council.audit_finding_filter` — a deterministic
+post-pass that drops findings whose anchor IDs are listed
+`registered` in the prompt context AND whose description matches the
+fake-ID phrase set ('not real', 'looks placeholder', 'matches naming
+conventions', etc.). Filter is structural — it does not bet the
+architecture on small-model prompt-following.
+
+Filter verified against:
+
+- The exact F-0.2.17-W1-003 false positive that W3 D4 left open
+  (D1 acceptance gate 1, W2 self-audit-rag artifact target sha
+  `afbc33a3ae68d90f444e5661cf7146180de9798eb2534a1cfd1f004882bfc91a`).
+  **Suppressed correctly.**
+- The W3 self-audit (D1 gate 2, target sha
+  `b3a4e2e6c88244f4b4fcd59f75b56112beed8287600eb2308a7cdb7f4a605efc`,
+  three findings remain active). **Did not over-suppress.**
+- Synthetic positive and negative tests (D1 gates 3 + 4) for the
+  structural-narrowness invariant.
+
+W4 acceptance archive sha256:
+`949908ffd933cfd9e5121432c5fd7294b060a39e17e4a2259d3a4cdc040c8300`.
+W4 audit archive (llama self-audit verbatim disposition
+`surface_to_drafter`) sha256:
+`9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`.
+
+Both demonstrated false positives (the only two that manifested
+across W0/W1/W2 RAG replays) are now structurally addressed.
+F-0.2.17-W2-006 and F-0.2.17-W3-001 close at W4 close. The W4 D1
+filter does NOT bet the architecture on small-model prompt-following:
+the model can ignore the registered-references rule and the failure
+mode is still contained because the filter reads the same RAG context
+the prompt section was built from and applies the suppression
+deterministically.
+
+### N=4 caveat — qualified validation, not full validation
+
+The 0.2.17 evidence build spans **four iterations** (W0 / W1 / W2 /
+W3) with the auditor primitive deploying first at W2 and stabilizing
+at W4. **N=4 is below the N≥8 threshold.** This ADR's three-iteration
+evidence build is **qualified validation, not full validation**:
+
+- The protocol is implemented and recording data correctly (counter
+  primitive lands at W2 D12, materiality dashboard surfaces land at
+  W4 D5).
+- The auditor primitive's known failure modes are progressively
+  contained across W2/W3/W4 (baseline → partial → structural).
+- Both demonstrated false positives that surfaced across W0/W1/W2
+  RAG replays close structurally at W4.
+
+But the falsifiability threshold (≥30% reduction in escaped, non-zero
+catch buckets, ≥60% resolution rate) is **not yet exercised** — the
+N≥8 window has not closed. 0.3.x continues the evidence build under
+partial-tier auditor deployment. Full validation lands when the
+falsifiability threshold has been exercised against an N≥8 evidence
+window.
+
+The qualified validation status is **deliberately recorded** as part
+of this ADR's accepted state. Premature claims of full validation
+(at N=4 or below) would be exactly the rubber-stamping the
+architecture is designed to surface.
+
+## Rationale
+
+> Token-spend reduction is downstream of better outcomes; outcomes
+> are what we measure.
+
+Three forces drive the four-bucket protocol:
+
+1. **Catch-locus is more informative than catch-rate.** A protocol
+   that counts "total defects caught" tells you nothing about which
+   seat is doing what; the same total can come from a single seat
+   doing all the work or from balanced contributions across seats.
+   Splitting by catch locus (`caught_by_llama` vs `caught_by_drafter`
+   vs `escaped`) makes the architecture's distributed-evaluation
+   premise observable.
+
+2. **Resolution rate closes the loop.** Catch-locus alone records
+   defect surfacing; the resolution rate counter records what
+   happens after surfacing. A high catch rate with a low resolution
+   rate is evidence that the protocol is generating noise (or that
+   the team can't keep up with the noise). A balanced catch + high
+   resolution is evidence the loop is functioning.
+
+3. **The N≥8 threshold prevents premature claims.** Architecture
+   claims are easy to make against N=1; they are robust against
+   N=8. The N=4 caveat in this ADR makes the qualified state
+   explicit so future readers can tell at a glance whether the
+   "harness-as-IQ" claim has been exercised against the threshold or
+   merely recorded against fewer iterations of evidence.
+
+The three-iteration auditor-seat evidence build (W2 baseline → W3
+partial → W4 structural) is itself a sample of the protocol
+operating: the auditor surfaced a known failure mode (false
+positives on registered IDs); the architecture progressively
+contained the failure mode without changing the model; the
+containment shipped as repo-resident code. That is the shape the
+protocol is designed to surface and reward.
+
+## Consequences
+
+### Positive
+
+- The "harness-as-IQ" claim becomes falsifiable. Future iterations
+  either accumulate evidence toward the threshold or flag failures
+  against it; either outcome is informative.
+- Catch-locus telemetry exposes seat-level contributions. Future
+  amendments (adding a partial-tier auditor seat at 0.3.x) get
+  observable comparative data, not just total-count drift.
+- Carry-forward resolution rate as a counter ties the open-loop
+  flagging surface to the closed-loop resolution surface. A protocol
+  that opens carry-forwards faster than it closes them surfaces
+  inside the same dashboard the auditor seat reports through.
+- The three-iteration evidence build (W2 → W4) is recorded with
+  sealed shas, so future architectural arguments grounded in
+  "0.2.17 demonstrated X" can be cross-referenced to the durable
+  artifacts rather than memory.
+
+### Negative
+
+- N=4 is below threshold. The ADR ships in a qualified-validation
+  state and stays qualified until N≥8 closes. Premature claims of
+  full validation must be guarded against in retrospectives.
+- Counter telemetry depends on a functioning OTEL pipeline. Hosts
+  without otelcol-contrib reachable on `127.0.0.1:4317` produce
+  no-op counter records (fail closed by design). Materiality data
+  for those iterations is degraded; the protocol does not break,
+  but the evidence build pauses for that iteration.
+- The catch-locus distinction depends on auditor confidence-floor
+  enforcement (ADR-0007 §Council roles §Anti-rubber-stamp
+  hardening). If the auditor rubber-stamps below the floor, the
+  `caught_by_llama` bucket undercounts and `escaped` overcounts.
+  Mitigation: confidence floor is structural, not advisory;
+  rubber-stamping is the failure mode the protocol is designed to
+  catch.
+- Severity attribution on `caught_by_drafter` requires the drafter
+  to assign severity at flag-time. Drafter-side process discipline
+  is the load-bearing surface.
+
+### Neutral
+
+- 0.2.17 evidence is recorded in W2/W3/W4 sealed archives plus this
+  ADR; future iterations append. The protocol itself is stable
+  across iterations — counter names, schema, and threshold
+  definition are versioned with this ADR.
+- Migration to a partial-tier auditor (qwen3.5:9b at 0.3.x) does
+  not change the counter shape; only the model behind the
+  `caught_by_llama` bucket changes. The bucket name remains
+  `caught_by_llama` for continuity (the architecture-level seat
+  name, not the model identity).
+
+## Out of Scope
+
+- **Cost-per-defect calculation.** The four buckets count defects;
+  cost-per-defect requires multiplying by token-spend, wall-clock,
+  or compute hours. That calculation is downstream of the catch
+  buckets and lives in the Pillar 8 dashboard's cost telemetry, not
+  in this ADR's protocol.
+- **Cross-iteration aggregation logic.** Aggregating the four
+  buckets across iterations to compute the threshold metrics (≥30%
+  reduction, etc.) is a dashboard-rendering concern; the protocol
+  defines the inputs, not the aggregation pipeline.
+- **Auditor-as-defect telemetry.** When the auditor itself is the
+  defect (false-positive flagging), the protocol does not have a
+  bucket for it. The W2 false-positive on F-0.2.17-W1-003 is
+  recorded in carry-forwards (F-0.2.17-W2-006) but does not
+  decrement `caught_by_llama` retroactively. Sealed archives stay
+  sealed.
+- **Severity weighting.** The protocol counts defects with
+  per-event severity attributes but does not weight the threshold
+  by severity. A `cosmetic` defect counts as one increment; a
+  `critical` defect counts as one increment. Severity-weighted
+  threshold logic is post-0.3.x.
+
+## Alternatives Considered
+
+### Token-spend reduction as the primary metric
+
+Measure orchestrator token-spend per iteration; declare the harness
+materially better when token-spend drops.
+
+**Rejected.** Token-spend is downstream of outcomes. A harness that
+costs more tokens but produces structurally honest dispositions is
+the goal; a harness that costs fewer tokens by skipping audits is
+the failure mode. The four-bucket protocol measures outcomes
+directly.
+
+### Single defect-rate counter
+
+Count all defects (without splitting by locus); declare improvement
+when total count drops.
+
+**Rejected.** Locus-blind counting hides whether improvements are
+real or whether defects are escaping rather than being caught. The
+catch-locus split is the architecture's load-bearing observation.
+
+### N=3 threshold (faster validation cycle)
+
+Lower the falsification threshold from N≥8 to N≥3 to validate the
+architecture faster.
+
+**Rejected.** N=3 is anecdote-adjacent; rejection thresholds at
+small N produce false rejections at high rate. N≥8 is the lower
+bound at which the threshold metrics are statistically informative
+under the iteration-noise distribution. The qualified-validation
+caveat exists precisely so the architecture is not over-claimed
+during the accumulation window.
+
+### Auditor self-grading
+
+Have the auditor grade its own performance retrospectively, feeding
+self-grades into the materiality protocol.
+
+**Rejected.** Pillar 7 ("generation and evaluation are separate
+roles") forbids self-grading. The drafter-side gap-net (catch by
+drafter on the next planning turn) is the architecturally correct
+way to surface what the auditor missed. Self-grading would collapse
+the catch-locus distinction.
+
+## Revisit Triggers
+
+This ADR is amended (not necessarily replaced) when any of the
+following become true:
+
+1. **N≥8 evidence window closes.** The falsifiability threshold is
+   exercised. If passed, the qualified-validation caveat is
+   removed; if failed, the architecture's harness-as-IQ claim is
+   revised in light of empirical evidence.
+
+2. **A partial-tier auditor seat lands (0.3.x).** The materiality
+   protocol's bucket names stay; the model behind `caught_by_llama`
+   changes. Amendment captures the seat-promotion event with
+   sealed-archive cross-references.
+
+3. **Severity weighting becomes load-bearing.** A future iteration
+   surfaces a clear distinction between cosmetic and critical
+   defects in catch-locus distribution; severity-weighted threshold
+   amendment lands.
+
+4. **A fifth bucket becomes necessary.** If the protocol's four
+   buckets undercount a real-world catch locus (e.g., a "caught by
+   triage" or "caught by user" surface), the bucket list is
+   amended explicitly with the new counter name and wiring.
+
+## References
+
+- `artifacts/adrs/0007-containerization-architecture.md` §Council
+  roles — auditor/drafter/triage/retrieval seats; the protocol
+  measures their joint output.
+- `artifacts/adrs/0009-secrets-broker-boundary.md` — boundary
+  between container and host; orthogonal to materiality but cited
+  for repo-resident architectural completeness.
+- `artifacts/iterations/0.2.17/acceptance/W2.json` (sha256
+  `4a5ab02b8b831de1df3c5f45bf8578d9f641fd2a5ee6de9eed9a0b6fb213a2dd`)
+  D11 self-audit + D12 counter wiring.
+- `artifacts/iterations/0.2.17/acceptance/W3.json` (sha256
+  `9ed9a88a5382d89f116083a1cf87de586ddd997da975ef8cd5091aa748c81790`)
+  D4 RAG-vs-non-RAG comparison.
+- `artifacts/iterations/0.2.17/acceptance/W4.json` (sha256
+  `949908ffd933cfd9e5121432c5fd7294b060a39e17e4a2259d3a4cdc040c8300`)
+  D1 deterministic post-hoc filter; F-0.2.17-W2-006 +
+  F-0.2.17-W3-001 closures.
+- `artifacts/iterations/0.2.17/audit/W4.json` (sha256
+  `9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`)
+  llama self-audit verbatim disposition.
+- `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
+  F-0.2.17-W2-006, F-0.2.17-W3-001, F-0.2.17-W3-002 — the auditor
+  capability-gap evidence chain.
+- `src/aho/materiality.py` — counter primitives (W4-close sha
+  `0ef021e3ee85d5c4390a7d40b19523d874ea84d6bdaeeb56b3f0a31fcac912b8`).
+- `src/aho/materiality_baseline_extract.py` — baseline extraction
+  (W4-close sha
+  `0fecabc9c73de9148478517e03cc402d8145acd33951a33c7bd654bd76722030`).
+- `artifacts/harness/base.md` §Pillar 7 ("generation and evaluation
+  are separate roles") — binding constraint on the catch-locus
+  distinction.
+- `artifacts/harness/base.md` §Pillar 8 ("efficacy is measured in
+  cost delta") — adjacent pillar; cost telemetry is separate from
+  materiality but feeds the same dashboard surface.
+```
+
 ### ADR: ahomw-ADR-044.md (ahomw-ADR-044.md)
 ```markdown
 # ADR-044: Four-Phase Question-Driven Iteration Cadence
@@ -2012,56 +4509,39 @@ ADR-045 does not modify ADR-044. It refines the scope contract semantics within 
 ```markdown
 # aho
 
-**Agentic Harness Orchestration.** Methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.
+## Origin
 
-**Phase 0** · **Iteration 0.2.15** · **Status: Tier 1 Partial Install Validation**
+TachTech builds data and SIEM migration pipelines for customers — moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
 
-```mermaid
-graph BT
-    AHO["<b>A H O</b><br/><i>Agentic Harness Orchestration</i>"]:::shaft
-    AHO --- COST["◆ Minimal cost"]:::prong
-    AHO --- SPEED["◆ Speed of delivery"]:::prong
-    AHO --- PERF["◆ Optimized performance"]:::prong
-    classDef shaft fill:#0D9488,stroke:#0D9488,color:#fff
-    classDef prong fill:#161B22,stroke:#4ADE80,color:#4ADE80
-```
+Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects — using the same multi-modal models — produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline — the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture — was doing the work. The pipeline was useful, but the harness was load-bearing.
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product. The executing model (Claude, Gemini, Qwen, Llama) is the engine. The harness ships working software without supervision.
+aho is the extraction of that harness from pipeline-specific contexts into general-purpose governed agentic engineering infrastructure. The thesis: richer harnesses produce smarter behavior from the same models. Same Claude, same Gemini, materially different output, because the scaffolding around them is structured rather than vibes-based.
 
----
+## What aho is
 
-## Quick start
+aho is governance infrastructure for LLM-driven engineering. The four properties that make it that, rather than another agent framework:
 
-```fish
-git clone https://github.com/soc-foundry/aho
-cd aho
-./install.fish
-aho doctor
-```
+- **Drafter/auditor separation as a structural constraint.** Pattern C: the agent that produces work cannot bless it. The drafter drafts; a separate auditor audits; a human signs.
+- **Provable lineage of every dispatch.** W3C TRACEPARENT propagation through the stack means every LLM call is attributable to its workstream, iteration, drafter session, and parent operation. Cost, tokens, errors, decisions all traceable.
+- **Monitored invariants enforced as policy.** Pillar 11 (no agent git operations) is the prototype. Future invariants extend the same pattern. Policy as gate, not dashboard.
+- **Sealed acceptance and audit archives, immutable event log.** The artifacts are the record. They cannot be retroactively edited. Disputes resolve by reading the archive, not by re-asking the agent.
 
-Requires: Arch-family Linux, Python 3.11+, fish shell, Ollama, 8GB+ VRAM for Tier 1 council.
+The combination — and the compliance-shaped framing — is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
----
+## Why aho — cost and token utilization
 
-## Cascade
+Token cost matters. Claude and Gemini API spend at scale is the dominant operating cost of LLM-driven engineering, and single-agent execution wastes it in characteristic ways:
 
-Five-stage pipeline. Each stage a distinct role. Handoffs validated.
+- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model — fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints — turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
+- **No model-cost gradient.** Single-agent execution sends every decision to the same expensive model. Routing decisions, classification, triage, substantive reasoning, and architectural decisions all priced identically. aho's council pattern routes triage and classification to small local models (Nemotron-class), substantive work to mid-tier (Qwen, GLM), premium dispatches to Claude or Gemini. The cost gradient is visible per-workstream.
+- **Re-execution waste from undetected drift.** Single-agent failure modes — hallucinated state, stale assumptions, lost context, mid-task looping — are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
+- **Scope creep priced as features.** Single-agent execution under "do this large complex thing" expands scope as it works. aho's no-mid-flight-scope-amendment rule keeps tokens on the requested scope, not on the agent's interpretation of what it should also fix.
 
-```
-Document → Indexer-in → Producer → Auditor → Indexer-out → Assessor → Output
-                              │           │
-                              ▼           ▼
-                         deltas      delta-validations
-                              │           │
-                              └─► staging ◄┘
-```
+These are mechanism claims, not benchmark claims. The mechanisms compound across iterations.
 
-Producer drafts. Indexers propose deltas. Auditor validates. Assessor meta-assesses.
-Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
+## The 11 Pillars
 
----
-
-## The Eleven Pillars of AHO
+aho's operating principles. Numbered, named, and binding.
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -2075,190 +4555,230 @@ Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
 10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt.
 11. **The human holds the keys.** No agent writes to git or manages secrets.
 
----
+Each pillar is enforced by tooling, registry entries, or both. Pillar violations are findings; repeated violations are gotcha registry entries with mitigations.
 
-## Capabilities
+## Architecture — current shape
 
-**Artifact loop.** Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word-count enforcement and 3-retry escalation.
+aho today runs as a single-machine local loop. One human, one workstation, one project at a time.
 
-**Pre-flight / post-flight gates.** Environment validation before launch, quality gates after execution. Bundle completeness enforced.
+Components on the workstation:
 
-**Cascade orchestrator.** 5-stage pipeline (`src/aho/pipeline/`) with trace events, per-stage artifacts, cross-stage delta propagation. Dispatcher supports Ollama `/api/chat` with model-family stop tokens and `num_ctx` up to 32K on 8GB VRAM.
+- **aho harness** — Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
+- **ollama** — local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
+- **OTEL collector** — custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
+- **aho-dashboard** — claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
+- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** — daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
+- **age + fernet secret store** — age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
 
-**Pattern C execution.** Claude Code drafts, Gemini CLI audits, human signs. State machine: `in_progress → pending_audit → audit_complete → workstream_complete`. Audit archives are versioned, overwrites forbidden.
+State on disk:
 
-**Gotcha registry.** 83+ indexed failure modes with mitigations, queried at iteration start.
+- **`.aho-checkpoint.json`** — Pattern C state machine, single source of truth for iteration progression.
+- **`artifacts/iterations/{version}/`** — sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
+- **`artifacts/adrs/`** — versioned architectural decision records, enumerated from disk.
+- **`~/.local/share/aho/events/aho_event_log.jsonl`** — immutable append-only event ledger.
 
-**Secrets architecture.** age encryption + OS keyring + fernet bulk storage. No keys, passphrases, or secret material in the repo.
+Distribution today is fish-shell-driven install scripts. This is a known limitation; see Target shape.
 
-**Multi-agent orchestration.** Qwen for general work, Llama 3.2 for triage, GLM and Nemotron re-test in 0.2.15, OpenClaw as file-bridge wrapper, Nemoclaw as dispatcher.
+## Architecture — target shape
 
-**Telegram `/ws` streaming.** `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`. Auto-push on workstream completion.
+aho deployment scales across three tiers. The harness lives at the edge with each engineer; the heavy compute lives centrally; the truth layer is managed storage.
 
-**Install surface.** Three-persona model (pipeline builder, framework host, impromptu assistant). `aho run "task"` for persona 3 pwd-scoped work.
+### Tier 1: engineer workstation (containerized)
 
-**Observability.** otelcol-contrib + Jaeger as systemd user services. Spans in dispatcher, openclaw, nemoclaw, telegram.
+Runs locally on every aho user's machine. Distributed as signed container images.
 
----
+- **aho-harness** — Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
+- **ollama-edge** — minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
+- **otel-collector-edge** — local OTEL collector, ships to central observability tier.
+- **aho-dashboard-local** — claw3d for this engineer's iterations. Optional; org dashboard exists separately.
+- **aho-harness-watcher** — daemon monitoring local harness state, emitting events.
+- **engineer-local secret store** — age identity for this engineer, fernet-encrypted local secret bundle.
 
-## Folder layout
+The engineer container is a workstation tool, not a Kubernetes pod. Stateful per iteration, identity-bound to the engineer, not fungible.
+
+### Tier 2: pod-deployed serving plane (GCP / Kubernetes)
+
+Runs centrally; engineer workstations consume via HTTPS. Pod-based, horizontally scaled with HPA, GPU-aware where applicable.
+
+- **inference-gateway** — the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
+- **vllm-{qwen, glm, nemotron, ...}** — high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
+- **api-proxy-{anthropic, google, openai}** — egress with per-tenant key vaulting, rate limiting, retry handling.
+- **audit-dispatcher** — stateless service handing drafter outputs to the auditor agent.
+- **embedding-service** — nomic-embed-text or equivalent containerized for retrieval at scale.
+- **batch-worker-pool** — Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
+- **registry-api** — Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
+- **archive-api** — GCS-fronted API for sealed acceptance and audit archive reads and writes.
+- **aho-dashboard-org** — team-level org-wide view, separate deployment from engineer-local dashboards.
+- **otel-collector-central** — DaemonSet ingestion tier.
+
+### Tier 3: managed storage and state services
+
+Not pods. The truth layer.
+
+- **Firestore** — checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
+- **GCS** — sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
+- **Cloud Trace (or Tempo)** — OTEL trace storage.
+- **Cloud Monitoring (or Mimir)** — OTEL metric storage.
+- **Cloud Logging (or Loki)** — OTEL log storage.
+- **Secret Manager (or Vault)** — per-engineer and per-tenant identity vaulting.
+- **Pub/Sub** — event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
+- **Workload Identity** — engineer-container to GCP authentication.
+
+### Why this shape
+
+Three independent scaling axes:
+
+- **Dispatch volume** scales pods in Tier 2 via HPA and cluster autoscaling on GPU node pools. This is the canonical Kubernetes-with-GPU workload.
+- **Engineer count and deployment count** scales by deployment multiplication: more engineers means more workstation containers, each producing load on Tier 2 services. Engineer-side does not pod-scale.
+- **Storage and archive volume** scales via Tier 3 service capacity, independent of pod count.
+
+Putting the harness or registries in pods would couple these axes and break the independence. The boundary — harness and registries at the edge or behind APIs, model compute in pods, truth in managed services — preserves it.
+
+## Components in detail
+
+### The harness
+
+The harness is the contract between human, drafter agent, and auditor agent. It enforces Pattern C state transitions, validates dispatch parameters, parses TRACEPARENT, creates spans, writes acceptance and audit archives, and refuses operations that violate Pillars (notably 11). The harness is not a library called from agent code; the harness invokes agents.
+
+### The registries
+
+Three registries form the harness's memory:
+
+- **Gotcha registry** — indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
+- **Script registry** — sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
+- **ADR index** — architectural decision records numbered sequentially from disk enumeration, never fabricated.
+
+In current shape, registries are version-controlled files in the repo. In target shape, registries are Firestore-backed APIs with Pub/Sub fan-out for change notification.
+
+### The dispatcher and router
+
+The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing — typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
+
+In current shape, dispatcher routes to local Ollama. In target shape, dispatcher routes through the inference-gateway, which bridges to local Ollama for edge work, vLLM pods for substantive council dispatches, or API proxies for premium dispatches.
+
+### Pattern C state machine
+
+Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 — the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
+
+### OTEL telemetry and TRACEPARENT propagation
+
+Every dispatch produces traces, metrics, and logs tagged with iteration, workstream, and role. TRACEPARENT propagates through the dispatch chain so a Claude Code `tool_use` span parents to the `aho.dispatch` span which parents to the inferred-model span. Cost and token attribution is per-span; the Pillar 8 dashboard aggregates by workstream.
+
+### The Pillar 8 cost and token dashboard
+
+claw3d-fronted Flutter dashboard reads from the OTEL aggregator and serves per-workstream and per-iteration cost rollups, token totals, cache:new ratios, turn counts, tool-call counts, MCP event counts, and error counts. The cost gradient is visible directly: substantive dispatches priced higher than triage dispatches, audit dispatches priced separately from drafter dispatches.
+
+### Pattern C drafter and auditor
+
+Drafter is typically Claude Code; auditor is typically Gemini CLI. They run in separate sessions with separate identity. The drafter writes the acceptance archive and stops; a fresh auditor session reads the archive and writes the audit archive; a fresh drafter session reads the audit archive and emits `workstream_complete`. Three sessions, three role boundaries, no agent able to bless its own work.
+
+## Roadmap
+
+aho deployment scales in phases:
+
+- **Phase A (current):** single-machine local loop. Working, refined through 0.2.x iterations.
+- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only — no central cloud yet. The data-gathering phase.
+- **Phase C:** cloud coordination layer informed by Phase B telemetry. Endpoints for registry sync, harness contribution, shared event log, and central observability backend. Specific shape determined by what Phase B telemetry reveals.
+- **Phase D:** customer-facing deployment. Multi-tenant. Compliance-shaped.
+
+Phase A is shipping. Phase B is the next several iterations of architectural work. Phase C and D are not yet designed in detail.
+
+## Repo layout
 
 ```
 aho/
 ├── src/aho/                    # Python package (src-layout)
-│   └── pipeline/               # Cascade: schemas, dispatcher, orchestrator
-├── bin/                        # CLI entry points and tool wrappers
+│   ├── pipeline/               # Cascade: dispatcher, router, orchestrator, schemas
+│   ├── agents/                 # Drafter/auditor agent integrations (nemoclaw, openclaw)
+│   ├── council/                # Local model fleet wiring
+│   ├── dashboard/              # Pillar 8 dashboard server + OTEL aggregator
+│   ├── harness.py              # Pattern C state machine entry point
+│   ├── acceptance.py           # Sealed acceptance archive writer
+│   ├── workstream_events.py    # Workstream lifecycle event emitter
+│   ├── workstream_gate.py      # State transition gating
+│   ├── preflight/              # Pre-launch environment validation
+│   ├── postflight/             # Post-execution quality gates
+│   ├── registry.py             # Gotcha and script registry access
+│   ├── secrets/                # age + fernet secret store wiring
+│   ├── telegram/               # Notification fan-out
+│   ├── integrations/           # External tool integrations
+│   ├── rag/                    # Retrieval (nomic-embed-text, ChromaDB)
+│   ├── install/                # Install-time orchestration logic
+│   └── components/             # Component coverage tracking
+├── bin/                        # CLI entry points and tool wrappers (Pillar 4)
 ├── artifacts/
-│   ├── harness/                # Pillars, ADRs, Pattern C protocol
-│   ├── adrs/                   # Architecture Decision Records
-│   ├── iterations/             # Per-iteration design, plan, build, report, bundle
+│   ├── harness/                # Pillars (base.md), Pattern C protocol, prompt conventions
+│   ├── adrs/                   # Architectural Decision Records (sequential)
+│   ├── iterations/             # Per-iteration: design, plan, build, acceptance, audit, bundle
 │   ├── phase-charters/         # Phase objective contracts
 │   ├── roadmap/                # Strategic planning
 │   ├── scripts/                # Utility and instrumentation
-│   ├── templates/              # Scaffolding
 │   ├── prompts/                # LLM generation templates
+│   ├── templates/              # Scaffolding
 │   └── tests/                  # Verification suite
-├── data/                       # Registries, event log, ChromaDB
-├── app/                        # Consumer application mount (Phase 1+)
-└── pipeline/                   # Processing pipeline mount (Phase 1+)
+├── data/                       # Registries, event log, ChromaDB stores
+├── templates/                  # Project bootstrap templates
+├── tests/                      # Top-level test suite
+├── web/                        # Dashboard web assets
+├── app/                        # Consumer application mount (Phase B+)
+├── pipeline/                   # Processing pipeline mount (Phase B+)
+├── CLAUDE.md                   # Drafter (Claude Code) operating instructions
+├── GEMINI.md                   # Auditor (Gemini CLI) operating instructions
+├── CHANGELOG.md                # Iteration history
+├── COMPATIBILITY.md            # Supported environments
+├── MANIFEST.json               # Repo-level manifest
+└── install.fish                # 9-step install orchestrator
 ```
 
-Canonical since 0.1.13. Path-agnostic via `iao_paths.find_project_root()` and `.aho.json` sentinel.
+Path-agnostic via `aho.paths.find_project_root()` and the `.aho.json` sentinel.
 
----
-
-## State machine
-
-Every workstream flows through four states. Claude emits three events. Gemini emits one. Checkpoint advances only after audit archive exists with pass or pass-with-findings.
-
-```
-  in_progress   ──►   pending_audit   ──►   audit_complete   ──►   workstream_complete
-  (Claude)           (Claude done)        (Gemini done)           (Claude emits)
-```
-
-No agent emits `workstream_complete` before `audit_complete` exists. Audit archive overwrites forbidden; re-audits create versioned files.
-
----
-
-## Roadmap
-
-| Iteration | Theme | Status |
-|---|---|---|
-| 1 (0.1.x) | Build the harness | graduated 2026-04-11 |
-| 2 (0.2.x) | Ship to soc-foundry + P3 | active (0.2.15) |
-| 3 (0.3.x) | Alex demo + polish | planned |
-| Phase 1 | Multi-project, multi-machine | planned |
-
-**Phase 0 charter:** `artifacts/phase-charters/aho-phase-0.md`
-
-Phase 0 is complete when soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.
-
----
-
-## Recent iterations
-
-**0.2.15 — Tier 1 Partial Install Validation (in progress).** Wire and ship Tier 1 install package. 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) validated through Ollama on fixed dispatcher. Fair re-test of GLM and Nemotron after 0.2.13 W2.5 compromise findings measured on broken substrate. Ollama Tier 1 capability audit, dispatcher hardening, Nemoclaw decision ADR, cross-model cascade integration test. 5 workstreams.
-
-**0.2.14 — Council Wiring Verification.** 4 workstreams delivered (W0 setup, W1 vet+wire+smoke, W1.5 substrate repair, W2 close). W1 smoke test surfaced two dispatcher bugs: `num_ctx` default 4096 truncating input to ~4K tokens, and `/api/generate` without stop tokens causing chat template leakage. W1.5 repaired the dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens). Run-2 smoke test produced 14,725 chars of substantive cross-stage output vs run-1's 6,901 chars of template-leaked garbage. Council validated as real-but-thin: cascade mechanics work, Pillar 7 violation persists (Qwen-solo), auditor role-prompt bifurcation identified.
-
-**0.2.13 — Dispatch-Layer Repair.** First Pattern C iteration. W1 fixed GLM parser (`GLMParseError` replaces hardcoded `{score:8, ship}` fallback). W2 fixed Nemotron classifier (specific error types replace blanket `except Exception`). W2.5 hard gate: honest parsers exposed that GLM timed out 80% of inputs, Nemotron returned "feature" 80% regardless of content. Rescoped W3-W9. 4 workstreams delivered.
-
-**0.2.12 — Council Activation.** 20 workstreams. Gemini CLI primary executor. Council inventory audit. Five gotchas landed (G078-G083) including foundational G083: exception handlers returning hardcoded positive values, masking real failures. Council health measured at 35.3/100. Strategic rescope at W5.
-
-See [CHANGELOG.md](CHANGELOG.md) for full history back to 0.1.0-alpha.
-
----
-
-## Core concepts
-
-**Harness.** The versioned set of files that constrain agent behavior. Pillars, ADRs, Pattern C protocol, gotcha registry, prompt conventions, test baseline. Changes at phase or iteration boundaries.
-
-**Cascade.** Five role-bound stages that produce and validate analytical artifacts. Handoffs are traced events. Deltas proposed by Indexers validated by Auditor and Assessor.
-
-**Pattern C.** Execution model where a cloud orchestrator drafts, a second cloud orchestrator audits, and a human signs. Separates generation from evaluation at the orchestrator boundary. Introduced in 0.2.13.
-
-**Council.** The set of local LLMs available to the harness. Members have distinct roles. Pillar 7 requires drafter ≠ reviewer; council composition enables this.
-
-**Gotcha registry.** Structured record of failure modes with mitigations. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
-
-**Three personas.** Persona 1 (pipeline builder) runs full iterations against known projects. Persona 2 (framework host) imports aho into another repo. Persona 3 (impromptu assistant) runs pwd-scoped one-shot work via `aho run`.
-
----
-
-## Installation
+## Getting started
 
 ```fish
-# 1. Clone
 git clone https://github.com/soc-foundry/aho ~/dev/projects/aho
 cd ~/dev/projects/aho
-
-# 2. Install (idempotent; 9-step orchestrator)
 ./install.fish
-
-# 3. Verify
 aho doctor
-aho doctor --deep    # includes Flutter and dart checks
-aho components check # per-kind presence verification
 ```
 
-**Requirements:**
+Optional deeper checks:
+
+```fish
+aho doctor --deep        # includes Flutter and dart checks
+aho components check     # per-kind component presence verification
+```
+
+Requirements:
 
 - Arch Linux family (CachyOS tested)
-- Python 3.11+ (`pip install -e . --break-system-packages`)
-- fish shell (primary)
+- Python 3.14
+- fish shell (primary; non-fish shells are not supported)
 - Ollama (installed via upstream script, not pacman)
-- 8GB+ VRAM for Tier 1 council (Qwen 3.5:9B + Llama 3.2:3B + GLM + Nemotron)
-- systemd user services (linger enabled)
+- 8GB+ VRAM for the local council (Qwen 3.5:9b, GLM-4.6V-Flash-9B, Nemotron-mini:4b, nomic-embed-text)
+- systemd user services with linger enabled
 - Telegram bot token (optional, for `/ws` streaming)
 - Brave Search API token (optional, for search tools)
 
-**Tier 1 install** pulls four chat LLMs and one embedding model. Tier 2 and Tier 3 (Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo) land with 16GB+ machines; see 0.2.15 carry-forwards.
+Distribution today is the fish install script. Container distribution is Phase B; do not assume signed images exist yet.
 
----
+Configuration:
 
-## Configuration
+- **Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
+- **MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. Smoke-tested via `bin/aho-mcp smoke`.
+- **Secrets** initialized via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
+- **Per-machine systemd user services:** `aho-openclaw`, `aho-nemoclaw`, `aho-telegram`, `aho-harness-watcher`, `aho-otel-collector`, `aho-dashboard`.
 
-**Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
+## Contributing
 
-**MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. 9 MCP servers smoke-tested via `bin/aho-mcp smoke`.
+Pillar 11 governs: agents do not write to git. All commits are human-authored. PRs are welcome from human contributors. Agent-assisted drafting is expected and encouraged; agent-direct git operations are not.
 
-**Secrets** via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
+## Changelog
 
-**Per-machine systemd user services:** openclaw, nemoclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard.
-
----
-
-## Related work
-
-**[karpathy/llm-council](https://github.com/karpathy/llm-council).** Conceptual reference for multi-LLM cross-review pattern. Three-stage architecture (first opinions → review → chairman) differs from aho's five-stage role-bound cascade. OpenRouter cloud APIs vs aho's local Ollama inference. Karpathy's description: "99% vibe coded as a fun Saturday hack." Value is conceptual, not implementation.
-
-**[ruvnet/ruflo](https://github.com/ruvnet/ruflo).** Claude Code orchestration platform with swarm coordination, WASM policy engine, plugin system. Much larger scope than aho; different architectural premises (swarm-per-task vs role-bound cascade, dynamic agent spawning vs fixed council composition). Structural reference for OSS project organization.
-
-aho's focus is narrower than either: harness-governed iterations with durable state transitions, honest substrate measurement, and supervised-free software delivery. Local-first, 8-24GB VRAM tier, Arch Linux family, fish shell.
-
----
-
-## Status
-
-**Phase 0 active.** Second-machine clone target: ThinkStation P3 (tsP3-cos). Third-machine (A8cos) reframed as orchestration/daily-driver after integrated GPU constraint. Luke's machine (24GB) is candidate Tier 3 clone for 0.2.17.
-
-**Council:** Qwen 3.5:9B operational. Llama 3.2:3B integration in 0.2.15 W0. GLM-4.6V-Flash-9B and Nemotron-mini:4b substrate-compromise re-test in 0.2.15 W0. Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo planned for 16GB+ machines.
-
-**Testing:** 302 passing, 12-13 known baseline failures (daemon-dependent), 0 new regressions across recent iterations.
-
-**Gotcha registry:** 83+ entries.
-
----
+See [CHANGELOG.md](CHANGELOG.md) for full iteration history back to 0.1.0-alpha.
 
 ## License
 
 License to be determined before v0.6.0 release.
-
----
-
-*aho v0.2.15 · aho.run · Phase 0 · April 2026*
-
-*README last reviewed: 2026-04-13 by 0.2.15 W0 work session*
 ```
 
 ## §8. CHANGELOG
@@ -2600,7 +5120,7 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 ```markdown
 # CLAUDE.md — aho 0.2.16
 
-You are Claude Code, primary drafter for aho 0.2.16 under Pattern C (modified). Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -2636,7 +5156,7 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **Cost attribution is Pillar 8 ground truth starting 0.2.16.** Do not estimate per-workstream cost from parsed logs once W1 dashboard lands. Read it from `claude_code.cost.usage` metrics tagged with `aho.workstream`.
 
-## Pattern C Role — Primary Drafter (Modified for 0.2.16)
+## Adversarial Authorship Role — Primary Drafter (Modified for 0.2.16)
 
 For each workstream N:
 1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 — it flows into OTEL resource attrs for per-workstream cost and trace attribution.
@@ -2721,7 +5241,7 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
 - `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment
@@ -2756,7 +5276,7 @@ When assembling the export pack (W4): keep it aho-brand-neutral, keep configurat
 ```markdown
 # GEMINI.md — aho 0.2.16
 
-You are Gemini CLI, auditor for aho 0.2.16 under Pattern C. Claude Code drafts. You audit. Kyle signs.
+You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude Code drafts. You audit. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -2790,11 +5310,11 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **OTEL telemetry is first-class evidence in 0.2.16.** If an acceptance archive claims a metric fired, a trace landed, or an alert delivered — spot-check by querying Jaeger or the collector directly, not by trusting a quoted log line. If the claim is about a dashboard panel, verify the panel renders with real data, not synthetic.
 
-## Pattern C Role — Auditor
+## Adversarial Authorship Role — Auditor
 
 For each workstream N:
 1. Claude writes `artifacts/iterations/0.2.16/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
-2. Read it. Read `artifacts/harness/pattern-c-protocol.md` if unclear.
+2. Read it. Read `artifacts/harness/adversarial-authorship-protocol.md` if unclear.
 3. Lightweight audit — **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
@@ -2872,7 +5392,7 @@ Findings severity scale (matches 0.2.15 AF convention): `info`, `important`, `cr
 Gemini CLI has no first-class OTEL support as of this iteration. Your audits will not produce API-level metrics, cost attribution, or trace spans under the OTEL export path. An ADR landed in 0.2.16 W2 documenting this posture (number determined at W2 execution time from ADR index).
 
 Consequences:
-- Pattern C traces in Jaeger show the Claude Code drafter side in full, and the Gemini CLI auditor side as harness-watcher wall-clock wrappers only
+- Adversarial Authorship traces in Jaeger show the Claude Code drafter side in full, and the Gemini CLI auditor side as harness-watcher wall-clock wrappers only
 - Audit cost attribution in the Pillar 8 dashboard shows drafter cost fully and auditor cost not at all
 - Downstream consumers of the Mercor export pack should expect this asymmetry — the pack documents it prominently
 
@@ -2917,7 +5437,7 @@ Specific pitfalls for 0.2.16:
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
 - `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, Producer failure root cause
@@ -3457,12 +5977,16 @@ Specific pitfalls for 0.2.16:
   "version": "0.2.16",
   "project_code": "ahomw",
   "files": {
-    ".aho-checkpoint.json": "7226aeecd12465e1",
+    ".aho-checkpoint.json": "b26a2f24a1b11789",
     ".aho-checkpoint.json.bak-0.2.15": "cbbab8f3233c900e",
     ".aho.json": "d41ca9d68c3a5a85",
-    ".claude/settings.json": "e9dd0e98ebf20fc5",
+    ".claude/settings.json": "26150448c4c551b3",
+    ".claude/settings.json.pre-w0-backup": "26150448c4c551b3",
     ".claude/settings.json.pre-w2-backup": "1106b2a065309d9b",
+    ".claude/settings.json.pre-w3-backup": "e9dd0e98ebf20fc5",
+    ".claude/settings.json.pre-w4-backup": "159306430ed03724",
     ".claude/settings.local.json": "cce5ed98226b7470",
+    ".dockerignore": "e808f649746d6f61",
     ".gitignore": "ddf6629d348fe182",
     ".mcp.json": "5e70df73f4713a20",
     ".mcp.json.tpl": "a09f6924ea760a0d",
@@ -3481,12 +6005,13 @@ Specific pitfalls for 0.2.16:
     ".pytest_cache/CACHEDIR.TAG": "83459a64cf189144",
     ".pytest_cache/README.md": "e1dae87d05c70e1f",
     ".pytest_cache/v/cache/lastfailed": "d06232ba944040c0",
-    ".pytest_cache/v/cache/nodeids": "589d4f9aa08ec52f",
+    ".pytest_cache/v/cache/nodeids": "50cebf7463d491e8",
     "CHANGELOG.md": "e1557770ceca91a2",
-    "CLAUDE.md": "c9b812913834d24b",
+    "CLAUDE.md": "e3177d17cc6e12a2",
     "COMPATIBILITY.md": "84cdc565a3273482",
-    "GEMINI.md": "a9923a418b0cc0b0",
-    "README.md": "dad035a675c6e66f",
+    "Dockerfile": "6e7e61852bc5d852",
+    "GEMINI.md": "7a5501a2f70b0d72",
+    "README.md": "9034224372848371",
     "VERSION": "3927e6d6897f355e",
     "aho-run-0.2.14.md": "1a2d3bdc0579d25e",
     "app/.gitignore": "2f6e4237a119428d",
@@ -3533,9 +6058,14 @@ Specific pitfalls for 0.2.16:
     "artifacts/adrs/0002-nemoclaw-decision.md": "e78e952a32f35c10",
     "artifacts/adrs/0003-otel-scaffolding-posture.md": "966fa4e98838cdd0",
     "artifacts/adrs/0004-iteration-close-confirm-redesign.md": "12f25ee6a0537c33",
+    "artifacts/adrs/0005-gemini-otel-asymmetry.md": "c1073f3938bc140c",
+    "artifacts/adrs/0006-iteration-deliverable-discipline.md": "54f9d851062941cd",
+    "artifacts/adrs/0007-containerization-architecture.md": "ccb7cfa4c4b6b6d4",
+    "artifacts/adrs/0008-dispatcher-missing-model.md": "2324122cd9e16fc5",
     "artifacts/adrs/ahomw-ADR-044.md": "60d88ce81616c64b",
     "artifacts/adrs/ahomw-ADR-045.md": "5dfd12f0c7a74c3d",
     "artifacts/council-models-0.2.14.md": "d75fcb031fb5b133",
+    "artifacts/harness/adversarial-authorship-protocol.md": "6b2b0b1b4440c93d",
     "artifacts/harness/agents-architecture.md": "93773c0ca64cca55",
     "artifacts/harness/aur-packages.txt": "9e93f0a5eac00c0c",
     "artifacts/harness/base.md": "d96eabb0a31f54d4",
@@ -3551,7 +6081,6 @@ Specific pitfalls for 0.2.16:
     "artifacts/harness/model-fleet.txt": "82243c8511f194f0",
     "artifacts/harness/orchestrator-config.md": "65607d2b171b72d2",
     "artifacts/harness/pacman-packages.txt": "20a5ef3260fbd1b2",
-    "artifacts/harness/pattern-c-protocol.md": "9ca36a09a7443d9e",
     "artifacts/harness/prompt-conventions.md": "c3c663d30946aeea",
     "artifacts/harness/secrets-architecture.md": "9fe63e6f290f699a",
     "artifacts/harness/test-baseline.json": "f3a6f5cd0ca4459a",
@@ -3880,18 +6409,71 @@ Specific pitfalls for 0.2.16:
     "artifacts/iterations/0.2.16/acceptance/W0.json": "6715923d04ff763e",
     "artifacts/iterations/0.2.16/acceptance/W1-audit-dispositions.md": "d3331f951115768a",
     "artifacts/iterations/0.2.16/acceptance/W1.json": "d82eb74dfbeb028f",
+    "artifacts/iterations/0.2.16/acceptance/W2-audit-dispositions.md": "fff611f52a6d61b2",
+    "artifacts/iterations/0.2.16/acceptance/W2.json": "578c548c41f58318",
+    "artifacts/iterations/0.2.16/acceptance/W3-audit-dispositions.md": "1c081c984c9e28e7",
+    "artifacts/iterations/0.2.16/acceptance/W3.json": "e5c7d23b35a7aff8",
+    "artifacts/iterations/0.2.16/acceptance/W4-audit-dispositions.md": "84fc8ff48f0b193e",
+    "artifacts/iterations/0.2.16/acceptance/W4.json": "f4b759ad94545f44",
     "artifacts/iterations/0.2.16/aho-design-0.2.16.md": "0977b28fddd2099a",
     "artifacts/iterations/0.2.16/aho-plan-0.2.16.md": "a585c98c9356c233",
+    "artifacts/iterations/0.2.16/alerts/anomaly-rules.yaml": "40737116a44829ee",
+    "artifacts/iterations/0.2.16/alerts/pillar-11-violations.yaml": "05550b6e9608a8ec",
     "artifacts/iterations/0.2.16/audit/W0.json": "3918393b4a816a97",
     "artifacts/iterations/0.2.16/audit/W1.json": "9c32ec927e2f29d8",
+    "artifacts/iterations/0.2.16/audit/W2.json": "3b16546f0bdf5a4a",
+    "artifacts/iterations/0.2.16/audit/W3.json": "07a0cf25bdd55007",
+    "artifacts/iterations/0.2.16/audit/W4.json": "8a96da13b3429b5c",
     "artifacts/iterations/0.2.16/bundles/w1-audit-bundle-0.2.16.tar.gz": "fa991ac88ff48704",
-    "artifacts/iterations/0.2.16/carry-forwards-0.2.16.md": "10e17e513bd5fa73",
+    "artifacts/iterations/0.2.16/carry-forwards-0.2.16.md": "163b3427a8de3f83",
     "artifacts/iterations/0.2.16/dashboards/api-otel-sample.json": "fd3ad87163a1225d",
+    "artifacts/iterations/0.2.16/export/claude-otel-reference-pack/alerts/README.md": "51b7369af9add4ba",
+    "artifacts/iterations/0.2.16/export/claude-otel-reference-pack/alerts/anomaly-rules.yaml": "90cdd5f52bcba39f",
+    "artifacts/iterations/0.2.16/export/claude-otel-reference-pack/alerts/pillar-11-violations.yaml": "e64ba4396f727a43",
     "artifacts/iterations/0.2.16/install-fish-dryrun.md": "3f7e29fcf213433a",
+    "artifacts/iterations/0.2.16/iteration-close-0.2.16.md": "21956b6b12169cc4",
     "artifacts/iterations/0.2.16/otel-scaffold-notes.md": "f01fa8891cc69ea9",
+    "artifacts/iterations/0.2.16/pillar-11-monitoring-notes.md": "257cbfd0f70c8124",
     "artifacts/iterations/0.2.16/probes/qwen_num_predict_probe.py": "7023eabbf0f9ce79",
-    "artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py": "276319e214b5e199",
+    "artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py": "2836e5aa91f66592",
+    "artifacts/iterations/0.2.16/probes/w3_baseline_calibration.py": "1f099024bb659d5d",
     "artifacts/iterations/0.2.16/qwen-num-predict-probe.json": "948b181fe3ae5a1b",
+    "artifacts/iterations/0.2.16/retrospective-0.2.16.md": "297d249b110c53d3",
+    "artifacts/iterations/0.2.16/trace-integration-notes.md": "0f15a6186176a9db",
+    "artifacts/iterations/0.2.16/traces/end-to-end-sample.json": "147767a1981a3f6c",
+    "artifacts/iterations/0.2.17/W0-close-note.md": "67d43a44d3f79fad",
+    "artifacts/iterations/0.2.17/W1-close-note.md": "d67dd1844e22f615",
+    "artifacts/iterations/0.2.17/W1-plan-doc.md": "fef4d84def32d509",
+    "artifacts/iterations/0.2.17/W2-close-note.md": "b2e8c55522c39dd6",
+    "artifacts/iterations/0.2.17/W2-plan-doc.md": "aef7b0631b378bb6",
+    "artifacts/iterations/0.2.17/W3-close-note.md": "0b2a3a522ba717fe",
+    "artifacts/iterations/0.2.17/W3-plan-doc.md": "ca817b50094a4dbd",
+    "artifacts/iterations/0.2.17/W4-plan-doc.md": "0b4e2e31ef27b9b3",
+    "artifacts/iterations/0.2.17/W4-plan-doc.pre-w3-arbitration.md": "79cf3fefab8e928b",
+    "artifacts/iterations/0.2.17/acceptance/W0-amendment-b2-3.json": "93b7a133e85d24d4",
+    "artifacts/iterations/0.2.17/acceptance/W0.json": "2d16ffff8c2487fc",
+    "artifacts/iterations/0.2.17/acceptance/W1.json": "344835a0768c24fc",
+    "artifacts/iterations/0.2.17/acceptance/W2.json": "7a2845dbd09502d3",
+    "artifacts/iterations/0.2.17/acceptance/W3.json": "746bf567187303c3",
+    "artifacts/iterations/0.2.17/aho-plan-0.2.17.md": "09a469c56fd5b32e",
+    "artifacts/iterations/0.2.17/audit/W0.json": "7a1faaeb10d9d93f",
+    "artifacts/iterations/0.2.17/audit/W1.json": "92366f7d6ffb6da4",
+    "artifacts/iterations/0.2.17/audit/W2.json": "29a51b3eea7d515f",
+    "artifacts/iterations/0.2.17/audit/W3.json": "8298097fd922cb64",
+    "artifacts/iterations/0.2.17/audit/replay/W0-comparison.json": "00ec37e9a3be56f2",
+    "artifacts/iterations/0.2.17/audit/replay/W0-llama-rag.json": "74522994ac56a772",
+    "artifacts/iterations/0.2.17/audit/replay/W0-llama.json": "76f3bd2abfbd7d9a",
+    "artifacts/iterations/0.2.17/audit/replay/W1-comparison.json": "623d95a1118e7522",
+    "artifacts/iterations/0.2.17/audit/replay/W1-llama-rag.json": "e2c31cfdb0245a2a",
+    "artifacts/iterations/0.2.17/audit/replay/W1-llama.json": "3b3e8d237029e2a3",
+    "artifacts/iterations/0.2.17/audit/replay/W2-self-audit-rag.json": "4d57748472272b55",
+    "artifacts/iterations/0.2.17/audit/replay/comparison-rag-vs-non-rag.json": "553b01a239643dcd",
+    "artifacts/iterations/0.2.17/firebase-debug.log": "39efef028795b982",
+    "artifacts/iterations/0.2.17/probes/W2_audit_replay.py": "bb5032b8742945f0",
+    "artifacts/iterations/0.2.17/probes/W2_materiality_telemetry.py": "5c3b3386604f930c",
+    "artifacts/iterations/0.2.17/probes/W2_rag_preseed.py": "7b0b80ebc7152a59",
+    "artifacts/iterations/0.2.17/probes/W2_self_audit.py": "dd3de4330b485e8b",
+    "artifacts/iterations/0.2.17/probes/W3_audit_replay_rag.py": "435fa315e39cd639",
     "artifacts/iterations/0.2.2/aho-build-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-build-log-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-bundle-0.2.2.md": "5d47133beaca242e",
@@ -3900,7 +6482,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/iterations/0.2.2/aho-report-0.2.2.md": "ae555a24b9b5cf59",
     "artifacts/iterations/0.2.2/aho-run-0.2.2.md": "4e8f3602bfccd15d",
     "artifacts/iterations/0.2.3/aho-build-log-0.2.3.md": "4b70d5555b7011af",
-    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "926c2692589037b0",
+    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "36395f5ef8239eb6",
     "artifacts/iterations/0.2.3/aho-design-0.2.3.md": "d13ae32a9ac21a89",
     "artifacts/iterations/0.2.3/aho-plan-0.2.3.md": "37c8202077386688",
     "artifacts/iterations/0.2.3/aho-report-0.2.3.md": "4f33de71c95bfb58",
@@ -3948,6 +6530,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/iterations/0.2.9/p3-clone-runbook.md": "b68dd8724d4e77a5",
     "artifacts/iterations/0.2.9/portability-audit.md": "e0f79be9d33d0f54",
     "artifacts/iterations/0.2/iteration-2-charter.md": "ef78277014f7ff9d",
+    "artifacts/iterations/0.3/iteration-3-charter.md": "fe58c3daf27bc9bb",
     "artifacts/iterations/unknown/aho-bundle-unknown.md": "066674cfb6233881",
     "artifacts/phase-charters/aho-phase-0.md": "6f7238c9aaf492cd",
     "artifacts/phase-charters/iao-phase-0-historical.md": "9b48851f3152e943",
@@ -3982,13 +6565,17 @@ Specific pitfalls for 0.2.16:
     "artifacts/templates/phase-charter-template.md": "4cb3615d433cad6a",
     "artifacts/templates/systemd/__init__.py": "e4a6a0577479b2b4",
     "artifacts/templates/systemd/project-telegram-bot.service.template": "5c7574deab625c98",
-    "artifacts/tests/conftest.py": "40a287d9eecbe0bf",
+    "artifacts/tests/conftest.py": "611a793026b22169",
     "artifacts/tests/reproduce_degenerate.py": "145a64b7f3f79e8e",
     "artifacts/tests/test_acceptance.py": "bb8df647d13a4ff2",
+    "artifacts/tests/test_anti_rubber_stamp.py": "1d5a02ff6dffc563",
+    "artifacts/tests/test_anti_rubber_stamp_dashboard.py": "9129536c7fe2d7b4",
     "artifacts/tests/test_artifacts_loop.py": "fe5c94bc536ff4e2",
+    "artifacts/tests/test_audit_finding_filter.py": "0c687dc677c4c4f2",
     "artifacts/tests/test_build_log_first.py": "e4b38a3a374c6c0c",
     "artifacts/tests/test_build_log_stub.py": "7e378e6d8b743b4a",
     "artifacts/tests/test_bundle_sections.py": "fa478538426312a7",
+    "artifacts/tests/test_checkpoint_isolation_guard.py": "3666c1c6115baacb",
     "artifacts/tests/test_components_manifest.py": "2e3b118ad33b3f04",
     "artifacts/tests/test_conductor.py": "d54196a2eed8a4ca",
     "artifacts/tests/test_config_port.py": "4e2add3c1a68afb9",
@@ -3996,6 +6583,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/tests/test_dashboard_aggregator.py": "88235ef75f7167e7",
     "artifacts/tests/test_density_check.py": "3b6800874cad39ce",
     "artifacts/tests/test_dispatcher_chat_api.py": "b81f99feb4aa300d",
+    "artifacts/tests/test_dispatcher_duration_error_path.py": "09f051fbbd199621",
     "artifacts/tests/test_dispatcher_hardening.py": "3a2aade14817f67e",
     "artifacts/tests/test_dispatcher_template_leak.py": "b469d2257fcca8a0",
     "artifacts/tests/test_dispatcher_traceparent.py": "165c1b4fb4a4587d",
@@ -4010,7 +6598,10 @@ Specific pitfalls for 0.2.16:
     "artifacts/tests/test_gate_verbosity.py": "c188ee77dca577a4",
     "artifacts/tests/test_glm_parser.py": "5d649e76cbcc1f0e",
     "artifacts/tests/test_harness.py": "ccbbf4287799c0f2",
+    "artifacts/tests/test_lego_bricks.py": "50748c9023f79251",
     "artifacts/tests/test_logger_otel.py": "760406d57725bd81",
+    "artifacts/tests/test_materiality_comparison.py": "4e317bb89810288d",
+    "artifacts/tests/test_materiality_surfaces.py": "0a1816ebec8e53b4",
     "artifacts/tests/test_mcp_smoke.py": "70fd5f47efbdc870",
     "artifacts/tests/test_mcp_template.py": "4a2535b7b84467a9",
     "artifacts/tests/test_migrate_config_fish.py": "f6edb9488ba03d82",
@@ -4021,7 +6612,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/tests/test_orchestrator_config.py": "d35a50f59da4c2c5",
     "artifacts/tests/test_orchestrator_halt.py": "e52e8749f5ceb981",
     "artifacts/tests/test_orchestrator_workstream_id.py": "0e90ee7a54ee93db",
-    "artifacts/tests/test_otel_aggregator.py": "2e4ce960df7883c5",
+    "artifacts/tests/test_otel_aggregator.py": "cc68c2fd8551ee61",
     "artifacts/tests/test_otel_instrumentation.py": "a129f8bf4ec92d87",
     "artifacts/tests/test_paths.py": "84ebc1cd20bd8c2c",
     "artifacts/tests/test_pillars_trident.py": "257659ec8d89f848",
@@ -4034,6 +6625,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/tests/test_preflight.py": "69a169e3da07d313",
     "artifacts/tests/test_rag_forbidden_filter.py": "5f969b16909de9fc",
     "artifacts/tests/test_report_builder.py": "6af658c1d555abc7",
+    "artifacts/tests/test_role_collapse_brick.py": "1d24e8c707331f98",
     "artifacts/tests/test_role_evaluator_agent.py": "806659cb4b0e2343",
     "artifacts/tests/test_role_harness_agent.py": "f1818a77c04503b5",
     "artifacts/tests/test_role_workstream_agent.py": "96309dcf638812b8",
@@ -4043,6 +6635,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/tests/test_secrets_backends.py": "e6dfc4dda0a93c90",
     "artifacts/tests/test_secrets_cli.py": "d093ed40bba724f6",
     "artifacts/tests/test_synthesis_evaluator.py": "bb2b51ed9fd27745",
+    "artifacts/tests/test_telegram_alerts.py": "b437950e56a2f770",
     "artifacts/tests/test_telegram_inbound.py": "ff089ae9ed583846",
     "artifacts/tests/test_telegram_real.py": "014e1215d7dccbc1",
     "artifacts/tests/test_telegram_ws_commands.py": "b59a363144b6fe1e",
@@ -4050,6 +6643,7 @@ Specific pitfalls for 0.2.16:
     "artifacts/tests/test_workstream_events.py": "1ecebf3cdb531ac9",
     "artifacts/tests/test_workstream_events_v2.py": "678d65dfc7da3fa7",
     "artifacts/tests/test_workstream_gate.py": "9d8be53ddd9648b9",
+    "artifacts/tests/test_workstream_init.py": "cb41bdd7bf056759",
     "artifacts/tests/test_ws_fixes.py": "d353dbdff3783b88",
     "artifacts/visualizations/lego-office-0.2.12.svg": "7fda42240cdd1ea7",
     "bin/aho": "468d233c6fe70e31",
@@ -4075,6 +6669,7 @@ Specific pitfalls for 0.2.16:
     "bin/aho-systemd": "65b06856f7433b5e",
     "bin/aho-telegram": "8cab98d30b9e3303",
     "bin/aho-uninstall": "ab3dc10fb952b364",
+    "containers/Dockerfile.hello": "ccdbba651d4544c0",
     "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/data_level0.bin": "b2c16901daf23c7a",
     "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/header.bin": "b9bdd5eafdb3855c",
     "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/length.bin": "b6f577665a4c9da3",
@@ -4092,7 +6687,7 @@ Specific pitfalls for 0.2.16:
     "data/known_hallucinations.json": "aa5f9768e8e84b53",
     "data/mcp_readiness.json": "935bbed5a3ba2b40",
     "docker-compose.otel.yml": "0b6166d7632f23d2",
-    "firebase-debug.log": "823554a2df576b9d",
+    "firebase-debug.log": "87ee9e4ced6ace29",
     "install.fish": "290b9afa195927b8",
     "pipeline/README.md": "e72e84ecf50b887a",
     "projects.json": "160afb32b90b60cb",
@@ -4104,6 +6699,7 @@ Specific pitfalls for 0.2.16:
     "src/aho.egg-info/requires.txt": "95c559957c389a07",
     "src/aho.egg-info/top_level.txt": "d01dac5a6cce638c",
     "src/aho/__init__.py": "5ecdbaafc1ab0684",
+    "src/aho/_otel_stub.py": "757ddf4917b0c285",
     "src/aho/acceptance.py": "a53baf306a8f82fa",
     "src/aho/agents/__init__.py": "3d24c1aff057bc16",
     "src/aho/agents/conductor.py": "04a58a43f832816c",
@@ -4117,6 +6713,8 @@ Specific pitfalls for 0.2.16:
     "src/aho/agents/roles/harness_agent.py": "ea23c3988c6f0752",
     "src/aho/agents/roles/reviewer.py": "719e150b5a6a78bd",
     "src/aho/agents/roles/workstream_agent.py": "3a5309942fc5b81f",
+    "src/aho/alerts/__init__.py": "5a3a634e9a68346b",
+    "src/aho/alerts/telegram_alerts.py": "6dd1aeef31bd5b59",
     "src/aho/artifacts/__init__.py": "333e450e98178e84",
     "src/aho/artifacts/context.py": "acb80deb0f3e150b",
     "src/aho/artifacts/evaluator.py": "095c8555e9a6e30c",
@@ -4127,23 +6725,37 @@ Specific pitfalls for 0.2.16:
     "src/aho/artifacts/repetition_detector.py": "afb5044893a63ed9",
     "src/aho/artifacts/schemas.py": "1630926df2218e96",
     "src/aho/artifacts/templates.py": "82e4fdcc72237e18",
+    "src/aho/audit_disposition_emitter.py": "0e5caa8b826f1d49",
     "src/aho/bundle/__init__.py": "854901698386dcb8",
     "src/aho/bundle/components_section.py": "94ae1b648c7af13c",
-    "src/aho/cli.py": "e45a4c4569b3edbb",
+    "src/aho/cli.py": "8214709541c5bb0e",
     "src/aho/compatibility.py": "55ed5019a6ebd358",
     "src/aho/components/__init__.py": "f65569a810c563a1",
     "src/aho/components/manifest.py": "3df26575df45b7f5",
     "src/aho/config.py": "ce252bafd1489c62",
     "src/aho/council/__init__.py": "e4a6a0577479b2b4",
+    "src/aho/council/_client.py": "ed7a00eda7864403",
+    "src/aho/council/audit.py": "6f803a0781d59586",
+    "src/aho/council/audit_finding_filter.py": "7a26fb4a0d5cc6b4",
+    "src/aho/council/audit_ref_extract.py": "389e8a463c15be1e",
+    "src/aho/council/audit_ref_lookup.py": "5dccd76edb0fead6",
+    "src/aho/council/dispatch.py": "c5a7e951b3f8be59",
+    "src/aho/council/embed.py": "78ce6ae27e8b1280",
     "src/aho/council/inventory.py": "bfde9dc99ad5ebfb",
     "src/aho/council/status.py": "817b8f3f6c9750a9",
+    "src/aho/council/triage.py": "6737bf4997a4a759",
     "src/aho/dashboard/__init__.py": "3c0749d4246f643a",
     "src/aho/dashboard/aggregator.py": "e938a978b33823f8",
     "src/aho/dashboard/lego/__init__.py": "e4a6a0577479b2b4",
+    "src/aho/dashboard/lego/anti_rubber_stamp_dashboard.py": "b2dff471267fe50b",
+    "src/aho/dashboard/lego/bricks.py": "4431c322fd2269d2",
     "src/aho/dashboard/lego/layout.py": "6f3dc420367e4afc",
+    "src/aho/dashboard/lego/materiality_comparison.py": "4f3d860b9558ddb1",
+    "src/aho/dashboard/lego/materiality_surfaces.py": "e4101d3c70f5c85e",
     "src/aho/dashboard/lego/palette.py": "5340e996b76d3b0b",
     "src/aho/dashboard/lego/renderer.py": "82fb5056bff9aa1e",
-    "src/aho/dashboard/otel_aggregator.py": "ebc3ed5e87bd68f0",
+    "src/aho/dashboard/lego/role_collapse_brick.py": "ad1c0063a1228991",
+    "src/aho/dashboard/otel_aggregator.py": "34ef306dc4181852",
     "src/aho/dashboard/server.py": "c9ce4ee49c213d66",
     "src/aho/data/__init__.py": "e4a6a0577479b2b4",
     "src/aho/data/firestore.py": "ae11a3dbf555abdc",
@@ -4158,7 +6770,12 @@ Specific pitfalls for 0.2.16:
     "src/aho/feedback/run.py": "534d5cb024239bf1",
     "src/aho/feedback/seed.py": "1668b268ba498114",
     "src/aho/feedback/summary.py": "e52af521e20968d6",
+    "src/aho/gap_carry_forward_writer.py": "7c80875e53916225",
     "src/aho/harness.py": "f773ff62a73379b3",
+    "src/aho/health.py": "3540e5438ee6c9f7",
+    "src/aho/host/__init__.py": "80b9f0ed407d056e",
+    "src/aho/host/run_container.py": "8d64e9d69ba6bf6d",
+    "src/aho/host/secrets_broker.py": "70e6701ba93bc0c3",
     "src/aho/install/__init__.py": "e4a6a0577479b2b4",
     "src/aho/install/migrate_config_fish.py": "91a9883461791f48",
     "src/aho/install/secret_patterns.py": "1258971235b1b94c",
@@ -4166,13 +6783,15 @@ Specific pitfalls for 0.2.16:
     "src/aho/integrations/brave.py": "cafaf7dcf7e55a09",
     "src/aho/logger.py": "8aca07c5a4ba25bd",
     "src/aho/manifest.py": "e65a01ce4153d300",
+    "src/aho/materiality.py": "466e2b43d3bcb35d",
+    "src/aho/materiality_baseline_extract.py": "2cfc6505c27c151f",
     "src/aho/ollama_config.py": "b2a914bd943f8918",
     "src/aho/orchestrator_config.py": "f4a3986392470930",
     "src/aho/paths.py": "da359bb27ccac62c",
     "src/aho/pipeline/__init__.py": "a4b65338af829eca",
     "src/aho/pipeline/dispatcher.py": "6f0203860fd7a864",
     "src/aho/pipeline/orchestrator.py": "e43696dd1811c4dc",
-    "src/aho/pipeline/router.py": "997f87ccc8d12736",
+    "src/aho/pipeline/router.py": "2507b8fe13273227",
     "src/aho/pipeline/schemas.py": "410b52bb2198eaee",
     "src/aho/pipelines/__init__.py": "9b23bc32afe708da",
     "src/aho/pipelines/pattern.py": "87322ca897d0ee07",
@@ -4202,7 +6821,7 @@ Specific pitfalls for 0.2.16:
     "src/aho/preflight/__init__.py": "e4a6a0577479b2b4",
     "src/aho/preflight/checks.py": "b6cc138eb0cd30dc",
     "src/aho/push.py": "01c8a0c6efd26f52",
-    "src/aho/rag/__init__.py": "e4a6a0577479b2b4",
+    "src/aho/rag/__init__.py": "efc4acf9e43a4830",
     "src/aho/rag/archive.py": "126759e9e055a397",
     "src/aho/rag/query.py": "a39be3c166dc014d",
     "src/aho/rag/router.py": "605e4f3d31cc88e9",
@@ -4217,12 +6836,17 @@ Specific pitfalls for 0.2.16:
     "src/aho/secrets/cli.py": "ecd524bee1d6b25b",
     "src/aho/secrets/session.py": "271ac99913a4e6d5",
     "src/aho/secrets/store.py": "10282dedce62c8de",
+    "src/aho/secrets_client.py": "eff326440d3c4aed",
+    "src/aho/serve.py": "7277cd8245e4a3b3",
+    "src/aho/signal.py": "5024b4cc66b5d8ee",
     "src/aho/telegram/__init__.py": "7e4ff984fdcb5cde",
     "src/aho/telegram/inbound.py": "481e968af2d37f54",
     "src/aho/telegram/notifications.py": "3597cb25d770dd8a",
     "src/aho/telegram/openclaw_client.py": "78f21d76ace64778",
-    "src/aho/workstream_events.py": "46e8239372226123",
+    "src/aho/tier_detect.py": "dc4b9e89dc1c438d",
+    "src/aho/workstream_events.py": "8025eeb974396614",
     "src/aho/workstream_gate.py": "a808f80a7463b55a",
+    "src/aho/workstream_init.py": "5dea866aad00f13f",
     "src/iao.egg-info/PKG-INFO": "f488a60934e56a23",
     "src/iao.egg-info/SOURCES.txt": "8273a764ce657f05",
     "src/iao.egg-info/dependency_links.txt": "5030c2a8db49e9c6",
@@ -4487,519 +7111,525 @@ _info "────────────────────────�
 ## §19. Event Log (tail 500)
 
 ```jsonl
-{"timestamp": "2026-04-23T23:29:54.962063+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373029s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:29:54.962486+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373028s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:30:18.350013+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172654s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:30:24.963037+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373059s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:30:24.963529+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373058s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:30:48.350911+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172684s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:30:54.964152+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373089s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:30:54.964406+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373088s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:31:18.351590+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172714s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:31:24.964900+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373119s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:31:24.965133+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373118s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:31:48.352533+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172744s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:31:54.965667+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373149s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:31:54.965981+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373148s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:32:18.353257+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172774s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:32:24.965991+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373179s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:32:24.966638+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373178s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:32:48.354145+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172804s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:32:54.966921+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373209s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:32:54.967495+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373208s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:33:18.354833+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172834s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:33:24.967665+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373239s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:33:24.968176+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373238s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:33:48.355731+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172864s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:33:54.968541+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373269s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:33:54.968960+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373268s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:34:18.356462+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172894s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:34:24.969255+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373299s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:34:24.969629+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373298s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:34:48.357335+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172924s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:34:54.970156+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373329s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:34:54.970457+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373328s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:35:18.358034+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172954s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:35:24.970858+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373359s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:35:24.971138+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373358s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:35:48.358937+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=172984s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:35:54.971914+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373388s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:35:54.972066+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373389s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:36:18.359668+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173014s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:36:24.972960+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373419s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:36:24.972919+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373418s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:36:48.360561+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173044s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:36:54.973858+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373449s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:36:54.974111+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373448s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:37:18.361265+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173074s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:37:24.974592+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373479s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:37:24.974969+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373478s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:37:48.362233+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173104s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:37:54.975441+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373509s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:37:54.975735+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373508s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:38:18.362943+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173134s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:38:24.976082+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373539s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:38:24.976380+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373538s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:38:48.363852+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173164s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:38:54.977061+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373569s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:38:54.977283+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373568s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:39:18.364567+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173194s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:39:24.977816+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373599s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:39:24.978004+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373598s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:39:48.365490+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173224s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:39:54.978689+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373629s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:39:54.979372+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373628s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:40:18.366203+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173254s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:40:24.979408+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373659s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:40:24.980129+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373658s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:40:48.367112+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173284s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:40:54.980314+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373689s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:40:54.981074+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373688s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:41:18.367848+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173314s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:41:24.981027+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373719s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:41:24.981790+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373718s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:41:48.368748+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173344s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:41:54.981894+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373749s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:41:54.982647+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373748s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:42:18.369482+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173374s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:42:24.982604+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373779s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:42:24.983346+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373778s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:42:48.370374+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173404s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:42:54.983515+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373809s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:42:54.984187+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373808s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:43:18.371106+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173434s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:43:24.984241+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373839s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:43:24.984832+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373838s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:43:48.372001+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173464s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:43:54.985115+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373869s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:43:54.985680+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373868s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:44:18.372736+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173494s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:44:24.985830+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373899s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:44:24.986401+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373898s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:44:48.373660+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173524s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:44:54.986795+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373929s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:44:54.987441+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373928s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:45:18.374409+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173554s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:45:24.987547+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373959s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:45:24.988400+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373958s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:45:48.375286+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173584s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:45:54.988410+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373989s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:45:54.989565+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=373988s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:46:18.375992+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173614s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:46:24.989134+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374019s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:46:24.990615+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374018s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:46:48.376926+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173644s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:46:54.989879+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374049s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:46:54.991295+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374048s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:47:18.377668+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173674s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:47:24.990215+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374079s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:47:24.991631+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374078s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:47:48.378584+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173704s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:47:54.991142+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374109s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:47:54.992633+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374108s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:48:18.379319+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173734s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:48:24.991841+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374139s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:48:24.993270+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374138s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:48:48.380223+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173764s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:48:54.992795+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374169s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:48:54.993953+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374168s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:18.380932+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173794s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:23.194761+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "iteration workstream", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:23.567694+00:00", "iteration": "0.2.16", "workstream_id": "W2", "event_type": "workstream_start", "source_agent": "claude-code", "target": "W2", "action": "start", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:24.993459+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374199s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:24.995938+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374198s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:48.381884+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173824s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:54.994241+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374229s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:49:54.996648+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374228s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:50:18.382672+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173854s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:50:24.994811+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374259s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:50:24.997113+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374258s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:50:48.383575+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173884s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:50:54.995377+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374289s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:50:54.997590+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374288s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:51:18.384279+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173914s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:51:24.996154+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374319s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:51:24.998231+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374318s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:51:48.385176+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173944s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:51:54.997032+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374349s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:51:54.998979+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374348s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:52:18.385917+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=173974s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:52:24.997704+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374379s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:52:24.999503+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374378s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:52:48.386826+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=174004s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:52:54.998621+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374409s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:52:55.000293+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374408s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:53:18.387518+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=174034s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:53:24.999390+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374439s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:53:25.000968+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374438s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:53:48.388435+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=174064s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:53:55.000325+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374469s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:53:55.001767+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374468s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:18.389083+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=174094s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:25.001011+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374499s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:25.004164+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374498s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:48.389963+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=174124s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:53.822275+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:55.001861+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374529s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:54:55.004858+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374528s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:55:23.822852+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:55:25.002519+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374559s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:55:25.006173+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374558s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:55:53.824445+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=60s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:55:55.003477+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374589s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:55:55.007008+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374588s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:23.825233+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=90s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:25.004120+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374619s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:25.007681+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374618s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:53.825974+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=120s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:55.004872+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374649s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:55.008425+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374648s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:56.583006+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:56.598740+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:56.603545+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:56.611570+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:56.990804+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:56.991038+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:58.275636+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:58.276598+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:58.278706+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:58.291413+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:56:58.292771+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:57:23.826225+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=150s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:57:25.005315+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374679s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:57:25.008937+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374678s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:57:53.826774+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=180s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:57:55.006049+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374709s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:57:55.009570+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374708s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:58:23.827436+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=210s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:58:25.006489+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374739s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:58:25.009921+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374738s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:58:53.828173+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=240s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:58:55.006842+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374769s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:58:55.010223+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374768s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:23.828560+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=270s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:25.007204+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374799s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:25.010523+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374798s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:37.525226+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:37.542703+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:37.549592+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:37.567450+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:38.062475+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:38.062863+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:39.358353+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:39.359961+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:39.362775+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:39.381352+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:39.383358+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:53.828945+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=300s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:55.007905+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374829s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-23T23:59:55.011117+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374828s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:00:23.830534+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=330s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:00:25.008200+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374859s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:00:25.011363+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374858s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:00:53.831435+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=360s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:00:55.008825+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374889s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:00:55.011872+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374888s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:01:23.831991+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=390s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:01:25.009262+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374919s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:01:25.012265+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374918s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:01:53.832513+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=420s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:01:55.009817+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374949s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:01:55.012771+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374948s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:02:23.832758+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=450s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:02:25.010120+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374979s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:02:25.013133+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=374978s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:02:53.833132+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=480s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:02:55.010904+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375009s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:02:55.013752+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375008s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:03:23.833372+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=510s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:03:25.011478+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375039s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:03:25.014306+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375038s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:03:53.833871+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=540s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:03:55.012140+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375069s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:03:55.014981+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375069s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:04:23.834341+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=570s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:04:25.012558+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375099s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:04:25.015432+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375099s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:04:53.835155+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=600s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:04:55.012867+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375129s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:04:55.015720+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375129s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:05:23.835697+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=630s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:05:25.013166+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375159s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:05:25.015974+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375159s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:05:53.836078+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=660s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:05:55.013755+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375189s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:05:55.016579+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375189s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:06:23.836439+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=690s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:06:25.014105+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375219s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:06:25.017105+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375219s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:06:53.836978+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=720s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:06:55.014766+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375249s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:06:55.017722+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375249s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:07:23.837364+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=750s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:07:25.015246+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375279s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:07:25.018182+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375279s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:07:53.838044+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=780s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:07:55.015651+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375309s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:07:55.018438+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375309s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:08:23.838372+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=810s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:08:25.016063+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375339s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:08:25.018764+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375339s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:08:53.839149+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=840s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:08:55.016746+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375369s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:08:55.019475+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375369s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:23.839632+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=870s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:25.017331+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375399s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:25.020013+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375399s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:53.840178+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=900s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:55.018131+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375429s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:55.020665+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375429s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:57.660961+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:57.677724+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:57.683258+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:57.701864+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:58.186152+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:58.186411+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:59.491104+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:59.492106+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:59.495161+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:59.511482+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:09:59.514202+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:10:23.840532+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=930s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:10:25.018624+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375459s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:10:25.021217+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375459s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:10:53.841317+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=960s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:10:55.019064+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375489s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:10:55.021880+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375489s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:11:23.841847+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=990s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:11:25.019588+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375519s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:11:25.022358+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375519s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:11:53.842373+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1020s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:11:55.020325+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375549s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:11:55.023020+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375549s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:12:23.842742+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1050s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:12:25.020746+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375579s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:12:25.023445+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375579s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:12:53.843467+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1080s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:12:55.021176+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375609s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:12:55.024020+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375609s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:23.843872+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1110s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:25.021700+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375639s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:25.024412+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375639s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:53.844760+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1140s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:55.022436+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375669s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:55.024844+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375669s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:57.144626+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:57.145443+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:57.146184+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:59.238278+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:13:59.238536+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:01.604292+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:03.233520+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:03.233963+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:05.780635+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:07.508017+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:07.508307+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:09.798849+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:11.408397+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:11.408668+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:13.815466+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:15.375751+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:15.376226+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:17.765305+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:19.394834+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:19.395248+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:21.904709+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.597848+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G662", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.642508+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=1", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.643984+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=1", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.645100+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.664974+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "test message", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.666682+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "hello world", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.668071+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "alert!", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.669352+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.670360+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "*[CAPABILITY GAP]* secrets session locked", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.671244+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "[OK] aho 0.2.2 closed", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.672233+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "retry test", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:22.673384+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "connection refused", "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:23.845417+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1170s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:24.191521+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "iteration workstream", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:25.022878+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375699s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:25.025345+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375699s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:53.845785+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1200s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:55.023173+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375729s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:14:55.025717+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375729s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:15:23.846162+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1230s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:15:25.023488+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375759s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:15:25.026025+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375759s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:15:53.846961+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1260s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:15:55.024074+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375789s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:15:55.026467+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375789s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:16:23.847573+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1290s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:16:25.024477+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375819s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:16:25.026743+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375819s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:16:53.848316+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1320s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:16:55.025199+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375849s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:16:55.027410+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375849s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:17:23.848592+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1350s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:17:25.025770+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375879s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:17:25.027921+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375879s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:17:53.849018+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1380s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:17:55.026374+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375909s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:17:55.028481+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375909s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:18:23.849500+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1410s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:18:25.026669+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375939s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:18:25.028810+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375939s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:18:53.849961+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1440s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:18:55.027249+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375969s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:18:55.029309+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375969s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:19:23.850506+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1470s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:19:25.027539+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375999s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:19:25.029653+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=375999s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:19:53.851024+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1500s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:19:55.028060+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376029s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:19:55.030329+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376029s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:20:23.851478+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1530s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:20:25.028640+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376059s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:20:25.030827+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376059s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:20:53.851866+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1560s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:20:55.029225+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376089s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:20:55.031446+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376089s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:21:23.852120+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1590s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:21:25.029531+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376119s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:21:25.031816+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376119s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:21:53.852680+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1620s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:21:55.030170+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376149s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:21:55.032449+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376149s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:22:23.853277+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1650s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:22:25.030506+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376179s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:22:25.032933+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376179s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:22:53.853866+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1680s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:22:55.031073+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376209s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:22:55.033526+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376209s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:23:23.854428+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1710s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:23:25.031426+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376239s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:23:25.033817+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376239s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:23:53.855214+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1740s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:23:55.031796+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376269s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:23:55.034360+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376269s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:24:23.855690+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1770s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:24:25.032307+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376299s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:24:25.034860+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376299s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:24:53.856142+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=1800s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:24:55.032882+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376329s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:24:55.035358+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376329s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:04.071884+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:04.072516+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:04.073154+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=section_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:05.883239+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:05.883490+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:08.390695+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:09.615984+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:09.616260+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:10.275543+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=0s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:11.882334+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:13.130033+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:13.130324+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:15.483924+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:16.708322+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:16.708569+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:19.005996+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:20.226588+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:20.226862+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:22.835280+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:24.064276+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:24.064516+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:25.033180+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376359s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:25.035705+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376359s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.382898+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "doctor", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.855736+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "agent_msg", "source_agent": "harness-agent", "target": "nemotron", "action": "propose_gotcha", "input_summary": "", "output_summary": "new gotcha candidate: aho-G326", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.887911+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=1", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.888846+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=1", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.889732+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "build_log_synthesis", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.903967+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "test message", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.904857+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "hello world", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.905722+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "alert!", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.906472+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.907336+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "*[CAPABILITY GAP]* secrets session locked", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.908271+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "[OK] aho 0.2.2 closed", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.909277+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "retry test", "output_summary": "status=200", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:26.910424+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "connection refused", "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:28.160322+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "iteration workstream", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:40.275976+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=30s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:55.033899+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376389s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:25:55.036579+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376389s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:26:10.276656+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=60s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:26:25.034186+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376419s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:26:25.036816+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376419s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:26:40.277381+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=90s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:26:55.034623+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376449s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:26:55.037170+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376449s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:27:10.278260+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=120s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:27:25.035232+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376479s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:27:25.037682+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376479s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:27:40.278933+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=150s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:27:55.036206+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376509s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:27:55.038411+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376509s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:28:10.279604+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=180s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:28:25.036941+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376539s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:28:25.038885+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376539s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:28:40.279883+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=210s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:28:55.037767+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376569s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:28:55.039557+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376569s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:29:10.280351+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=240s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:29:25.038801+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376599s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:29:25.040180+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376599s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:29:40.280854+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=270s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:29:55.040014+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376629s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:29:55.040974+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376629s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:30:10.282187+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=300s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:30:25.040700+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376659s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:30:25.041523+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376659s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:30:40.283235+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=330s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:30:55.041380+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376689s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:30:55.042119+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376689s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:31:10.284513+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=360s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:31:25.042099+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376719s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:31:25.042744+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376719s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:31:40.285569+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=390s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:31:55.042956+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376749s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:31:55.043599+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376749s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:32:10.286900+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=420s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:32:25.043853+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376779s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:32:25.044313+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376779s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:32:40.287484+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=450s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:32:55.044593+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376809s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:32:55.045007+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376809s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:33:10.288490+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=480s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:33:25.044833+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376839s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:33:25.045254+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376839s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:33:40.289264+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=510s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:33:55.045357+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376869s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:33:55.045744+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376869s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:34:10.290277+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=540s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:34:25.046137+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376899s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:34:25.046464+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376899s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:34:40.290971+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=570s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:34:55.047332+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376929s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:34:55.047446+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376929s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:35:10.291999+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=600s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:35:25.048105+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376959s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:35:25.048407+00:00", "iteration": "0.2.14", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=376959s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
-{"timestamp": "2026-04-24T00:35:40.292750+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=630s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:38:53.524064+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84362s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:39:23.455575+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84392s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:39:23.508690+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84392s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:39:23.524749+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84392s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:39:53.456486+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84422s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:39:53.509546+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84422s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:39:53.525574+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84422s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:40:23.457185+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84452s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:40:23.510249+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84452s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:40:23.526276+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84452s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:40:53.458062+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84482s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:40:53.511109+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84482s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:40:53.527123+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84482s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:41:23.458794+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84512s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:41:23.511820+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84512s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:41:23.527833+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84512s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:41:53.459702+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84542s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:41:53.512680+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84542s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:41:53.528721+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84542s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:42:23.460435+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84572s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:42:23.513356+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84572s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:42:23.529448+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84572s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:42:53.461407+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84602s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:42:53.514178+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84602s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:42:53.530337+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84602s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:43:23.462125+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84632s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:43:23.514836+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84632s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:43:23.531038+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84632s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:43:53.463061+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84662s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:43:53.515710+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84662s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:43:53.531910+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84662s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:44:23.463796+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84692s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:44:23.516412+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84692s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:44:23.532618+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84692s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:44:53.464720+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84722s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:44:53.517201+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84722s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:44:53.533455+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84722s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:45:23.465482+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84752s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:45:23.517889+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84752s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:45:23.534126+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84752s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:45:53.466405+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84782s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:45:53.518740+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84782s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:45:53.535008+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84782s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:46:23.467139+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84812s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:46:23.519439+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84812s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:46:23.535729+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84812s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:46:53.468095+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84842s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:46:53.520249+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84842s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:46:53.536561+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84842s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:47:23.468833+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84872s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:47:23.520914+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84872s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:47:23.537269+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84872s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:47:53.469764+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84902s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:47:53.521762+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84902s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:47:53.538077+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84902s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:48:23.470501+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84932s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:48:23.522505+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84932s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:48:23.538714+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84932s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:48:53.471420+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84962s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:48:53.523330+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84962s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:48:53.539583+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84962s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:49:23.472144+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84992s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:49:23.524012+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84992s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:49:23.540263+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=84992s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:49:53.473067+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85022s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:49:53.524878+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85022s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:49:53.541118+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85022s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:50:23.473742+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85052s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:50:23.525596+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85052s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:50:23.541833+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85052s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:50:53.474671+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85082s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:50:53.526419+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85082s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:50:53.542703+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85082s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:51:23.475431+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85112s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:51:23.527103+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85112s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:51:23.543375+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85112s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:51:53.476372+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85142s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:51:53.527962+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85142s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:51:53.544260+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85142s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:52:23.477123+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85172s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:52:23.528642+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85172s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:52:23.544954+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85172s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:52:53.478137+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85202s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:52:53.529744+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85202s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:52:53.545825+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85202s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:53:23.478909+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85232s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:53:23.530811+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85232s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:53:23.546546+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85232s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:53:53.479853+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85262s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:53:53.531979+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85262s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:53:53.547425+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85262s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:54:23.480599+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85292s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:54:23.532981+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85292s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:54:23.548136+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85292s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:54:53.481574+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85322s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:54:53.534216+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85322s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:54:53.548995+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85322s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:55:23.482319+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85352s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:55:23.535114+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85352s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:55:23.549687+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85352s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:55:53.483267+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85382s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:55:53.536114+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85382s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:55:53.550522+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85382s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:56:23.484013+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85412s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:56:23.536826+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85412s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:56:23.551190+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85412s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:56:53.484952+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85442s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:56:53.537731+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85442s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:56:53.552023+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85442s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:57:23.485727+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85472s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:57:23.538384+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85472s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:57:23.552719+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85472s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:57:53.486696+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85502s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:57:53.539260+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85502s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:57:53.553572+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85502s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:58:23.487441+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85532s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:58:23.539960+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85532s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:58:23.554170+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85532s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:58:53.488398+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85562s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:58:53.540853+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85562s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:58:53.555051+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85562s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:59:23.489133+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85592s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:59:23.541507+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85592s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:59:23.555738+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85592s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:59:53.490030+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85622s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:59:53.542366+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85622s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T02:59:53.556589+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85622s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:00:23.490739+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85652s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:00:23.543047+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85652s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:00:23.557296+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85652s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:00:53.491692+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85682s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:00:53.543856+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85682s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:00:53.558156+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85682s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:01:23.492452+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85712s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:01:23.544573+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85712s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:01:23.558867+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85712s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:01:53.493395+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85742s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:01:53.545406+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85742s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:01:53.559746+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85742s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:02:23.494147+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85772s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:02:23.546072+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85772s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:02:23.560474+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85772s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:02:53.495133+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85802s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:02:53.546934+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85802s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:02:53.561337+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85802s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:03:23.495867+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85832s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:03:23.547661+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85832s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:03:23.562026+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85832s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:03:53.496865+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85862s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:03:53.548562+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85862s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:03:53.562902+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85862s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:04:23.497626+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85892s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:04:23.549282+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85892s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:04:23.563619+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85892s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:04:53.498535+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85922s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:04:53.550134+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85922s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:04:53.564479+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85922s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:05:23.499291+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85952s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:05:23.550841+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85952s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:05:23.565163+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85952s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:05:53.500275+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85982s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:05:53.551711+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85982s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:05:53.566009+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=85982s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:06:23.500922+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86012s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:06:23.552397+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86012s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:06:23.566704+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86012s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:06:53.501866+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86042s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:06:53.553250+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86042s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:06:53.567553+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86042s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:07:23.502643+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86072s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:07:23.553913+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86072s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:07:23.568250+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86072s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:07:53.503533+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86102s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:07:53.554797+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86102s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:07:53.569071+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86102s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:08:23.504169+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86132s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:08:23.555436+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86132s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:08:23.569787+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86132s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:08:53.505009+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86162s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:08:53.556285+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86162s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:08:53.570658+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86162s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:09:23.505766+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86192s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:09:23.556990+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86192s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:09:23.571339+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86192s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:09:53.506708+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86222s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:09:53.557891+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86222s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:09:53.572139+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86222s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:10:23.507455+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86252s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:10:23.558607+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86252s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:10:23.572885+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86252s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:10:53.508380+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86282s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:10:53.559465+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86282s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:10:53.573780+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86282s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:11:23.509121+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86312s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:11:23.560163+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86312s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:11:23.574494+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86312s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:11:53.510018+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86342s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:11:53.560985+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86342s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:11:53.575382+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86342s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:12:23.510708+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86372s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:12:23.561666+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86372s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:12:23.576075+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86372s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:12:53.511653+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86402s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:12:53.562573+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86402s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:12:53.576932+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86402s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:13:23.512361+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86432s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:13:23.563262+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86432s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:13:23.577631+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86432s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:13:53.513310+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86462s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:13:53.564036+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86462s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:13:53.578478+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86462s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:14:23.514057+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86492s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:14:23.564705+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86492s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:14:23.579116+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86492s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:14:53.514936+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86522s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:14:53.565408+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86522s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:14:53.579940+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86522s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:15:23.515654+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86552s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:15:23.566121+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86552s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:15:23.580595+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86552s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:15:53.516570+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86582s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:15:53.566988+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86582s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:15:53.581425+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86582s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:16:23.517259+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86612s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:16:23.567690+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86612s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:16:23.582043+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86612s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:16:53.518115+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86642s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:16:53.568581+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86642s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:16:53.582898+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86642s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:17:23.518807+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86672s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:17:23.569264+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86672s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:17:23.583575+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86672s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:17:53.519675+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86702s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:17:53.570110+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86702s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:17:53.584422+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86702s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:18:23.520393+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86732s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:18:23.570778+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86732s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:18:23.585101+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86732s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:18:53.521336+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86762s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:18:53.571611+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86762s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:18:53.585927+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86762s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:19:23.522107+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86792s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:19:23.572311+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86792s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:19:23.586566+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86792s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:19:53.523010+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86822s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:19:53.573138+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86822s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:19:53.587414+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86822s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:20:23.523761+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86852s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:20:23.573843+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86852s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:20:23.588095+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86852s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:20:53.524687+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86882s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:20:53.574687+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86882s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:20:53.588979+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86882s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:21:23.525383+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86912s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:21:23.575356+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86912s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:21:23.589672+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86912s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:21:53.526306+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86942s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:21:53.576184+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86942s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:21:53.590504+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86942s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:22:23.527006+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86972s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:22:23.576864+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86972s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:22:23.591178+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=86972s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:22:53.527944+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87002s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:22:53.577765+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87002s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:22:53.592063+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87002s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:23:23.528696+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87032s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:23:23.578459+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87032s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:23:23.592872+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87032s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:23:53.529590+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87062s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:23:53.579287+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87062s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:23:53.594054+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87062s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:24:23.530340+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87092s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:24:23.579937+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87092s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:24:23.594761+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87092s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:24:53.531268+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87122s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:24:53.580755+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87122s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:24:53.595621+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87122s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:25:23.531952+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87152s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:25:23.581448+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87152s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:25:23.596302+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87152s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:25:53.532902+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87182s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:25:53.582293+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87182s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:25:53.597132+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87182s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:26:23.533629+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87212s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:26:23.582941+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87212s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:26:23.597833+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87212s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:26:53.534507+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87242s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:26:53.583784+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87242s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:26:53.598691+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87242s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:27:23.535206+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87272s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:27:23.584455+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87272s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:27:23.599365+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87272s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:27:53.536176+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87302s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:27:53.585310+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87302s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:27:53.600118+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87302s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:28:23.536916+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87332s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:28:23.586007+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87332s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:28:23.600749+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87332s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:28:53.537982+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87362s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:28:53.586852+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87362s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:28:53.601518+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87362s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:29:23.538720+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87392s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:29:23.587582+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87392s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:29:23.602186+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87392s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:29:53.539646+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87422s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:29:53.588438+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87422s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:29:53.603038+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87422s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:30:23.540417+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87452s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:30:23.589121+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87452s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:30:23.603744+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87452s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:30:29.060968+00:00", "iteration": "0.2.17", "workstream_id": "W5", "event_type": "workstream_complete", "source_agent": "claude-code", "target": "W5", "action": "complete", "input_summary": "", "output_summary": "ADR consolidation + repo-resident docs + 0.2.17 retrospective. 8 deliverables passed acceptance. D8 self-audit produced 10 findings (6 path-drift surfaces, 2 outstanding-gate observations, 2 structura", "tokens": null, "latency_ms": null, "status": "pass_with_findings", "error": null, "gotcha_triggered": null, "acceptance_results": [{"archive_path": "artifacts/iterations/0.2.17/acceptance/W5.json", "archive_sha256": "3ba226016b824641e8c07030cdc5bb74835c8d394228556a58850b1201520b8f", "audit_path": "artifacts/iterations/0.2.17/audit/W5.json", "audit_sha256": "5bd170e930c4b3e26df735651407ba9595e42457754bdd6b0f69838d1bcbe4e6", "audit_disposition_verbatim": "halt", "drafter_arbitrated_disposition": "pass_with_findings"}], "agents_involved": [{"agent": "claude-web", "role": "drafter"}, {"agent": "claude-code", "role": "executor"}, {"agent": "council-audit", "role": "auditor"}, {"agent": "council-embed", "role": "supporting"}], "schema_version": 3}
+{"timestamp": "2026-05-04T03:30:53.541397+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87482s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:30:53.589947+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87482s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:30:53.604630+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87482s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:31:23.542161+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87512s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:31:23.590673+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87512s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:31:23.605317+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87512s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:31:53.543035+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87542s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:31:53.591567+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87542s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:31:53.606153+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87542s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:32:23.543727+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87572s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:32:23.592242+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87572s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:32:23.606857+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87572s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:32:53.544647+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87602s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:32:53.593081+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87602s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:32:53.607717+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87602s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:33:23.545371+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87632s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:33:23.593843+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87632s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:33:23.608406+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87632s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:33:53.546303+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87662s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:33:53.594700+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87662s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:33:53.609323+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87662s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:34:23.547020+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87692s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:34:23.595363+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87692s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:34:23.610020+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87692s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:34:53.547964+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87722s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:34:53.596196+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87722s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:34:53.610875+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87722s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:35:23.548704+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87752s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:35:23.596882+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87752s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:35:23.611577+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87752s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:35:53.549632+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87782s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:35:53.597726+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87782s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:35:53.612428+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87782s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:36:23.550358+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87812s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:36:23.598398+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87812s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:36:23.613110+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87812s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:36:53.551324+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87842s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:36:53.599180+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87842s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:36:53.613974+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87842s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:37:23.552048+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87872s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:37:23.599868+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87872s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:37:23.614662+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87872s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:37:53.552994+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87902s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:37:53.600755+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87902s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:37:53.615480+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87902s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:38:23.553736+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87932s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:38:23.601472+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87932s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:38:23.616158+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87932s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:38:53.554707+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87962s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:38:53.602315+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87962s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:38:53.616994+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87962s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:39:23.555456+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87992s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:39:23.602973+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87992s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:39:23.617698+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=87992s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:39:53.556344+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88022s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:39:53.603736+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88022s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:39:53.618520+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88022s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:40:23.556841+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88052s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:40:23.604395+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88052s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:40:23.619194+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88052s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:40:53.557664+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88082s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:40:53.605310+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88082s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:40:53.620074+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88082s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:41:23.558280+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88112s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:41:23.606040+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88112s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:41:23.620797+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88112s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:41:53.558787+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88142s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:41:53.606787+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88142s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:41:53.621706+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88142s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:14.077768+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "secret unlock", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:23.559518+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88172s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:23.607388+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88172s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:23.622302+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88172s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:53.561431+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88202s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:53.608219+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88202s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:42:53.623128+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88202s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:23.562132+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88232s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:23.608968+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88232s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:23.624302+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88232s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:52.582746+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "secrets-test", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:52.589607+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "secrets-test", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:52.596187+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "secrets-test", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:53.562987+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88262s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:53.609828+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88262s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:43:53.625209+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88262s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:44:23.563979+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88292s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:44:23.610475+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88292s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:44:23.626289+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88292s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:44:53.564689+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88322s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:44:53.611038+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88322s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:44:53.626873+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88322s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:23.565816+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88352s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:23.611760+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88352s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:23.627831+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88352s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:35.935835+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "host run-container", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:43.038469+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "host run-container", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:51.209609+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "cli_invocation", "source_agent": "aho-cli", "target": "cli", "action": "host run-container", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:53.566751+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88382s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:53.612599+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88382s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:45:53.628976+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88382s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:46:23.567576+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88412s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:46:23.613297+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88412s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:46:23.629931+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88412s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:46:53.568462+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88442s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:46:53.614110+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88442s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:46:53.630986+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88442s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:47:23.569191+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88472s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:47:23.614804+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88472s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:47:23.631943+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88472s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:47:53.570131+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88502s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:47:53.615686+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88502s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:47:53.633139+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88502s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:48:23.570833+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88532s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:48:23.616376+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88532s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:48:23.633960+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88532s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:48:53.571736+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88562s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:48:53.617332+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88562s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:48:53.634779+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88562s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:49:23.572465+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88592s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:49:23.618035+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88592s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:49:23.635484+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88592s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:49:53.573404+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88622s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:49:53.619576+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88622s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:49:53.636327+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88622s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:50:23.574113+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88652s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:50:23.620213+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88652s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:50:23.637103+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88652s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:50:53.575128+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88682s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:50:53.621086+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88682s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:50:53.638055+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88682s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:51:23.576219+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88712s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:51:23.622132+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88712s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:51:23.638813+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88712s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:51:53.577210+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88742s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:51:53.623314+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88742s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:51:53.639680+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88742s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:52:23.577900+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88772s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:52:23.624281+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88772s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:52:23.640377+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88772s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:52:53.578798+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88802s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:52:53.625305+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88802s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:52:53.641246+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88802s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:23.579503+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88832s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:23.626406+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88832s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:23.641941+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88832s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:53.580228+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88862s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:53.627354+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88862s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:53.642570+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88862s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:57.917036+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:57.934638+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=reject errors=40", "tokens": null, "latency_ms": null, "status": "reject", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:57.939572+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "unknown", "action": "evaluate", "input_summary": "", "output_summary": "severity=warn errors=2", "tokens": null, "latency_ms": null, "status": "warn", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:57.947828+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "evaluator_run", "source_agent": "evaluator", "target": "test", "action": "evaluate", "input_summary": "", "output_summary": "severity=clean errors=0", "tokens": null, "latency_ms": null, "status": "clean", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:59.432634+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "design", "action": "check", "input_summary": "", "output_summary": "status=FAIL errors=1 variant=w_based", "tokens": null, "latency_ms": null, "status": "failed", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:53:59.433290+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "structural_gate", "source_agent": "structural-gates", "target": "plan", "action": "check", "input_summary": "", "output_summary": "status=PASS errors=0 variant=w_based", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:00.891861+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "test prompt", "output_summary": "hello world", "tokens": {"total": 2}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:00.892931+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "nemotron-client", "target": "nemotron-mini:4b", "action": "classify", "input_summary": "test text", "output_summary": "category_a", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:00.895008+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: hello\n\nASSISTANT:", "output_summary": "ok", "tokens": {"total": 1}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:00.907587+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "qwen-client", "target": "qwen3.5:9b", "action": "generate", "input_summary": "USER: test task\n\nASSISTANT:", "output_summary": "", "tokens": {"total": 0}, "latency_ms": 0, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:00.908796+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "llm_call", "source_agent": "telegram", "target": "api.telegram.org", "action": "send", "input_summary": "", "output_summary": "", "tokens": null, "latency_ms": null, "status": "error", "error": "missing credentials", "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:23.580505+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88892s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:23.627717+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88892s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:23.642782+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88892s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:53.581086+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88922s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:53.628327+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88922s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:54:53.643272+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88922s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:55:23.581686+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88952s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:55:23.628916+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88952s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:55:23.643820+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88952s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:55:53.582307+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88982s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:55:53.629402+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88982s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:55:53.644706+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=88982s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:56:23.582622+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89012s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:56:23.629712+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89012s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:56:23.645390+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89012s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:56:53.583132+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89042s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:56:53.630176+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89042s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:56:53.646086+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89042s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:57:23.583704+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89072s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:57:23.630603+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89072s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:57:23.646654+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89072s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:57:53.584281+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89102s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:57:53.631228+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89102s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:57:53.647433+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89102s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:58:23.584588+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89132s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:58:23.631571+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89132s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:58:23.647994+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89132s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:58:53.585073+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "telegram", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89162s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:58:53.632093+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "openclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89162s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
+{"timestamp": "2026-05-04T03:58:53.648698+00:00", "iteration": "0.2.16", "workstream_id": null, "event_type": "heartbeat", "source_agent": "nemoclaw", "target": "self", "action": "heartbeat", "input_summary": "", "output_summary": "uptime=89162s port=7800", "tokens": null, "latency_ms": null, "status": "success", "error": null, "gotcha_triggered": null}
 ```
 
 ## §20. File Inventory (sha256_16)
 
 ```
-28553cb91688c1e9  .aho-checkpoint.json
+cae4b35b67552ed3  .aho-checkpoint.json
 63677145fec7d954  .aho-checkpoint.json.bak-0.2.15
 5e0487d8bf06e1ba  .aho.json
-cf6a430b113ab68d  .claude/settings.json
+ab667925b6133fc2  .claude/settings.json
+ab667925b6133fc2  .claude/settings.json.pre-w0-backup
 d7406a768df1d022  .claude/settings.json.pre-w2-backup
+cf6a430b113ab68d  .claude/settings.json.pre-w3-backup
+6cf645b2cd252c34  .claude/settings.json.pre-w4-backup
 5bff6e32f74f7d9b  .claude/settings.local.json
-2c51d5274a92a694  .git/COMMIT_EDITMSG
+2f1fc7ca1be593c7  .dockerignore
+c6f63d1407c29499  .git/AUTO_MERGE
+015c847f179c899d  .git/COMMIT_EDITMSG
 28d25bf82af4c0e2  .git/HEAD
+d6a06237af686398  .git/ORIG_HEAD
 d48a759563bf8481  .git/config
 85ab6c163d43a17e  .git/description
 0223497a0b8b033a  .git/hooks/applypatch-msg.sample
@@ -5016,382 +7646,376 @@ e9ddcaa4189fddd2  .git/hooks/prepare-commit-msg.sample
 a53d0741798b287c  .git/hooks/push-to-checkout.sample
 44ebfc923dc5466b  .git/hooks/sendemail-validate.sample
 8d5f2fa83e103cf0  .git/hooks/update.sample
-621c74448307e81e  .git/index
+013b9734813a89ad  .git/index
 6671fe83b7a07c89  .git/info/exclude
-6f2ef8a5bec04cd8  .git/logs/HEAD
-6f2ef8a5bec04cd8  .git/logs/refs/heads/main
-ba79288a66776168  .git/logs/refs/remotes/origin/main
-965fea76ce739251  .git/objects/00/0882f018f99fa622329b08dd343580e79ec25e
-de7cfd1d8c470b72  .git/objects/00/2a17f411e27e459d2f93bf4981b24acc618f22
-3484fce390a1754b  .git/objects/00/3adc6671674f8cafdc21cc80f579fef866d369
-475af5beb5daf10e  .git/objects/00/45b1854ac37c87dbe8e9f747c943fe2f361ff8
-3cb9fb1361d2dd80  .git/objects/00/91520bd2bfba453246c11e5ba498ea924d0e15
-5d53def92b339f45  .git/objects/00/9df7f969a0031c34eb15637c6b014653c30836
-441037bfa4b3f770  .git/objects/01/1af57bb9956ed0fadc403f78334b32c06c5d88
-45ee19dc3ba8250e  .git/objects/01/7a0aa2261bb589bef592086edc373ccace37ea
-d1afc14c827d1093  .git/objects/01/8f58112446c1d7327423a399506d9ac222a1b6
-7dbcb015871ea8ba  .git/objects/02/0cbe75c1e128993f75030b04411919346d3173
-ee541202d8cbf489  .git/objects/02/43df8c08a5c0c9d9a60b6d08bf0f1b7ec905cd
-d83b913e7b600613  .git/objects/02/7b8e62409d9b004fa924ebf030639d6d787c4c
-0da47a4bca5c58c9  .git/objects/02/817ce954db38aa70a1dd5faded8ae5603f5691
-ac08f884bd475afd  .git/objects/02/8d65bb9dddd2c43fec95a81fc3bf1959a0da84
-6b60a4888a5ecc30  .git/objects/02/911c4afbcc351d6cf5936a13f2b78b2086ecd9
-bca654d0e8b08aad  .git/objects/02/b776224f36b4a51b3446c061e2dad792f8877e
-784990fc35467c52  .git/objects/03/0ff0c7d13ce7a6d607c340ef9751f666668129
-82312636fa7008a0  .git/objects/03/40ff7a442adb519297e0c0d0870e5c53a07b38
-4ef5efcc31669ab5  .git/objects/03/635aad811202c102b51bb8fbe259d341cb1308
-97344bed69dfeea4  .git/objects/03/7a9467eb678760df8ff0faaba93bb3c9ecbe61
-e12ba0824c8694ab  .git/objects/03/8f1eaa27587d291bc3062ce4f408a0b45698f6
-09ce5815afd91a8a  .git/objects/03/9f8864fcedf1823a33561964782ce418368588
-ef12ef0fa87a8ae0  .git/objects/03/9ffe25e32f0ebb875eb4ca9faf27423c87769d
-4c4116bfba52a078  .git/objects/03/ba3415b9e697e34afc93c180f3835b3ae5f85e
-eb99fd1e69f88c99  .git/objects/03/c9bcb40c681948f47f683760f45c7747d35f62
-b2e68ed8ae28d48a  .git/objects/03/d78b36686186c58c51b2a61422605f3246e0d6
-c270879261ef4157  .git/objects/04/4519118eb5ac966970c6c5a81bbabda14270d2
-0312adf2522279c2  .git/objects/04/745bd6112828309d109504692ea4c133bea5c5
-e6f7ef4f458cbe08  .git/objects/04/872b2978bfee840794b2a24c67c0565ada1a2c
-3cd5f6c8e552b893  .git/objects/04/8e8e32a1a3742023dba2912d97b8a26147e9b2
-6d0b749eaee0db33  .git/objects/04/a43a1de545576ea840eabf2696c17b3fe4e836
-aa6f22574908df8e  .git/objects/04/b1a41ad1502d8a1719b1220f069b31f5537d8a
-360a00460ac0847f  .git/objects/04/b30ecb840755f59f0cea024b09056991c555ce
-0c2f0c87ce881fda  .git/objects/04/ba18e81f880a3609f463154cb24640954995b7
-80526eb9eab1ec68  .git/objects/04/bb23ef97e2d6a39d481a41cad8393ee9a440ca
-a9683cbcaca23496  .git/objects/05/2ead678049fee8dc7c2ce3c1448a791d6385de
-cb135444ffc73fa1  .git/objects/05/664b9c9ebdc7483bd1dfcb87650a99f34541ae
-5d9032fffdd2e028  .git/objects/05/a1ed1e971e1971f0250631992a4f0fe1009f8b
-8d491e6cad30813d  .git/objects/05/ab198a4fed0177fde7b3aa122b1ce3ade3cee0
-1bcc4e696d498e36  .git/objects/05/bc803267e17a2dc56e1744d109515f9a965c1c
-5447117a0ce14a30  .git/objects/06/27c16d8341a1657ba2c331d591fd8a7d8ccf5d
-27a01bc593c48c13  .git/objects/06/8c0b8ecb99bf0e3d32009f245217750ed26633
-b0c70f45b559ac5e  .git/objects/06/ae8074cf3789862cfa9d0b42bde80079bda5b6
-caf487b3530cb2a8  .git/objects/06/ecfd13dd6f134cbae6adbd81f9cc5d5eb00826
-9b93cdc7ebe17a8f  .git/objects/07/45edefab6a9c5946c236af2d879439e6fd488c
-5749b8ca2e42dc4e  .git/objects/07/46f68f56b5a8a881c84ef4d7381b716b3a8b64
-5f445459ba5517ae  .git/objects/07/5348090dd39691d647025876a86a4fcca19b15
-002251dc7e345ef5  .git/objects/07/93eb36d8ddc8ce856dbfb99fb9daa15b5cc4ca
-8c93d569d9247b85  .git/objects/07/becd38d2354c7f6e91540c4a54a358e0845002
-b1411020f309689f  .git/objects/07/ed2693c5dedcad062de2f5de0e28ab2a63371c
-899640d1a8eafa62  .git/objects/08/19d8485d331a34279d176c8418cc297841c9da
-d12b435d3c72f885  .git/objects/08/4f7a7f850fc3f8f39c03d211dab415d8acdc68
-71e88d61d5ca1f4d  .git/objects/09/3de6f722c5ba06e2d83e17d537873d13f6fb3f
-04046186e0d4094c  .git/objects/09/f79ba1885309837756586a0828ff15e825f810
-62bc1e2aea072a34  .git/objects/09/f97fab8ff59108740fa61fe11e39fd30adf2ef
-572dee8a5e071de1  .git/objects/09/fa05f9c05c426188b8c5c9057fa09a8f12acfa
-b8cf834da8f5ab89  .git/objects/0a/436d8318bbffa32213f40b0459b837df303366
-94df816b43fd82fa  .git/objects/0a/73c2a2e8642769d5e8086619f87e9263c86479
-873b242f8044ada9  .git/objects/0a/98ee5aeaec6df1576bf51ccd56f9264b521b8d
-d915bce00f18bc85  .git/objects/0a/a8d434de08a9fd2f9e17a18b5456980106e47c
-6ade34ae28507839  .git/objects/0a/e7543dffff60cf563f37d69b463b35b956f096
-848b875840be234e  .git/objects/0b/0e26b0f48176cf3e84bd5ed7b6206aab06426f
-854f7bf41b19eb68  .git/objects/0b/1c13183bae803c1fdb6991c6dbf5e07ea792ce
-83085771b3505fd3  .git/objects/0b/3ef3dab7ec89de23f59d5516cbeef731d4f8f9
-060599d4b9b38677  .git/objects/0b/77e6484344bc099b53cba725d4d2a32fbe2f84
-4e26594e9a61f647  .git/objects/0b/7af5b58faa81b99aa101a0484b931970f1f492
-97f7af88074ccb16  .git/objects/0b/d3cd03a653a494f3b1ccd94950026cd677fb6a
-b4aa5561ea666a63  .git/objects/0b/d9bc469ba4fdf9ff200ca52f7bef4cf6427c54
-36278966f5b260c1  .git/objects/0c/33555e3802aad98ec9c8bd89ded19ece6ac833
-3216d14a31cb16b3  .git/objects/0c/4220503e0246016dcb099cd2854646e7912eb6
-4c640710e92ba492  .git/objects/0c/43a61a0d25203835a11fa4a8c49ba0ac9df207
-cfaff21861a1139e  .git/objects/0c/78af4b14610ebd6fb3f41b68e0f0f01006f994
-8920ba963119adb3  .git/objects/0c/87def28b4217ccfb6712b43ee79f80017d61b3
-742a21b090283cfd  .git/objects/0c/c8fb68b37aaf17e72c27c6e5eeffd0cb30c6f8
-0bc1317369a3988a  .git/objects/0c/db45ba8402b24b353fd0bffc88789db9d63ee5
-0531ff3db869b113  .git/objects/0d/16aa353ecbb0c350eb15937fbb5d8cecd6aecc
-24c86d56db8ed455  .git/objects/0d/2902135caece481a035652d88970c80e29cc7e
-114a574deaa555ad  .git/objects/0d/6cf8a9b0442108b127cec6b77366a7cc8588bf
-a92ccfa88c6ef9bb  .git/objects/0d/9581738dddde40917e01fe1450cfad7bc33882
-ea6c036731565ae2  .git/objects/0d/e23672c6427b857874d57690307764b318949f
-383283e2f1e03346  .git/objects/0e/6c55d73735b991e2e8a9151b50ca737c25f485
-e077e0b3a450dafb  .git/objects/0e/72d87c72e56e1ff4f17b9b5a655accecf68f39
-ae4511013af0e8f2  .git/objects/0e/c9acc14c91b47059ccfcf3996df95acb19ff9a
-4abef601efc17eb1  .git/objects/0e/dd0bb702803a2950025e7595518c1ed46fec9b
-2a1253d3c46de3b2  .git/objects/0e/e606529c33fb9c494f12f2ce4b4aa15f871f51
-b387595c71f4dad9  .git/objects/0f/3633da35d64eeba0a0884397b8b60b147cbef4
-88584ab9c66bc20d  .git/objects/0f/3b4df30df338c1d083a4b6a675db365dd13589
-5f762bb826142391  .git/objects/0f/5cd30cbbe056791874c27c72d3f93186737e72
-e4139535efe6cf40  .git/objects/0f/ba8b1087369048b536e4274819d1bf0c849eb6
-56605fbfaf9bee51  .git/objects/0f/dc2483598fdb253155a0cb88ebf9d15ee6b4d8
-9205481f76c37504  .git/objects/0f/e13a6642c4e01ea8620cc51463a0268fc3da26
-e246dec46800b00c  .git/objects/0f/ec7f9cc60ed0304a7c9f02829bfbb8e04f2eaf
-097029830c486fe7  .git/objects/10/00b0ef65f06dfd3c523448ab297a433963b807
-bc90db15ccbd67bd  .git/objects/10/231aefc0e91bc52e5debc5e7de0b6aad4d8734
-57a2131ac7d1017e  .git/objects/10/2646ba173e1355e486a38cc4e903455d9bc8fb
-b383fae954a2a941  .git/objects/10/517b5e068f9efeef1c90ede609b0c6b15e8c20
-59c8fa42c73ef40a  .git/objects/10/80972329bbf6a162e8d40f8a9ff94ac6a57fab
-9df1cc7fcd0900ff  .git/objects/10/a184feec5c453860addd766a59da7e968d86a9
-f541b56a4f675c16  .git/objects/11/37f39c1b909741befa565282c45a3f7c446e63
-9a7a6656e7c42cf1  .git/objects/11/425e23226635132e74bc020d89bf2510447e4c
-0b1d1c3797e08404  .git/objects/11/5130ccf1f69c1dfb713c65227fb10ec9be13b4
-d7436d33bb9f92fb  .git/objects/11/808190d4b90b20fe074a2dad43af6c0c1427ee
-9d9588f6dd969f0f  .git/objects/11/88ba6279581b447beefc5e9a73d350a82500f3
-8d95a0b22b1e1d6f  .git/objects/11/c15bef750b0031a2bd2bef19b0087cc5311fb5
-a371419808b7940a  .git/objects/11/ca70235b7535506afeef3deac3f8f659a768e3
-9fede7c0c5db08d8  .git/objects/11/cad81220482fa47d7611c02300d466594b0654
-b0b3370186c9bc31  .git/objects/11/f52a029abfa49c237429f2b7986e2bca115c31
-1c56ec9d38bc0956  .git/objects/12/7ea8bb9ca89484bc49886d5704f1ad10b28cf4
-b8e0c63688c3c514  .git/objects/12/d07c281276038221cc28ce55bc9a70ee4d2be1
-6f0bfecdb361efbc  .git/objects/12/e4527d0a1658c9da817db912aabb2814a718b2
-f7527da1da89e701  .git/objects/12/fb117bcb0021b22d43de10ec649512c5ca0502
-b2311600ec3e4133  .git/objects/13/58dee319c73c9376b8d6c4a69d0b8367df5d11
-11815d69d07003b4  .git/objects/13/68e9d8f6bd3801ffbe6b01654eae1fcc5e0e2b
-a4a9255032aa2488  .git/objects/13/7c88128600d08ee00afe8727c10b14877f13aa
-57d3d67af0c83b68  .git/objects/13/b0edd8375745439e4dfd8e130421410147eb75
-31ac003eb190f426  .git/objects/13/c67a75119eb2b1ab78cc5ae9068004df834560
-181d1be9bdc9e2ae  .git/objects/13/e0a24217d228f9391d20894dc8b1e661257cf5
-7f7b23602351acd6  .git/objects/14/41e9080a69682a93cfe6135b2af6ae1dc37229
-79ff89c8f09dd195  .git/objects/14/5d44ef965ee0336d86494384e631688b9b184e
-49fc0e5fff18ec6e  .git/objects/14/7c152b71de70589535e20bc980ac156c263e35
-10c2273f715a1305  .git/objects/14/bd0eac33037b60607f077bec46d7a7d61545c4
-03ed0ac2f5c9a9d3  .git/objects/14/d7731c3133bc4b4b2ceac34b7a7343c7e5a154
-ae25aff1735fce62  .git/objects/14/fc84d5df6d4100742858ff48540ef2d11689c9
-bbc1136a367bfb67  .git/objects/15/041284e35c3e1b16668efd009798d7ee5d695e
-cba3a09f3c49c99a  .git/objects/15/460745a2dc92bd0901c813d0ab5579f79466cd
-85bb2990cf5c5491  .git/objects/15/ad417681d8c127e040abd0792fc9605ee52468
-2971a9dadc0bd2ed  .git/objects/16/00d0dda38fe5b43e8e92e093d8e662ee266882
-6062c76fc0dae287  .git/objects/16/25cabec6ae8210fa8458f26d9234675bc5128c
-c8215cb4d20dd188  .git/objects/16/72e6bafacd81d5d2a29b2140c6358fd70fbb71
-a2fc415412ee6fbb  .git/objects/16/7a90c6a8df91b7641002200f39fa303f040b7b
-7ea2552dc3fba550  .git/objects/16/7fa25644e333e8bd3ef8484c7371ea4c42b274
-4e169e846cfe329a  .git/objects/16/a8ebe656a96ccd7d2b0c887d87764a1f6cbe58
-84dcf0f688149669  .git/objects/16/ce4443e60116fbb0594bdcf8ea3f3a64b6e209
-8128e048c28a549f  .git/objects/17/481e0431f6571ad6dd68a3b5c5c19499e3a5ce
-ce950b4c46c47820  .git/objects/17/58b3a41d2123abc1d021f0453bf59e3b1c468e
-3948e793aa22ce05  .git/objects/17/7a78ff2f0e7174872e230bb2470f65cd7a216f
-0c06a795124df888  .git/objects/17/9a95c016dca711383283615482fca165ce120b
-33edd5826c9b1ed1  .git/objects/17/9c75bd4c2c63331ad5ebf999777f5a6f0f80c0
-6d414ea91cfa8136  .git/objects/17/a721a5b7777a8df8f13bf87e3c274df01202a1
-e2a4e23dd19e4127  .git/objects/18/0a2b3a1d0b1bf4460049ae4503d50c06641081
-5fc3c7344c3329c7  .git/objects/18/1bb16acf62290b3e9a8698a44b8ffe789e75d7
-6bb0662a45dd4850  .git/objects/18/5125cdd1416a707cdceb4fce9f72b194c55f48
-cfad2ce92f4026f8  .git/objects/18/acb9ff6b33ec6040410ae56ce3cd31594b907e
-1ecdc8fc4d1ce580  .git/objects/18/e6e2429fa322bce1c68d500a953e7a4c4da5e0
-d93487fd302af4a7  .git/objects/19/49018836fdea958451980a95fb9f0ae81cf23f
-1a4cbd16d56758a6  .git/objects/19/68479e247e87121fdc0f6024d5606f69d73d5c
-dece2b20e830d41a  .git/objects/19/697f09c50c34615407a01b3fd90ca17127d64e
-2bdf1940b95be965  .git/objects/19/afedbd37a91c8e62e5ffe2e7cbd6b03ac585ad
-1d72b7ff1a9bcac9  .git/objects/19/c8fd086442d139eea62e287d9f2ae33e0b908e
-37e0913eee004397  .git/objects/19/cf0eb36836e2f3d7d4ba3b5bde6218969b4063
-24d60f6ba9602cbb  .git/objects/1a/1b44beedd7fe8589b4da540e7b0dccfac72e3a
-cd4c166ece16b79e  .git/objects/1a/2db721258703c5c466e59c9b61bccd1623730c
-944d7835af15eac1  .git/objects/1a/3b4eb3a30f4f802edfe8b620c4b106b4a0ced0
-89898192fb7943dd  .git/objects/1a/4b6c79b12cb234c57e5be20d1fbb3af303ef67
-7298da64239038e6  .git/objects/1a/4caab80628151e5109240cc277dc26193bc27d
-0f7069780a96e4f2  .git/objects/1a/6bfaa8b8753295b277fb9edc6bd2edd35f6d99
-55f5763c669ef335  .git/objects/1a/8cccfd9f2d9e5fce2e495f5cd5d911d944e633
-ec71cf32b27b5c00  .git/objects/1a/911310579fa88cefa06e183da1d33a11354a79
-559ffa8a8b1713b5  .git/objects/1a/c6f56a85d993daf96557562624876806041b51
-066d9a09bae75349  .git/objects/1a/ca0453cb8a52014d457aafda6293731bd32264
-ef44a0d60019d9d4  .git/objects/1b/091704eaeb5969e6f4a4d999f482dbab999315
-69434288782c6f81  .git/objects/1b/47f50feb2f42c6c94ec9eb73df4b39302f8177
-9d38b86cc10b3401  .git/objects/1b/6a1be6ff428f2a7db60a4bb137ec03107da22e
-dcc2a79e0a9420ae  .git/objects/1b/9300c4ca7e6c4039b2cd0f7b8b526000300ee7
-4a65ea4ffab43e87  .git/objects/1b/b159f2a387bde30771cb9ae46e0183e790e4dc
-806d1fe5bd39bbf6  .git/objects/1b/b5674c1a2a1b482d3f4cfed245feaa3682a6fe
-4fd989270b3f2e67  .git/objects/1c/169af38961c3127f06dd7b4d2b05f42e3b2b41
-c769f8f3509abf93  .git/objects/1c/9f5efa3b9f3dae88df84adee442893180fa4c0
-e27d02bb5adc5ec6  .git/objects/1d/618c4333de2f74ef0d51021c4da61a24970b4d
-4e7c79a209b0794b  .git/objects/1d/b59a8322c360c85d356d939b9dd1dcbaa8d889
-3e974f4fdd61e1bf  .git/objects/1e/1f9aeb4aff93b7a50034d6ef00d78a03708d51
-370b133bebcb2dfa  .git/objects/1e/43a8393870c0ac0c7175bb59acfc25af732ae4
-efda0bb414603a09  .git/objects/1e/672c7117be78b2299e65dfeb7df87dd064cc9f
-9fca4faf9dd0a42a  .git/objects/1e/a0f1eccad96b24f8e7d2f53a36f85daa3a447d
-19471aa9dca843d8  .git/objects/1e/f7011ed78b60282f60f4c0589c61a62a80e4dc
-8a52172ebdf95049  .git/objects/1f/bdb1e846745f4496f327fb2fd7e3bf31575f88
-7ce54dbd0cf7d08f  .git/objects/1f/f636465c3e12d52b0b1e53f96a3a148d99d287
-558786773cb783a2  .git/objects/20/0a82a5f3b8c86a2bbfd796752ba24819ea7cbd
-76905a25b3ec71ff  .git/objects/20/430e393907aeecfd287c01894f62eb1dd4df5b
-9a3ce128fcb6fcb0  .git/objects/20/47554d695114f434ef4f57b1c03098659507d3
-88cfad20a829043e  .git/objects/20/88a7f035ed631749889ace35cc9d6957a04555
-799f902446dcceab  .git/objects/20/a9afca793d194d419f641192ba2895f6baca26
-1065b1d1b4939c0a  .git/objects/20/b7f67ac12e8aa46a92e768657ed79752e221c4
-5fd70ec176d85832  .git/objects/20/c271eed2f0e19c212edb3f4bf67c1204b2c12c
-898d1dfac6e11986  .git/objects/20/cca0b3e030ce7f571622843f60a6729a93f961
-f139a504f00b915d  .git/objects/21/0a9764e6f9d96117486bfab85d9be6bd980583
-c69b3c3740096c10  .git/objects/21/20bd1478c4fc9691cb24a03e78b763fd8c107c
-6d341d5f2daaa6a3  .git/objects/21/3b61087e4a1739b116bb2cfcea6ce0251da43d
-1414bb7399b253ff  .git/objects/21/51aab9621b6397a03cb5961502d4482714540a
-cdc55f8a91322f2b  .git/objects/21/5474283d08f441410e51f1cd5f1989a179bdb0
-8adbd433afdb5c7c  .git/objects/21/5acf77e883e133bb4d9f8836bdafeec2b6d1aa
-05a6f224798c3d4b  .git/objects/21/6ae7d8d440e27d9103663c19074a9c8809038b
-5025a2544e40c5f2  .git/objects/21/6f448c0dc60cf78dc79433f10c3edbd072c86d
-6b2c1d9ab8797e5a  .git/objects/21/af3934d8f8b92333102602af2e9cf2106ad043
-28e092d9c6fd7c61  .git/objects/21/dd801a4c579c49f06e51572664c07f71a31263
-f74e8074812af01d  .git/objects/22/b2b5d90658037689b6db5fbbb16025c6ee27f3
-fcdcba00f5d05e76  .git/objects/22/cc995dd99723333e041def318e894d04fe10b7
-25fcfc0ad3541e63  .git/objects/23/09cc64ef3bc90bf8d841644b04002f64333a08
-a179a4aea0bbd034  .git/objects/23/318023be639b138c1c8787a9834b3a15455052
-2a962af814ea207a  .git/objects/23/75e113e14312db7e7149e5bc37de99d7dfec20
-0f65d11923503830  .git/objects/23/7ef9d87f11891d0191c957df5690850654b22b
-dcd42328bf5a50cb  .git/objects/23/b0c9229da00d079c85933d894161a50a91aab9
-c52c75f1c2ca6174  .git/objects/24/0dc34a02a791fe9ff8072a34afdb846fe84bab
-c358e1c5742dc4a1  .git/objects/24/627253b5c5fd17bbfdfc830fc042385953a4c0
-4f70a8da94270a4d  .git/objects/24/97c79696388c63c5f06d9aba73d38524b943b9
-18e058cb4158f605  .git/objects/24/ec2bb7ad765989ef18de08fcd05d6f6a5c4f56
-ed1e54e5258b2b35  .git/objects/24/fa78eee55acb6644e738f6e2377f65025cfc6f
-da73a9ee4e61e048  .git/objects/25/16af23eedc436461f703c952848be5b8f0f0fe
-231a677c9a6fac8a  .git/objects/25/33f9f2679fddfd4f79a89a40aa6ea3f6054aba
-8c9f3c61e71ac3da  .git/objects/25/9e38a5266ef1ee26bb20a5bbb85cf3bfd5e463
-2e341802d9d56129  .git/objects/25/9e5a2272aa625f49b4f1b2a3166a09e641f55b
-9bd617d880826c2c  .git/objects/25/9ee6cc43caf840718028ecfd24962c614f96e8
-86b7ed6fb16ddd90  .git/objects/25/a09a42ebe2b47495da4bd377144b5fbc12c13e
-162ed7d5364b5c34  .git/objects/26/250fd063cb3f08cf7dcf28b7b014685ba4cb1d
-318df4880ee3bc3c  .git/objects/26/e88b0571a0ee1b4b023ddbc41f0d41a756e060
-508d7793b293739f  .git/objects/27/01bb973e6a175ef40bbae07eee72d7da7f7a01
-4a7f38846abfe308  .git/objects/27/027c24e8fa14f4b5c83e08912197455e212f21
-0f609ddd4d90d6e2  .git/objects/27/54ba682a71395aa96e4b950afb804e3c5f11dc
-e8020c3dd4b923c2  .git/objects/27/5bf61f8df1c9e13f37df179626da4af7cf5a74
-9acb498e35525ac2  .git/objects/27/77a7ebe639c3827ee2226f8dd10f9bc0a5380e
-1218f5cfbd8a86a4  .git/objects/27/792457cb5073fab2fc78d02c0052e0c4e43844
-5ff224ac0e29f59d  .git/objects/27/798c3edb337673a2732a199b9653b5d53cd162
-a4e740ee281cbbae  .git/objects/27/86a386df47b441a7a2f42ce93018fe4b169f7f
-742312dd681d1340  .git/objects/27/990549a9ab0e1cc3c3d4f4467fe37f4aa7a2d2
-2347a0ccf2cc7cc5  .git/objects/27/f6feb0b3cf08827802f648d4bbf6e74fe835bc
-49ed2699d53a3c86  .git/objects/28/99924fa1a07684b6b793955a888752c948e288
-010736300150e7af  .git/objects/28/dfa2e036f869c081a6cee469cdd03708a611ba
-9cf83ddd2ac5008e  .git/objects/29/4dfddddba5a05c1119fbe7c752f39a9eaaeb22
-7e6bf367c04d0d7d  .git/objects/29/5e9331fe7af0ebd77d8019c74024aa451607aa
-9ca8c9f48d5eec52  .git/objects/29/99ded2b96914bfbda1b9ffb38888dff1e08585
-bb8fc2d3f94f2965  .git/objects/2a/0725365c07d2737071ed8303471cbfbd6ec420
-7dee46e6671e89f6  .git/objects/2a/243ff8f477c8f4bdcf28c01c10186e1a0a1ff3
-a5121204a3e0877c  .git/objects/2a/33528cdd3c9cd20e30212ef244a3eddbacbd44
-b30dbdd4fa1a3c0b  .git/objects/2a/4d1281225fdf170c36e3bcc26adb4c9c04350f
-1278fafc22849723  .git/objects/2a/5c4437cfb55395c7b9751b284ee01c6af5e776
-4483796f27b11350  .git/objects/2a/ccc3023b4889c79a9ce766ad44809e825c501b
-7828c8af24fbbc5e  .git/objects/2a/ee995b8dfd4af706ad978d7e926d8d64bca9c2
-2114e8bbfe4025e0  .git/objects/2a/f6ce333d8e544f66aa4edc19bc9063f63046d1
-4388cb567c8c2a73  .git/objects/2b/10ff6796eed949b9e555a8fd3ea0249af5af1b
-bb1443f396f168fd  .git/objects/2b/324d9ef41f92a9a0a24c60dcd1c2d3d6a7659d
-fad9d965736853ac  .git/objects/2b/5233885a92882824fc53e4cb9cd362da3cc3ea
-7b82fdbc80972765  .git/objects/2b/81a3a644c817b06a72a4764994bde7ba05988f
-449348709224b501  .git/objects/2b/96cdce88db4077b27c7f51cc8bee3cf69d4d94
-256fa5709c7c30f6  .git/objects/2b/fc30f557cd36c1aff566c39f3f896c1a1b6d88
-321127084ec4bb19  .git/objects/2c/042d4ee2b52be39b5e1e4a9c75c680b3d7d4df
-d8f080f84b989e86  .git/objects/2c/c3612c5f223ea893927bcc906cc0b76eca0459
-5926a23645960bfb  .git/objects/2c/f73f63352515889ae2bf84774d8c9ebd630fc0
-5f955dde92fe7ba0  .git/objects/2d/169ae196f814f5b00405b2d9561fecac20f492
-2094f29cec1c7001  .git/objects/2d/564a8f8ac841acb4fdfa4d9287be5f925f64a5
-98d10f764fece16e  .git/objects/2d/97e83d6d8a8ff3db409709d3e3de6f70c386f1
-2156bb476357ce0b  .git/objects/2d/b1ed69dcaa4e91899ea8a85b02c417bf690ad9
-be87768b980af674  .git/objects/2d/cafff435d6fbf10ee5e1d768db5d7204dcff22
-28af185baa51a0bc  .git/objects/2e/082398f1065ab4a91cefed0e8908ca4bce4c74
-b3455f38a92080b9  .git/objects/2e/332f0b84de94e9616eec219609fe887b48a102
-572e82af5c79bd98  .git/objects/2e/3d0b21b3cd2511fb1413beea1fb35856358327
-a7c82f5961316b8f  .git/objects/2e/894c06ab820c1024fae1f1d792283480277acf
-0e8f980068829350  .git/objects/2e/b44e45e58ef92986391db860ccfb719492c3c5
-363a281ba35a8997  .git/objects/2e/ce60b98c582f1d5afea1c716d16c16ef87f4d8
-4eedaa42eb36b9a3  .git/objects/2f/42a963bc37c1095dc1e1de8eb39b5a989c6096
-eedf544dbeb641cd  .git/objects/2f/84a28560f8bf1fecd61ef5fd3d185ad4eb5f25
-b3936f0c32d296c0  .git/objects/2f/93cab8545823de71402ff9f8d5feabbe8af7e3
-4ad097fdfa6c3413  .git/objects/2f/9fed1d6900c46c121cfddb13e7d74fbaf6c324
-bf7106befe9765f3  .git/objects/30/352055832776461f8c5e6ee6ffb3f7cf450740
-c9890ac30885b3ea  .git/objects/30/5757022eed4241949a8b58737f4fc6c4565881
-a651b815acc15438  .git/objects/30/58b2e61aa18a0abc49d17fdf2993f415b365b6
-aca08e6d588bc761  .git/objects/30/637c25a73994e95899d811e8cbd8c3fa2aa1ef
-3d1518d7069bff7c  .git/objects/30/7b44a1df398e41398b67c21dda38e788ec58d6
-f84d627702b2c868  .git/objects/30/a468aced622f6ed004cdc591c9fceab5f6d167
-437921f893886078  .git/objects/31/35360755d553fc27bee68fa3719a763c12869e
-4155bf857278ddfc  .git/objects/31/3c1371d96697a5771e963a48b0ac949cad62c6
-6e511f810a7020a6  .git/objects/31/6d6789787c5d5f762065158d6cc379accb92ff
-c0eeac23ca2a0541  .git/objects/31/7e70d523546e908d3e660e929c1979eddaf81b
-eb0aad763a4cc52f  .git/objects/31/9b269013041cb74e6e44c0194ee3400274d4de
-e33b95a19eafb8b8  .git/objects/31/b854b17d2a0ca516d7241fc97899930ac2a5fc
-a8a3afa15781dc2b  .git/objects/31/ba5e2f52a6d197ae9097f622c4353630779cae
-46aa795694d95100  .git/objects/31/dcb4088673786aad8fa85fabd52ed6c99b299f
-557f582effc7c052  .git/objects/31/e37874dbc3739c3060ab83d516e1c696e08492
-42c7962de201fe6d  .git/objects/31/fd13979cae8e8aea92eafee208835d8689819d
-417f8a0abb932f08  .git/objects/31/fe450a62e1901de86b63a3d5b6fed34fd7f9b6
-8f839c8b7b527d1e  .git/objects/32/1350c1c9881464301c962d7e8e6b4bc90227c1
-abd8d85f9adad44a  .git/objects/32/7cd5f4ed7b2048fc83acc9499bce668ee49d7a
-b67a768fe914c2c1  .git/objects/32/81dd7e0883acc7f87040bc7cfba495fca3035e
-fe431db52348687d  .git/objects/32/e8d83ad55e9f0e2372f678890561475463e27a
-7adbbfd91aa1a2ea  .git/objects/32/e95035eca670cc5dd3f4d2fe2afcd01789d43a
-d1bf1327bdbeb78f  .git/objects/33/7c499040db35cf7a2c5aa0bd598ffe27bb96d0
-1d1b1f329a4501fc  .git/objects/33/b1652d07df49728be5f7f54fad60c9c9d6672a
-538de4e90f853ac7  .git/objects/33/cd637e36749f13b6b15732bcf0cf072e101722
-d30b411f6212a07f  .git/objects/33/d6d5fe45dcd89a00dbffd8f9c9556bb2069805
-c8c6860f06a65480  .git/objects/33/ff4ddbed37982dbbe4243e929433bf643052e6
-b3d69a17cab76321  .git/objects/34/1abf897d96d7310576e0630e6e2fef6873342c
-38f6ccc14a6480f4  .git/objects/34/304b68aec7a9feda440ace3502543f80d38341
-311b6fd7d0411e41  .git/objects/34/44df963652ff0d254a20d9cd3680c55f0a106f
-3f495061ff5180c5  .git/objects/34/98ff63d68fe2ed670ad0d21767259640cc9857
-be955872272ec5fd  .git/objects/34/d4d31f50d2c851e93d998c24c975cec0f5a759
-a0195ddcb958345e  .git/objects/34/fc8d36330a7de72878833edf8888b6c8e9fcb2
-a4202a8648292836  .git/objects/35/0c0244d7c7054777de4e6b10d2f4086eebe055
-934f1dbc2af2f715  .git/objects/35/6f0facd964c45f45b86964f47700b53b939895
-e555cee14a5c8dfb  .git/objects/35/ad03e90e96d0848ec023d9e6c7b94c6f9edb01
-75a96166b3c516aa  .git/objects/35/c4a122de402eed2f9e27e832663bfdcb0f4634
-006c2d62a21da1e5  .git/objects/36/0cf38c4b2548647fb1e153a5a94e67cc7f2fcc
-00fce1152f2e0538  .git/objects/36/151240eea86ab789685dd590e8b927cc76f4f1
-afe9f379c46cd9ba  .git/objects/36/ad98e5d89e8f60b382a5dfec371729f5c90415
-beece2f1c98ab857  .git/objects/36/b29ef0a8e84c18b409dabb3127c0d09bd1dac5
-52804d4ca7cb32c5  .git/objects/36/b4754b0644c175901a372c32b5f3d795a52c44
-763221f37004d5ee  .git/objects/36/b7488ca68fa5a86d74fa88f83bb53302080175
-0aa34071ae257461  .git/objects/36/d1963dec54addae0479d7f1519ada57fafce84
-2a2e2396ab669a4d  .git/objects/37/07a62299c5d784b0c6be2eab4dd0ec464fc203
-83059fbeb29a4b31  .git/objects/37/36a9674cecf5f353c7b4a651e0499bbb96b4f4
-32006959a1f86c91  .git/objects/37/3cad3f1bea3cd807d96cd8d6b0b8152efb78aa
-a159d12aa21a2341  .git/objects/37/688d8fdaf12a4f0451feaa7ae4ab4892ae773d
-583ecb02456eb922  .git/objects/37/80cddf10b2905cdd96b0a765a71ab66dac4b63
-41e3de322176b0b4  .git/objects/38/10725619ed3f7e9f08d72014e9513d37aebed4
-8eef8b36fa04dfb2  .git/objects/38/15a5d89f5733d23bb186f083faca0f28441940
-ef1bc00338cc7a9f  .git/objects/38/20a95c65c3e5983cc66d481e2e68706a750090
-56004cdd73a76b2c  .git/objects/38/20e7e942854993e482711c39545df3d6378733
-5e07ebd9bd3cbd12  .git/objects/38/48d442bd681e773ff99cd7d579da65dbde2c10
-dc36d58eec528106  .git/objects/38/4f857f9e875f36d4ae7d1fa5d3737fe45112fd
-ed49d9c2750c112e  .git/objects/38/b1029528f90883506fda7d217655f300b6f047
-6fcbd17929bcdfa2  .git/objects/39/86e5fb1cf57ba8fc7326c3a1cb6924c75a1fac
-1661ad860050a792  .git/objects/39/9931f247f4b1608bb7a97b7f4c6bbe01e906fa
-5adf7bc2e1fd9567  .git/objects/39/bf9487ce90456807705541a23c1e17dd11bb53
-92caf0a5511c9a8f  .git/objects/39/d6892271ec6e22ef287b35e2add47e18fa31b3
-09ef95208c370f9c  .git/objects/3a/1e684edb6e2af036c7e912148ba421e5c57d06
-2be1ca917c29d287  .git/objects/3a/5f7cbd35d060f4991e307a05beef9492d50bef
-16d1409312894baa  .git/objects/3a/d13c58ac6fa1b34e6d56d2f437e20ae4222062
-1113db10bf06625f  .git/objects/3a/f00c09713878413597f2fef89d645c9d07c269
-0ff9a247062d59d2  .git/objects/3b/2a70dfd7491f01fbd3e1059b84113a627b73fd
-c412ca3d10e27d87  .git/objects/3b/43b81b244b441c3ee1ec1fa902deaac0154946
-b63e5c443e074f31  .git/objects/3b/677d7772286207df4ab02843db6bcf7506ebe7
-7c3e9b71828af41f  .git/objects/3b/a1358f2e4236d6c998f48aa60dcbba5e50397f
-b84eaf72cbc818ca  .git/objects/3b/b14e16d0753e4cff324dceda7faeeb468aaca5
-0924173d6880ab50  .git/objects/3b/da9d1845ff2a5e7ff8fd6a18d76a604aa6e285
-ee8c5122c81498e9  .git/objects/3c/10426eac56facc46eb1394c0ff69969a6698f3
-10164cc35b686706  .git/objects/3c/9d8e34fdf8e338518f2f78081285c144a80841
-cdb29e538e3782e6  .git/objects/3d/12a3bdfe3d53e249a9edc33177127e60690c87
-daa4f2e71dbdc526  .git/objects/3d/5484e3af5e8b3ef06eea0a5386f6251e125ff1
-53e687a6701fbc60  .git/objects/3d/7363a698cf57ce7282a07fdc98390cbf7dc297
-c11004b414cd814e  .git/objects/3d/7e0362d868c7ca41fabca6e0e868906771c38e
-29596fb888339edd  .git/objects/3d/dc7eaa9b0764835a05e4757944df3c8dab50c7
-426767f8c30f18ac  .git/objects/3d/fcef509da05de75acfb85fc6dbdbca19a5b83f
-a0f02df12f812b99  .git/objects/3e/2dc720048d34df0ce6547979a8b30e59a998ae
-72d155dd3984bce7  .git/objects/3e/6e9783eb8ebf42e8d7a2509729b176bd850691
-f7076cc52bc06e2b  .git/objects/3e/b8d163411f14b9eb525de630e1d3fa29888f01
-430cbf53aa51df75  .git/objects/3e/f78519565cd8d011aee8ce29aff551233a1da4
-b09eb17af65dcbfc  .git/objects/3f/168e04d1b1a5befb293d7f5749a5fcee7f187c
-690b6fea055d9b52  .git/objects/3f/5ce5c0ad4868944bcb2e6adf16f9db3b7ffb48
-991cbd0292860f70  .git/objects/3f/65fb5ba7616356347a1035154b1cccb4418723
-167675d987504269  .git/objects/3f/e3e7e75e745d632ddf487cc160cd029934dfb8
-1112c4ddde1ec472  .git/objects/40/1e64de7df8f4a3071f079d5024722673675ff6
-89cef6cd848ebdbf  .git/objects/40/23e9dffb2b91286f8cd5db23383e133edfd3ad
-35615163ddfb9ac5  .git/objects/40/717084408c76ea059d55988508ff65cf7739ef
-3ede93cd9066874f  .git/objects/40/7cc8adf653becc183a66418005248812aca1f5
-329cf8da097102c7  .git/objects/40/fa774a33b64473397f6b27e81fc3677bc4ab76
-ea04c9c46ef6a977  .git/objects/41/035d74bd924032213248424945a0eee3475417
-4e2efb3926b3d11a  .git/objects/41/1bb4f714c3fe1733b7c6eebe6409416a730d1b
-ce9857f8abd59bb0  .git/objects/41/74a4b9fbaeaefd70cbe39e31d7ffa3707d4d3a
-f7da85f6936252f4  .git/objects/41/7af5498c5a8b6c9cad9313b3ddda0b1d4575ee
-80067a35f709438b  .git/objects/41/dd789da3d2097bb6bc9ae62118e16c36d8831e
-743353e3e3431271  .git/objects/42/57ac54426a871a2a90a1e05b3932acfc0e4359
-2ad0e9ff49bd0f79  .git/objects/42/5f16702dc36937bb396295adf12aa0e18f2d12
-f72bdc37a939e497  .git/objects/42/77138fc11421b7c621a412e808e6139daedd2d
-bc7639800710aea0  .git/objects/42/93979dc624762afd80eeba6628a89abcd3e94f
-f0a741033dbe6ac7  .git/objects/42/940c7783d479f86af51c1eac0b824a1dd3d07a
-847dc88c669797da  .git/objects/42/b887493238b8693724bd4ab62f75f628ba7070
-27acfa8c74996747  .git/objects/43/2ee5d3f6e74c625caaeeb84fbac8513aaa588a
-5bf2711395be4222  .git/objects/43/7d0a771e413181d5ebe2ebef215bff4c1719d8
-7534676bcb7bd0e2  .git/objects/43/dc507787ba0ef452eb44ecaf6700d1dca43af1
-b2a8abe0abd83d38  .git/objects/43/eecf50f17ad6e16c0b599bfc876f9ccb21946b
-786f3bedcd7a674f  .git/objects/43/f242e2ba7a65d4f4eb6b857eb93c3d0867fc14
-aa0097a324c51a37  .git/objects/44/0424bc075626789f6816a88af412cd918903de
-ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
+fec1379a5e1e8624  .git/info/refs
+fffda1c3812fa891  .git/logs/HEAD
+6d6a7ad9dcd21c60  .git/logs/refs/heads/main
+3de902cf89a8098f  .git/logs/refs/remotes/origin/main
+17e7c74a4e9991fd  .git/objects/00/3199fbb96d3a9e440429f730f00af004d9e5cc
+dcc97cf66bcd2d3b  .git/objects/00/7acfda3742f2aad5c5b48413199ddd306b6fdb
+d50b46d67fa7162b  .git/objects/04/28d55e220012492dd87f021a03268285a47ae9
+e1f2e058d7e2d0c9  .git/objects/0c/70af7f4ce3dc35c7a142f78f52bbbe481a5c92
+869d416501b5e27c  .git/objects/0e/8c3a89a336c1113ba0454712ef3ce9acbd4cc0
+48c967e06c442699  .git/objects/12/82229264fda2ffc1557029b5c62150c3ea3832
+0356c43220520241  .git/objects/1e/a2242767161f87631c9fb532e3e2a4dd4f99d7
+c098d4ba6b2970ab  .git/objects/2e/85484278cec51e9e5be21b83608646020916e5
+5bf296b35f68002f  .git/objects/34/538ed2c6d5bd96ddaafd410a44283e04a3d790
+22211dee4b01feee  .git/objects/49/cef04adc382ca7c0582d0ee57cc89840273047
+7aa4dc9ee7463a36  .git/objects/4a/9c47dd1f64af2147e13f0c437d0a30620a412b
+41698f6bb7a8fccf  .git/objects/4d/fe9d1fc07e760962b195b48e2b2af0d54ea1ae
+5fa0f0354474856a  .git/objects/5b/484c4d73720fb934a5fa83206234eeb35bd0a9
+f583bf0cc428f5f2  .git/objects/66/b85fe678701dd7c4e816bec9e7f656a550a58d
+cca82194d8083e0e  .git/objects/69/29dc009bf75cdee184eede89dd3bae77b669be
+555f40e369fb350a  .git/objects/6d/a1328759e5ba5e34185cd38d531cd0ed37bd56
+40d748240c3b5a5a  .git/objects/77/b382e445d84d4e700601602c29ba6d1c300497
+09a6d45d3fb04120  .git/objects/80/0124f19dd0bb988c5ca39bcff7ff594543b9fe
+c0ae127186de8a71  .git/objects/83/ef2fd2c2a02785fbe6bbf22402cd692487d839
+f12394172db9377a  .git/objects/85/888bf45c7b907dc8ee65165f9f121eca38332f
+07d50695c39f5c4a  .git/objects/85/9c71d7cedd577997925cc49c0f8d7f8975992c
+1f9c9c3db51b3363  .git/objects/8a/28669076a0254c26dd8b8dad0ee57b0a3a2231
+d6fcb8f8656a39fd  .git/objects/90/6b7e6340d2b56612b16c732123b1665e4f9216
+367abe4d320b443d  .git/objects/94/c635b8ea22aa5b272280555b601e7289474a48
+f715080c2bea2019  .git/objects/95/68a8ec25e33a64497f531b0e5d2dedcc2ee350
+c4a282461d7a4945  .git/objects/98/a6025cff1b8a9f234e8e3df56201d678f640bd
+91e9a16b999df8f6  .git/objects/9c/3ad4ff841a5b299ebdf2e79d45691f48b44341
+7b224c271ea32f2d  .git/objects/a6/e5dd7377afe7c17ad3cd664c1b875d4084769f
+ca5a46f6743d3c43  .git/objects/b0/eda68d5f1e80007436040a82c6fab201fbf64e
+5dd75729c3949d77  .git/objects/b2/d2185d66b4937c293d0eb3f984cfe85fa5cc8b
+7ad86246e5273cbd  .git/objects/b9/aa34e19e516382b43f0266b6aba6e455fd74f3
+02149661b9e8ff7a  .git/objects/bb/ce4eee82e32b432bc852809d78c1cf94249b9e
+cfca5bb765e5035d  .git/objects/bc/ac1792fcfcd6316f20bf6b9bcfef061e6b6f5f
+fd22941429b693ca  .git/objects/bd/ae8b5377bdc60fb21ae927c42af77a485b89fa
+0f85b2935d5c88ef  .git/objects/c8/281932b37d8937b7ec9d1b82aaa0d0f6ad142e
+b72ebc6d426f32b5  .git/objects/ca/c5b5178e98f68db60c4620745c1368c2696bd4
+9c02a4fc0905414a  .git/objects/cc/51636063fff11fb55ebd1bf3c696dc0575a3ba
+7fabc6a3cf6e2d68  .git/objects/ce/e50c0b4b64b6cbc3363d50896705016a3b3f3b
+45f877698b9f8d4d  .git/objects/d7/463fdafb0b105fa47b5c8bea976846fdad8900
+ac8f227a5c14ea07  .git/objects/da/81434ed0d9a5fcec2a6618a1d47301a4da4f7c
+3113106b1ca237d9  .git/objects/dd/9bdfef2ef5e93cde6c3dba8d39a8721efb5065
+c2435f24f53e5a1d  .git/objects/f4/8cd9ea3e0b5f62748d935a5446e896be033ead
+a2587ed3cbaaadb7  .git/objects/fe/dd4384189007fb78f7ed587941a72f22d82d8c
+38bec06671ee7903  .git/objects/info/packs
+503606dde15ae7d0  .git/objects/pack/multi-pack-index
+86a8ff4b768961f4  .git/objects/pack/pack-e81a09e2e56086fa75fe953341d4ae636e1e92f5.idx
+87b59cf619df7cf3  .git/objects/pack/pack-e81a09e2e56086fa75fe953341d4ae636e1e92f5.pack
+6909411166c45291  .git/objects/pack/pack-e81a09e2e56086fa75fe953341d4ae636e1e92f5.rev
+d6a06237af686398  .git/refs/heads/main
+d6a06237af686398  .git/refs/remotes/origin/main
+27cdcecad2b46251  .gitignore
+aea84d7dab648e0b  .mcp.json
+6eea7f9a94491a98  .mcp.json.tpl
+cb93366b7f4ca0f5  .playwright-mcp/console-2026-04-12T19-47-12-749Z.log
+82fae70fe4bd9050  .playwright-mcp/console-2026-04-23T18-09-16-549Z.log
+1e4c6750b9f81268  .playwright-mcp/console-2026-04-23T18-30-55-454Z.log
+e3b0c44298fc1c14  .playwright-mcp/page-2026-04-11T22-43-34-959Z.yml
+e3b0c44298fc1c14  .playwright-mcp/page-2026-04-12T19-47-13-292Z.yml
+e3b0c44298fc1c14  .playwright-mcp/page-2026-04-23T18-09-16-591Z.yml
+550828af5d997f28  .playwright-mcp/page-2026-04-23T18-10-03-958Z.yml
+e3b0c44298fc1c14  .playwright-mcp/page-2026-04-23T18-30-55-497Z.yml
+550828af5d997f28  .playwright-mcp/page-2026-04-23T18-31-02-325Z.yml
+550828af5d997f28  .playwright-mcp/page-2026-04-23T18-31-49-511Z.yml
+550828af5d997f28  .playwright-mcp/page-2026-04-23T18-32-55-064Z.yml
+3ed731b65d06150c  .pytest_cache/.gitignore
+37dc88ef9a0abedd  .pytest_cache/CACHEDIR.TAG
+73fd6fccdd802c41  .pytest_cache/README.md
+03125c3d87bf1436  .pytest_cache/v/cache/lastfailed
+f76cffc89bf84cc3  .pytest_cache/v/cache/nodeids
+c8765555696de46d  CHANGELOG.md
+d2632bc35c07547b  CLAUDE.md
+6a51aca1aa36e1f5  COMPATIBILITY.md
+8b60dbd729ec9834  Dockerfile
+6a24ff5fb01f7a30  GEMINI.md
+caed6994b50b7a17  MANIFEST.json
+aabd89ba28a76dfa  README.md
+26e6ebd4b069ddb0  VERSION
+ef11804ea6bd220d  aho-run-0.2.14.md
+9bf322a14adec1fc  app/.dart_tool/dartpad/web_plugin_registrant.dart
+9b5e8f80bcd71317  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/.filecache
+d00873d7bdf19c17  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/app.dill
+caa1174f46475e6a  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/app.dill.deps
+9b8dac0c3b13cfa6  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/dart2js.d
+a52152f205598296  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/dart2js.stamp
+dcb4346e36f1942d  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/dart2wasm.stamp
+eb75547a3bbeb045  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/dart_build.d
+fa4e6ef2406db5b1  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/dart_build.stamp
+a3856cfcf7df4813  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/dart_build_result.json
+261e0944d1ac9097  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/flutter_assets.d
+cc720a324af5727c  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/gen_localizations.stamp
+9b97f8a4e417a4d3  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/main.dart
+405f7e61bddf9686  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/main.dart.js
+59922c0cefd4a903  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/main.dart.js.deps
+0290a367e8a47791  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/outputs.json
+8ba3d74f131aada6  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/service_worker.d
+eed9793119c5d599  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_entrypoint.stamp
+9bf322a14adec1fc  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_plugin_registrant.dart
+50de077a0722256a  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_release_bundle.stamp
+f022d378eb040834  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_resources.d
+595589d35bb1a966  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_service_worker.stamp
+76d834c21c6bcaaf  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_static_assets.stamp
+e19fa88380ce2d63  app/.dart_tool/flutter_build/7aecd0b659afba173603394431fa7839/web_templated_files.stamp
+0a7205e7399237d1  app/.dart_tool/package_config.json
+dab4363a17d67594  app/.dart_tool/package_graph.json
+6a0ef93e7dd63ac6  app/.dart_tool/version
+4a8d984279954e04  app/.gitignore
+45e2a6e7cfb2e727  app/.idea/libraries/Dart_SDK.xml
+82dff6dd06516451  app/.idea/libraries/KotlinJavaRuntime.xml
+057f5fa1bb2b96e7  app/.idea/modules.xml
+0b2227c29b468c49  app/.idea/runConfigurations/main_dart.xml
+1f4bdf93fa0c89b3  app/.idea/workspace.xml
+14c555d89b8e57eb  app/.metadata
+260acd318d486ee1  app/README.md
+078556ebd66f23ee  app/aho_app.iml
+e0ea485cfdbc3e12  app/analysis_options.yaml
+c7ef907ba9580fca  app/build/web/.last_build_id
+00af55ad3d6f2189  app/build/web/assets/AssetManifest.bin
+8460b5f4299ca1ed  app/build/web/assets/AssetManifest.bin.json
+cd7e03645bc44b2d  app/build/web/assets/FontManifest.json
+d1be020c05783e3c  app/build/web/assets/NOTICES
+4435fed7e4d7b5ac  app/build/web/assets/fonts/MaterialIcons-Regular.otf
+3d90c370aa4cf00d  app/build/web/assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+5aee0e4ff369c055  app/build/web/assets/shaders/ink_sparkle.frag
+c723fbb5b9a3456b  app/build/web/assets/shaders/stretch_effect.frag
+931ae3f02e76e8ac  app/build/web/canvaskit/canvaskit.js
+1eaa264186e78d3c  app/build/web/canvaskit/canvaskit.js.symbols
+42e392d69fd05a85  app/build/web/canvaskit/canvaskit.wasm
+ff8dcd85cee32569  app/build/web/canvaskit/chromium/canvaskit.js
+d567cb3073b9f549  app/build/web/canvaskit/chromium/canvaskit.js.symbols
+2bf5ea09d70b8ead  app/build/web/canvaskit/chromium/canvaskit.wasm
+d52e58007af74083  app/build/web/canvaskit/skwasm.js
+8e97d47e659208f9  app/build/web/canvaskit/skwasm.js.symbols
+f8bab54ad143745f  app/build/web/canvaskit/skwasm.wasm
+7a1aa20e765441b2  app/build/web/canvaskit/skwasm_heavy.js
+a0ff1ec5048a82e2  app/build/web/canvaskit/skwasm_heavy.js.symbols
+33f5c52d1612df0a  app/build/web/canvaskit/skwasm_heavy.wasm
+fa58b2c534ef9c66  app/build/web/canvaskit/wimp.js
+6f302386272ed4a8  app/build/web/canvaskit/wimp.js.symbols
+8d2bf4ac60320c1d  app/build/web/canvaskit/wimp.wasm
+7ab2525f4b86b65d  app/build/web/favicon.png
+a483fd28f51ed2fa  app/build/web/flutter.js
+d97b5b061965660f  app/build/web/flutter_bootstrap.js
+a131df5ca46154cc  app/build/web/flutter_service_worker.js
+3dce99077602f704  app/build/web/icons/Icon-192.png
+baccb205ae45f0b4  app/build/web/icons/Icon-512.png
+d2c842e22a9f4ec9  app/build/web/icons/Icon-maskable-192.png
+6aee06cdcab6b2ae  app/build/web/icons/Icon-maskable-512.png
+c345486081423b6f  app/build/web/index.html
+405f7e61bddf9686  app/build/web/main.dart.js
+fcf7034cc7cdaac2  app/build/web/manifest.json
+8499b1622fc5a9af  app/build/web/version.json
+80f29b35aaa1a29e  app/lib/main.dart
+4d2b32c02fbd8a9a  app/lib/pages/component_grid.dart
+00251b8777018096  app/lib/pages/event_log_stream.dart
+7828a8c216b74121  app/lib/pages/iteration_timeline.dart
+359c96db19a0dd84  app/lib/pages/postflight_dashboard.dart
+5c0259bbe014d7d9  app/lib/pages/workstream_detail.dart
+f9ff8efe341cd41b  app/pubspec.lock
+abb6e6629b9ba7d1  app/pubspec.yaml
+6288841463e039bc  app/test/widget_test.dart
+7ab2525f4b86b65d  app/web/favicon.png
+3dce99077602f704  app/web/icons/Icon-192.png
+baccb205ae45f0b4  app/web/icons/Icon-512.png
+d2c842e22a9f4ec9  app/web/icons/Icon-maskable-192.png
+6aee06cdcab6b2ae  app/web/icons/Icon-maskable-512.png
+3b3a3e559ea191e1  app/web/index.html
+fcf7034cc7cdaac2  app/web/manifest.json
+0b48799724a3b5aa  artifacts/adrs/0001-phase-a-externalization.md
+cd0187138e56027c  artifacts/adrs/0002-nemoclaw-decision.md
+ac7f094fcb17a94a  artifacts/adrs/0003-otel-scaffolding-posture.md
+13ccdf0ba915f550  artifacts/adrs/0004-iteration-close-confirm-redesign.md
+77b6004ef53a8932  artifacts/adrs/0005-gemini-otel-asymmetry.md
+59e99ad99a7626c9  artifacts/adrs/0006-iteration-deliverable-discipline.md
+ed99e70e8598d516  artifacts/adrs/0007-containerization-architecture.md
+b316edfc41a727ab  artifacts/adrs/0008-dispatcher-missing-model.md
+d2dfed10c9ee6cbd  artifacts/adrs/0009-secrets-broker-boundary.md
+37b7883021591626  artifacts/adrs/0010-materiality-measurement.md
+7256fdc47d6e8d80  artifacts/adrs/ahomw-ADR-044.md
+3b1d08f8b8e1d89f  artifacts/adrs/ahomw-ADR-045.md
+141fa237182cc002  artifacts/council-models-0.2.14.md
+384f8b761af3f1bb  artifacts/harness/adversarial-authorship-protocol.md
+affbed274d92f001  artifacts/harness/agents-architecture.md
+47673f048513756c  artifacts/harness/aur-packages.txt
+c19b2d839c7892aa  artifacts/harness/base.md
+9950ae6ee7001f56  artifacts/harness/canonical_artifacts.yaml
+e4c3dda6f6af7911  artifacts/harness/components.yaml
+f7f026df55f23f0e  artifacts/harness/dashboard-contract.md
+e642bbc0cea19b8d  artifacts/harness/design-template.md
+d76bb80cdb148442  artifacts/harness/global-deployment.md
+6d60c59c2f4ee5e4  artifacts/harness/mcp-fleet.md
+b77ca49506b8e55c  artifacts/harness/mcp-readiness.md
+573b8c9e318778fc  artifacts/harness/mcp-wiring.md
+81fb9fa9431b62e6  artifacts/harness/model-fleet.md
+f9b21512f1bafeb5  artifacts/harness/model-fleet.txt
+5abbc1643c3b3423  artifacts/harness/orchestrator-config.md
+1b375f4ba6dfebb6  artifacts/harness/pacman-packages.txt
+d2b43b1bdea9d8da  artifacts/harness/prompt-conventions.md
+db122132f0831701  artifacts/harness/secrets-architecture.md
+ad1e0923b4dfcbf0  artifacts/harness/test-baseline.json
+3cc23f012d0760ea  artifacts/iterations/0.1/iteration-1-close.md
+5ba237241653a657  artifacts/iterations/0.1.10/aho-build-log-0.1.10.md
+b44d2c86c5cfd0b7  artifacts/iterations/0.1.10/aho-bundle-0.1.10.md
+69b295fa8a3330d9  artifacts/iterations/0.1.10/aho-design-0.1.10.md
+e3b8c88df236cd1d  artifacts/iterations/0.1.10/aho-plan-0.1.10.md
+f426c60fb4293ea5  artifacts/iterations/0.1.10/aho-report-0.1.10.md
+c6baefe3be40a35e  artifacts/iterations/0.1.10/aho-run-0.1.10.md
+8a00851398881aae  artifacts/iterations/0.1.10/aho-run-report-0.1.10.md
+94d86d70289decd4  artifacts/iterations/0.1.11/aho-build-log-0.1.11.md
+415f7ac06abe1ef2  artifacts/iterations/0.1.11/aho-build-log-0.1.11.md.tmp
+01ba4719c80b6fe9  artifacts/iterations/0.1.11/aho-build-log-synthesis-0.1.11.md
+a12d3f10e770734d  artifacts/iterations/0.1.11/aho-bundle-0.1.11.md
+1a945a5613928542  artifacts/iterations/0.1.11/aho-design-0.1.11.md
+5e9a54fba3abecb8  artifacts/iterations/0.1.11/aho-plan-0.1.11.md
+a6183e6fa92341bc  artifacts/iterations/0.1.11/aho-report-0.1.11.md
+216f5de8024b66db  artifacts/iterations/0.1.11/aho-run-0.1.11.md
+f7ce2f122d709070  artifacts/iterations/0.1.12/aho-build-log-0.1.12.md
+4833dd748d75ec41  artifacts/iterations/0.1.12/aho-build-log-synthesis-0.1.12.md
+0b931a5887b2c132  artifacts/iterations/0.1.12/aho-bundle-0.1.12.md
+c0845f5c0d967280  artifacts/iterations/0.1.12/aho-design-0.1.12.md
+53511bdaaef7e27a  artifacts/iterations/0.1.12/aho-plan-0.1.12.md
+e84081c96087282f  artifacts/iterations/0.1.12/aho-report-0.1.12.md
+8b0782d96c774a75  artifacts/iterations/0.1.12/aho-run-0.1.12.md
+f791396a763b3f3d  artifacts/iterations/0.1.13/aho-bundle-0.1.13.md
+174308d7ba40dd84  artifacts/iterations/0.1.13/aho-design-0.1.13.md
+bdccc18d028c6473  artifacts/iterations/0.1.13/aho-plan-0.1.13.md
+2cc9db5de6ecb3a9  artifacts/iterations/0.1.13/aho-run-0.1.13.md
+498dce524169f535  artifacts/iterations/0.1.14/aho-build-log-0.1.14.md
+da7037a27c6d73ed  artifacts/iterations/0.1.14/aho-bundle-0.1.14.md
+c384c97016e64622  artifacts/iterations/0.1.14/aho-design-0.1.14.md
+22798731c1fc7e80  artifacts/iterations/0.1.14/aho-plan-0.1.14.md
+82f2ea40b62f621c  artifacts/iterations/0.1.14/aho-report-0.1.14.md
+3559778fe6dcab5f  artifacts/iterations/0.1.14/aho-run-0.1.14.md
+39cfc86b13281685  artifacts/iterations/0.1.15/aho-build-log-0.1.15.md
+3aa89536470d4d40  artifacts/iterations/0.1.15/aho-bundle-0.1.15.md
+6ae0d010fa822ce1  artifacts/iterations/0.1.15/aho-design-0.1.15.md
+ff9db3a8d6372ce0  artifacts/iterations/0.1.15/aho-plan-0.1.15.md
+db9b1dd013fb2d1c  artifacts/iterations/0.1.15/aho-report-0.1.15.md
+2ebeec8752716ef7  artifacts/iterations/0.1.15/aho-run-0.1.15.md
+2b129daf88324bf8  artifacts/iterations/0.1.16/aho-build-log-0.1.16.md
+4bc3bec11e1876f1  artifacts/iterations/0.1.16/aho-bundle-0.1.16.md
+08d91b67bad3917f  artifacts/iterations/0.1.16/aho-design-0.1.16.md
+6a2983307ec0433f  artifacts/iterations/0.1.16/aho-plan-0.1.16.md
+d277e6797538c1e1  artifacts/iterations/0.1.16/aho-report-0.1.16.md
+2ebeec8752716ef7  artifacts/iterations/0.1.16/aho-run-0.1.15.md
+2433e85359e8f099  artifacts/iterations/0.1.16/aho-run-0.1.16.md
+171bb0147018e175  artifacts/iterations/0.1.2/iao-build-log-0.1.2.md
+f558ac36b496ed47  artifacts/iterations/0.1.2/iao-bundle-0.1.2.md
+22584b4bd6c35a2c  artifacts/iterations/0.1.2/iao-design-0.1.2.md
+250046bdffe90844  artifacts/iterations/0.1.2/iao-design-0.1.2.qwen.md
+b337472061c513c5  artifacts/iterations/0.1.2/iao-plan-0.1.2.md
+372fb92f915ce90f  artifacts/iterations/0.1.2/iao-plan-0.1.2.qwen.md
+4eac90ffd178ab20  artifacts/iterations/0.1.2/iao-report-0.1.2.md
+587441fd2dab0a1e  artifacts/iterations/0.1.2/kjtcom-audit.md
+5254f3b5b4948a2e  artifacts/iterations/0.1.3/iao-build-log-0.1.3.md
+92c91a9b0427ca5c  artifacts/iterations/0.1.3/iao-bundle-0.1.3.md
+22eb6a936e5f039d  artifacts/iterations/0.1.3/iao-design-0.1.3.md
+9178596fd99b8553  artifacts/iterations/0.1.3/iao-plan-0.1.3.md
+4cb92a66a13c2116  artifacts/iterations/0.1.3/iao-report-0.1.3.md
+b1235d74b7ed2738  artifacts/iterations/0.1.3/iao-run-report-0.1.3.md
+c2cac6226792db91  artifacts/iterations/0.1.4/iao-build-log-0.1.4.md
+7fcb72fe630026aa  artifacts/iterations/0.1.4/iao-bundle-0.1.4.md
+efd46d8d5b379784  artifacts/iterations/0.1.4/iao-design-0.1.4.md
+042403694f6fdfc6  artifacts/iterations/0.1.4/iao-plan-0.1.4.md
+91251e9228ca4a78  artifacts/iterations/0.1.4/iao-report-0.1.4.md
+76ad465cbbc414e7  artifacts/iterations/0.1.4/iao-run-report-0.1.4.md
+3d23d517dcfb334b  artifacts/iterations/0.1.5/INCOMPLETE.md
+c06bfaec58f95446  artifacts/iterations/0.1.5/iao-design-0.1.5.md
+76032fb07c6c4267  artifacts/iterations/0.1.5/iao-plan-0.1.5.md
+6db0ea7d6c39912b  artifacts/iterations/0.1.6/precursors/01-repo-state.md
+d7636c18109d61f6  artifacts/iterations/0.1.6/precursors/02-version-consistency.md
+8537f85ee268b788  artifacts/iterations/0.1.6/precursors/03-artifact-loop-diagnosis.md
+1decb126cc2a93df  artifacts/iterations/0.1.6/precursors/04-workstream-audit-0.1.4.md
+aa44c236f62ea5f8  artifacts/iterations/0.1.6/precursors/05-w3-ambiguous-pile.md
+973e6744cc7b4e53  artifacts/iterations/0.1.6/precursors/06-gotcha-registry-schema.md
+8930381e8b9c5d9a  artifacts/iterations/0.1.6/precursors/07-model-fleet-smoke.md
+8630ba11b9c77b9e  artifacts/iterations/0.1.6/precursors/08-claw3d-discovery.md
+478053d33964e11f  artifacts/iterations/0.1.6/precursors/09-telegram-openclaw-state.md
+8f414bc0df0e1a9a  artifacts/iterations/0.1.6/precursors/10-carryover-debts.md
+c2214a555997d3a0  artifacts/iterations/0.1.6/precursors/11-synthesis-and-open-questions.md
+28204f2435f3e9eb  artifacts/iterations/0.1.7/iao-build-log-0.1.7.md
+da807b0a0dd1c7de  artifacts/iterations/0.1.7/iao-bundle-0.1.7.md
+cc319834b5326a7e  artifacts/iterations/0.1.7/iao-design-0.1.7.md
+0e64bb39f3af95c3  artifacts/iterations/0.1.7/iao-plan-0.1.7.md
+1a687cd4caf28630  artifacts/iterations/0.1.7/iao-report-0.1.7.md
+1ae02d5ff740c86d  artifacts/iterations/0.1.7/iao-run-report-0.1.7.md
+3e38af4d46fc07fb  artifacts/iterations/0.1.7/seed.json
+0a34829366ebd26e  artifacts/iterations/0.1.8/iao-build-log-0.1.8.md
+a494c6c702d84401  artifacts/iterations/0.1.8/iao-bundle-0.1.8.md
+81318d26b5ad1d46  artifacts/iterations/0.1.8/iao-design-0.1.8.md
+b4eac2890eae06a1  artifacts/iterations/0.1.8/iao-plan-0.1.8.md
+73baec0bb8135665  artifacts/iterations/0.1.8/iao-run-report-0.1.8.md
+9f81238aa7cf0cdc  artifacts/iterations/0.1.9/aho-build-log-0.1.9.md
+0c6b39ba0842ba34  artifacts/iterations/0.1.9/aho-build-log-synthesis-0.1.9.md
+678ceca37a085dc7  artifacts/iterations/0.1.9/aho-bundle-0.1.9.md
+70793d26c4863ad9  artifacts/iterations/0.1.9/aho-design-0.1.9.md
+17e468b53921ef09  artifacts/iterations/0.1.9/aho-plan-0.1.9.md
+79c301df6d526eab  artifacts/iterations/0.1.9/aho-report-0.1.9.md
+dfdfbacd9517d427  artifacts/iterations/0.1.9/aho-run-report-0.1.9.md
+09103dc447bfc4d4  artifacts/iterations/0.1.9/seed.json
+9109df2f395ab21d  artifacts/iterations/0.2/iteration-2-charter.md
+676c9e8a8d8a3dc6  artifacts/iterations/0.2.1/aho-build-log-0.2.1.md
+2d16fe7a7eecc1db  artifacts/iterations/0.2.1/aho-bundle-0.2.1.md
+7e17fe09befd966f  artifacts/iterations/0.2.1/aho-design-0.2.1.md
+ee0d83ff8a6fbf01  artifacts/iterations/0.2.1/aho-plan-0.2.1.md
+bef74b6029539235  artifacts/iterations/0.2.1/aho-report-0.2.1.md
+f96c80dd9e6b7c55  artifacts/iterations/0.2.1/aho-run-0.2.1.md
+1d3f3fad131686db  artifacts/iterations/0.2.10/aho-build-log-0.2.10.md
+8e5b8f15064ddd89  artifacts/iterations/0.2.10/aho-bundle-0.2.10.md
+2d96f3a47dc84d3d  artifacts/iterations/0.2.10/aho-design-0.2.10.md
+d718c0d3d4de1b0a  artifacts/iterations/0.2.10/aho-plan-0.2.10.md
+f88ae901f26ef796  artifacts/iterations/0.2.10/aho-report-0.2.10.md
+6da40dc4466e0b5b  artifacts/iterations/0.2.10/aho-run-0.2.10.md
+65caa532898a8983  artifacts/iterations/0.2.10/carry-forwards.md
+802fe6347ff84c23  artifacts/iterations/0.2.10/decisions.md
+b7842becc81a134a  artifacts/iterations/0.2.10/forensic-patch-report.md
+0fc4a283d7a570d9  artifacts/iterations/0.2.10/w16-smoke-findings.md
+f87199fcaf25958c  artifacts/iterations/0.2.11/acceptance/W1.json
+866fa7e4613d1d27  artifacts/iterations/0.2.11/acceptance/W2.json
+c006efdae96845e2  artifacts/iterations/0.2.11/acceptance/W3.json
+89f6f55928720b2d  artifacts/iterations/0.2.11/acceptance/W4.json
+0fbcba5caf2b7def  artifacts/iterations/0.2.11/acceptance/W5.json
+97aac851d8da1c81  artifacts/iterations/0.2.11/acceptance/W6-patch.json
+530928520b27645d  artifacts/iterations/0.2.11/acceptance/W6.json
+9a6a2db9c86383e2  artifacts/iterations/0.2.11/acceptance/W7.json
+4e0eea047cb765b5  artifacts/iterations/0.2.11/acceptance/W8.json
+fc6d07a17561f10f  artifacts/iterations/0.2.11/acceptance/W9.json
+065f363c85ebe6b2  artifacts/iterations/0.2.11/acceptance/w3_check_gates.py
+991c9ef52c7ebb69  artifacts/iterations/0.2.11/acceptance/w3_check_gotchas.py
+46480fe6e3308b38  artifacts/iterations/0.2.11/acceptance/w4_check_report.py
+34b6aa2422275ff6  artifacts/iterations/0.2.11/acceptance/w4_check_verbose.py
+60d2226452c8e479  artifacts/iterations/0.2.11/acceptance/w5_check_manifest.py
+f6d4ee52e0a47aa1  artifacts/iterations/0.2.11/acceptance/w5_check_readme_tz.py
+7b6fb5ed46043b55  artifacts/iterations/0.2.11/acceptance/w5_check_section22.py
+9c2645abd2fdbb7f  artifacts/iterations/0.2.11/acceptance/w6_check_stub_fails.py
+9562fd4d39244571  artifacts/iterations/0.2.11/acceptance/w6_patch_check_gate.py
+f5beb760af8bda34  artifacts/iterations/0.2.11/acceptance/w6_patch_check_gotcha.py
+ed01562d6edf29c3  artifacts/iterations/0.2.11/acceptance/w7_check_daemons.py
+a907663b6bcc52f1  artifacts/iterations/0.2.11/acceptance/w7_check_line_count.py
+16a512cbf0e2b6f6  artifacts/iterations/0.2.11/acceptance/w7_check_log_writes.py
+a8b5dcd5997046fa  artifacts/iterations/0.2.11/acceptance/w8_check_caption.py
+fe8cedc4293a213a  artifacts/iterations/0.2.11/acceptance/w8_check_gotchas.py
+7bba542220b3c6c8  artifacts/iterations/0.2.11/acceptance/w8_check_in_progress.py
+2d7998809a856574  artifacts/iterations/0.2.11/acceptance/w8_check_v3.py
+1764c2aaaebb8da4  artifacts/iterations/0.2.11/acceptance/w9_check_g077.py
+1cca98f1d508e248  artifacts/iterations/0.2.11/aho-build-log-0.2.11.md
+7c699e419445fd64  artifacts/iterations/0.2.11/aho-bundle-0.2.11.md
+a4f2b7ddc57665cb  artifacts/iterations/0.2.11/aho-design-0.2.11.md
+b09f4439320741b3  artifacts/iterations/0.2.11/aho-plan-0.2.11.md
+3556a5cad758b499  artifacts/iterations/0.2.11/aho-run-0.2.11.md
+d2b025089e3037d7  artifacts/iterations/0.2.11/carry-forwards.md
+6284c53c034f2fcf  artifacts/iterations/0.2.11/decisions.md
+67c25939de4658d3  artifacts/iterations/0.2.11/mcp-readiness.md
+b47e44708caae280  artifacts/iterations/0.2.11/w6-patch-report.md
+dcb85eb1487185fd  artifacts/iterations/0.2.12/acceptance/W0.json
+c55af82697e6f9c6  artifacts/iterations/0.2.12/acceptance/W1.json
+9a3366a637c14597  artifacts/iterations/0.2.12/acceptance/W1_5.json
+984624ca1e53497a  artifacts/iterations/0.2.12/acceptance/W2.json
+6ee38fee62509f3d  artifacts/iterations/0.2.12/acceptance/W3.json
+eae483a584c687a5  artifacts/iterations/0.2.12/acceptance/W4.json
+34a197407b3bba78  artifacts/iterations/0.2.12/acceptance/W5.json
+8bb08e284fe8650c  artifacts/iterations/0.2.12/acceptance/W6.json
+fbb43ee6734c49ad  artifacts/iterations/0.2.12/acceptance/W7.json
+39d7089a8b928bf0  artifacts/iterations/0.2.12/acceptance/W8.json
+cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 ... (truncated)
 ```
 
@@ -5400,16 +8024,16 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
 ```json
 {
   "python": "3.14.4",
-  "platform": "Linux-7.0.0-1-cachyos-x86_64-with-glibc2.43",
+  "platform": "Linux-7.0.3-1-cachyos-x86_64-with-glibc2.43",
   "node": "NZXTcos",
   "ollama": [
     "NAME                                ID              SIZE      MODIFIED    ",
-    "llama3.2:3b                         a80c4f17acd5    2.0 GB    10 days ago    ",
-    "nomic-embed-text:latest             0a109f422b47    274 MB    12 days ago    ",
-    "haervwe/GLM-4.6V-Flash-9B:latest    ad2e2e374c6b    8.0 GB    12 days ago    ",
-    "nemotron-mini:4b                    ed76ab18784f    2.7 GB    12 days ago    "
+    "llama3.2:3b                         a80c4f17acd5    2.0 GB    2 weeks ago    ",
+    "nomic-embed-text:latest             0a109f422b47    274 MB    3 weeks ago    ",
+    "haervwe/GLM-4.6V-Flash-9B:latest    ad2e2e374c6b    8.0 GB    3 weeks ago    ",
+    "nemotron-mini:4b                    ed76ab18784f    2.7 GB    3 weeks ago    "
   ],
-  "disk": "/dev/nvme1n1p2  912G  134G  733G  16% /"
+  "disk": "/dev/nvme1n1p2  912G  149G  717G  18% /"
 }
 ```
 
@@ -5540,20 +8164,22 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
   "iteration": "0.2.16",
   "phase": 0,
   "run_type": "pattern-c-modified",
-  "current_workstream": "W2",
+  "current_workstream": "W0",
   "workstreams": {
     "W0": "workstream_complete",
     "W1": "workstream_complete",
-    "W2": "in_progress",
-    "W3": "not_started",
-    "W4": "not_started"
+    "W2": "workstream_complete",
+    "W3": "workstream_complete",
+    "W4": "workstream_complete",
+    "W5": "workstream_complete"
   },
   "executor": "claude-code",
   "auditor": "gemini-cli",
   "started_at": "2026-04-21T00:00:00Z",
-  "last_event": "W1_workstream_complete",
+  "last_event": "W5_workstream_complete",
   "status": "active",
-  "iteration_status": "active",
+  "iteration_status": "closed",
+  "iteration_closed_at": "2026-05-01T23:36:52Z",
   "proceed_awaited": false
 }
 ```
@@ -5564,12 +8190,16 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
   "version": "0.2.16",
   "project_code": "ahomw",
   "files": {
-    ".aho-checkpoint.json": "7226aeecd12465e1",
+    ".aho-checkpoint.json": "b26a2f24a1b11789",
     ".aho-checkpoint.json.bak-0.2.15": "cbbab8f3233c900e",
     ".aho.json": "d41ca9d68c3a5a85",
-    ".claude/settings.json": "e9dd0e98ebf20fc5",
+    ".claude/settings.json": "26150448c4c551b3",
+    ".claude/settings.json.pre-w0-backup": "26150448c4c551b3",
     ".claude/settings.json.pre-w2-backup": "1106b2a065309d9b",
+    ".claude/settings.json.pre-w3-backup": "e9dd0e98ebf20fc5",
+    ".claude/settings.json.pre-w4-backup": "159306430ed03724",
     ".claude/settings.local.json": "cce5ed98226b7470",
+    ".dockerignore": "e808f649746d6f61",
     ".gitignore": "ddf6629d348fe182",
     ".mcp.json": "5e70df73f4713a20",
     ".mcp.json.tpl": "a09f6924ea760a0d",
@@ -5588,12 +8218,13 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     ".pytest_cache/CACHEDIR.TAG": "83459a64cf189144",
     ".pytest_cache/README.md": "e1dae87d05c70e1f",
     ".pytest_cache/v/cache/lastfailed": "d06232ba944040c0",
-    ".pytest_cache/v/cache/nodeids": "589d4f9aa08ec52f",
+    ".pytest_cache/v/cache/nodeids": "50cebf7463d491e8",
     "CHANGELOG.md": "e1557770ceca91a2",
-    "CLAUDE.md": "c9b812913834d24b",
+    "CLAUDE.md": "e3177d17cc6e12a2",
     "COMPATIBILITY.md": "84cdc565a3273482",
-    "GEMINI.md": "a9923a418b0cc0b0",
-    "README.md": "dad035a675c6e66f",
+    "Dockerfile": "6e7e61852bc5d852",
+    "GEMINI.md": "7a5501a2f70b0d72",
+    "README.md": "9034224372848371",
     "VERSION": "3927e6d6897f355e",
     "aho-run-0.2.14.md": "1a2d3bdc0579d25e",
     "app/.gitignore": "2f6e4237a119428d",
@@ -5640,9 +8271,14 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/adrs/0002-nemoclaw-decision.md": "e78e952a32f35c10",
     "artifacts/adrs/0003-otel-scaffolding-posture.md": "966fa4e98838cdd0",
     "artifacts/adrs/0004-iteration-close-confirm-redesign.md": "12f25ee6a0537c33",
+    "artifacts/adrs/0005-gemini-otel-asymmetry.md": "c1073f3938bc140c",
+    "artifacts/adrs/0006-iteration-deliverable-discipline.md": "54f9d851062941cd",
+    "artifacts/adrs/0007-containerization-architecture.md": "ccb7cfa4c4b6b6d4",
+    "artifacts/adrs/0008-dispatcher-missing-model.md": "2324122cd9e16fc5",
     "artifacts/adrs/ahomw-ADR-044.md": "60d88ce81616c64b",
     "artifacts/adrs/ahomw-ADR-045.md": "5dfd12f0c7a74c3d",
     "artifacts/council-models-0.2.14.md": "d75fcb031fb5b133",
+    "artifacts/harness/adversarial-authorship-protocol.md": "6b2b0b1b4440c93d",
     "artifacts/harness/agents-architecture.md": "93773c0ca64cca55",
     "artifacts/harness/aur-packages.txt": "9e93f0a5eac00c0c",
     "artifacts/harness/base.md": "d96eabb0a31f54d4",
@@ -5658,7 +8294,6 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/harness/model-fleet.txt": "82243c8511f194f0",
     "artifacts/harness/orchestrator-config.md": "65607d2b171b72d2",
     "artifacts/harness/pacman-packages.txt": "20a5ef3260fbd1b2",
-    "artifacts/harness/pattern-c-protocol.md": "9ca36a09a7443d9e",
     "artifacts/harness/prompt-conventions.md": "c3c663d30946aeea",
     "artifacts/harness/secrets-architecture.md": "9fe63e6f290f699a",
     "artifacts/harness/test-baseline.json": "f3a6f5cd0ca4459a",
@@ -5987,18 +8622,71 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/iterations/0.2.16/acceptance/W0.json": "6715923d04ff763e",
     "artifacts/iterations/0.2.16/acceptance/W1-audit-dispositions.md": "d3331f951115768a",
     "artifacts/iterations/0.2.16/acceptance/W1.json": "d82eb74dfbeb028f",
+    "artifacts/iterations/0.2.16/acceptance/W2-audit-dispositions.md": "fff611f52a6d61b2",
+    "artifacts/iterations/0.2.16/acceptance/W2.json": "578c548c41f58318",
+    "artifacts/iterations/0.2.16/acceptance/W3-audit-dispositions.md": "1c081c984c9e28e7",
+    "artifacts/iterations/0.2.16/acceptance/W3.json": "e5c7d23b35a7aff8",
+    "artifacts/iterations/0.2.16/acceptance/W4-audit-dispositions.md": "84fc8ff48f0b193e",
+    "artifacts/iterations/0.2.16/acceptance/W4.json": "f4b759ad94545f44",
     "artifacts/iterations/0.2.16/aho-design-0.2.16.md": "0977b28fddd2099a",
     "artifacts/iterations/0.2.16/aho-plan-0.2.16.md": "a585c98c9356c233",
+    "artifacts/iterations/0.2.16/alerts/anomaly-rules.yaml": "40737116a44829ee",
+    "artifacts/iterations/0.2.16/alerts/pillar-11-violations.yaml": "05550b6e9608a8ec",
     "artifacts/iterations/0.2.16/audit/W0.json": "3918393b4a816a97",
     "artifacts/iterations/0.2.16/audit/W1.json": "9c32ec927e2f29d8",
+    "artifacts/iterations/0.2.16/audit/W2.json": "3b16546f0bdf5a4a",
+    "artifacts/iterations/0.2.16/audit/W3.json": "07a0cf25bdd55007",
+    "artifacts/iterations/0.2.16/audit/W4.json": "8a96da13b3429b5c",
     "artifacts/iterations/0.2.16/bundles/w1-audit-bundle-0.2.16.tar.gz": "fa991ac88ff48704",
-    "artifacts/iterations/0.2.16/carry-forwards-0.2.16.md": "10e17e513bd5fa73",
+    "artifacts/iterations/0.2.16/carry-forwards-0.2.16.md": "163b3427a8de3f83",
     "artifacts/iterations/0.2.16/dashboards/api-otel-sample.json": "fd3ad87163a1225d",
+    "artifacts/iterations/0.2.16/export/claude-otel-reference-pack/alerts/README.md": "51b7369af9add4ba",
+    "artifacts/iterations/0.2.16/export/claude-otel-reference-pack/alerts/anomaly-rules.yaml": "90cdd5f52bcba39f",
+    "artifacts/iterations/0.2.16/export/claude-otel-reference-pack/alerts/pillar-11-violations.yaml": "e64ba4396f727a43",
     "artifacts/iterations/0.2.16/install-fish-dryrun.md": "3f7e29fcf213433a",
+    "artifacts/iterations/0.2.16/iteration-close-0.2.16.md": "21956b6b12169cc4",
     "artifacts/iterations/0.2.16/otel-scaffold-notes.md": "f01fa8891cc69ea9",
+    "artifacts/iterations/0.2.16/pillar-11-monitoring-notes.md": "257cbfd0f70c8124",
     "artifacts/iterations/0.2.16/probes/qwen_num_predict_probe.py": "7023eabbf0f9ce79",
-    "artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py": "276319e214b5e199",
+    "artifacts/iterations/0.2.16/probes/w2_end_to_end_probe.py": "2836e5aa91f66592",
+    "artifacts/iterations/0.2.16/probes/w3_baseline_calibration.py": "1f099024bb659d5d",
     "artifacts/iterations/0.2.16/qwen-num-predict-probe.json": "948b181fe3ae5a1b",
+    "artifacts/iterations/0.2.16/retrospective-0.2.16.md": "297d249b110c53d3",
+    "artifacts/iterations/0.2.16/trace-integration-notes.md": "0f15a6186176a9db",
+    "artifacts/iterations/0.2.16/traces/end-to-end-sample.json": "147767a1981a3f6c",
+    "artifacts/iterations/0.2.17/W0-close-note.md": "67d43a44d3f79fad",
+    "artifacts/iterations/0.2.17/W1-close-note.md": "d67dd1844e22f615",
+    "artifacts/iterations/0.2.17/W1-plan-doc.md": "fef4d84def32d509",
+    "artifacts/iterations/0.2.17/W2-close-note.md": "b2e8c55522c39dd6",
+    "artifacts/iterations/0.2.17/W2-plan-doc.md": "aef7b0631b378bb6",
+    "artifacts/iterations/0.2.17/W3-close-note.md": "0b2a3a522ba717fe",
+    "artifacts/iterations/0.2.17/W3-plan-doc.md": "ca817b50094a4dbd",
+    "artifacts/iterations/0.2.17/W4-plan-doc.md": "0b4e2e31ef27b9b3",
+    "artifacts/iterations/0.2.17/W4-plan-doc.pre-w3-arbitration.md": "79cf3fefab8e928b",
+    "artifacts/iterations/0.2.17/acceptance/W0-amendment-b2-3.json": "93b7a133e85d24d4",
+    "artifacts/iterations/0.2.17/acceptance/W0.json": "2d16ffff8c2487fc",
+    "artifacts/iterations/0.2.17/acceptance/W1.json": "344835a0768c24fc",
+    "artifacts/iterations/0.2.17/acceptance/W2.json": "7a2845dbd09502d3",
+    "artifacts/iterations/0.2.17/acceptance/W3.json": "746bf567187303c3",
+    "artifacts/iterations/0.2.17/aho-plan-0.2.17.md": "09a469c56fd5b32e",
+    "artifacts/iterations/0.2.17/audit/W0.json": "7a1faaeb10d9d93f",
+    "artifacts/iterations/0.2.17/audit/W1.json": "92366f7d6ffb6da4",
+    "artifacts/iterations/0.2.17/audit/W2.json": "29a51b3eea7d515f",
+    "artifacts/iterations/0.2.17/audit/W3.json": "8298097fd922cb64",
+    "artifacts/iterations/0.2.17/audit/replay/W0-comparison.json": "00ec37e9a3be56f2",
+    "artifacts/iterations/0.2.17/audit/replay/W0-llama-rag.json": "74522994ac56a772",
+    "artifacts/iterations/0.2.17/audit/replay/W0-llama.json": "76f3bd2abfbd7d9a",
+    "artifacts/iterations/0.2.17/audit/replay/W1-comparison.json": "623d95a1118e7522",
+    "artifacts/iterations/0.2.17/audit/replay/W1-llama-rag.json": "e2c31cfdb0245a2a",
+    "artifacts/iterations/0.2.17/audit/replay/W1-llama.json": "3b3e8d237029e2a3",
+    "artifacts/iterations/0.2.17/audit/replay/W2-self-audit-rag.json": "4d57748472272b55",
+    "artifacts/iterations/0.2.17/audit/replay/comparison-rag-vs-non-rag.json": "553b01a239643dcd",
+    "artifacts/iterations/0.2.17/firebase-debug.log": "39efef028795b982",
+    "artifacts/iterations/0.2.17/probes/W2_audit_replay.py": "bb5032b8742945f0",
+    "artifacts/iterations/0.2.17/probes/W2_materiality_telemetry.py": "5c3b3386604f930c",
+    "artifacts/iterations/0.2.17/probes/W2_rag_preseed.py": "7b0b80ebc7152a59",
+    "artifacts/iterations/0.2.17/probes/W2_self_audit.py": "dd3de4330b485e8b",
+    "artifacts/iterations/0.2.17/probes/W3_audit_replay_rag.py": "435fa315e39cd639",
     "artifacts/iterations/0.2.2/aho-build-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-build-log-0.2.2.md": "91dfb7473da0e61a",
     "artifacts/iterations/0.2.2/aho-bundle-0.2.2.md": "5d47133beaca242e",
@@ -6007,7 +8695,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/iterations/0.2.2/aho-report-0.2.2.md": "ae555a24b9b5cf59",
     "artifacts/iterations/0.2.2/aho-run-0.2.2.md": "4e8f3602bfccd15d",
     "artifacts/iterations/0.2.3/aho-build-log-0.2.3.md": "4b70d5555b7011af",
-    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "926c2692589037b0",
+    "artifacts/iterations/0.2.3/aho-bundle-0.2.3.md": "36395f5ef8239eb6",
     "artifacts/iterations/0.2.3/aho-design-0.2.3.md": "d13ae32a9ac21a89",
     "artifacts/iterations/0.2.3/aho-plan-0.2.3.md": "37c8202077386688",
     "artifacts/iterations/0.2.3/aho-report-0.2.3.md": "4f33de71c95bfb58",
@@ -6055,6 +8743,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/iterations/0.2.9/p3-clone-runbook.md": "b68dd8724d4e77a5",
     "artifacts/iterations/0.2.9/portability-audit.md": "e0f79be9d33d0f54",
     "artifacts/iterations/0.2/iteration-2-charter.md": "ef78277014f7ff9d",
+    "artifacts/iterations/0.3/iteration-3-charter.md": "fe58c3daf27bc9bb",
     "artifacts/iterations/unknown/aho-bundle-unknown.md": "066674cfb6233881",
     "artifacts/phase-charters/aho-phase-0.md": "6f7238c9aaf492cd",
     "artifacts/phase-charters/iao-phase-0-historical.md": "9b48851f3152e943",
@@ -6089,13 +8778,17 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/templates/phase-charter-template.md": "4cb3615d433cad6a",
     "artifacts/templates/systemd/__init__.py": "e4a6a0577479b2b4",
     "artifacts/templates/systemd/project-telegram-bot.service.template": "5c7574deab625c98",
-    "artifacts/tests/conftest.py": "40a287d9eecbe0bf",
+    "artifacts/tests/conftest.py": "611a793026b22169",
     "artifacts/tests/reproduce_degenerate.py": "145a64b7f3f79e8e",
     "artifacts/tests/test_acceptance.py": "bb8df647d13a4ff2",
+    "artifacts/tests/test_anti_rubber_stamp.py": "1d5a02ff6dffc563",
+    "artifacts/tests/test_anti_rubber_stamp_dashboard.py": "9129536c7fe2d7b4",
     "artifacts/tests/test_artifacts_loop.py": "fe5c94bc536ff4e2",
+    "artifacts/tests/test_audit_finding_filter.py": "0c687dc677c4c4f2",
     "artifacts/tests/test_build_log_first.py": "e4b38a3a374c6c0c",
     "artifacts/tests/test_build_log_stub.py": "7e378e6d8b743b4a",
     "artifacts/tests/test_bundle_sections.py": "fa478538426312a7",
+    "artifacts/tests/test_checkpoint_isolation_guard.py": "3666c1c6115baacb",
     "artifacts/tests/test_components_manifest.py": "2e3b118ad33b3f04",
     "artifacts/tests/test_conductor.py": "d54196a2eed8a4ca",
     "artifacts/tests/test_config_port.py": "4e2add3c1a68afb9",
@@ -6103,6 +8796,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/tests/test_dashboard_aggregator.py": "88235ef75f7167e7",
     "artifacts/tests/test_density_check.py": "3b6800874cad39ce",
     "artifacts/tests/test_dispatcher_chat_api.py": "b81f99feb4aa300d",
+    "artifacts/tests/test_dispatcher_duration_error_path.py": "09f051fbbd199621",
     "artifacts/tests/test_dispatcher_hardening.py": "3a2aade14817f67e",
     "artifacts/tests/test_dispatcher_template_leak.py": "b469d2257fcca8a0",
     "artifacts/tests/test_dispatcher_traceparent.py": "165c1b4fb4a4587d",
@@ -6117,7 +8811,10 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/tests/test_gate_verbosity.py": "c188ee77dca577a4",
     "artifacts/tests/test_glm_parser.py": "5d649e76cbcc1f0e",
     "artifacts/tests/test_harness.py": "ccbbf4287799c0f2",
+    "artifacts/tests/test_lego_bricks.py": "50748c9023f79251",
     "artifacts/tests/test_logger_otel.py": "760406d57725bd81",
+    "artifacts/tests/test_materiality_comparison.py": "4e317bb89810288d",
+    "artifacts/tests/test_materiality_surfaces.py": "0a1816ebec8e53b4",
     "artifacts/tests/test_mcp_smoke.py": "70fd5f47efbdc870",
     "artifacts/tests/test_mcp_template.py": "4a2535b7b84467a9",
     "artifacts/tests/test_migrate_config_fish.py": "f6edb9488ba03d82",
@@ -6128,7 +8825,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/tests/test_orchestrator_config.py": "d35a50f59da4c2c5",
     "artifacts/tests/test_orchestrator_halt.py": "e52e8749f5ceb981",
     "artifacts/tests/test_orchestrator_workstream_id.py": "0e90ee7a54ee93db",
-    "artifacts/tests/test_otel_aggregator.py": "2e4ce960df7883c5",
+    "artifacts/tests/test_otel_aggregator.py": "cc68c2fd8551ee61",
     "artifacts/tests/test_otel_instrumentation.py": "a129f8bf4ec92d87",
     "artifacts/tests/test_paths.py": "84ebc1cd20bd8c2c",
     "artifacts/tests/test_pillars_trident.py": "257659ec8d89f848",
@@ -6141,6 +8838,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/tests/test_preflight.py": "69a169e3da07d313",
     "artifacts/tests/test_rag_forbidden_filter.py": "5f969b16909de9fc",
     "artifacts/tests/test_report_builder.py": "6af658c1d555abc7",
+    "artifacts/tests/test_role_collapse_brick.py": "1d24e8c707331f98",
     "artifacts/tests/test_role_evaluator_agent.py": "806659cb4b0e2343",
     "artifacts/tests/test_role_harness_agent.py": "f1818a77c04503b5",
     "artifacts/tests/test_role_workstream_agent.py": "96309dcf638812b8",
@@ -6150,6 +8848,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/tests/test_secrets_backends.py": "e6dfc4dda0a93c90",
     "artifacts/tests/test_secrets_cli.py": "d093ed40bba724f6",
     "artifacts/tests/test_synthesis_evaluator.py": "bb2b51ed9fd27745",
+    "artifacts/tests/test_telegram_alerts.py": "b437950e56a2f770",
     "artifacts/tests/test_telegram_inbound.py": "ff089ae9ed583846",
     "artifacts/tests/test_telegram_real.py": "014e1215d7dccbc1",
     "artifacts/tests/test_telegram_ws_commands.py": "b59a363144b6fe1e",
@@ -6157,6 +8856,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "artifacts/tests/test_workstream_events.py": "1ecebf3cdb531ac9",
     "artifacts/tests/test_workstream_events_v2.py": "678d65dfc7da3fa7",
     "artifacts/tests/test_workstream_gate.py": "9d8be53ddd9648b9",
+    "artifacts/tests/test_workstream_init.py": "cb41bdd7bf056759",
     "artifacts/tests/test_ws_fixes.py": "d353dbdff3783b88",
     "artifacts/visualizations/lego-office-0.2.12.svg": "7fda42240cdd1ea7",
     "bin/aho": "468d233c6fe70e31",
@@ -6166,106 +8866,7 @@ ba17d95b5f621970  .git/objects/44/0791504a1b7da2fdcc3d4c9d2de50ad37f43e3
     "bin/aho-bootstrap": "9f6fb86e7c3c1a3f",
     "bin/aho-cli": "9345aa332fe26af4",
     "bin/aho-conductor": "8286b196a7f9725f",
-    "bin/aho-dashboard": "2d011b8e41cb3636",
-    "bin/aho-install": "c67d037cb51c1a6c",
-    "bin/aho-mcp": "5dfb3969f6becc59",
-    "bin/aho-models": "ec454f0935d0ef91",
-    "bin/aho-models-status": "e9a8db8f29d879a7",
-    "bin/aho-nemoclaw": "15cc2d57983db603",
-    "bin/aho-openclaw": "ce2b4ac03e980ea5",
-    "bin/aho-otel-down": "1a9b2f370a3e3cea",
-    "bin/aho-otel-status": "213c264cf7ab0cce",
-    "bin/aho-otel-up": "527ff1375036a38a",
-    "bin/aho-pacman": "2c954ec1cc9455fa",
-    "bin/aho-python": "e320021fb543da9a",
-    "bin/aho-secrets-init": "b6bd1c7ede3f594c",
-    "bin/aho-systemd": "65b06856f7433b5e",
-    "bin/aho-telegram": "8cab98d30b9e3303",
-    "bin/aho-uninstall": "ab3dc10fb952b364",
-    "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/data_level0.bin": "b2c16901daf23c7a",
-    "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/header.bin": "b9bdd5eafdb3855c",
-    "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/length.bin": "b6f577665a4c9da3",
-    "data/chroma/4f68a005-1f4e-4967-8643-20f5830515cd/link_lists.bin": "e4a6a0577479b2b4",
-    "data/chroma/64fbf7af-0f75-446b-9708-d2ecab3474ba/data_level0.bin": "b2c16901daf23c7a",
-    "data/chroma/64fbf7af-0f75-446b-9708-d2ecab3474ba/header.bin": "b9bdd5eafdb3855c",
-    "data/chroma/64fbf7af-0f75-446b-9708-d2ecab3474ba/length.bin": "d6d62fe6b11374bd",
-    "data/chroma/64fbf7af-0f75-446b-9708-d2ecab3474ba/link_lists.bin": "e4a6a0577479b2b4",
-    "data/chroma/f177c10e-2e5d-4274-89ab-6ac7710cbbe6/data_level0.bin": "b2c16901daf23c7a",
-    "data/chroma/f177c10e-2e5d-4274-89ab-6ac7710cbbe6/header.bin": "b9bdd5eafdb3855c",
-    "data/chroma/f177c10e-2e5d-4274-89ab-6ac7710cbbe6/length.bin": "c1b6a59d3362d715",
-    "data/chroma/f177c10e-2e5d-4274-89ab-6ac7710cbbe6/link_lists.bin": "e4a6a0577479b2b4",
-    "data/fs_test.txt": "20c645fc6216e5f6",
-    "data/gotcha_archive.json": "51ed41d639d1df16",
-    "data/known_hallucinations.json": "aa5f9768e8e84b53",
-    "data/mcp_readiness.json": "935bbed5a3ba2b40",
-    "docker-compose.otel.yml": "0b6166d7632f23d2",
-    "firebase-debug.log": "823554a2df576b9d",
-    "install.fish": "290b9afa195927b8",
-    "pipeline/README.md": "e72e84ecf50b887a",
-    "projects.json": "160afb32b90b60cb",
-    "pyproject.toml": "b3e87d891f650342",
-    "src/aho.egg-info/PKG-INFO": "8831746ceeeabb01",
-    "src/aho.egg-info/SOURCES.txt": "bf67ce26ff4a7164",
-    "src/aho.egg-info/dependency_links.txt": "5030c2a8db49e9c6",
-    "src/aho.egg-info/entry_points.txt": "3cdf8f78d86215a6",
-    "src/aho.egg-info/requires.txt": "95c559957c389a07",
-    "src/aho.egg-info/top_level.txt": "d01dac5a6cce638c",
-    "src/aho/__init__.py": "5ecdbaafc1ab0684",
-    "src/aho/acceptance.py": "a53baf306a8f82fa",
-    "src/aho/agents/__init__.py": "3d24c1aff057bc16",
-    "src/aho/agents/conductor.py": "04a58a43f832816c",
-    "src/aho/agents/nemoclaw.py": "3edcecb0aeccddd2",
-    "src/aho/agents/openclaw.py": "1675cda9a402ae8c",
-    "src/aho/agents/roles/__init__.py": "ca34cb44fd66a6c2",
-    "src/aho/agents/roles/assistant.py": "21ba8ee182a93fbf",
-    "src/aho/agents/roles/base_role.py": "7081fa659d509c1a",
-    "src/aho/agents/roles/code_runner.py": "cff2c05d89703c20",
-    "src/aho/agents/roles/evaluator_agent.py": "d9dc584da92d990a",
-    "src/aho/agents/roles/harness_agent.py": "ea23c3988c6f0752",
-    "src/aho/agents/roles/reviewer.py": "719e150b5a6a78bd",
-    "src/aho/agents/roles/workstream_agent.py": "3a5309942fc5b81f",
-    "src/aho/artifacts/__init__.py": "333e450e98178e84",
-    "src/aho/artifacts/context.py": "acb80deb0f3e150b",
-    "src/aho/artifacts/evaluator.py": "095c8555e9a6e30c",
-    "src/aho/artifacts/glm_client.py": "b3d456a330bb070f",
-    "src/aho/artifacts/loop.py": "df8183cf01daacb4",
-    "src/aho/artifacts/nemotron_client.py": "a59762ab81b0d402",
-    "src/aho/artifacts/qwen_client.py": "f6ce4efb91d5d2fb",
-    "src/aho/artifacts/repetition_detector.py": "afb5044893a63ed9",
-    "src/aho/artifacts/schemas.py": "1630926df2218e96",
-    "src/aho/artifacts/templates.py": "82e4fdcc72237e18",
-    "src/aho/bundle/__init__.py": "854901698386dcb8",
-    "src/aho/bundle/components_section.py": "94ae1b648c7af13c",
-    "src/aho/cli.py": "e45a4c4569b3edbb",
-    "src/aho/compatibility.py": "55ed5019a6ebd358",
-    "src/aho/components/__init__.py": "f65569a810c563a1",
-    "src/aho/components/manifest.py": "3df26575df45b7f5",
-    "src/aho/config.py": "ce252bafd1489c62",
-    "src/aho/council/__init__.py": "e4a6a0577479b2b4",
-    "src/aho/council/inventory.py": "bfde9dc99ad5ebfb",
-    "src/aho/council/status.py": "817b8f3f6c9750a9",
-    "src/aho/dashboard/__init__.py": "3c0749d4246f643a",
-    "src/aho/dashboard/aggregator.py": "e938a978b33823f8",
-    "src/aho/dashboard/lego/__init__.py": "e4a6a0577479b2b4",
-    "src/aho/dashboard/lego/layout.py": "6f3dc420367e4afc",
-    "src/aho/dashboard/lego/palette.py": "5340e996b76d3b0b",
-    "src/aho/dashboard/lego/renderer.py": "82fb5056bff9aa1e",
-    "src/aho/dashboard/otel_aggregator.py": "ebc3ed5e87bd68f0",
-    "src/aho/dashboard/server.py": "c9ce4ee49c213d66",
-    "src/aho/data/__init__.py": "e4a6a0577479b2b4",
-    "src/aho/data/firestore.py": "ae11a3dbf555abdc",
-    "src/aho/docs/harness/local-global-model.md": "06c588fe9f34f147",
-    "src/aho/doctor.py": "7c4bb0012a5a59f3",
-    "src/aho/feedback/__init__.py": "e9f1a8458b7d4ddd",
-    "src/aho/feedback/aho_json.py": "36051eaa019deaad",
-    "src/aho/feedback/build_log_stub.py": "bf270ab49f96f8d2",
-    "src/aho/feedback/prompt.py": "97680462332b6108",
-    "src/aho/feedback/questions.py": "76cdfc280d065a60",
-    "src/aho/feedback/report_builder.py": "9e0c07453c88b771",
-    "src/aho/feedback/run.py": "534d5cb024239bf1",
-    "src/aho/feedback/seed.py": "1668b268ba498114",
-    "src/aho/feedback/summary.py": "e52af521e20968d6",
-    "src/aho/harness.py": "f773ff62a7337
+    "bin/aho-dashboard": "2d01
 [truncated, see file]
 ```
 
@@ -6604,56 +9205,39 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 ```markdown
 # aho
 
-**Agentic Harness Orchestration.** Methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.
+## Origin
 
-**Phase 0** · **Iteration 0.2.15** · **Status: Tier 1 Partial Install Validation**
+TachTech builds data and SIEM migration pipelines for customers — moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
 
-```mermaid
-graph BT
-    AHO["<b>A H O</b><br/><i>Agentic Harness Orchestration</i>"]:::shaft
-    AHO --- COST["◆ Minimal cost"]:::prong
-    AHO --- SPEED["◆ Speed of delivery"]:::prong
-    AHO --- PERF["◆ Optimized performance"]:::prong
-    classDef shaft fill:#0D9488,stroke:#0D9488,color:#fff
-    classDef prong fill:#161B22,stroke:#4ADE80,color:#4ADE80
-```
+Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects — using the same multi-modal models — produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline — the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture — was doing the work. The pipeline was useful, but the harness was load-bearing.
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product. The executing model (Claude, Gemini, Qwen, Llama) is the engine. The harness ships working software without supervision.
+aho is the extraction of that harness from pipeline-specific contexts into general-purpose governed agentic engineering infrastructure. The thesis: richer harnesses produce smarter behavior from the same models. Same Claude, same Gemini, materially different output, because the scaffolding around them is structured rather than vibes-based.
 
----
+## What aho is
 
-## Quick start
+aho is governance infrastructure for LLM-driven engineering. The four properties that make it that, rather than another agent framework:
 
-```fish
-git clone https://github.com/soc-foundry/aho
-cd aho
-./install.fish
-aho doctor
-```
+- **Drafter/auditor separation as a structural constraint.** Pattern C: the agent that produces work cannot bless it. The drafter drafts; a separate auditor audits; a human signs.
+- **Provable lineage of every dispatch.** W3C TRACEPARENT propagation through the stack means every LLM call is attributable to its workstream, iteration, drafter session, and parent operation. Cost, tokens, errors, decisions all traceable.
+- **Monitored invariants enforced as policy.** Pillar 11 (no agent git operations) is the prototype. Future invariants extend the same pattern. Policy as gate, not dashboard.
+- **Sealed acceptance and audit archives, immutable event log.** The artifacts are the record. They cannot be retroactively edited. Disputes resolve by reading the archive, not by re-asking the agent.
 
-Requires: Arch-family Linux, Python 3.11+, fish shell, Ollama, 8GB+ VRAM for Tier 1 council.
+The combination — and the compliance-shaped framing — is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
----
+## Why aho — cost and token utilization
 
-## Cascade
+Token cost matters. Claude and Gemini API spend at scale is the dominant operating cost of LLM-driven engineering, and single-agent execution wastes it in characteristic ways:
 
-Five-stage pipeline. Each stage a distinct role. Handoffs validated.
+- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model — fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints — turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
+- **No model-cost gradient.** Single-agent execution sends every decision to the same expensive model. Routing decisions, classification, triage, substantive reasoning, and architectural decisions all priced identically. aho's council pattern routes triage and classification to small local models (Nemotron-class), substantive work to mid-tier (Qwen, GLM), premium dispatches to Claude or Gemini. The cost gradient is visible per-workstream.
+- **Re-execution waste from undetected drift.** Single-agent failure modes — hallucinated state, stale assumptions, lost context, mid-task looping — are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
+- **Scope creep priced as features.** Single-agent execution under "do this large complex thing" expands scope as it works. aho's no-mid-flight-scope-amendment rule keeps tokens on the requested scope, not on the agent's interpretation of what it should also fix.
 
-```
-Document → Indexer-in → Producer → Auditor → Indexer-out → Assessor → Output
-                              │           │
-                              ▼           ▼
-                         deltas      delta-validations
-                              │           │
-                              └─► staging ◄┘
-```
+These are mechanism claims, not benchmark claims. The mechanisms compound across iterations.
 
-Producer drafts. Indexers propose deltas. Auditor validates. Assessor meta-assesses.
-Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
+## The 11 Pillars
 
----
-
-## The Eleven Pillars of AHO
+aho's operating principles. Numbered, named, and binding.
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -6667,197 +9251,237 @@ Cross-model role assignment enforces Pillar 7 (drafter ≠ reviewer).
 10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt.
 11. **The human holds the keys.** No agent writes to git or manages secrets.
 
----
+Each pillar is enforced by tooling, registry entries, or both. Pillar violations are findings; repeated violations are gotcha registry entries with mitigations.
 
-## Capabilities
+## Architecture — current shape
 
-**Artifact loop.** Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word-count enforcement and 3-retry escalation.
+aho today runs as a single-machine local loop. One human, one workstation, one project at a time.
 
-**Pre-flight / post-flight gates.** Environment validation before launch, quality gates after execution. Bundle completeness enforced.
+Components on the workstation:
 
-**Cascade orchestrator.** 5-stage pipeline (`src/aho/pipeline/`) with trace events, per-stage artifacts, cross-stage delta propagation. Dispatcher supports Ollama `/api/chat` with model-family stop tokens and `num_ctx` up to 32K on 8GB VRAM.
+- **aho harness** — Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
+- **ollama** — local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
+- **OTEL collector** — custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
+- **aho-dashboard** — claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
+- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** — daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
+- **age + fernet secret store** — age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
 
-**Pattern C execution.** Claude Code drafts, Gemini CLI audits, human signs. State machine: `in_progress → pending_audit → audit_complete → workstream_complete`. Audit archives are versioned, overwrites forbidden.
+State on disk:
 
-**Gotcha registry.** 83+ indexed failure modes with mitigations, queried at iteration start.
+- **`.aho-checkpoint.json`** — Pattern C state machine, single source of truth for iteration progression.
+- **`artifacts/iterations/{version}/`** — sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
+- **`artifacts/adrs/`** — versioned architectural decision records, enumerated from disk.
+- **`~/.local/share/aho/events/aho_event_log.jsonl`** — immutable append-only event ledger.
 
-**Secrets architecture.** age encryption + OS keyring + fernet bulk storage. No keys, passphrases, or secret material in the repo.
+Distribution today is fish-shell-driven install scripts. This is a known limitation; see Target shape.
 
-**Multi-agent orchestration.** Qwen for general work, Llama 3.2 for triage, GLM and Nemotron re-test in 0.2.15, OpenClaw as file-bridge wrapper, Nemoclaw as dispatcher.
+## Architecture — target shape
 
-**Telegram `/ws` streaming.** `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`. Auto-push on workstream completion.
+aho deployment scales across three tiers. The harness lives at the edge with each engineer; the heavy compute lives centrally; the truth layer is managed storage.
 
-**Install surface.** Three-persona model (pipeline builder, framework host, impromptu assistant). `aho run "task"` for persona 3 pwd-scoped work.
+### Tier 1: engineer workstation (containerized)
 
-**Observability.** otelcol-contrib + Jaeger as systemd user services. Spans in dispatcher, openclaw, nemoclaw, telegram.
+Runs locally on every aho user's machine. Distributed as signed container images.
 
----
+- **aho-harness** — Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
+- **ollama-edge** — minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
+- **otel-collector-edge** — local OTEL collector, ships to central observability tier.
+- **aho-dashboard-local** — claw3d for this engineer's iterations. Optional; org dashboard exists separately.
+- **aho-harness-watcher** — daemon monitoring local harness state, emitting events.
+- **engineer-local secret store** — age identity for this engineer, fernet-encrypted local secret bundle.
 
-## Folder layout
+The engineer container is a workstation tool, not a Kubernetes pod. Stateful per iteration, identity-bound to the engineer, not fungible.
+
+### Tier 2: pod-deployed serving plane (GCP / Kubernetes)
+
+Runs centrally; engineer workstations consume via HTTPS. Pod-based, horizontally scaled with HPA, GPU-aware where applicable.
+
+- **inference-gateway** — the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
+- **vllm-{qwen, glm, nemotron, ...}** — high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
+- **api-proxy-{anthropic, google, openai}** — egress with per-tenant key vaulting, rate limiting, retry handling.
+- **audit-dispatcher** — stateless service handing drafter outputs to the auditor agent.
+- **embedding-service** — nomic-embed-text or equivalent containerized for retrieval at scale.
+- **batch-worker-pool** — Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
+- **registry-api** — Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
+- **archive-api** — GCS-fronted API for sealed acceptance and audit archive reads and writes.
+- **aho-dashboard-org** — team-level org-wide view, separate deployment from engineer-local dashboards.
+- **otel-collector-central** — DaemonSet ingestion tier.
+
+### Tier 3: managed storage and state services
+
+Not pods. The truth layer.
+
+- **Firestore** — checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
+- **GCS** — sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
+- **Cloud Trace (or Tempo)** — OTEL trace storage.
+- **Cloud Monitoring (or Mimir)** — OTEL metric storage.
+- **Cloud Logging (or Loki)** — OTEL log storage.
+- **Secret Manager (or Vault)** — per-engineer and per-tenant identity vaulting.
+- **Pub/Sub** — event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
+- **Workload Identity** — engineer-container to GCP authentication.
+
+### Why this shape
+
+Three independent scaling axes:
+
+- **Dispatch volume** scales pods in Tier 2 via HPA and cluster autoscaling on GPU node pools. This is the canonical Kubernetes-with-GPU workload.
+- **Engineer count and deployment count** scales by deployment multiplication: more engineers means more workstation containers, each producing load on Tier 2 services. Engineer-side does not pod-scale.
+- **Storage and archive volume** scales via Tier 3 service capacity, independent of pod count.
+
+Putting the harness or registries in pods would couple these axes and break the independence. The boundary — harness and registries at the edge or behind APIs, model compute in pods, truth in managed services — preserves it.
+
+## Components in detail
+
+### The harness
+
+The harness is the contract between human, drafter agent, and auditor agent. It enforces Pattern C state transitions, validates dispatch parameters, parses TRACEPARENT, creates spans, writes acceptance and audit archives, and refuses operations that violate Pillars (notably 11). The harness is not a library called from agent code; the harness invokes agents.
+
+### The registries
+
+Three registries form the harness's memory:
+
+- **Gotcha registry** — indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
+- **Script registry** — sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
+- **ADR index** — architectural decision records numbered sequentially from disk enumeration, never fabricated.
+
+In current shape, registries are version-controlled files in the repo. In target shape, registries are Firestore-backed APIs with Pub/Sub fan-out for change notification.
+
+### The dispatcher and router
+
+The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing — typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
+
+In current shape, dispatcher routes to local Ollama. In target shape, dispatcher routes through the inference-gateway, which bridges to local Ollama for edge work, vLLM pods for substantive council dispatches, or API proxies for premium dispatches.
+
+### Pattern C state machine
+
+Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 — the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
+
+### OTEL telemetry and TRACEPARENT propagation
+
+Every dispatch produces traces, metrics, and logs tagged with iteration, workstream, and role. TRACEPARENT propagates through the dispatch chain so a Claude Code `tool_use` span parents to the `aho.dispatch` span which parents to the inferred-model span. Cost and token attribution is per-span; the Pillar 8 dashboard aggregates by workstream.
+
+### The Pillar 8 cost and token dashboard
+
+claw3d-fronted Flutter dashboard reads from the OTEL aggregator and serves per-workstream and per-iteration cost rollups, token totals, cache:new ratios, turn counts, tool-call counts, MCP event counts, and error counts. The cost gradient is visible directly: substantive dispatches priced higher than triage dispatches, audit dispatches priced separately from drafter dispatches.
+
+### Pattern C drafter and auditor
+
+Drafter is typically Claude Code; auditor is typically Gemini CLI. They run in separate sessions with separate identity. The drafter writes the acceptance archive and stops; a fresh auditor session reads the archive and writes the audit archive; a fresh drafter session reads the audit archive and emits `workstream_complete`. Three sessions, three role boundaries, no agent able to bless its own work.
+
+## Roadmap
+
+aho deployment scales in phases:
+
+- **Phase A (current):** single-machine local loop. Working, refined through 0.2.x iterations.
+- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only — no central cloud yet. The data-gathering phase.
+- **Phase C:** cloud coordination layer informed by Phase B telemetry. Endpoints for registry sync, harness contribution, shared event log, and central observability backend. Specific shape determined by what Phase B telemetry reveals.
+- **Phase D:** customer-facing deployment. Multi-tenant. Compliance-shaped.
+
+Phase A is shipping. Phase B is the next several iterations of architectural work. Phase C and D are not yet designed in detail.
+
+## Repo layout
 
 ```
 aho/
 ├── src/aho/                    # Python package (src-layout)
-│   └── pipeline/               # Cascade: schemas, dispatcher, orchestrator
-├── bin/                        # CLI entry points and tool wrappers
+│   ├── pipeline/               # Cascade: dispatcher, router, orchestrator, schemas
+│   ├── agents/                 # Drafter/auditor agent integrations (nemoclaw, openclaw)
+│   ├── council/                # Local model fleet wiring
+│   ├── dashboard/              # Pillar 8 dashboard server + OTEL aggregator
+│   ├── harness.py              # Pattern C state machine entry point
+│   ├── acceptance.py           # Sealed acceptance archive writer
+│   ├── workstream_events.py    # Workstream lifecycle event emitter
+│   ├── workstream_gate.py      # State transition gating
+│   ├── preflight/              # Pre-launch environment validation
+│   ├── postflight/             # Post-execution quality gates
+│   ├── registry.py             # Gotcha and script registry access
+│   ├── secrets/                # age + fernet secret store wiring
+│   ├── telegram/               # Notification fan-out
+│   ├── integrations/           # External tool integrations
+│   ├── rag/                    # Retrieval (nomic-embed-text, ChromaDB)
+│   ├── install/                # Install-time orchestration logic
+│   └── components/             # Component coverage tracking
+├── bin/                        # CLI entry points and tool wrappers (Pillar 4)
 ├── artifacts/
-│   ├── harness/                # Pillars, ADRs, Pattern C protocol
-│   ├── adrs/                   # Architecture Decision Records
-│   ├── iterations/             # Per-iteration design, plan, build, report, bundle
+│   ├── harness/                # Pillars (base.md), Pattern C protocol, prompt conventions
+│   ├── adrs/                   # Architectural Decision Records (sequential)
+│   ├── iterations/             # Per-iteration: design, plan, build, acceptance, audit, bundle
 │   ├── phase-charters/         # Phase objective contracts
 │   ├── roadmap/                # Strategic planning
 │   ├── scripts/                # Utility and instrumentation
-│   ├── templates/              # Scaffolding
 │   ├── prompts/                # LLM generation templates
+│   ├── templates/              # Scaffolding
 │   └── tests/                  # Verification suite
-├── data/                       # Registries, event log, ChromaDB
-├── app/                        # Consumer application mount (Phase 1+)
-└── pipeline/                   # Processing pipeline mount (Phase 1+)
+├── data/                       # Registries, event log, ChromaDB stores
+├── templates/                  # Project bootstrap templates
+├── tests/                      # Top-level test suite
+├── web/                        # Dashboard web assets
+├── app/                        # Consumer application mount (Phase B+)
+├── pipeline/                   # Processing pipeline mount (Phase B+)
+├── CLAUDE.md                   # Drafter (Claude Code) operating instructions
+├── GEMINI.md                   # Auditor (Gemini CLI) operating instructions
+├── CHANGELOG.md                # Iteration history
+├── COMPATIBILITY.md            # Supported environments
+├── MANIFEST.json               # Repo-level manifest
+└── install.fish                # 9-step install orchestrator
 ```
 
-Canonical since 0.1.13. Path-agnostic via `iao_paths.find_project_root()` and `.aho.json` sentinel.
+Path-agnostic via `aho.paths.find_project_root()` and the `.aho.json` sentinel.
 
----
-
-## State machine
-
-Every workstream flows through four states. Claude emits three events. Gemini emits one. Checkpoint advances only after audit archive exists with pass or pass-with-findings.
-
-```
-  in_progress   ──►   pending_audit   ──►   audit_complete   ──►   workstream_complete
-  (Claude)           (Claude done)        (Gemini done)           (Claude emits)
-```
-
-No agent emits `workstream_complete` before `audit_complete` exists. Audit archive overwrites forbidden; re-audits create versioned files.
-
----
-
-## Roadmap
-
-| Iteration | Theme | Status |
-|---|---|---|
-| 1 (0.1.x) | Build the harness | graduated 2026-04-11 |
-| 2 (0.2.x) | Ship to soc-foundry + P3 | active (0.2.15) |
-| 3 (0.3.x) | Alex demo + polish | planned |
-| Phase 1 | Multi-project, multi-machine | planned |
-
-**Phase 0 charter:** `artifacts/phase-charters/aho-phase-0.md`
-
-Phase 0 is complete when soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.
-
----
-
-## Recent iterations
-
-**0.2.15 — Tier 1 Partial Install Validation (in progress).** Wire and ship Tier 1 install package. 4 chat LLMs (Qwen, Llama 3.2, GLM, Nemotron) validated through Ollama on fixed dispatcher. Fair re-test of GLM and Nemotron after 0.2.13 W2.5 compromise findings measured on broken substrate. Ollama Tier 1 capability audit, dispatcher hardening, Nemoclaw decision ADR, cross-model cascade integration test. 5 workstreams.
-
-**0.2.14 — Council Wiring Verification.** 4 workstreams delivered (W0 setup, W1 vet+wire+smoke, W1.5 substrate repair, W2 close). W1 smoke test surfaced two dispatcher bugs: `num_ctx` default 4096 truncating input to ~4K tokens, and `/api/generate` without stop tokens causing chat template leakage. W1.5 repaired the dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens). Run-2 smoke test produced 14,725 chars of substantive cross-stage output vs run-1's 6,901 chars of template-leaked garbage. Council validated as real-but-thin: cascade mechanics work, Pillar 7 violation persists (Qwen-solo), auditor role-prompt bifurcation identified.
-
-**0.2.13 — Dispatch-Layer Repair.** First Pattern C iteration. W1 fixed GLM parser (`GLMParseError` replaces hardcoded `{score:8, ship}` fallback). W2 fixed Nemotron classifier (specific error types replace blanket `except Exception`). W2.5 hard gate: honest parsers exposed that GLM timed out 80% of inputs, Nemotron returned "feature" 80% regardless of content. Rescoped W3-W9. 4 workstreams delivered.
-
-**0.2.12 — Council Activation.** 20 workstreams. Gemini CLI primary executor. Council inventory audit. Five gotchas landed (G078-G083) including foundational G083: exception handlers returning hardcoded positive values, masking real failures. Council health measured at 35.3/100. Strategic rescope at W5.
-
-See [CHANGELOG.md](CHANGELOG.md) for full history back to 0.1.0-alpha.
-
----
-
-## Core concepts
-
-**Harness.** The versioned set of files that constrain agent behavior. Pillars, ADRs, Pattern C protocol, gotcha registry, prompt conventions, test baseline. Changes at phase or iteration boundaries.
-
-**Cascade.** Five role-bound stages that produce and validate analytical artifacts. Handoffs are traced events. Deltas proposed by Indexers validated by Auditor and Assessor.
-
-**Pattern C.** Execution model where a cloud orchestrator drafts, a second cloud orchestrator audits, and a human signs. Separates generation from evaluation at the orchestrator boundary. Introduced in 0.2.13.
-
-**Council.** The set of local LLMs available to the harness. Members have distinct roles. Pillar 7 requires drafter ≠ reviewer; council composition enables this.
-
-**Gotcha registry.** Structured record of failure modes with mitigations. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
-
-**Three personas.** Persona 1 (pipeline builder) runs full iterations against known projects. Persona 2 (framework host) imports aho into another repo. Persona 3 (impromptu assistant) runs pwd-scoped one-shot work via `aho run`.
-
----
-
-## Installation
+## Getting started
 
 ```fish
-# 1. Clone
 git clone https://github.com/soc-foundry/aho ~/dev/projects/aho
 cd ~/dev/projects/aho
-
-# 2. Install (idempotent; 9-step orchestrator)
 ./install.fish
-
-# 3. Verify
 aho doctor
-aho doctor --deep    # includes Flutter and dart checks
-aho components check # per-kind presence verification
 ```
 
-**Requirements:**
+Optional deeper checks:
+
+```fish
+aho doctor --deep        # includes Flutter and dart checks
+aho components check     # per-kind component presence verification
+```
+
+Requirements:
 
 - Arch Linux family (CachyOS tested)
-- Python 3.11+ (`pip install -e . --break-system-packages`)
-- fish shell (primary)
+- Python 3.14
+- fish shell (primary; non-fish shells are not supported)
 - Ollama (installed via upstream script, not pacman)
-- 8GB+ VRAM for Tier 1 council (Qwen 3.5:9B + Llama 3.2:3B + GLM + Nemotron)
-- systemd user services (linger enabled)
+- 8GB+ VRAM for the local council (Qwen 3.5:9b, GLM-4.6V-Flash-9B, Nemotron-mini:4b, nomic-embed-text)
+- systemd user services with linger enabled
 - Telegram bot token (optional, for `/ws` streaming)
 - Brave Search API token (optional, for search tools)
 
-**Tier 1 install** pulls four chat LLMs and one embedding model. Tier 2 and Tier 3 (Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo) land with 16GB+ machines; see 0.2.15 carry-forwards.
+Distribution today is the fish install script. Container distribution is Phase B; do not assume signed images exist yet.
 
----
+Configuration:
 
-## Configuration
+- **Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
+- **MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. Smoke-tested via `bin/aho-mcp smoke`.
+- **Secrets** initialized via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
+- **Per-machine systemd user services:** `aho-openclaw`, `aho-nemoclaw`, `aho-telegram`, `aho-harness-watcher`, `aho-otel-collector`, `aho-dashboard`.
 
-**Orchestrator config** at `~/.config/aho/orchestrator.json`: engine, search provider, openclaw/nemoclaw model defaults.
+## Contributing
 
-**MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. 9 MCP servers smoke-tested via `bin/aho-mcp smoke`.
+Pillar 11 governs: agents do not write to git. All commits are human-authored. PRs are welcome from human contributors. Agent-assisted drafting is expected and encouraged; agent-direct git operations are not.
 
-**Secrets** via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase.
+## Changelog
 
-**Per-machine systemd user services:** openclaw, nemoclaw, telegram, harness-watcher, otel-collector, jaeger, dashboard.
-
----
-
-## Related work
-
-**[karpathy/llm-council](https://github.com/karpathy/llm-council).** Conceptual reference for multi-LLM cross-review pattern. Three-stage architecture (first opinions → review → chairman) differs from aho's five-stage role-bound cascade. OpenRouter cloud APIs vs aho's local Ollama inference. Karpathy's description: "99% vibe coded as a fun Saturday hack." Value is conceptual, not implementation.
-
-**[ruvnet/ruflo](https://github.com/ruvnet/ruflo).** Claude Code orchestration platform with swarm coordination, WASM policy engine, plugin system. Much larger scope than aho; different architectural premises (swarm-per-task vs role-bound cascade, dynamic agent spawning vs fixed council composition). Structural reference for OSS project organization.
-
-aho's focus is narrower than either: harness-governed iterations with durable state transitions, honest substrate measurement, and supervised-free software delivery. Local-first, 8-24GB VRAM tier, Arch Linux family, fish shell.
-
----
-
-## Status
-
-**Phase 0 active.** Second-machine clone target: ThinkStation P3 (tsP3-cos). Third-machine (A8cos) reframed as orchestration/daily-driver after integrated GPU constraint. Luke's machine (24GB) is candidate Tier 3 clone for 0.2.17.
-
-**Council:** Qwen 3.5:9B operational. Llama 3.2:3B integration in 0.2.15 W0. GLM-4.6V-Flash-9B and Nemotron-mini:4b substrate-compromise re-test in 0.2.15 W0. Gemma 2, DeepSeek-Coder-V2, Mistral-Nemo planned for 16GB+ machines.
-
-**Testing:** 302 passing, 12-13 known baseline failures (daemon-dependent), 0 new regressions across recent iterations.
-
-**Gotcha registry:** 83+ entries.
-
----
+See [CHANGELOG.md](CHANGELOG.md) for full iteration history back to 0.1.0-alpha.
 
 ## License
 
 License to be determined before v0.6.0 release.
-
----
-
-*aho v0.2.15 · aho.run · Phase 0 · April 2026*
-
-*README last reviewed: 2026-04-13 by 0.2.15 W0 work session*
 ```
 
 ### CLAUDE.md
 ```markdown
 # CLAUDE.md — aho 0.2.16
 
-You are Claude Code, primary drafter for aho 0.2.16 under Pattern C (modified). Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -6893,7 +9517,7 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **Cost attribution is Pillar 8 ground truth starting 0.2.16.** Do not estimate per-workstream cost from parsed logs once W1 dashboard lands. Read it from `claude_code.cost.usage` metrics tagged with `aho.workstream`.
 
-## Pattern C Role — Primary Drafter (Modified for 0.2.16)
+## Adversarial Authorship Role — Primary Drafter (Modified for 0.2.16)
 
 For each workstream N:
 1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 — it flows into OTEL resource attrs for per-workstream cost and trace attribution.
@@ -6978,7 +9602,7 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
 - `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment
@@ -7011,7 +9635,7 @@ When assembling the export pack (W4): keep it aho-brand-neutral, keep configurat
 ```markdown
 # GEMINI.md — aho 0.2.16
 
-You are Gemini CLI, auditor for aho 0.2.16 under Pattern C. Claude Code drafts. You audit. Kyle signs.
+You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude Code drafts. You audit. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -7045,11 +9669,11 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **OTEL telemetry is first-class evidence in 0.2.16.** If an acceptance archive claims a metric fired, a trace landed, or an alert delivered — spot-check by querying Jaeger or the collector directly, not by trusting a quoted log line. If the claim is about a dashboard panel, verify the panel renders with real data, not synthetic.
 
-## Pattern C Role — Auditor
+## Adversarial Authorship Role — Auditor
 
 For each workstream N:
 1. Claude writes `artifacts/iterations/0.2.16/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
-2. Read it. Read `artifacts/harness/pattern-c-protocol.md` if unclear.
+2. Read it. Read `artifacts/harness/adversarial-authorship-protocol.md` if unclear.
 3. Lightweight audit — **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
@@ -7127,7 +9751,7 @@ Findings severity scale (matches 0.2.15 AF convention): `info`, `important`, `cr
 Gemini CLI has no first-class OTEL support as of this iteration. Your audits will not produce API-level metrics, cost attribution, or trace spans under the OTEL export path. An ADR landed in 0.2.16 W2 documenting this posture (number determined at W2 execution time from ADR index).
 
 Consequences:
-- Pattern C traces in Jaeger show the Claude Code drafter side in full, and the Gemini CLI auditor side as harness-watcher wall-clock wrappers only
+- Adversarial Authorship traces in Jaeger show the Claude Code drafter side in full, and the Gemini CLI auditor side as harness-watcher wall-clock wrappers only
 - Audit cost attribution in the Pillar 8 dashboard shows drafter cost fully and auditor cost not at all
 - Downstream consumers of the Mercor export pack should expect this asymmetry — the pack documents it prominently
 
@@ -7172,7 +9796,7 @@ Specific pitfalls for 0.2.16:
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
 - `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, Producer failure root cause
@@ -7345,6 +9969,124 @@ _info "────────────────────────�
 ```
 
 ## §25. Harnesses
+
+### adversarial-authorship-protocol.md
+```markdown
+# Adversarial Authorship Protocol — aho 0.2.14
+
+**Produced:** W0 0.2.13, patched W0 0.2.14 | **Renamed:** 0.2.17 W0 (from "Pattern C Protocol") | **Status:** Active for 0.2.14+
+
+> This protocol was authored as "Pattern C Protocol" through
+> 0.2.13–0.2.16. Renamed to "Adversarial Authorship Protocol" in
+> 0.2.17 W0 to describe the protocol's actual structural property —
+> drafter and auditor are constitutionally adversarial, with human
+> as sole signing authority — rather than an arbitrary letter label.
+> Protocol body (state machine, emitter table, halt conditions) is
+> unchanged. Sealed 0.2.16 acceptance and audit archives retain the
+> original "Pattern C" terminology verbatim per sealed-archive
+> discipline.
+
+---
+
+## 1. Emitter Table (authoritative)
+
+| Event | Emitter | When |
+|-------|---------|------|
+| `workstream_start` | Claude Code | At workstream begin. **REQUIRED.** Missing starts = protocol violation. |
+| `pending_audit` | Claude Code | After acceptance archive written. Checkpoint advances to `pending_audit`. |
+| `audit_complete` | Gemini CLI | After audit archive written. |
+| `workstream_complete` | Claude Code | After reading Gemini's audit archive with `audit_result: "pass"` or `"pass_with_findings"`. **Never before `audit_complete` exists.** |
+
+No other agents emit lifecycle events. No event is emitted by both agents.
+
+## 2. When Gemini Audits
+
+Gemini CLI audits **after** Claude Code writes its acceptance archive for a workstream and **before** the checkpoint advances to `workstream_complete`.
+
+Sequence per workstream:
+1. Claude Code executes scope per plan.
+2. Claude Code writes acceptance archive to `artifacts/iterations/{iter}/acceptance/W{N}.json`.
+3. Claude Code sets checkpoint status to `pending_audit` (NOT `workstream_complete`).
+4. Claude Code emits `pending_audit`. **Claude STOPS here.**
+5. Kyle hands context to Gemini CLI.
+6. Gemini CLI reviews the acceptance archive + targeted spot-checks.
+7. Gemini CLI writes audit archive (see section 3).
+8. Gemini CLI emits `audit_complete`.
+9. Claude Code returns in a **fresh session**, reads the audit archive, and emits `workstream_complete`.
+10. Checkpoint advances to `workstream_complete`.
+
+### workstream_start requirement (0.2.14 patch)
+
+0.2.13 fired zero `workstream_start` events across all workstreams. This created a gap in lifecycle traceability — event log had complete events but no starts. Starting 0.2.14, `workstream_start` is REQUIRED at workstream begin. Missing starts are a protocol violation to be flagged in audit.
+
+## 3. What Audit Produces
+
+Gemini CLI writes an audit archive to:
+```
+artifacts/iterations/{iter}/audit/W{N}.json
+```
+
+Audit archive shape:
+- `workstream_id`: e.g. "W0"
+- `auditor`: "gemini-cli"
+- `timestamp`: ISO 8601
+- `acceptance_archive_reviewed`: path to Claude's acceptance file
+- `spot_checks_performed`: list of commands/files checked
+- `findings`: list of observations (pass, concern, or fail)
+- `audit_status`: "audit_complete" | "audit_failed"
+- `recommendation`: "advance" | "rework" | "halt"
+
+### Audit archive overwrites forbidden (0.2.14 patch)
+
+An audit archive, once written, is immutable. If a re-audit is required (e.g., after rework), Gemini writes a versioned file:
+- First audit: `audit/W{N}.json`
+- Re-audit: `audit/W{N}-v2.json`
+- Further: `audit/W{N}-v3.json`, etc.
+
+This prevents the timestamp coherence risk identified in the 0.2.13 triple-audit session, where batch auditing overwrote per-workstream audit timestamps.
+
+## 4. How Checkpoint Advances
+
+State machine per workstream:
+```
+in_progress → pending_audit → audit_complete → workstream_complete
+```
+
+- `in_progress`: Claude Code is executing. Set by `emit_workstream_start`.
+- `pending_audit`: Claude Code finished; acceptance archive written; awaiting Gemini. Set by Claude.
+- `audit_complete`: Gemini wrote audit archive with `audit_status: "audit_complete"` and `recommendation: "advance"`. Set by Gemini.
+- `workstream_complete`: Claude read audit archive in fresh session and advanced checkpoint. Set by Claude.
+
+If Gemini recommends `"rework"`, the workstream reverts to `in_progress` and Claude re-executes the identified gaps. If Gemini recommends `"halt"`, the iteration enters strategic-rescope.
+
+### Checkpoint update scoping (0.2.14 patch)
+
+`emit_workstream_complete()` and `emit_workstream_start()` MUST only modify the named workstream's state in the checkpoint. Sibling workstream states must be preserved. This was a bug in 0.2.13: emitting a lifecycle event for one workstream corrupted sibling states (W0/W1 reverted to `in_progress`, W3-W6 flipped from `skipped_per_rescope` to `in_progress`). Fixed in 0.2.14 W0.
+
+### Terminal event session requirement (0.2.14 patch, from 0.2.13 carry-forwards)
+
+`workstream_complete` events require a fresh executor session after audit, not an inline emit during the audit session. Claude returns, reads the audit archive, then emits in its own session. This prevents role-crossing (0.2.13 W0 ambiguity where Gemini attempted to emit `workstream_complete`).
+
+## 5. Halt Conditions
+
+Gemini halts the workstream (and potentially the iteration) if audit finds any of:
+
+1. **Gaming**: Acceptance archive passes checks via manipulated thresholds, weakened assertions, or manufactured data rather than substantive work (G079).
+2. **G083 reintroduction**: New code introduces `except Exception` blocks that return hardcoded positive values (G083).
+3. **Acceptance-substance mismatch**: Acceptance archive claims pass but spot-check reveals the claimed behavior does not hold.
+4. **Baseline regression**: `baseline_regression_check()` reveals new test failures beyond the baseline in `test-baseline.json`.
+5. **Schema drift**: Acceptance archive shape deviates from the strict Pydantic `AcceptanceResult` model without documented rationale (G078).
+
+A halt at any workstream triggers review with Kyle before proceeding.
+
+## 6. Cautionary Examples (0.2.13)
+
+**W0 role-crossing:** Gemini attempted to emit `workstream_complete` in its audit — this is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity. The emitter table (section 1) is now authoritative.
+
+**Triple-audit timestamp coherence:** Gemini auditing W1, W2, W2.5 in one session gave all three archives timestamps from the batch session, not per-workstream. The overwrite ban (section 3) prevents this going forward.
+
+**Stale workstream_complete:** During 0.2.13 close reconciliation, a `workstream_complete` event was emitted for W10 before verifying the audit archive existed. The state machine (section 4) is authoritative: `workstream_complete` follows `audit_complete`, not checkpoint status.
+```
 
 ### agents-architecture.md
 ```markdown
@@ -8177,114 +10919,6 @@ The token is never stored in plaintext on disk. The `token_secret_key` field in 
 ---
 
 *orchestrator-config.md v0.2.8 — aho harness artifact.*
-```
-
-### pattern-c-protocol.md
-```markdown
-# Pattern C Protocol — aho 0.2.14
-
-**Produced:** W0 0.2.13, patched W0 0.2.14 | **Status:** Active for 0.2.14+
-
----
-
-## 1. Emitter Table (authoritative)
-
-| Event | Emitter | When |
-|-------|---------|------|
-| `workstream_start` | Claude Code | At workstream begin. **REQUIRED.** Missing starts = protocol violation. |
-| `pending_audit` | Claude Code | After acceptance archive written. Checkpoint advances to `pending_audit`. |
-| `audit_complete` | Gemini CLI | After audit archive written. |
-| `workstream_complete` | Claude Code | After reading Gemini's audit archive with `audit_result: "pass"` or `"pass_with_findings"`. **Never before `audit_complete` exists.** |
-
-No other agents emit lifecycle events. No event is emitted by both agents.
-
-## 2. When Gemini Audits
-
-Gemini CLI audits **after** Claude Code writes its acceptance archive for a workstream and **before** the checkpoint advances to `workstream_complete`.
-
-Sequence per workstream:
-1. Claude Code executes scope per plan.
-2. Claude Code writes acceptance archive to `artifacts/iterations/{iter}/acceptance/W{N}.json`.
-3. Claude Code sets checkpoint status to `pending_audit` (NOT `workstream_complete`).
-4. Claude Code emits `pending_audit`. **Claude STOPS here.**
-5. Kyle hands context to Gemini CLI.
-6. Gemini CLI reviews the acceptance archive + targeted spot-checks.
-7. Gemini CLI writes audit archive (see section 3).
-8. Gemini CLI emits `audit_complete`.
-9. Claude Code returns in a **fresh session**, reads the audit archive, and emits `workstream_complete`.
-10. Checkpoint advances to `workstream_complete`.
-
-### workstream_start requirement (0.2.14 patch)
-
-0.2.13 fired zero `workstream_start` events across all workstreams. This created a gap in lifecycle traceability — event log had complete events but no starts. Starting 0.2.14, `workstream_start` is REQUIRED at workstream begin. Missing starts are a protocol violation to be flagged in audit.
-
-## 3. What Audit Produces
-
-Gemini CLI writes an audit archive to:
-```
-artifacts/iterations/{iter}/audit/W{N}.json
-```
-
-Audit archive shape:
-- `workstream_id`: e.g. "W0"
-- `auditor`: "gemini-cli"
-- `timestamp`: ISO 8601
-- `acceptance_archive_reviewed`: path to Claude's acceptance file
-- `spot_checks_performed`: list of commands/files checked
-- `findings`: list of observations (pass, concern, or fail)
-- `audit_status`: "audit_complete" | "audit_failed"
-- `recommendation`: "advance" | "rework" | "halt"
-
-### Audit archive overwrites forbidden (0.2.14 patch)
-
-An audit archive, once written, is immutable. If a re-audit is required (e.g., after rework), Gemini writes a versioned file:
-- First audit: `audit/W{N}.json`
-- Re-audit: `audit/W{N}-v2.json`
-- Further: `audit/W{N}-v3.json`, etc.
-
-This prevents the timestamp coherence risk identified in the 0.2.13 triple-audit session, where batch auditing overwrote per-workstream audit timestamps.
-
-## 4. How Checkpoint Advances
-
-State machine per workstream:
-```
-in_progress → pending_audit → audit_complete → workstream_complete
-```
-
-- `in_progress`: Claude Code is executing. Set by `emit_workstream_start`.
-- `pending_audit`: Claude Code finished; acceptance archive written; awaiting Gemini. Set by Claude.
-- `audit_complete`: Gemini wrote audit archive with `audit_status: "audit_complete"` and `recommendation: "advance"`. Set by Gemini.
-- `workstream_complete`: Claude read audit archive in fresh session and advanced checkpoint. Set by Claude.
-
-If Gemini recommends `"rework"`, the workstream reverts to `in_progress` and Claude re-executes the identified gaps. If Gemini recommends `"halt"`, the iteration enters strategic-rescope.
-
-### Checkpoint update scoping (0.2.14 patch)
-
-`emit_workstream_complete()` and `emit_workstream_start()` MUST only modify the named workstream's state in the checkpoint. Sibling workstream states must be preserved. This was a bug in 0.2.13: emitting a lifecycle event for one workstream corrupted sibling states (W0/W1 reverted to `in_progress`, W3-W6 flipped from `skipped_per_rescope` to `in_progress`). Fixed in 0.2.14 W0.
-
-### Terminal event session requirement (0.2.14 patch, from 0.2.13 carry-forwards)
-
-`workstream_complete` events require a fresh executor session after audit, not an inline emit during the audit session. Claude returns, reads the audit archive, then emits in its own session. This prevents role-crossing (0.2.13 W0 ambiguity where Gemini attempted to emit `workstream_complete`).
-
-## 5. Halt Conditions
-
-Gemini halts the workstream (and potentially the iteration) if audit finds any of:
-
-1. **Gaming**: Acceptance archive passes checks via manipulated thresholds, weakened assertions, or manufactured data rather than substantive work (G079).
-2. **G083 reintroduction**: New code introduces `except Exception` blocks that return hardcoded positive values (G083).
-3. **Acceptance-substance mismatch**: Acceptance archive claims pass but spot-check reveals the claimed behavior does not hold.
-4. **Baseline regression**: `baseline_regression_check()` reveals new test failures beyond the baseline in `test-baseline.json`.
-5. **Schema drift**: Acceptance archive shape deviates from the strict Pydantic `AcceptanceResult` model without documented rationale (G078).
-
-A halt at any workstream triggers review with Kyle before proceeding.
-
-## 6. Cautionary Examples (0.2.13)
-
-**W0 role-crossing:** Gemini attempted to emit `workstream_complete` in its audit — this is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity. The emitter table (section 1) is now authoritative.
-
-**Triple-audit timestamp coherence:** Gemini auditing W1, W2, W2.5 in one session gave all three archives timestamps from the batch session, not per-workstream. The overwrite ban (section 3) prevents this going forward.
-
-**Stale workstream_complete:** During 0.2.13 close reconciliation, a `workstream_complete` event was emitted for W10 before verifying the audit archive existed. The state machine (section 4) is authoritative: `workstream_complete` follows `audit_complete`, not checkpoint status.
 ```
 
 ### prompt-conventions.md

@@ -1,0 +1,196 @@
+{
+  "disposition": "surface_to_drafter",
+  "confidence": 0.85,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-03T16:25:37.107139+00:00",
+  "audit_completed_utc": "2026-05-03T16:25:50.896935+00:00",
+  "target_artifact_sha256": "a1432e3dd323e06ca281918aaa1c43fdaeaab4832e1abc3c6f6083f236eefeb0",
+  "findings_count": 4,
+  "evidence_trace_count": 2,
+  "audit_kind": "self",
+  "iteration": "0.2.17",
+  "workstream": "W4",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "F-0.2.17-W3-001",
+      "severity": "important",
+      "description": "The artifact claims that the carry-forward ID F-0.2.17-W3-001 is registered, but its source is not found in the iteration-context."
+    },
+    {
+      "id": "F-0.2.17-W9-999",
+      "severity": "important",
+      "description": "The artifact claims that the carry-forward ID F-0.2.17-W9-999 is registered, but its source is not found in the iteration-context."
+    },
+    {
+      "id": "G081",
+      "severity": "info",
+      "description": "The artifact mentions a gotcha G081, but does not provide any further information about it."
+    },
+    {
+      "id": "AUDIT-PILLAR11",
+      "severity": "critical",
+      "description": "Possible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push'"
+    }
+  ],
+  "evidence_traces": [
+    "All operator-facing surfaces and codeblocks fish-clean.",
+    "command ls not `ls`."
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "fail",
+    "git_ops_hits": [
+      "git-add",
+      "git-commit",
+      "git-push"
+    ],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "latency_ms": 13788,
+  "body_md": "# Self-Audit \u2014 0.2.17 W4\n**Disposition:** surface_to_drafter\n**Confidence:** 0.85\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W4.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **fail**\n- three_octet_versioning_present: **pass**\n- git-op references: 'git-add', 'git-commit', 'git-push'\n\n## Findings\n\n### Finding F-0.2.17-W3-001 (important)\n\nThe artifact claims that the carry-forward ID F-0.2.17-W3-001 is registered, but its source is not found in the iteration-context.\n\n### Finding F-0.2.17-W9-999 (important)\n\nThe artifact claims that the carry-forward ID F-0.2.17-W9-999 is registered, but its source is not found in the iteration-context.\n\n### Finding G081 (info)\n\nThe artifact mentions a gotcha G081, but does not provide any further information about it.\n\n### Finding AUDIT-PILLAR11 (critical)\n\nPossible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push'\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201cAll operator-facing surfaces and codeblocks fish-clean.\u201d\n- \u201ccommand ls not `ls`.\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 19,
+    "registered_count": 15,
+    "unverified_count": 4,
+    "truncated": false,
+    "section_chars": 6266,
+    "references": [
+      {
+        "id": "D1",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-0.2.17-W3-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W1-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "G081",
+        "kind": "gotcha",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "AF-1",
+        "kind": "audit_finding_short",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W9-999",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D2",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D3",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D8",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "D9",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "D4",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D5",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "D6",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "D7",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W2-006",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W1-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "ADR-0009",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "ADR-0010",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      }
+    ]
+  },
+  "suppressed_findings": [],
+  "finding_filter": {
+    "filter_enabled": true,
+    "filter_eligible": true,
+    "registered_id_count": 15,
+    "model_findings_count": 3,
+    "active_findings_count": 3,
+    "suppressed_count": 0
+  }
+}

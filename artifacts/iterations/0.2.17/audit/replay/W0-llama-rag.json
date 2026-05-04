@@ -1,0 +1,239 @@
+{
+  "disposition": "halt",
+  "confidence": 0.9,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-03T14:38:48.634502+00:00",
+  "audit_completed_utc": "2026-05-03T14:39:01.685885+00:00",
+  "target_artifact_sha256": "29ae7f5034f20c45e0e6c95216920fd7151fb04388c342e0ac9af5ded53502c6",
+  "findings_count": 2,
+  "evidence_trace_count": 2,
+  "audit_kind": "replay",
+  "iteration": "0.2.17",
+  "workstream": "W0",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "B2.3",
+      "severity": "info",
+      "description": "The B2.3 post-reboot validation outcome is deferred across the post-W0 reboot boundary per ADR 0007 \u00a7GPU passthrough deferral amendment."
+    },
+    {
+      "id": "ADR-0008",
+      "severity": "important",
+      "description": "The ADR-0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required."
+    }
+  ],
+  "evidence_traces": [
+    "Deferred across post-W0 reboot boundary per ADR 0007 \u00a7GPU passthrough deferral amendment.",
+    "ADR-0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required."
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "pass",
+    "git_ops_hits": [],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "latency_ms": 13048,
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 31,
+    "registered_count": 21,
+    "unverified_count": 9,
+    "truncated": true,
+    "section_chars": 8905,
+    "references": [
+      {
+        "id": "F-0.2.17-W0-002",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W0-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W0-005",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W0-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "ADR-0008",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "B2.3",
+        "kind": "bucket",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-host-002",
+        "kind": "carry_forward_host",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "W2-AF004",
+        "kind": "audit_finding_ws_scoped",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "F-host-001",
+        "kind": "carry_forward_host",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "W4-AF002",
+        "kind": "audit_finding_ws_scoped",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "AF004",
+        "kind": "audit_finding_bare",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "AF005",
+        "kind": "audit_finding_bare",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "F-W0-004",
+        "kind": "carry_forward_short",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "F-W1-001",
+        "kind": "carry_forward_short",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "B2.1",
+        "kind": "bucket",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W0.json"
+      },
+      {
+        "id": "B2.5",
+        "kind": "bucket",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "ADR-0006",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "B1.2",
+        "kind": "bucket",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W0.json"
+      },
+      {
+        "id": "B4.1",
+        "kind": "bucket",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W0.json"
+      },
+      {
+        "id": "AF003",
+        "kind": "audit_finding_bare",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "B2.2",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B2.4",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B1.1",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B1.3",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B1.4",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B1.5",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B3.1",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B3.2",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "B3.3",
+        "kind": "bucket",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  },
+  "body_md": "# Audit Replay \u2014 0.2.17 W0\n**Disposition:** halt\n**Confidence:** 0.9\n**Auditor:** llama3.2:3b\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **pass**\n- three_octet_versioning_present: **pass**\n\n## Findings\n\n### Finding B2.3 (info)\n\nThe B2.3 post-reboot validation outcome is deferred across the post-W0 reboot boundary per ADR 0007 \u00a7GPU passthrough deferral amendment.\n\n### Finding ADR-0008 (important)\n\nThe ADR-0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required.\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201cDeferred across post-W0 reboot boundary per ADR 0007 \u00a7GPU passthrough deferral amendment.\u201d\n- \u201cADR-0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required.\u201d\n"
+}

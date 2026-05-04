@@ -1,0 +1,248 @@
+{
+  "disposition": "halt",
+  "confidence": 0.95,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-03T14:44:19.350017+00:00",
+  "audit_completed_utc": "2026-05-03T14:44:27.291434+00:00",
+  "target_artifact_sha256": "b1c093fa8863919f8f0720715abe6e4f3683cf0a9984c042ff7a473571e68cc4",
+  "findings_count": 3,
+  "evidence_trace_count": 2,
+  "audit_kind": "self",
+  "iteration": "0.2.17",
+  "workstream": "W3",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "F-0.2.17-W3-001",
+      "severity": "important",
+      "description": "Llama3.2:3b inconsistently honors the registered-references prompt rule"
+    },
+    {
+      "id": "G081",
+      "severity": "info",
+      "description": "No celebratory framing in G081"
+    },
+    {
+      "id": "AUDIT-PILLAR11",
+      "severity": "critical",
+      "description": "Possible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push'"
+    }
+  ],
+  "evidence_traces": [
+    "The system-prompt rule wording can be strengthened (e.g. moving the rule into the JSON schema description rather than a paragraph at end of system prompt).",
+    "Llama failed to use the RAG context, not a Pillar 11 / secrets / git-op miss."
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "fail",
+    "git_ops_hits": [
+      "git-add",
+      "git-commit",
+      "git-push"
+    ],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "latency_ms": 7939,
+  "body_md": "# Self-Audit \u2014 0.2.17 W3\n**Disposition:** halt\n**Confidence:** 0.95\n**Auditor:** llama3.2:3b\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **fail**\n- three_octet_versioning_present: **pass**\n- git-op references: 'git-add', 'git-commit', 'git-push'\n\n## Findings\n\n### Finding F-0.2.17-W3-001 (important)\n\nLlama3.2:3b inconsistently honors the registered-references prompt rule\n\n### Finding G081 (info)\n\nNo celebratory framing in G081\n\n### Finding AUDIT-PILLAR11 (critical)\n\nPossible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push'\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201cThe system-prompt rule wording can be strengthened (e.g. moving the rule into the JSON schema description rather than a paragraph at end of system prompt).\u201d\n- \u201cLlama failed to use the RAG context, not a Pillar 11 / secrets / git-op miss.\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 38,
+    "registered_count": 29,
+    "unverified_count": 1,
+    "truncated": true,
+    "section_chars": 11222,
+    "references": [
+      {
+        "id": "F-0.2.17-W0-002",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W1-002",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W0-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W0-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W1-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W1-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "AF-0.2.17-W1-001",
+        "kind": "audit_finding_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "ADR-0008",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "B2.3",
+        "kind": "bucket",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "F-host-002",
+        "kind": "carry_forward_host",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "W2-AF004",
+        "kind": "audit_finding_ws_scoped",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "F-host-001",
+        "kind": "carry_forward_host",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "W4-AF002",
+        "kind": "audit_finding_ws_scoped",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W0-close-note.md"
+      },
+      {
+        "id": "D2",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D3",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D4",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D1",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-W0-004",
+        "kind": "carry_forward_short",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "AF003",
+        "kind": "audit_finding_bare",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "G081",
+        "kind": "gotcha",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "D12",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "AF004",
+        "kind": "audit_finding_bare",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "AF005",
+        "kind": "audit_finding_bare",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "ADR-0006",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "ADR-0009",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "G083",
+        "kind": "gotcha",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-W1-001",
+        "kind": "carry_forward_short",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "D5",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W2-006",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  }
+}

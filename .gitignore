@@ -55,3 +55,12 @@ firebase-debug.log
 # Downloaded binary artifacts (installed to /usr/local/bin/)
 *.tar.gz
 jaeger-*-linux-amd64/
+
+
+# Working-state files (mirror .dockerignore working-state list)
+.aho-checkpoint.json
+.aho.json
+.claude/
+.claude-history
+MANIFEST.json
+projects.json

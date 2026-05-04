@@ -1,6 +1,6 @@
 # CLAUDE.md — aho 0.2.16
 
-You are Claude Code, primary drafter for aho 0.2.16 under Pattern C (modified). Gemini CLI audits. Kyle signs.
+You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship (modified). Gemini CLI audits. Kyle signs.
 
 ## The Eleven Pillars of AHO (verbatim from artifacts/harness/base.md)
 
@@ -36,7 +36,7 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **Cost attribution is Pillar 8 ground truth starting 0.2.16.** Do not estimate per-workstream cost from parsed logs once W1 dashboard lands. Read it from `claude_code.cost.usage` metrics tagged with `aho.workstream`.
 
-## Pattern C Role — Primary Drafter (Modified for 0.2.16)
+## Adversarial Authorship Role — Primary Drafter (Modified for 0.2.16)
 
 For each workstream N:
 1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 — it flows into OTEL resource attrs for per-workstream cost and trace attribution.
@@ -121,7 +121,7 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
 - `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
-- `artifacts/harness/pattern-c-protocol.md`
+- `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
 - `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment

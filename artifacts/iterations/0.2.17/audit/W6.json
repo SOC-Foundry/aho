@@ -1,0 +1,149 @@
+{
+  "disposition": "halt",
+  "confidence": 0.95,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-04T04:33:13.631861+00:00",
+  "audit_completed_utc": "2026-05-04T04:33:24.631978+00:00",
+  "target_artifact_sha256": "f105f65c2d9e029a12b63e567b97e196e88f1ce69d337f4a2ab22e089690e867",
+  "findings_count": 3,
+  "evidence_trace_count": 1,
+  "audit_kind": "self",
+  "iteration": "0.2.17",
+  "workstream": "W6",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "D1",
+      "severity": "important",
+      "description": "The carry-forward_full ID F-0.2.17-W1-001 is registered, but its source is not found in the iteration-context."
+    },
+    {
+      "id": "F-0.2.17-W4-001",
+      "severity": "info",
+      "description": "The carry-forward_full ID F-0.2.17-W4-001 is unverified"
+    },
+    {
+      "id": "AUDIT-PILLAR11",
+      "severity": "critical",
+      "description": "Possible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push', 'gh pr create'"
+    }
+  ],
+  "evidence_traces": [
+    "The source of the carry-forward_full ID F-0.2.17-W1-001 is not found in the iteration-context."
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "fail",
+    "git_ops_hits": [
+      "git-add",
+      "git-commit",
+      "git-push",
+      "gh pr create"
+    ],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17",
+      "0.2.17"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "latency_ms": 10998,
+  "body_md": "# Self-Audit \u2014 0.2.17 W6\n**Disposition:** halt\n**Confidence:** 0.95\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W6.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **fail**\n- three_octet_versioning_present: **pass**\n- git-op references: 'git-add', 'git-commit', 'git-push', 'gh pr create'\n\n## Findings\n\n### Finding D1 (important)\n\nThe carry-forward_full ID F-0.2.17-W1-001 is registered, but its source is not found in the iteration-context.\n\n### Finding F-0.2.17-W4-001 (info)\n\nThe carry-forward_full ID F-0.2.17-W4-001 is unverified\n\n### Finding AUDIT-PILLAR11 (critical)\n\nPossible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push', 'gh pr create'\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201cThe source of the carry-forward_full ID F-0.2.17-W1-001 is not found in the iteration-context.\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 12,
+    "registered_count": 9,
+    "unverified_count": 3,
+    "truncated": false,
+    "section_chars": 3981,
+    "references": [
+      {
+        "id": "F-0.2.17-W1-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W4-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D1",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-0.2.17-W1-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W1-002",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "D5",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "D4",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D3",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D2",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-plan-doc.md"
+      },
+      {
+        "id": "D8",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-0.2.17-W5-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W5-002",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  },
+  "suppressed_findings": [],
+  "finding_filter": {
+    "filter_enabled": true,
+    "filter_eligible": true,
+    "registered_id_count": 9,
+    "model_findings_count": 2,
+    "active_findings_count": 2,
+    "suppressed_count": 0
+  }
+}

@@ -1,0 +1,433 @@
+{
+  "iteration": "0.2.17",
+  "workstream": "W4",
+  "title": "Deterministic post-hoc filter on RAG-aware audit findings + claw3d brick rendering + materiality dashboard surfaces",
+  "audit_status": "pending_drafter_review",
+  "executor": "claude-code (claude-opus-4-7)",
+  "drafter": "claude-web",
+  "auditor_assigned": "llama3.2:3b in-container, with RAG enrichment + W4 D1 deterministic post-hoc filter on findings",
+  "rag_enrichment_enabled": true,
+  "post_hoc_filter_enabled": true,
+  "executor_session_started_utc": "2026-05-03T16:00:00Z",
+  "archive_written_utc": "2026-05-03T16:30:00Z",
+  "deliverables": [
+    {
+      "id": "D1",
+      "title": "Deterministic post-hoc filter on RAG-aware audit findings (drafter-arbitrated path c from F-0.2.17-W3-001)",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/council/audit_finding_filter.py",
+        "module_sha256": "67ba8796241ca7ba743bb10e6ac91b79408beb82fb8e70168ca628ab22bcd345",
+        "audit_integration_module_path": "src/aho/council/audit.py",
+        "audit_integration_module_sha256": "12f2cabcb6d2449d2e547912862252c3f49d9fa9663cda871305641d092dd35c",
+        "emitter_path": "src/aho/audit_disposition_emitter.py",
+        "emitter_sha256": "a3e6df0469fe5183c7ddb7caf410ddf61adec20c5273450b7764cddb3703b2fa",
+        "fake_id_phrase_set": [
+          "not real",
+          "does not look real",
+          "looks placeholder",
+          "looks like a placeholder",
+          "matches naming conventions",
+          "not corroborated",
+          "cannot be corroborated",
+          "appears fictitious",
+          "appears fabricated"
+        ],
+        "filter_contract": {
+          "input_anchor_extraction": "audit_ref_extract.detect_references on the finding description",
+          "registered_set_source": "rag_enrichment.references where status == 'registered'",
+          "suppression_decision": "drop only when BOTH (registered anchor in description) AND (fake-ID phrase substring match in description)",
+          "suppression_record_shape": {
+            "reason": "registered_id_flagged_as_fake",
+            "matched_phrase": "string from fake_id_phrase_set",
+            "matched_registered_anchor": "the canonical anchor ID that triggered",
+            "finding": "verbatim copy of the suppressed finding"
+          },
+          "structural_pre_check_findings_bypass_filter": true,
+          "disposition_left_untouched_by_filter": true,
+          "auditable_via_suppressed_findings_field": true
+        },
+        "acceptance_gate_1_w2_self_audit_rag_suppression": {
+          "target_path": "artifacts/iterations/0.2.17/audit/replay/W2-self-audit-rag.json",
+          "target_sha256": "afbc33a3ae68d90f444e5661cf7146180de9798eb2534a1cfd1f004882bfc91a",
+          "model_finding_count_in_target": 1,
+          "filter_outcome": {
+            "active_findings_count": 0,
+            "suppressed_findings_count": 1,
+            "matched_registered_anchor": "F-0.2.17-W1-003",
+            "matched_phrase": "(one of: 'does not look real', 'matches naming conventions')",
+            "result": "F-0.2.17-W3-001 false positive structurally suppressed"
+          }
+        },
+        "acceptance_gate_2_w3_self_audit_no_oversuppression": {
+          "target_path": "artifacts/iterations/0.2.17/audit/W3.json",
+          "target_sha256": "b3a4e2e6c88244f4b4fcd59f75b56112beed8287600eb2308a7cdb7f4a605efc",
+          "filter_outcome": {
+            "active_findings_count": 3,
+            "suppressed_findings_count": 0,
+            "result": "filter does not over-suppress; structural narrowness verified"
+          },
+          "preserved_findings": [
+            "F-0.2.17-W3-001 (no fake-ID phrase in description)",
+            "G081 (No celebratory framing in G081 — no fake-ID phrase)",
+            "AUDIT-PILLAR11 (regex-grounded structural pre-check; bypasses filter by design)"
+          ]
+        },
+        "acceptance_gate_3_synthetic_positive": {
+          "input_finding": {
+            "id": "F-FAKE-1",
+            "description": "F-0.2.17-W1-003 looks like a placeholder ID"
+          },
+          "rag_context": "F-0.2.17-W1-003 status=registered",
+          "filter_outcome": {
+            "suppressed": true,
+            "matched_phrase": "looks like a placeholder",
+            "matched_registered_anchor": "F-0.2.17-W1-003"
+          }
+        },
+        "acceptance_gate_4_synthetic_negative": {
+          "input_finding": {
+            "id": "AF-1",
+            "description": "F-0.2.17-W9-999 cannot be corroborated"
+          },
+          "rag_context": "F-0.2.17-W9-999 status=unverified (not registered)",
+          "filter_outcome": {
+            "suppressed": false,
+            "rationale": "auditor flag of an unverified ID is legitimate; filter is structurally narrow"
+          }
+        },
+        "test_path": "artifacts/tests/test_audit_finding_filter.py",
+        "test_sha256": "66b4957ec0bd94d39a64f1e49eaaf6236880590439a5e288977f80c384267e95",
+        "test_count": 12,
+        "test_result": "12 passed"
+      },
+      "notes": "Closes F-0.2.17-W3-001 structurally. The filter is the path (c) drafter arbitration: keep base-tier auditor model and add a deterministic post-pass between model output and disposition return. Disposition left untouched at the filter level — drafter inspects suppressed_findings and active_findings to make the final call."
+    },
+    {
+      "id": "D2",
+      "title": "Per-component bricks (10 bricks)",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/dashboard/lego/bricks.py",
+        "module_sha256": "35cbb6c1a7ba24762e857e750f98253eac21066be3641d3efd021ed5e5e96fd4",
+        "components_covered": [
+          "aho.dispatcher",
+          "aho.adversarial",
+          "aho.workstream",
+          "aho.secrets_client",
+          "aho.otel",
+          "aho.health",
+          "aho.signal",
+          "aho.council.audit",
+          "aho.council.triage",
+          "aho.council.embed+aho.rag"
+        ],
+        "synthetic_load_test_shape": "synthetic_signal_state(healthy=True / False) emits a counter dict consistent with a 5-min synthetic load. Acceptance: every brick greens under healthy state, every brick reds under fault state, every brick is unknown under empty state. Per-brick isolated fault injection: each fault counter reds only its target brick — other bricks remain green.",
+        "council_audit_brick_filter_activity_visible": true,
+        "filter_activity_signal_keys": [
+          "aho.council.audit.finding_filter.eligible_count",
+          "aho.council.audit.finding_filter.suppressed_count"
+        ],
+        "test_path": "artifacts/tests/test_lego_bricks.py",
+        "test_sha256": "d50e964ed90db2a9f9fa0613efcc8805524dfeaa8c5ea7c5b8560810e8a6894e",
+        "test_count": 18,
+        "test_result": "18 passed"
+      },
+      "notes": "Bricks consume the aggregated OTEL counter shape as the canonical signal source. Live OTEL ingest is the dashboard layer's responsibility (aho.dashboard.otel_aggregator, W2). The brick layer reduces that state to color + reason + detail. The aho.council.audit brick exposes the new D1 filter activity through extra_render."
+    },
+    {
+      "id": "D3",
+      "title": "Materiality four-bucket dashboard surfaces",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/dashboard/lego/materiality_surfaces.py",
+        "module_sha256": "9e6b97399c91354c18bc5dfaedc7134f2da607b4340d2e14653a58614fddbd8c",
+        "buckets_canonical": [
+          "caught_by_llama",
+          "caught_by_drafter",
+          "escaped",
+          "carry_forward_resolution"
+        ],
+        "counter_to_bucket_mapping": {
+          "aho.materiality.claim_vs_artifact_mismatches.caught_by_llama": "caught_by_llama",
+          "aho.materiality.claim_vs_artifact_mismatches.caught_by_drafter": "caught_by_drafter",
+          "aho.materiality.claim_vs_artifact_mismatches.escaped": "escaped",
+          "aho.materiality.carry_forward_resolution_rate": "carry_forward_resolution"
+        },
+        "render_contract": "render_dashboard_payload returns kind=materiality_four_bucket_dashboard with overview + four bucket surfaces; bucket order is canonical; each bucket carries count + by_severity + last_seen_utc.",
+        "test_path": "artifacts/tests/test_materiality_surfaces.py",
+        "test_sha256": "2c99032b0b8e574a0409b71b0b19724f3b2374516ae5d4d130d1e21d3cd1046c",
+        "test_count": 10,
+        "test_result": "10 passed"
+      },
+      "notes": "The four bucket counters are the W2 D8/D9 instruments; D3 surfaces them. The overview renders catch-rate components (caught_by_llama + caught_by_drafter) vs escaped, plus carry_forward_resolution count, in one compact view."
+    },
+    {
+      "id": "D4",
+      "title": "Role-collapse trip-wire brick",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/dashboard/lego/role_collapse_brick.py",
+        "module_sha256": "e7b836217e64bf25393214b820ce04422f42924491b4e28971083f7f8f4e7272",
+        "signal_source": [
+          "aho.council.dispatch.role_collapse_tripwire_fired",
+          "aho.council.dispatch.invocation_count"
+        ],
+        "render_contract": "render(signal_state) returns kind=role_collapse_tripwire_brick with color, reason, fired count, dispatch invocation count, and the role_pair_snapshot (drafter family vs auditor family) when available.",
+        "shared_signal_with_d2_aho_adversarial_brick": true,
+        "test_path": "artifacts/tests/test_role_collapse_brick.py",
+        "test_sha256": "8f44d75f090df1959a01e74df2789c8d35e06fd4ca786ee217e7bbb437716a91",
+        "test_count": 5,
+        "test_result": "5 passed"
+      },
+      "notes": "D4 and D2's aho.adversarial brick read the same signal slice so they cannot disagree. D4 is the focused single-brick render for use on the anti-rubber-stamp dashboard; D2 surfaces the brick in the per-component grid view."
+    },
+    {
+      "id": "D5",
+      "title": "Materiality comparison surface (with vs without base container)",
+      "result": "pass",
+      "evidence": {
+        "baseline_extract_module_path": "src/aho/materiality_baseline_extract.py",
+        "baseline_extract_module_sha256": "0fecabc9c73de9148478517e03cc402d8145acd33951a33c7bd654bd76722030",
+        "comparison_module_path": "src/aho/dashboard/lego/materiality_comparison.py",
+        "comparison_module_sha256": "9038f83119249bbdef14feea10aa5f54efbaf4b5d7b99d68f668bce362f4177b",
+        "baseline_reconstruction_0_2_16": {
+          "audit_sources": [
+            "artifacts/iterations/0.2.16/audit/W0.json",
+            "artifacts/iterations/0.2.16/audit/W1.json",
+            "artifacts/iterations/0.2.16/audit/W2.json",
+            "artifacts/iterations/0.2.16/audit/W3.json",
+            "artifacts/iterations/0.2.16/audit/W4.json"
+          ],
+          "caught_by_auditor_count": 15,
+          "per_workstream_finding_count": "W0=3, W1=5, W2=2, W3=3, W4=2 (manually verified — not 'obviously wrong' per D5 halt condition)",
+          "buckets_unknown": [
+            "caught_by_drafter",
+            "escaped"
+          ],
+          "buckets_unknown_rationale": "0.2.16 archives don't separately record drafter-vs-auditor catch attribution; escaped counter wasn't wired."
+        },
+        "n_iterations_observed": 4,
+        "n_iterations_threshold": 8,
+        "below_threshold_annotated": true,
+        "below_threshold_text": "N=4 below threshold of 8 iterations — comparison is suggestive, not conclusive. Statistical confidence requires ≥8 iteration data points.",
+        "test_path": "artifacts/tests/test_materiality_comparison.py",
+        "test_sha256": "6aa5358e6b699a0ff253c0935a25d8c5edab01532b95df8c7a7939bf310ff22c",
+        "test_count": 11,
+        "test_result": "11 passed"
+      },
+      "notes": "Baseline labels \"caught_by_llama\" but in 0.2.16 the auditor was Gemini, not llama. The provenance section calls this out explicitly. The comparison surface is honest about the bucket label drift and includes the unknown-bucket annotation in its render."
+    },
+    {
+      "id": "D6",
+      "title": "Anti-rubber-stamp verification dashboard (FOUR surfaces, not three)",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/dashboard/lego/anti_rubber_stamp_dashboard.py",
+        "module_sha256": "04748ce6fac719c776d6a2b66d66db534d025ac3a7aba415ff37044e70e3774c",
+        "surfaces": [
+          "nemotron_raise_on_malformed",
+          "llama_confidence_floor_lock",
+          "role_collapse_tripwire",
+          "deterministic_post_hoc_filter"
+        ],
+        "fourth_surface_is_new_w4_d1": true,
+        "filter_surface_drill_down_contract": "drill_down list of audit records with non-empty suppressed_findings; each entry surfaces audit_path, iteration, workstream, audit_kind, and the suppressed_findings records. Auditable / falsifiable per W4 plan-doc D6 requirement.",
+        "overview_contract": "Red if any of the four reds; green if at least one is green and none red; unknown only when all four unknown.",
+        "test_path": "artifacts/tests/test_anti_rubber_stamp_dashboard.py",
+        "test_sha256": "e9e742b42294e86cba38eb4d0fb0331d18dfb8e4e60f1b0b3800766fcafffa30",
+        "test_count": 18,
+        "test_result": "18 passed"
+      },
+      "notes": "Filter surface greens under both 'eligible + suppressing' and 'eligible + no suppression' — either is a valid outcome demonstrating the W4 D1 fix is live. Filter reds only on instrumentation problems (filter_error_count > 0). Three original failure-mode surfaces inherit the existing trip-wire signals; the fourth is the new D1 hardening signal."
+    },
+    {
+      "id": "D7",
+      "title": "W4 self-audit with stabilized auditor (llama3.2:3b + RAG + post-hoc filter)",
+      "result": "pass",
+      "evidence": {
+        "probe_path": "artifacts/iterations/0.2.17/probes/W4_self_audit.py",
+        "probe_sha256": "36950ffa0411c6eea48a31c770e696bd5f5a800c2a9709bc53b74c2594b0a286",
+        "audit_target_path": "artifacts/iterations/0.2.17/acceptance/W4.json",
+        "audit_disposition_path": "artifacts/iterations/0.2.17/audit/W4.json",
+        "audit_disposition_sha256": "9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a",
+        "audit_target_artifact_sha256_at_audit_time": "a1432e3dd323e06ca281918aaa1c43fdaeaab4832e1abc3c6f6083f236eefeb0",
+        "self_audit_disposition": "surface_to_drafter",
+        "self_audit_confidence": 0.85,
+        "self_audit_findings_count": 4,
+        "self_audit_completed_utc": "2026-05-03T16:25:50.896935+00:00",
+        "self_audit_latency_ms": 13788,
+        "filter_outcome": {
+          "filter_enabled": true,
+          "filter_eligible": true,
+          "registered_id_count": 15,
+          "model_findings_count": 3,
+          "active_findings_count": 3,
+          "suppressed_count": 0
+        },
+        "filter_zero_suppression_interpretation": "Per W4 plan-doc D7 acceptance gate: 'If the filter surface shows zero suppressions during self-audit (no findings of that shape were generated), great — model is now consistent.' This is that case. The filter was eligible (15 registered IDs in context) and ran on every model finding, but none matched the fake-ID-on-registered-anchor failure shape — meaning the W4 D1 fix is live AND the model did not produce the F-0.2.17-W3-001 shape on this archive. Either outcome (zero or non-zero suppressions) demonstrates the fix is live; this run produced zero.",
+        "self_audit_findings_inspection": [
+          {
+            "id": "F-0.2.17-W3-001",
+            "severity": "important",
+            "description": "The artifact claims that the carry-forward ID F-0.2.17-W3-001 is registered, but its source is not found in the iteration-context.",
+            "classification": "auditor_stylistic_unverified_anchor_observation",
+            "filter_relevance": "filter did NOT suppress because the description does not contain a fake-ID phrase from the canonical set ('not real', 'looks placeholder', 'matches naming conventions', etc.). The auditor's observation is structurally legitimate — F-0.2.17-W3-001 is genuinely unverified in the iteration-context (it was added in W3 close but its definition lives in carry-forwards-0.2.16.md, not in 0.2.17 acceptance archives). Drafter arbitration: this is auditor reporting a real RAG-context observation, not a fake-ID false positive."
+          },
+          {
+            "id": "F-0.2.17-W9-999",
+            "severity": "important",
+            "description": "The artifact claims that the carry-forward ID F-0.2.17-W9-999 is registered, but its source is not found in the iteration-context.",
+            "classification": "auditor_stylistic_unverified_anchor_observation",
+            "filter_relevance": "Same shape as the W3-001 finding above. F-0.2.17-W9-999 is the synthetic test ID embedded in D1 acceptance gate 4 description (the negative test). The auditor correctly observes it is unverified. Filter did NOT suppress because (a) the description does not contain a fake-ID phrase, and (b) F-0.2.17-W9-999 is not in the registered set anyway. Drafter arbitration: the auditor is reporting a true negative — the synthetic test ID exists for the very purpose of being unverified."
+          },
+          {
+            "id": "G081",
+            "severity": "info",
+            "description": "The artifact mentions a gotcha G081, but does not provide any further information about it.",
+            "classification": "auditor_stylistic_information_gap_observation",
+            "filter_relevance": "Filter did NOT suppress: description has no fake-ID phrase. G081 is registered in the RAG context. The auditor is flagging an information-density preference, not a fake-ID claim. Drafter arbitration: info-severity stylistic finding; G081 is the celebratory-framing gotcha referenced via its identifier — full text lives in the harness-base reference, which is an iteration-context artifact, not part of the W4 acceptance archive scope."
+          },
+          {
+            "id": "AUDIT-PILLAR11",
+            "severity": "critical",
+            "description": "Possible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push'",
+            "classification": "self_referential_structural_pre_check",
+            "filter_relevance": "Filter did NOT suppress because structural pre-check findings are regex-grounded and bypass the filter by design. Same self-referential shape that fired on W3 self-audit: the literal git-add/git-commit/git-push tokens appear inside the pillar_11_invariant_check.evidence prose (the field documenting that we never invoke these). Drafter arbitration: structurally identical to the W3 close-note arbitration. Pillar 11 invariant is in fact respected — the prose attests compliance."
+          }
+        ],
+        "hard_fail_check": {
+          "condition": "self-audit produces fake-ID-on-registered-anchor false positives that the filter should have caught (i.e., model still flags a registered ID as 'not real' / 'placeholder' AND the filter fails to suppress it)",
+          "observed": "no finding of that shape arose. The two unverified-ID findings (W3-001, W9-999) are auditor reports of a real RAG-context observation (unverified status), not pattern-matched fake-ID claims. The filter was active and eligible across all 3 model findings; it correctly suppressed zero because none qualified.",
+          "result": "no_hard_fail"
+        },
+        "rag_enrichment_observation": {
+          "detected_count": 19,
+          "registered_count": 15,
+          "unverified_count": 4,
+          "truncated": false,
+          "note": "Detection found 19 reference-shaped tokens across the W4 archive. 15 registered, 4 unverified (F-0.2.17-W3-001, F-0.2.17-W9-999, AF-1, F-0.2.17-W2-006). Each unverified status is structurally accurate: W3-001 source lives in the cross-iteration carry-forwards file not in 0.2.17 acceptance archives; W9-999 is the synthetic test ID; AF-1 is a synthetic test finding ID; W2-006 was the carry-forward W3 pinged."
+        }
+      },
+      "notes": "D7 emit complete. workstream_complete is NOT emitted in this session per executor prompt. Drafter (claude-web) reviews the disposition pre-sign in chat; operator (Kyle) signs after drafter review. The audit/W4.json archive is sealed (no post-emit edits) per Adversarial Authorship convention; drafter arbitration is recorded here in the acceptance archive.",
+      "drafter_review_note": {
+        "reviewer": "claude-web (drafter)",
+        "reviewed_utc": "2026-05-03T16:45:00Z",
+        "arbitration_summary": "Drafter arbitrated 4 findings as: 3 auditor stylistic observations correctly reflecting RAG state (F-0.2.17-W3-001 + F-0.2.17-W9-999 unverified-anchor reports, G081 info-density note) + 1 self-referential structural pre-check (AUDIT-PILLAR11). Filter ran on 3 model findings, suppressed 0 because none had fake-ID phrase. Bootstrap test 5 (loop closure with stabilized auditor) passes. F-0.2.17-W2-006 + F-0.2.17-W3-001 close legitimately.",
+        "per_finding": [
+          {
+            "id": "F-0.2.17-W3-001",
+            "arbitration": "Auditor accurately reports W3-001 as unverified in RAG state. RAG enrichment shows W3-001 status=unverified, top_source_artifact_path=null. Filter did not suppress because no fake-ID phrase in description. The defect is upstream in the indexing pipeline, not in the audit. Captured as new carry-forward F-0.2.17-W4-001 (ChromaDB index staleness)."
+          },
+          {
+            "id": "F-0.2.17-W9-999",
+            "arbitration": "Synthetic test ID from D1 acceptance gate 4. Genuinely unverified by construction. Same auditor-doing-its-job pattern as W3-001 finding."
+          },
+          {
+            "id": "G081",
+            "arbitration": "Stylistic information-density observation. No action."
+          },
+          {
+            "id": "AUDIT-PILLAR11",
+            "arbitration": "Self-referential structural pre-check, same shape as W3 D5. Structural pre-checks bypass filter by design. Pillar 11 invariant in fact respected; prose attests compliance."
+          }
+        ],
+        "hard_fail_check_drafter_concurrence": "NO fake-ID-on-registered false positives. Filter live, structurally narrow, did not over-suppress. Bootstrap test 5 passes.",
+        "arbitrated_disposition": "pass_with_findings"
+      }
+    }
+  ],
+  "carry_forwards_added": [
+    {
+      "id": "F-0.2.17-W4-001",
+      "title": "ChromaDB iteration-context index does not auto-refresh on carry-forwards-0.2.16.md updates",
+      "severity": "important",
+      "what_surfaced": "W4 D7 self-audit RAG enrichment showed F-0.2.17-W3-001, F-0.2.17-W3-002, F-0.2.17-W2-006 as status=unverified with top_source_artifact_path=null, despite all three being added in W2/W3 closes to carry-forwards-0.2.16.md. RAG retrieval operates against stale ChromaDB snapshot. Auditor flagged unverified-status correctly but the underlying state is misleading — those IDs ARE registered, the index just hasn't been rebuilt since W2 close indexed it.",
+      "mechanism": "gap_carry_forward_writer appends entries to carry-forwards-0.2.16.md but does not trigger ChromaDB re-index. The index built during W2 D1 pre-seed has not been refreshed since.",
+      "disposition": "Hook re-index into gap_carry_forward_writer's append path so any carry-forward addition triggers re-index of the source file. Alternative: schedule re-index pre-audit. Either approach closes the staleness.",
+      "target": "0.2.17 W5 retrospective fold-in OR 0.3.x base-tier hardening",
+      "source": "0.2.17 W4 D7 self-audit RAG enrichment state inspection",
+      "audit_traceability": "Surfaced by D7 self-audit at audit/W4.json (sha 9d5ab9ec...). Three findings (F-0.2.17-W3-001, F-0.2.17-W9-999, F-0.2.17-W2-006) all show unverified status with null source path despite being registered in carry-forwards-0.2.16.md."
+    }
+  ],
+  "carry_forwards_closed": [
+    {
+      "id": "F-0.2.17-W2-006",
+      "title": "Auditor reference-resolution gap (load-bearing fix that motivated W3)",
+      "closure_basis": "W4 D1 deterministic post-hoc filter structurally suppresses the F-0.2.17-W3-001 false-positive shape on the W2 self-audit-rag artifact (D1 acceptance gate 1). Combined with W3's W0 closure, both demonstrated false positives are now structurally addressed.",
+      "closure_condition_met": "D7 self-audit produced no novel fake-ID-on-registered-anchor false-positive shapes; filter was eligible (15 registered IDs) and ran on every model finding."
+    },
+    {
+      "id": "F-0.2.17-W3-001",
+      "title": "Llama3.2:3b inconsistently honors the registered-references prompt rule",
+      "closure_basis": "W4 D1 deterministic post-hoc filter is the drafter-arbitrated path (c) closure. Filter verified against the exact F-0.2.17-W1-003 false-positive that motivated this carry-forward (D1 acceptance gate 1, target sha afbc33a3…).",
+      "closure_condition_met": "D7 self-audit produced no novel fake-ID-on-registered-anchor false-positive shapes; filter was eligible and ran on every model finding."
+    }
+  ],
+  "carry_forwards_closed_pending_drafter_review": "Closure claim above is contingent on drafter review of the D7 disposition. If drafter arbitration during pre-sign review surfaces a fake-ID-on-registered-anchor finding the filter missed, both closures revert to OPEN.",
+  "pillar_11_invariant_check": {
+    "result": "pass",
+    "evidence": {
+      "git_operations_in_executor_session": "none — executor did not invoke git, gh, git-add, git-commit, git-push, gh-pr-create, or any merge/push/commit primitive",
+      "secret_reads_attempted": "none — W4 work touches Python code, dashboard primitives, and audit archive emission only; no broker reads, no ~/.config/, ~/.ssh/, age, or fernet artifact reads",
+      "files_written": "src/aho/council/audit_finding_filter.py (new), src/aho/council/audit.py (modify — filter integration + OTEL span tags), src/aho/audit_disposition_emitter.py (modify — surface suppressed_findings + finding_filter in emitted JSON), src/aho/dashboard/lego/bricks.py (new), src/aho/dashboard/lego/materiality_surfaces.py (new), src/aho/dashboard/lego/role_collapse_brick.py (new), src/aho/dashboard/lego/materiality_comparison.py (new), src/aho/dashboard/lego/anti_rubber_stamp_dashboard.py (new), src/aho/materiality_baseline_extract.py (new), artifacts/tests/test_audit_finding_filter.py (new), artifacts/tests/test_lego_bricks.py (new), artifacts/tests/test_materiality_surfaces.py (new), artifacts/tests/test_role_collapse_brick.py (new), artifacts/tests/test_materiality_comparison.py (new), artifacts/tests/test_anti_rubber_stamp_dashboard.py (new), artifacts/iterations/0.2.17/acceptance/W4.json (this archive). No .git/, no ~/.config/, no /etc/, no .ssh/ writes.",
+      "operator_only_actions_respected": "F-0.2.17-W1-003 (Telegram bot token rotation) explicitly NOT performed by this executor. Surfaced under outstanding_pre_03x_gates."
+    }
+  },
+  "outstanding_pre_03x_gates": [
+    {
+      "id": "F-0.2.17-W1-003",
+      "title": "Telegram bot token rotation (operator-side, pre-0.3.x hard gate)",
+      "status": "operator_action_pending",
+      "executor_action": "none — surfaced as continuing reminder per W4 executor prompt",
+      "next_surface": "W5 close + tsP3 handoff"
+    },
+    {
+      "id": "F-0.2.17-W1-001",
+      "title": "secrets-test subcommand still in rc1 image",
+      "status": "carry_forward",
+      "executor_action": "none — folded into W5 retrospective per W2 plan",
+      "next_surface": "W5 retrospective"
+    }
+  ],
+  "agents_involved": [
+    {
+      "agent": "claude-web",
+      "role": "drafter",
+      "model": "claude-opus (web project folder; W4 plan + executor prompt authoring including the post-W3-close refresh that introduced D1)"
+    },
+    {
+      "agent": "claude-code",
+      "role": "executor",
+      "model": "claude-opus-4-7[1m]"
+    },
+    {
+      "agent": "council-audit",
+      "role": "auditor",
+      "model_id": "llama3.2:3b",
+      "rag_enrichment_enabled": true,
+      "post_hoc_filter_enabled": true,
+      "auditor_prompt_path": "src/aho/council/audit.py::_AUDIT_SYSTEM",
+      "filter_path": "src/aho/council/audit_finding_filter.py::filter_findings"
+    },
+    {
+      "agent": "council-embed",
+      "role": "supporting (RAG retrieval embed step)",
+      "model": "nomic-embed-text"
+    }
+  ],
+  "scope_notes": [
+    "W4 added the D1 filter without modifying the audit primitive's existing contract surface (disposition + confidence + findings + evidence_traces). The new fields suppressed_findings and finding_filter are additive.",
+    "Out of scope (deferred): ADR-0007 amendment, ADR-0009 secrets broker, ADR-0010 materiality as repo-resident docs → W5. Component decomposition + claw3d brick spec as repo-resident → W5. 0.2.17 retrospective → W5. Token rotation → operator-side pre-0.3.x. Secrets-test subcommand removal → W5 retrospective."
+  ],
+  "halt_and_surface_after_d7": "Per executor prompt: D7 emits, audit_status transitions to pending_drafter_review, executor halts and does NOT emit workstream_complete. Drafter (claude-web) reviews D7 disposition pre-sign. workstream_complete emits in a follow-up executor invocation only after operator sign-off.",
+  "workstream_complete_emitted": false,
+  "workstream_complete_emit_condition": "Pending drafter (claude-web) review of D7 disposition + operator (Kyle) sign-off. workstream_complete emits in a follow-up executor invocation. No W5 plan-doc, W5 executor prompt, or other forward-looking artifacts authored in this session per executor prompt.",
+  "self_audit_disposition": "surface_to_drafter",
+  "self_audit_confidence": 0.85,
+  "self_audit_findings_count": 4,
+  "self_audit_path": "artifacts/iterations/0.2.17/audit/W4.json",
+  "self_audit_completed_utc": "2026-05-03T16:25:50.896935+00:00",
+  "self_audit_target_artifact_sha256_at_audit_time": "a1432e3dd323e06ca281918aaa1c43fdaeaab4832e1abc3c6f6083f236eefeb0",
+  "self_audit_filter_outcome_summary": "filter_eligible=true, registered_id_count=15, model_findings=3, suppressed=0 — filter live, no fake-ID-on-registered-anchor false-positive shape surfaced this run."
+}

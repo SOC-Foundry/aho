@@ -1,0 +1,41 @@
+# Agent-policy violation rules: zero-tolerance commit/PR alerts for
+# Claude Code sessions where the operating policy forbids agent-side git
+# operations. Names retain the originating "Pillar 11" framing for
+# traceability; rename freely to match local policy nomenclature.
+#
+# Format: Prometheus alerting rules YAML (loaded via `rule_files` in
+# prometheus.yml). Translation to vmalert / Grafana alerting is mechanical.
+#
+# Status: rule expressions only. Consumer must wire to their own
+# Alertmanager-compatible engine — see ../README.md.
+
+groups:
+  - name: agent-policy.commit-violations
+    interval: 30s
+    rules:
+
+      - alert: Pillar11CommitViolation
+        expr: increase(claude_code_commit_count[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Policy violation: claude_code.commit.count delta > 0"
+          description: >-
+            An agent-attributable git commit was observed in the last minute.
+            If your operating policy forbids agent-side git writes, this alert
+            indicates either an unintended agent-side commit or a misconfigured
+            wrapper that surfaced `git commit` to a role. Investigate the
+            originating session and wrapper.
+
+      - alert: Pillar11PullRequestViolation
+        expr: increase(claude_code_pull_request_count[1m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Policy violation: claude_code.pull_request.count delta > 0"
+          description: >-
+            An agent-attributable pull-request creation was observed in the
+            last minute. Same investigation pattern as the commit-violation
+            rule.

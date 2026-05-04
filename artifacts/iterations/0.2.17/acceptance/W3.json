@@ -1,0 +1,393 @@
+{
+  "iteration": "0.2.17",
+  "workstream": "W3",
+  "title": "Auditor-RAG integration (load-bearing fix from F-0.2.17-W2-006)",
+  "audit_status": "pending_drafter_review",
+  "executor": "claude-code (claude-opus-4-7)",
+  "drafter": "claude-web",
+  "auditor_assigned": "llama3.2:3b in-container, with RAG enrichment via aho.council.audit (rag_enrichment=True)",
+  "rag_enrichment_enabled": true,
+  "executor_session_started_utc": "2026-05-03T14:00:00Z",
+  "archive_written_utc": "2026-05-03T14:50:00Z",
+  "deliverables": [
+    {
+      "id": "D1",
+      "title": "Reference-token detection (audit_ref_extract.py)",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/council/audit_ref_extract.py",
+        "module_sha256": "35bdf5fbe74c37ae90b0e3cb94690739346338ae8d2cba34a19e90d85c3cd116",
+        "patterns_supported": [
+          "carry_forward_full: F-0.2.17-W0-001",
+          "carry_forward_short: F-W0-004",
+          "carry_forward_host: F-host-001",
+          "audit_finding_full: AF-0.2.17-W1-001",
+          "audit_finding_short: AF-1",
+          "audit_finding_bare: AF003",
+          "audit_finding_ws_scoped: W2-AF004",
+          "adr: ADR 0007 / ADR-0007 (canonicalized to hyphen form)",
+          "gotcha: G081",
+          "section: Sec1",
+          "deliverable: D1..D12",
+          "bucket: B2.3"
+        ],
+        "w0_acceptance_detection": {
+          "target_path": "artifacts/iterations/0.2.17/acceptance/W0.json",
+          "detected_count": 28,
+          "expected_anchors_present": [
+            "F-0.2.17-W0-001",
+            "F-0.2.17-W0-002",
+            "F-W0-004",
+            "F-host-001",
+            "F-host-002",
+            "AF004",
+            "AF005",
+            "ADR-0006",
+            "ADR-0007",
+            "ADR-0008",
+            "B2.3",
+            "W2-AF004",
+            "W4-AF002"
+          ]
+        },
+        "w1_acceptance_detection": {
+          "target_path": "artifacts/iterations/0.2.17/acceptance/W1.json",
+          "detected_count": 12,
+          "expected_anchors_present": [
+            "F-0.2.17-W1-001",
+            "F-0.2.17-W1-002",
+            "F-0.2.17-W1-003",
+            "ADR-0007",
+            "ADR-0009"
+          ]
+        },
+        "w2_acceptance_detection": {
+          "target_path": "artifacts/iterations/0.2.17/acceptance/W2.json",
+          "detected_count": 30,
+          "expected_anchors_present": [
+            "F-0.2.17-W2-001",
+            "F-0.2.17-W2-002",
+            "F-0.2.17-W2-003",
+            "F-0.2.17-W2-006",
+            "F-0.2.17-W1-003",
+            "AF-0.2.17-W1-001",
+            "G081",
+            "G083"
+          ]
+        },
+        "input_validation": [
+          "'' (empty) -> RefExtractError",
+          "'   ' (whitespace) -> RefExtractError",
+          "None -> RefExtractError"
+        ],
+        "overlap_discipline": "longest-pattern-first; F-0.2.17-W1-001 detected as carry_forward_full and not split into shorter F-W1-001 form"
+      },
+      "notes": "False positives are downstream \u2014 D2 RAG retrieval tags unmatched IDs as `unverified` rather than auto-failing. Spurious test ID `F-FAKE-9.9.9-W9-999` does not pattern-match (FAKE is letters, not digits); a structurally-valid synthetic ID like F-9.9.9-W9-999 was used to verify the unverified-status path in D2."
+    },
+    {
+      "id": "D2",
+      "title": "RAG retrieval per detected reference (audit_ref_lookup.py)",
+      "result": "pass",
+      "evidence": {
+        "module_path": "src/aho/council/audit_ref_lookup.py",
+        "module_sha256": "995e43a26b182699967cfc7414df175c7a627dd47ca5b771eebebc27d041d1d3",
+        "rag_query_function": "aho.rag.query (W2 D1 implementation, unmodified)",
+        "k_per_reference": 3,
+        "pool_multiplier": 8,
+        "substring_filter_rationale": "Embedding similarity for opaque IDs (F-0.2.17-W0-001) is too noisy to define `registered` \u2014 RAG always returns top-k by cosine, even when the corpus contains no chunk literally mentioning the ID. Substring presence in the document is the load-bearing signal.",
+        "id_variant_handling": "ADR-0007 surface form maps to both 'ADR-0007' and 'ADR 0007' for substring search; other kinds have one canonical form.",
+        "snippet_centering": "snippet is a 200-char window centred on the first variant match (with leading/trailing ellipsis when truncated).",
+        "acceptance_gate_results": [
+          {
+            "id": "F-W0-004",
+            "expected": "registered (carry-forward closure context from 0.2.16 W4)",
+            "observed": "registered, k=3, snippets cite F-W0-004 as `conftest allowlist brittleness`"
+          },
+          {
+            "id": "F-0.2.17-W1-003",
+            "expected": "registered (W1 acceptance Pillar 11 incident entry)",
+            "observed": "registered, k=3, snippets cite F-0.2.17-W1-003 as `secrets-test subcommand exposes decrypted value to agent`"
+          },
+          {
+            "id": "F-0.2.17-W0-003",
+            "expected": "registered (carry-forward entry from carry-forwards-0.2.16.md region around line 485)",
+            "observed": "registered, k=3, snippets cite the W0 close-note context for F-0.2.17-W0-003 addition"
+          },
+          {
+            "id": "F-9.9.9-W9-999 (synthetic spurious)",
+            "expected": "unverified, empty retrieval set",
+            "observed": "unverified, k=0"
+          }
+        ],
+        "failure_mode_handling": "RagBackendUnavailable / RagInputError / RagError -> RefLookupError raised; zero-retrieval -> status=unverified (no silent pass-through)."
+      },
+      "notes": "Plan-doc references `F-FAKE-9.9.9-W9-999` for the spurious-ID gate. That literal token is not structurally valid (FAKE is letters not digits) and would be rejected at D1 detection. F-9.9.9-W9-999 was substituted as the structurally-valid synthetic spurious ID; gate semantics are unchanged."
+    },
+    {
+      "id": "D3",
+      "title": "Pre-prompt RAG enrichment in audit prompt construction (audit.py)",
+      "result": "pass",
+      "evidence": {
+        "modified_module_path": "src/aho/council/audit.py",
+        "modified_module_sha256": "6975e661b0c7570d2a1ae72d1759a58890818200f5e8371d4e74c411450bea6a",
+        "section_header": "## Registered references retrieved from project context",
+        "section_format": "Per-reference list: ID, kind, status (registered|unverified), source artifact path + iteration/workstream + 200-char snippet for registered.",
+        "system_prompt_rule_added": "Before flagging any reference ID as 'not real,' 'placeholder,' 'not corroborated,' or 'fake,' check the Registered references section. If listed `registered`, do not flag. If listed `unverified`, flag for verification rather than as fake.",
+        "max_refs_default": 30,
+        "truncation_strategy": "sort by max retrieval score desc, keep top 30",
+        "char_ceiling": 84000,
+        "char_ceiling_reasoning": "28K tokens at ~3 chars/token for dense JSON archives = 84K chars conservative ceiling; raises CouncilAuditInputError on exceed",
+        "audit_function_signature_extension": [
+          "rag_enrichment: bool = True",
+          "rag_project: Optional[str] = None",
+          "max_enrichment_refs: int = DEFAULT_MAX_ENRICHMENT_REFS"
+        ],
+        "audit_dict_extension": "rag_enrichment: { enabled, detected_count, registered_count, unverified_count, truncated, section_chars, references[] }",
+        "acceptance_gate_results": {
+          "w0_archive_section_entries": "28 detected, 18 registered, 10 unverified -> well over the >=10 entry threshold",
+          "synthetic_no_refs_omits_section": "section_text is '' when zero refs detected; user blocks contain only AUDIT TARGET",
+          "w0_prompt_total_chars": 40409,
+          "w0_prompt_token_estimate_at_3_chars_per_token": 13470,
+          "w2_prompt_total_chars": 37428,
+          "char_ceiling_check": "all replay targets well under PROMPT_CHAR_CEILING=84000"
+        },
+        "anti_rubber_stamp_tests_pass": "13/13 tests in artifacts/tests/test_anti_rubber_stamp.py pass after D3 changes; confidence-floor lock and structural-override semantics unchanged."
+      },
+      "notes": "RAG enrichment is the only behavioral change to the audit primitive. Confidence floor (G083 hardening), severity-synonym normalisation, structural pre-checks, and disposition validation are unmodified. Reference detection raises rather than silently pass-through (per executor prompt G083 anti-rubber-stamp directive)."
+    },
+    {
+      "id": "D4",
+      "title": "Replay W0/W1/W2 audits with RAG enrichment + cross-comparison",
+      "result": "pass_with_findings",
+      "evidence": {
+        "runner_path": "artifacts/iterations/0.2.17/probes/W3_audit_replay_rag.py",
+        "runner_sha256": "2ae6a10748cc08bf70b40bcdaf1bd2e7a88e95678ebdd4f6ea1f242fcfcf57c4",
+        "rag_audit_paths": {
+          "W0": {
+            "path": "artifacts/iterations/0.2.17/audit/replay/W0-llama-rag.json",
+            "sha256": "022c3550d19268e61e5365cf06111839c15f2df6e8095756ebcd486513fa97bc",
+            "disposition": "halt",
+            "confidence": 0.9,
+            "findings_count": 2,
+            "rag_detected_refs": 31,
+            "rag_registered": 21,
+            "rag_unverified": 9,
+            "rag_truncated": true
+          },
+          "W1": {
+            "path": "artifacts/iterations/0.2.17/audit/replay/W1-llama-rag.json",
+            "sha256": "0cbf90bb2dda18f10c300f8ecf2bdeadfd7fe99642e16ecef3a1257973423226",
+            "disposition": "halt",
+            "confidence": 0.9,
+            "findings_count": 1,
+            "rag_detected_refs": 12,
+            "rag_registered": 12,
+            "rag_unverified": 0
+          },
+          "W2": {
+            "path": "artifacts/iterations/0.2.17/audit/replay/W2-self-audit-rag.json",
+            "sha256": "afbc33a3ae68d90f444e5661cf7146180de9798eb2534a1cfd1f004882bfc91a",
+            "disposition": "halt",
+            "confidence": 0.95,
+            "findings_count": 1,
+            "rag_detected_refs": 30,
+            "rag_registered": 25,
+            "rag_unverified": 5
+          }
+        },
+        "comparison_artifact_path": "artifacts/iterations/0.2.17/audit/replay/comparison-rag-vs-non-rag.json",
+        "comparison_artifact_sha256": "3057c9540fb6cd14052a72eff1b844cd5609bd7dcd2c34f1863fd836f4fae3b4",
+        "false_positive_resolution": {
+          "W0_replay": {
+            "non_rag_fake_id_findings": 1,
+            "anchor": "F-W0-004",
+            "result": "CLOSED \u2014 RAG run did not flag F-W0-004 as fake. Auditor honored the registered-references context."
+          },
+          "W1_replay": {
+            "non_rag_fake_id_findings": 0,
+            "result": "n/a \u2014 non-RAG W1 replay produced no fake-ID findings; nothing to close."
+          },
+          "W2_self_audit": {
+            "non_rag_fake_id_findings": 1,
+            "anchor": "F-0.2.17-W1-003",
+            "result": "STILL PRESENT \u2014 RAG run continued to flag 'the ID does not look real (matches naming conventions)' for F-0.2.17-W1-003 even though the registered-references section listed it as `registered` with the W1 acceptance archive snippet. Llama3.2:3b inconsistently honors the prompt rule."
+          }
+        },
+        "substantive_disagreement_check": {
+          "rag_clean_while_non_rag_substantive": "false (no replay produced this shape)",
+          "rag_only_substantive_findings": "false",
+          "non_rag_only_substantive_findings": "false",
+          "halt_and_surface_triggered": false
+        },
+        "thesis_assessment": "Partially validated. RAG enrichment closes one of two demonstrated false positives (50%). The W0 closure shows the architecture works in principle. The W2 persistence shows llama3.2:3b's prompt-following on the registered-references rule is unreliable in self-audit context. The architectural fix is correct but the auditor model is the bottleneck."
+      },
+      "notes": "Plan halt-and-surface condition was 'substantive cross-audit disagreement' (RAG says clean, non-RAG found real violation). That did not occur. The remaining false positive in W2 is a non-substantive disagreement \u2014 llama failed to use the RAG context, not a Pillar 11 / secrets / git-op miss. Drafter arbitration not required at the substantive layer; thesis-level review is required."
+    },
+    {
+      "id": "D5",
+      "title": "W3 self-audit with RAG enrichment",
+      "result": "pass_with_findings",
+      "evidence": {
+        "self_audit_target": "this acceptance archive (artifacts/iterations/0.2.17/acceptance/W3.json)",
+        "self_audit_path": "artifacts/iterations/0.2.17/audit/W3.json",
+        "self_audit_method": "council.audit(artifact=self_archive_text, rag_enrichment=True)",
+        "self_audit_completed_utc": "2026-05-03T14:44:27.291434+00:00",
+        "self_audit_disposition": "halt",
+        "self_audit_confidence": 0.95,
+        "self_audit_findings_count": 3,
+        "loop_closure_check": "Bootstrap test 4 \u2014 does the auditor that W3 just upgraded correctly audit W3's own work? Result populated post-emit.",
+        "self_audit_target_artifact_sha256": "b1c093fa8863919f8f0720715abe6e4f3683cf0a9984c042ff7a473571e68cc4",
+        "self_audit_findings_summary": [
+          {
+            "id": "F-0.2.17-W3-001",
+            "severity": "important",
+            "description": "Llama3.2:3b inconsistently honors the registered-references prompt rule",
+            "classification": "echo_of_executor_added_carry_forward"
+          },
+          {
+            "id": "G081",
+            "severity": "info",
+            "description": "No celebratory framing in G081",
+            "classification": "banned_phrase_check_confirmation"
+          },
+          {
+            "id": "AUDIT-PILLAR11",
+            "severity": "critical",
+            "description": "Possible Pillar 11 reference (agent-side git op): 'git-add', 'git-commit', 'git-push'",
+            "classification": "self_referential_structural_pre_check"
+          }
+        ],
+        "hard_fail_check": {
+          "condition": "self-audit produces false-positive ID-validation findings (the F-0.2.17-W2-006 shape \u2014 flagging a registered ID as fake)",
+          "observed": "no finding flags any reference ID as fake, placeholder, or not-real. AUDIT-PILLAR11 fires on literal git-add/commit/push tokens in the pillar_11 invariant evidence section (self-referential structural pre-check). F-0.2.17-W3-001 echoes the executor-added carry-forward title verbatim. G081 is a confirmation-shaped finding.",
+          "result": "no_hard_fail"
+        },
+        "rag_enrichment_observation": {
+          "detected_count": 38,
+          "registered_count": 29,
+          "unverified_count": 1,
+          "truncated": true,
+          "note": "Self-audit detected 38 reference-shaped tokens (high count is expected \u2014 the W3 archive lists carry-forwards from W0/W1/W2 plus the new W3-001/002 IDs). 29 registered (definitions found in iteration-context). 1 unverified. Truncation triggered: top-30 by retrieval score retained."
+        },
+        "drafter_review_note": {
+          "reviewer": "claude-web (drafter)",
+          "reviewed_utc": "2026-05-03T15:00:00Z",
+          "arbitration_summary": "All three D5 findings arbitrate to auditor self-referential artifacts, not W3 substance defects.",
+          "per_finding": [
+            {
+              "id": "F-0.2.17-W3-001",
+              "arbitration": "Auditor echoing the executor-added carry-forward title verbatim. Tautological \u2014 the carry-forward itself captures the real issue (small-model prompt-following inconsistency). The finding is just the carry-forward title showing up again."
+            },
+            {
+              "id": "G081",
+              "arbitration": "Confirmation-shape. Auditor reading the structural pre-check result that says G081 banned-phrases pass and reporting it as a finding rather than as the absence-of-finding it is."
+            },
+            {
+              "id": "AUDIT-PILLAR11",
+              "arbitration": "Auditor reading the literal git-add, git-commit, git-push tokens inside pillar_11_invariant_check.evidence (the field documenting we never invoke these) and flagging them as actual git invocations. Self-referential. Same shape as a security scanner flagging its own regex pattern."
+            }
+          ],
+          "arbitrated_disposition": "pass_with_findings"
+        }
+      },
+      "notes": "D5 emits then transitions audit_status to pending_drafter_review. Drafter (claude-web) reviews disposition pre-sign. workstream_complete is NOT emitted in this session per executor prompt + Adversarial Authorship modified protocol."
+    }
+  ],
+  "carry_forwards_added": [
+    {
+      "id": "F-0.2.17-W3-001",
+      "title": "Llama3.2:3b inconsistently honors the registered-references prompt rule",
+      "severity": "important",
+      "what_surfaced": "D4 W2 self-audit re-run with RAG enrichment continued to flag F-0.2.17-W1-003 as 'ID does not look real (matches naming conventions)' even though the registered-references section listed it as `registered` with a snippet pointing to W1 acceptance archive. The W0 replay correctly stopped flagging F-W0-004; the W2 self-audit did not stop flagging F-0.2.17-W1-003. Same prompt rule, same context shape, same model, different outcome.",
+      "disposition": "Investigate: (a) whether the system-prompt rule wording can be strengthened (e.g. moving the rule into the JSON schema description rather than a paragraph at end of system prompt); (b) whether a stronger auditor model (qwen3.5:9b, llama3.3, etc.) follows the rule consistently; (c) whether a two-pass audit \u2014 model produces findings, then a deterministic post-hoc filter drops findings whose anchor IDs are `registered` and whose description matches the fake-ID phrase set \u2014 closes the gap structurally rather than relying on prompt-following. Drafter selects path (c) deterministic post-hoc filter as the structural fix appropriate for base-tier auditor model.",
+      "target": "0.2.17 W4 \u2014 deterministic post-hoc filter on RAG-aware audit findings (drafter-arbitrated path c)",
+      "source": "W3 D4 RAG-vs-non-RAG comparison artifact"
+    },
+    {
+      "id": "F-0.2.17-W3-002",
+      "title": "Plan-doc spurious-ID test token is not structurally detectable",
+      "severity": "info",
+      "what_surfaced": "Plan doc D2 acceptance gate names `F-FAKE-9.9.9-W9-999` as the spurious test ID expected to return `unverified`. The carry_forward_full pattern requires digits after `F-`, so `F-FAKE-...` is not detected at D1 and therefore never reaches D2. Substituted F-9.9.9-W9-999 as the structurally-valid synthetic spurious token. Gate semantics held.",
+      "disposition": "Document the substitution in any later replay. No code change needed.",
+      "target": "Drafter awareness during W3 close-note authoring",
+      "source": "W3 D1/D2 implementation"
+    }
+  ],
+  "carry_forwards_closed": [],
+  "carry_forwards_partial_closure_claim": [
+    {
+      "id": "F-0.2.17-W2-006",
+      "title": "Auditor reference-resolution gap (load-bearing fix that motivated W3)",
+      "claim": "PARTIAL CLOSURE \u2014 not full closure",
+      "evidence": "1 of 2 demonstrated false positives closed (W0 F-W0-004 closure). W2 self-audit F-0.2.17-W1-003 false positive persisted. New carry-forward F-0.2.17-W3-001 surfaces the residual problem.",
+      "drafter_arbitration_request": "Drafter (claude-web) decides whether F-0.2.17-W2-006 is closed (architecture works, model is the bottleneck \u2014 covered by F-0.2.17-W3-001) or remains open (false-positive persistence is unacceptable; W3 didn't actually fix it). Recommendation: keep F-0.2.17-W2-006 OPEN until F-0.2.17-W3-001 is resolved at W4/W5 \u2014 partial closure means the load-bearing fix is incomplete.",
+      "drafter_arbitration_decision": "OPEN \u2014 partial closure does not constitute full closure. F-0.2.17-W3-001 inherits as more specific surface of same underlying issue. Closes via W4 deterministic post-hoc filter."
+    }
+  ],
+  "pillar_11_invariant_check": {
+    "result": "pass",
+    "evidence": {
+      "git_operations_in_executor_session": "none \u2014 executor did not invoke git, gh, git-add, git-commit, git-push, gh-pr-create, or any merge/push/commit primitive",
+      "secret_reads_attempted": "none \u2014 RAG layer reads chromadb local files only; embed layer talks to host Ollama; no broker reads attempted; no ~/.config/, ~/.ssh/, age, or fernet artifact reads",
+      "files_written": "all writes targeted src/aho/council/ (audit.py modify; audit_ref_extract.py + audit_ref_lookup.py new), artifacts/iterations/0.2.17/probes/ (W3_audit_replay_rag.py new), artifacts/iterations/0.2.17/audit/replay/ (4 new JSON outputs), artifacts/iterations/0.2.17/acceptance/W3.json (this archive). No .git/, no ~/.config/, no /etc/, no .ssh/ writes.",
+      "operator_only_actions_respected": "F-0.2.17-W1-003 (Telegram bot token rotation) explicitly NOT performed by this executor. Surfaced under outstanding_pre_03x_gates."
+    }
+  },
+  "outstanding_pre_03x_gates": [
+    {
+      "id": "F-0.2.17-W1-003",
+      "title": "Telegram bot token rotation (operator-side, pre-0.3.x hard gate)",
+      "status": "operator_action_pending",
+      "executor_action": "none \u2014 surfaced as continuing reminder per W3 executor prompt",
+      "next_surface": "W4 close + W5 close + tsP3 handoff"
+    },
+    {
+      "id": "F-0.2.17-W1-001",
+      "title": "secrets-test subcommand still in rc1 image",
+      "status": "carry_forward",
+      "executor_action": "none \u2014 folded into W5 retrospective per W2 plan",
+      "next_surface": "W5 retrospective"
+    }
+  ],
+  "agents_involved": [
+    {
+      "agent": "claude-web",
+      "role": "drafter",
+      "model": "claude-opus (web project folder; W3 plan + executor prompt authoring)"
+    },
+    {
+      "agent": "claude-code",
+      "role": "executor",
+      "model": "claude-opus-4-7[1m]"
+    },
+    {
+      "agent": "council-audit",
+      "role": "auditor",
+      "model_id": "llama3.2:3b",
+      "rag_enrichment_enabled": true,
+      "auditor_prompt_path": "src/aho/council/audit.py::_AUDIT_SYSTEM (with W3-added Registered-references rule)",
+      "enrichment_construction_path": "src/aho/council/audit.py::_build_enrichment -> audit_ref_extract.detect_references + audit_ref_lookup.lookup_references"
+    },
+    {
+      "agent": "council-embed",
+      "role": "supporting (RAG retrieval embed step)",
+      "model": "nomic-embed-text"
+    }
+  ],
+  "scope_notes": [
+    "W3 modified the audit primitive's prompt-construction path only. Confidence floor, severity normalisation, structural pre-checks, disposition validation, and the council triage / dispatch / embed primitives are untouched.",
+    "Out of scope (deferred): claw3d brick rendering -> W4. Materiality four-bucket dashboard surfaces -> W4. Per-component bricks -> W4. ADR documents -> W5. Token rotation -> operator-side pre-0.3.x. Secrets-test subcommand removal -> W5 retrospective."
+  ],
+  "halt_and_surface_after_d5": "Per executor prompt: D5 emits, audit_status transitions to pending_drafter_review, executor halts and does NOT emit workstream_complete. Drafter reviews D5 disposition pre-sign. Drafter also arbitrates the F-0.2.17-W2-006 partial-closure claim.",
+  "workstream_complete_emitted": false,
+  "workstream_complete_emit_condition": "Pending drafter (claude-web) review of D5 disposition + drafter arbitration of F-0.2.17-W2-006 partial-closure claim + operator (Kyle) sign-off. workstream_complete emits in a follow-up executor invocation.",
+  "self_audit_disposition": "halt",
+  "self_audit_confidence": 0.95,
+  "self_audit_findings_count": 3,
+  "self_audit_path": "artifacts/iterations/0.2.17/audit/W3.json",
+  "self_audit_completed_utc": "2026-05-03T14:44:27.291434+00:00",
+  "sealed_archive_sha256": "3700753c5ddfb163203ab91795b8495ab4bf339ea8a0717401918bf42262ba58",
+  "self_audit_target_artifact_sha256_pre_update": "b1c093fa8863919f8f0720715abe6e4f3683cf0a9984c042ff7a473571e68cc4",
+  "drafter_arbitrated_disposition": "pass_with_findings",
+  "drafter_arbitration_summary": "D5 self-audit halt arbitrated to pass_with_findings \u2014 three findings are auditor self-referential artifacts (echo, confirmation-shape, literal-token regex on Pillar 11 evidence prose), not W3 substance defects. F-0.2.17-W2-006 stays OPEN; partial closure does not constitute full closure. F-0.2.17-W3-001 closes via W4 deterministic post-hoc filter (path c)."
+}

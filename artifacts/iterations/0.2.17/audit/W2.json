@@ -1,0 +1,43 @@
+{
+  "disposition": "surface_to_drafter",
+  "confidence": 0.9,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-03T05:26:14.075037+00:00",
+  "audit_completed_utc": "2026-05-03T05:26:19.776299+00:00",
+  "target_artifact_sha256": "75e23f4358208a847e928fa6267078b4fccc2444ca9507725892e3a625077521",
+  "findings_count": 1,
+  "evidence_trace_count": 1,
+  "audit_kind": "self",
+  "iteration": "0.2.17",
+  "workstream": "W2",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "G081",
+      "severity": "critical",
+      "description": "The artifact references a gotcha / ADR / carry-forward by ID (F-0.2.17-W1-003) but the ID does not look real (matches naming conventions)"
+    }
+  ],
+  "evidence_traces": [
+    "\"F-0.2.17-W1-003\""
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "pass",
+    "git_ops_hits": [],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.17",
+      "0.2.16",
+      "0.2.16",
+      "0.2.17",
+      "0.2.17"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "latency_ms": 5699,
+  "body_md": "# Self-Audit \u2014 0.2.17 W2\n**Disposition:** surface_to_drafter\n**Confidence:** 0.9\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W2.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **pass**\n- three_octet_versioning_present: **pass**\n\n## Findings\n\n### Finding G081 (critical)\n\nThe artifact references a gotcha / ADR / carry-forward by ID (F-0.2.17-W1-003) but the ID does not look real (matches naming conventions)\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201c\"F-0.2.17-W1-003\"\u201d\n"
+}

@@ -1,0 +1,56 @@
+# 0.2.17 W1 build context discipline.
+# Keep image lean and exclude credentials, history, telemetry sinks, build caches.
+
+.git
+.gitignore
+.gitattributes
+
+# Claude Code / runtime working state
+.claude
+.claude-history
+.aho.json
+.aho-checkpoint.json
+
+# Iteration artifacts (not needed in image — harness baked in only at /opt/aho/src)
+artifacts
+projects.json
+MANIFEST.json
+
+# Local logs and runtime state
+firebase-debug.log
+*.log
+data
+templates
+web
+app
+
+# Build / caches
+**/__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+.pytest_cache
+.mypy_cache
+.ruff_cache
+node_modules
+dist
+build
+*.egg-info
+
+# Dev tooling and editor state
+.vscode
+.idea
+.DS_Store
+
+# Containers context already-built images (avoid recursive baking)
+containers/Dockerfile.hello
+
+# Credentials — defensive even though none should ever live in repo root
+**/id_ed25519
+**/id_rsa
+**/age-identity*
+**/*.fernet
+**/secrets.fish*
+.env
+.env.*

@@ -17,13 +17,61 @@ Schema v3 (0.2.13 W0): agents_involved extended from list[str] to
 list[dict] with {agent: str, role: "primary"|"auditor"|"cameo"}.
 AgentInvolvement model in acceptance.py normalizes bare strings to
 {agent: str, role: "primary"} for backward compatibility.
+
+Test isolation (0.2.17 W0 — F-W0-004 closure): _resolve_checkpoint_root()
+guards against the recurring failure mode of test code mutating the real
+.aho-checkpoint.json. When PYTEST_CURRENT_TEST is set, the resolved
+checkpoint dir MUST be a tempdir-rooted path (or AHO_TEST_CHECKPOINT_DIR
+explicitly set). Otherwise a TestIsolationError is raised loudly. The
+conftest autouse fixture provides that isolation for known emit-using
+test modules; this guard catches anything outside that allowlist.
 """
 import json
 import os
+import tempfile
 from dataclasses import asdict
 from pathlib import Path
 
 from aho.logger import log_event, LOG_PATH, _ITERATION
+
+
+class TestIsolationError(RuntimeError):
+    """Raised when emit_workstream_* would mutate the real checkpoint inside pytest."""
+
+    # Tell pytest this is not a test class despite the Test* prefix.
+    __test__ = False
+
+
+def _resolve_checkpoint_root() -> Path | None:
+    """Resolve the directory containing .aho-checkpoint.json for emit writes.
+
+    Honours AHO_TEST_CHECKPOINT_DIR as an explicit override. Falls through
+    to find_project_root() otherwise. Inside pytest (PYTEST_CURRENT_TEST set)
+    the resolved path MUST live under the system tempdir or AHO_TEST_CHECKPOINT_DIR
+    must be set; raises TestIsolationError to surface the missing isolation.
+    """
+    explicit = os.environ.get("AHO_TEST_CHECKPOINT_DIR")
+    if explicit:
+        return Path(explicit)
+
+    from aho.paths import AhoProjectNotFound, find_project_root
+    try:
+        root = find_project_root()
+    except AhoProjectNotFound:
+        return None
+
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        tmp_root = Path(tempfile.gettempdir()).resolve()
+        try:
+            root.resolve().relative_to(tmp_root)
+        except ValueError:
+            raise TestIsolationError(
+                f"emit_workstream_* would write to {root}/.aho-checkpoint.json "
+                f"but PYTEST_CURRENT_TEST is set. Set AHO_TEST_CHECKPOINT_DIR "
+                f"to a per-test tmp_path, or add this test module to the "
+                f"_CHECKPOINT_MUTATING_MODULES allowlist in artifacts/tests/conftest.py."
+            )
+    return root
 
 
 def _scan_events(iteration: str, workstream_id: str, event_type: str) -> bool:
@@ -58,17 +106,18 @@ def emit_workstream_start(workstream_id: str, summary: str = "",
     agent = source_agent or os.environ.get("AHO_EXECUTOR", "claude-code")
 
     # Update checkpoint to in_progress
-    try:
-        from aho.paths import find_project_root
-        root = find_project_root()
+    root = _resolve_checkpoint_root()
+    if root is not None:
         ckpt_path = root / ".aho-checkpoint.json"
         if ckpt_path.exists():
-            ckpt = json.loads(ckpt_path.read_text())
-            ckpt.setdefault("workstreams", {})[workstream_id] = "in_progress"
-            ckpt["current_workstream"] = workstream_id
-            ckpt_path.write_text(json.dumps(ckpt, indent=2) + "\n")
-    except Exception:
-        pass
+            try:
+                ckpt = json.loads(ckpt_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                ckpt = None
+            if ckpt is not None:
+                ckpt.setdefault("workstreams", {})[workstream_id] = "in_progress"
+                ckpt["current_workstream"] = workstream_id
+                ckpt_path.write_text(json.dumps(ckpt, indent=2) + "\n")
 
     return log_event(
         event_type="workstream_start",
@@ -112,17 +161,18 @@ def emit_workstream_complete(workstream_id: str, status: str = "pass",
 
     # Update checkpoint: only the named workstream's state.
     # Sibling workstream states must be preserved (0.2.13 side-effect bug fix).
-    try:
-        from aho.paths import find_project_root
-        root = find_project_root()
+    root = _resolve_checkpoint_root()
+    if root is not None:
         ckpt_path = root / ".aho-checkpoint.json"
         if ckpt_path.exists():
-            ckpt = json.loads(ckpt_path.read_text())
-            ckpt.setdefault("workstreams", {})[workstream_id] = "workstream_complete"
-            ckpt["last_event"] = f"{workstream_id}_workstream_complete"
-            ckpt_path.write_text(json.dumps(ckpt, indent=2) + "\n")
-    except Exception:
-        pass
+            try:
+                ckpt = json.loads(ckpt_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                ckpt = None
+            if ckpt is not None:
+                ckpt.setdefault("workstreams", {})[workstream_id] = "workstream_complete"
+                ckpt["last_event"] = f"{workstream_id}_workstream_complete"
+                ckpt_path.write_text(json.dumps(ckpt, indent=2) + "\n")
 
     has_v2 = acceptance_results is not None
     has_v3 = any(x is not None for x in [agents_involved, token_count,

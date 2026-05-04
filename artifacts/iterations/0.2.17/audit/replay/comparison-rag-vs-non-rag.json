@@ -1,0 +1,157 @@
+{
+  "iteration": "0.2.17",
+  "comparison_kind": "rag_vs_non_rag_replay",
+  "generated_utc": "2026-05-03T14:39:16.723959+00:00",
+  "workstreams": {
+    "W0": {
+      "source_workstream": "W0",
+      "non_rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W0-llama.json",
+      "disposition": {
+        "rag": "halt",
+        "non_rag": "halt",
+        "match": true
+      },
+      "finding_counts": {
+        "rag": 2,
+        "non_rag": 1,
+        "delta_rag_minus_non_rag": 1
+      },
+      "false_positive_resolution": {
+        "non_rag_fake_id_findings": 1,
+        "closed_by_rag": [
+          {
+            "non_rag_finding_id": "AF-1",
+            "anchor_ids": [
+              "F-W0-004"
+            ],
+            "non_rag_description": "The executor referenced a gotcha / ADR / carry-forward by ID (F-W0-004) but the artifact does not corroborate this."
+          }
+        ],
+        "still_present_in_rag": []
+      },
+      "novel_findings": {
+        "rag_only": [
+          {
+            "id": "B2.3",
+            "severity": "info",
+            "description": "The B2.3 post-reboot validation outcome is deferred across the post-W0 reboot boundary per ADR 0007 \u00a7GPU passthrough deferral amendment."
+          },
+          {
+            "id": "ADR-0008",
+            "severity": "important",
+            "description": "The ADR-0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required."
+          }
+        ],
+        "non_rag_only": [
+          {
+            "id": "AF-1",
+            "severity": "info",
+            "description": "The executor referenced a gotcha / ADR / carry-forward by ID (F-W0-004) but the artifact does not corroborate this."
+          }
+        ]
+      },
+      "substantive_keyword_split": {
+        "rag_clean_while_non_rag_substantive": false,
+        "rag_only_substantive_findings": false,
+        "non_rag_only_substantive_findings": false
+      },
+      "substantively_important_disagreement": false
+    },
+    "W1": {
+      "source_workstream": "W1",
+      "non_rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W1-llama.json",
+      "disposition": {
+        "rag": "halt",
+        "non_rag": "surface_to_drafter",
+        "match": false
+      },
+      "finding_counts": {
+        "rag": 1,
+        "non_rag": 1,
+        "delta_rag_minus_non_rag": 0
+      },
+      "false_positive_resolution": {
+        "non_rag_fake_id_findings": 0,
+        "closed_by_rag": [],
+        "still_present_in_rag": []
+      },
+      "novel_findings": {
+        "rag_only": [],
+        "non_rag_only": []
+      },
+      "substantive_keyword_split": {
+        "rag_clean_while_non_rag_substantive": false,
+        "rag_only_substantive_findings": false,
+        "non_rag_only_substantive_findings": false
+      },
+      "substantively_important_disagreement": false
+    },
+    "W2": {
+      "source_workstream": "W2",
+      "non_rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/W2.json",
+      "disposition": {
+        "rag": "halt",
+        "non_rag": "surface_to_drafter",
+        "match": false
+      },
+      "finding_counts": {
+        "rag": 1,
+        "non_rag": 1,
+        "delta_rag_minus_non_rag": 0
+      },
+      "false_positive_resolution": {
+        "non_rag_fake_id_findings": 1,
+        "closed_by_rag": [],
+        "still_present_in_rag": [
+          {
+            "non_rag_finding_id": "G081",
+            "anchor_ids": [
+              "F-0.2.17-W1-003"
+            ],
+            "non_rag_description": "The artifact references a gotcha / ADR / carry-forward by ID (F-0.2.17-W1-003) but the ID does not look real (matches naming conventions)"
+          }
+        ]
+      },
+      "novel_findings": {
+        "rag_only": [],
+        "non_rag_only": []
+      },
+      "substantive_keyword_split": {
+        "rag_clean_while_non_rag_substantive": false,
+        "rag_only_substantive_findings": false,
+        "non_rag_only_substantive_findings": false
+      },
+      "substantively_important_disagreement": false
+    }
+  },
+  "rollup": {
+    "false_positives_closed_by_rag": 1,
+    "false_positives_still_present_in_rag": 1,
+    "f_0_2_17_w2_006_resolution_claim": false,
+    "substantively_important_disagreement_anywhere": false
+  },
+  "per_workstream_artifact_paths": {
+    "W0": {
+      "rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W0-llama-rag.json",
+      "non_rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W0-llama.json",
+      "source_artifact_paths": [
+        "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W0.json",
+        "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W0-amendment-b2-3.json"
+      ]
+    },
+    "W1": {
+      "rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W1-llama-rag.json",
+      "non_rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W1-llama.json",
+      "source_artifact_paths": [
+        "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W1.json"
+      ]
+    },
+    "W2": {
+      "rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/replay/W2-self-audit-rag.json",
+      "non_rag_audit_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/audit/W2.json",
+      "source_artifact_paths": [
+        "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/acceptance/W2.json"
+      ]
+    }
+  }
+}

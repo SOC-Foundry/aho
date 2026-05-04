@@ -11,6 +11,16 @@ active iteration.
 PII scrubbing: no user.*/organization.id/session.id fields ever appear
 in aggregator output. Only `aho.*` resource attrs are read for
 filtering; numeric values and event names are the only payload.
+
+Event-to-counter mapping (one event name → one counter, no aliasing):
+  api_request           → api_request_count
+  api_error             → api_error_count
+  api_retries_exhausted → api_retries_exhausted_count
+  internal_error        → internal_error_count (+ top_error_names)
+  tool_result           → tool_result_count
+  tool_decision         → tool_decision_count
+  user_prompt           → user_prompt_count
+  mcp_server_connection → mcp_server_connection_count
 """
 from __future__ import annotations
 
@@ -277,9 +287,12 @@ def aggregate(
             r["user_prompt_count"] += 1
         elif event_name == "internal_error":
             r["internal_error_count"] += 1
-            r["api_error_count"] += 1
             name = attrs.get("error_name") or "UNKNOWN"
             ws_error_names[ws][name] += 1
+        elif event_name == "api_error":
+            r["api_error_count"] += 1
+        elif event_name == "api_retries_exhausted":
+            r["api_retries_exhausted_count"] += 1
         if ts_iso:
             if not r["first_event_ts"] or ts_iso < r["first_event_ts"]:
                 r["first_event_ts"] = ts_iso
