@@ -17,7 +17,7 @@ Inputs:
   - ``post_state`` — normalized materiality state for the post-
     base-container iteration (0.2.17), built from live OTEL counter
     state via
-    ``aho.dashboard.lego.materiality_surfaces.materiality_state_from_otel_counters``.
+    ``aho.claw3d.lego.materiality_surfaces.materiality_state_from_otel_counters``.
 """
 from __future__ import annotations
 

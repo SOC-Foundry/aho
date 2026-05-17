@@ -1,9 +1,9 @@
 #!/usr/bin/env fish
-# aho-dashboard - Localhost dashboard server.
+# aho-claw3d - Localhost dashboard server.
 # 0.2.3 W3 skeleton, 0.2.7 W1 — full aggregator + static file server.
 # Serves /api/state (aggregated JSON), /api/health (traces), / (Flutter app).
 
 set -l project_root (dirname (dirname (realpath (status filename))))
 set -x AHO_PROJECT_ROOT $project_root
 
-python3 -m aho.dashboard.server
+python3 -m aho.claw3d.server

@@ -8,7 +8,7 @@ post-state.
 The 0.2.16 audit archives use a different schema than the 0.2.17 archives:
 findings are a dict keyed by finding ID with values {severity, description},
 not a list-of-dicts. This module flattens both shapes to the canonical
-``materiality_state`` dict used by ``aho.dashboard.lego.materiality_surfaces``.
+``materiality_state`` dict used by ``aho.claw3d.lego.materiality_surfaces``.
 
 Buckets we can populate from 0.2.16 archives:
 

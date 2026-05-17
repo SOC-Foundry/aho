@@ -18,7 +18,7 @@ without re-reading code paths.
 
 The brick layer reads aggregated OTEL state — it does not poll Ollama,
 ChromaDB, or systemd directly. The aggregator
-(``aho.dashboard.otel_aggregator``) is the single owner of OTEL parsing.
+(``aho.claw3d.otel_aggregator``) is the single owner of OTEL parsing.
 
 Coverage is the W4 plan-doc §D2 list of ten components:
 

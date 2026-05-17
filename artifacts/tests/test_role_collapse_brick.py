@@ -8,8 +8,8 @@ Verifies:
 """
 from __future__ import annotations
 
-from aho.dashboard.lego.bricks import BRICK_GREEN, BRICK_RED, BRICK_UNKNOWN
-from aho.dashboard.lego.role_collapse_brick import (
+from aho.claw3d.lego.bricks import BRICK_GREEN, BRICK_RED, BRICK_UNKNOWN
+from aho.claw3d.lego.role_collapse_brick import (
     SIGNAL_KEYS,
     evaluate,
     render,

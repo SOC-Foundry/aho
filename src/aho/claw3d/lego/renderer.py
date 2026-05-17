@@ -1,7 +1,7 @@
 import math
 from aho.council.status import CouncilStatus
-from aho.dashboard.lego.palette import COLOR_OPERATIONAL, COLOR_GAP, COLOR_UNKNOWN, COLOR_BG, COLOR_TEXT, COLOR_STROKE, COLOR_LINE
-from aho.dashboard.lego.layout import get_node_position, get_relationships, BLOCK_W, BLOCK_H
+from aho.claw3d.lego.palette import COLOR_OPERATIONAL, COLOR_GAP, COLOR_UNKNOWN, COLOR_BG, COLOR_TEXT, COLOR_STROKE, COLOR_LINE
+from aho.claw3d.lego.layout import get_node_position, get_relationships, BLOCK_W, BLOCK_H
 
 def render_council_svg(status: CouncilStatus) -> str:
     """Render the council status into a static SVG document."""

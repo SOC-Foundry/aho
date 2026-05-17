@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from aho.dashboard import otel_aggregator as oa
+from aho.claw3d import otel_aggregator as oa
 
 
 # ------------------------------------------------------------------------- #

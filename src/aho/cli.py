@@ -632,7 +632,7 @@ def main():
     pupds.add_parser("all", help="Update everything")
 
     # --- aho dashboard ---
-    pdash = sub.add_parser("dashboard", help="Localhost dashboard server")
+    pdash = sub.add_parser("claw3d", help="Localhost dashboard server")
 
     # --- aho models ---
     pmod = sub.add_parser("models", help="Model fleet management")
@@ -968,8 +968,8 @@ def main():
             pupd.print_help()
         else:
             print(f"aho update {args.update_cmd}: dispatch not yet wired")
-    elif args.cmd == "dashboard":
-        _dispatch_wrapper("aho-dashboard")
+    elif args.cmd == "claw3d":
+        _dispatch_wrapper("aho-claw3d")
     elif args.cmd == "models":
         if args.models_cmd == "status":
             _dispatch_wrapper("aho-models-status")

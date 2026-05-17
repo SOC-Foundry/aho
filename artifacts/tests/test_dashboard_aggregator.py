@@ -1,4 +1,4 @@
-"""Tests for aho.dashboard.aggregator — W1 0.2.7."""
+"""Tests for aho.claw3d.aggregator — W1 0.2.7."""
 import json
 import os
 import pytest
@@ -65,7 +65,7 @@ def project_root(tmp_path):
 
 
 def test_system_state(project_root):
-    from aho.dashboard.aggregator import _system_state, _cache
+    from aho.claw3d.aggregator import _system_state, _cache
     _cache["data"] = None  # clear cache
     state = _system_state()
     assert state["iteration"] == "0.2.7"
@@ -74,7 +74,7 @@ def test_system_state(project_root):
 
 
 def test_component_state(project_root):
-    from aho.dashboard.aggregator import _component_state, _cache
+    from aho.claw3d.aggregator import _component_state, _cache
     _cache["data"] = None
     comps = _component_state()
     assert len(comps) == 1
@@ -88,7 +88,7 @@ def test_trace_state_returns_last_20(project_root, monkeypatch):
         return project_root / "data" / "aho_event_log.jsonl"
     monkeypatch.setattr(aho.logger, "event_log_path", mock_event_log_path)
     
-    from aho.dashboard.aggregator import _trace_state, _cache
+    from aho.claw3d.aggregator import _trace_state, _cache
     _cache["data"] = None
     traces = _trace_state()
     assert len(traces) == 20
@@ -96,7 +96,7 @@ def test_trace_state_returns_last_20(project_root, monkeypatch):
 
 
 def test_daemon_state_returns_7(project_root):
-    from aho.dashboard.aggregator import _daemon_state, _cache
+    from aho.claw3d.aggregator import _daemon_state, _cache
     _cache["data"] = None
     daemons = _daemon_state()
     assert len(daemons) == 7
@@ -111,7 +111,7 @@ def test_daemon_state_returns_7(project_root):
 
 
 def test_get_state_returns_all_sections(project_root):
-    from aho.dashboard.aggregator import get_state, _cache
+    from aho.claw3d.aggregator import get_state, _cache
     _cache["data"] = None
     state = get_state(force=True)
     assert "system" in state
@@ -123,7 +123,7 @@ def test_get_state_returns_all_sections(project_root):
 
 
 def test_get_state_caching(project_root):
-    from aho.dashboard.aggregator import get_state, _cache
+    from aho.claw3d.aggregator import get_state, _cache
     _cache["data"] = None
     s1 = get_state(force=True)
     s2 = get_state()  # should be cached
@@ -131,7 +131,7 @@ def test_get_state_caching(project_root):
 
 
 def test_mcp_state_returns_list(project_root):
-    from aho.dashboard.aggregator import _mcp_state, _cache
+    from aho.claw3d.aggregator import _mcp_state, _cache
     _cache["data"] = None
     mcp = _mcp_state()
     assert isinstance(mcp, list)
@@ -141,7 +141,7 @@ def test_mcp_state_returns_list(project_root):
 
 
 def test_model_state_returns_list(project_root):
-    from aho.dashboard.aggregator import _model_state, _cache
+    from aho.claw3d.aggregator import _model_state, _cache
     _cache["data"] = None
     models = _model_state()
     assert isinstance(models, list)

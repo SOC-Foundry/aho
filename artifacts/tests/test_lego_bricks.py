@@ -15,7 +15,7 @@ from typing import Any, Dict
 
 import pytest
 
-from aho.dashboard.lego.bricks import (
+from aho.claw3d.lego.bricks import (
     BRICK_GREEN,
     BRICK_RED,
     BRICK_UNKNOWN,

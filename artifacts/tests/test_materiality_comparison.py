@@ -15,11 +15,11 @@ from pathlib import Path
 
 import pytest
 
-from aho.dashboard.lego.materiality_comparison import (
+from aho.claw3d.lego.materiality_comparison import (
     N_ITERATIONS_THRESHOLD,
     render_comparison,
 )
-from aho.dashboard.lego.materiality_surfaces import (
+from aho.claw3d.lego.materiality_surfaces import (
     materiality_state_from_otel_counters,
 )
 from aho.materiality_baseline_extract import (

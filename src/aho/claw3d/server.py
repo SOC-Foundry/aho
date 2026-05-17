@@ -13,10 +13,10 @@ from pathlib import Path
 
 from aho.paths import find_project_root
 from aho.config import get_dashboard_port
-from aho.dashboard.aggregator import get_state
-from aho.dashboard.otel_aggregator import get_otel_state, get_workstream_detail
+from aho.claw3d.aggregator import get_state
+from aho.claw3d.otel_aggregator import get_otel_state, get_workstream_detail
 from aho.council.status import collect_status
-from aho.dashboard.lego.renderer import render_council_svg
+from aho.claw3d.lego.renderer import render_council_svg
 
 
 def create_handler(project_root: Path):
@@ -81,7 +81,23 @@ def create_handler(project_root: Path):
                 else:
                     self.send_error(404)
             else:
-                super().do_GET()
+                # SPA fallback: serve index.html for unknown non-API, non-asset paths
+                # so Flutter's client-side router takes over on reload/deep-link.
+                # (0.2.18 W4 — fix for "Error response 404 File not found" when
+                # user loads any URL other than /.)
+                requested_path = self.path.split('?')[0].split('#')[0].lstrip('/')
+                candidate = Path(serve_dir) / requested_path
+                if candidate.exists() and candidate.is_file():
+                    super().do_GET()
+                elif self.path.startswith('/api/'):
+                    self.send_error(404, f"Unknown API endpoint: {self.path}")
+                elif requested_path and '.' in requested_path.split('/')[-1]:
+                    # asset-like request (has extension) — real 404, not SPA fallback
+                    self.send_error(404)
+                else:
+                    # SPA route — serve index.html via client-side router
+                    self.path = '/'
+                    super().do_GET()
 
         def _json_response(self, data):
             body = json.dumps(data, default=str).encode()

@@ -10,13 +10,13 @@ Verifies the four-surface dashboard:
 """
 from __future__ import annotations
 
-from aho.dashboard.lego.anti_rubber_stamp_dashboard import (
+from aho.claw3d.lego.anti_rubber_stamp_dashboard import (
     SURFACE_IDS,
     evaluate_all_surfaces,
     evaluate_overview,
     render_dashboard,
 )
-from aho.dashboard.lego.bricks import BRICK_GREEN, BRICK_RED, BRICK_UNKNOWN
+from aho.claw3d.lego.bricks import BRICK_GREEN, BRICK_RED, BRICK_UNKNOWN
 
 
 def test_dashboard_has_four_surfaces_in_canonical_order():

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from aho.dashboard.lego.materiality_surfaces import (
+from aho.claw3d.lego.materiality_surfaces import (
     BUCKET_DESCRIPTIONS,
     CANONICAL_BUCKETS,
     COUNTER_TO_BUCKET,
