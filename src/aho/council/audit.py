@@ -117,6 +117,30 @@ _GIT_OP_PATTERNS = [
     re.compile(r"\bgh[\s]+pr[\s]+(create|merge|close)\b", re.IGNORECASE),
 ]
 
+# Sentinels marking a git-op mention as Pillar 11 *enforcement narration*
+# rather than agent execution. Within ±_GIT_OP_SENTINEL_WINDOW chars of a
+# git-op regex hit, any sentinel match suppresses that hit. Closes the
+# 0.2.18 W0 false-positive shape: an acceptance archive narrating the
+# Pillar 11 invariant ("No `git commit`, `git push`, ... from this
+# session") tripped the pre-check on its own enforcement language. The
+# pre-check is a fast-path heuristic — model + post-hoc filter remain the
+# substantive defenses against actual violations.
+_GIT_OP_ENFORCEMENT_SENTINELS = re.compile(
+    r"(?:"
+    r"\boperator[\s-]?only\b"
+    r"|\boperator[\s-]?side\b"
+    r"|\boperator[\s-]?execute(?:d|s)?\b"
+    r"|\boperator[\s_-]?action\b"
+    r"|\bagent[\s-]?surface(?:s|d)?\b"
+    r"|\bnever[\s-]?execute(?:s|d)?\b"
+    r"|\bno[\s-]?agent[\s-]?write\w*\b"
+    r"|\bOPR-"
+    r"|\bno[\s`]+git\b"
+    r")",
+    re.IGNORECASE,
+)
+_GIT_OP_SENTINEL_WINDOW = 150
+
 # Three-octet versioning — phase.iteration.run.
 _THREE_OCTET_PATTERN = re.compile(r"\b\d+\.\d+\.\d+\b")
 
@@ -179,9 +203,20 @@ def _scan_banned_phrases(text: str) -> List[str]:
 
 
 def _scan_git_ops(text: str) -> List[str]:
+    """Return git-op regex hits, suppressing those wrapped in Pillar 11
+    enforcement narration. A hit is suppressed if any
+    `_GIT_OP_ENFORCEMENT_SENTINELS` token matches within ±
+    `_GIT_OP_SENTINEL_WINDOW` chars of the hit span. Suppression is fast-
+    path only — model spot-check still sees the artifact and can flag
+    semantic violations that slip the regex.
+    """
     hits: List[str] = []
     for pattern in _GIT_OP_PATTERNS:
         for m in pattern.finditer(text):
+            window_start = max(0, m.start() - _GIT_OP_SENTINEL_WINDOW)
+            window_end = min(len(text), m.end() + _GIT_OP_SENTINEL_WINDOW)
+            if _GIT_OP_ENFORCEMENT_SENTINELS.search(text[window_start:window_end]):
+                continue
             hits.append(m.group(0))
     return hits
 
@@ -702,9 +737,25 @@ def audit(
     # higher-confidence than model semantic analysis.
     final_disposition = floor_decision["disposition"]
     structural_override = False
+    unsupported_halt_downgrade = False
     if extra_findings and final_disposition == "clean":
         final_disposition = "surface_to_drafter"
         structural_override = True
+
+    # 0.2.18 W0 / F-0.2.18-W0-007 — unsupported-halt downgrade. If the
+    # model returned `halt` but the post-hoc filter suppressed every
+    # active model finding AND no deterministic pre-check fired, the halt
+    # is materially unsupported. Downgrade to `surface_to_drafter` (NEVER
+    # `clean`) — the model still emitted a halt signal, so drafter/operator
+    # arbitration is the right backstop. This is structurally narrow:
+    # any active finding (model or pre-check) keeps the halt.
+    if (
+        final_disposition == "halt"
+        and len(model_findings_active) == 0
+        and len(extra_findings) == 0
+    ):
+        final_disposition = "surface_to_drafter"
+        unsupported_halt_downgrade = True
 
     latency_ms = int((time.monotonic() - start) * 1000)
     completed_utc = datetime.now(timezone.utc).isoformat()
@@ -747,6 +798,7 @@ def audit(
         "confidence_floor": floor_decision["confidence_floor"],
         "confidence_floor_locked": floor_decision["confidence_floor_locked"],
         "structural_override_to_surface": structural_override,
+        "unsupported_halt_downgrade": unsupported_halt_downgrade,
         "auditor_model_id": _model(),
         "rag_enrichment": rag_summary,
         "audit_started_utc": started_utc,

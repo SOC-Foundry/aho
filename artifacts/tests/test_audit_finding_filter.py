@@ -314,9 +314,12 @@ def test_audit_integration_suppresses_fake_id_finding(monkeypatch):
     assert result["finding_filter"]["suppressed_count"] == 1
     assert len(result["suppressed_findings"]) == 1
     assert result["suppressed_findings"][0]["reason"] == SUPPRESSION_REASON
-    # Disposition is left untouched (model said halt; filter records the
-    # structural override at finding level, not at disposition level).
-    assert result["disposition"] == "halt"
+    # Per F-0.2.18-W0-007 unsupported-halt downgrade: model said halt with
+    # exactly one finding, that finding was filter-suppressed, and no
+    # pre-check fired → halt is materially unsupported → downgrade to
+    # surface_to_drafter (preserves human-review backstop, never auto-clean).
+    assert result["disposition"] == "surface_to_drafter"
+    assert result["unsupported_halt_downgrade"] is True
     # No model findings in final list, but pre-check findings (none here)
     # would still flow through.
     assert result["findings"] == []

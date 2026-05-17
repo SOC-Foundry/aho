@@ -47,7 +47,7 @@ def _evaluate_readiness() -> tuple[bool, Dict[str, bool]]:
 
 
 class _Handler(BaseHTTPRequestHandler):
-    server_version = "aho-health/0.2.17"
+    server_version = "aho-health/0.2.18"
 
     def log_message(self, format, *args):  # noqa: A002, ARG002
         # Quiet stdlib's per-request stderr line — we route via aho.logger if needed.

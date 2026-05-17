@@ -1,0 +1,159 @@
+{
+  "disposition": "halt",
+  "confidence": 0.9,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-17T14:56:16.587218+00:00",
+  "audit_completed_utc": "2026-05-17T14:56:28.049159+00:00",
+  "target_artifact_sha256": "4936545a9561851c2f0a6dab6bb363b77846e70cad53d5434bdc6322549105f9",
+  "findings_count": 1,
+  "evidence_trace_count": 1,
+  "audit_kind": "self",
+  "iteration": "0.2.18",
+  "workstream": "W2",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "G071",
+      "severity": "critical",
+      "description": "Did the executor reference a gotcha / ADR / carry-forward by ID? Does the ID look real (matches naming conventions)?"
+    }
+  ],
+  "evidence_traces": [
+    "\"G070\" (gotcha) \u2014 status: `unverified`"
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "pass",
+    "git_ops_hits": [],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.18",
+      "0.2.18",
+      "0.2.18",
+      "0.0.0",
+      "0.2.18"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "unsupported_halt_downgrade": false,
+  "latency_ms": 11460,
+  "body_md": "# Self-Audit \u2014 0.2.18 W2\n**Disposition:** halt\n**Confidence:** 0.9\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.18/acceptance/W2.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **pass**\n- three_octet_versioning_present: **pass**\n\n## Findings\n\n### Finding G071 (critical)\n\nDid the executor reference a gotcha / ADR / carry-forward by ID? Does the ID look real (matches naming conventions)?\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201c\"G070\" (gotcha) \u2014 status: `unverified`\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 16,
+    "registered_count": 3,
+    "unverified_count": 13,
+    "truncated": false,
+    "section_chars": 2814,
+    "references": [
+      {
+        "id": "F-0.2.18-W1-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0009",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W1-close-note.md"
+      },
+      {
+        "id": "F-0.2.18-W1-005",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W1-004",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-005",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-002",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-004",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-003",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "G070",
+        "kind": "gotcha",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "G071",
+        "kind": "gotcha",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0010",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-0.2.18-W2-006",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-007",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-008",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  },
+  "suppressed_findings": [],
+  "finding_filter": {
+    "filter_enabled": true,
+    "filter_eligible": true,
+    "registered_id_count": 3,
+    "model_findings_count": 1,
+    "active_findings_count": 1,
+    "suppressed_count": 0
+  }
+}

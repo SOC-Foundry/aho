@@ -9,7 +9,9 @@ Wire-up:
 - OLLAMA_BASE_URL env override; default http://localhost:11434 (host) /
   http://host.containers.internal:11434 (container — set there via env).
 - AHO_COUNCIL_EMBED_MODEL env override; default nomic-embed-text.
-- AHO_COUNCIL_EMBED_TIMEOUT_S env override; default 30.
+- AHO_COUNCIL_EMBED_TIMEOUT_S env override; default 120 (raised from 30
+  in 0.2.18 W0 per F-0.2.17-W6-002 — 30s was too tight under cold-start
+  + concurrent embed load on NZXTcos 8GB VRAM substrate).
 
 G083 discipline: malformed model output (missing 'embeddings' / wrong dim)
 raises CouncilEmbedMalformedError rather than returning a zero vector or
@@ -33,7 +35,7 @@ except ImportError:  # pragma: no cover — opentelemetry is a hard dep
 
 EMBED_DIM = 768
 DEFAULT_MODEL = "nomic-embed-text"
-DEFAULT_TIMEOUT_S = 30
+DEFAULT_TIMEOUT_S = 120
 DEFAULT_BASE_URL = "http://localhost:11434"
 
 

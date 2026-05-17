@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>aho Quantum Posture — Campus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Spline+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  /* Trident chrome (matches existing claw3d) */
+  --bg:#0d1117;
+  --bg2:#0b0f17;
+  --surface:#161b22;
+  --surface2:#1c2128;
+  --border:#27313f;
+  --border2:#1c2533;
+  --text:#e6edf3;
+  --text-dim:#8b949e;
+  --text-dim2:#48525f;
+  --trident-teal:#0d9488;
+
+  /* Quantum-posture accents (the artifact's palette, used in posture panels) */
+  --teal:#39e6cf;
+  --teal-d:#1f9c8e;
+  --amber:#f4b145;
+  --red:#ff5c6c;
+  --violet:#9d8cff;
+  --green:#5fe08a;
+  --grid:rgba(120,150,180,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:
+    radial-gradient(900px 600px at 12% -10%, rgba(57,230,207,0.05), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(157,140,255,0.04), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:'Spline Sans Mono', ui-monospace, monospace;
+  font-size:13px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:18px;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:999;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 1px, transparent 1px 3px);
+  mix-blend-mode:overlay;
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:998;
+  background:radial-gradient(120% 120% at 50% 40%, transparent 55%, rgba(0,0,0,0.55));
+}
+.wrap{max-width:1380px;margin:0 auto;}
+
+/* ---- top nav ---- */
+.nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 0 16px;border-bottom:1px solid var(--border);
+  margin-bottom:18px;
+}
+.nav .brand{display:flex;align-items:center;gap:11px;}
+.nav .glyph{
+  color:var(--teal);text-shadow:0 0 14px rgba(57,230,207,.55);
+  font-size:22px;
+}
+.nav .brand h1{
+  font-family:'Chakra Petch',sans-serif;font-weight:700;
+  font-size:18px;letter-spacing:.04em;
+}
+.nav .brand .sub{
+  color:var(--text-dim);font-size:11px;letter-spacing:.02em;margin-top:2px;
+}
+.nav .routes{display:flex;gap:4px;}
+.route{
+  font-family:'Chakra Petch',sans-serif;font-weight:600;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-dim);padding:7px 11px;border-radius:6px;
+  cursor:pointer;transition:.16s;
+}
+.route:hover{color:var(--text);}
+.route.active{color:var(--teal);background:rgba(57,230,207,0.08);}
+.endpoint{
+  text-align:right;font-size:10.5px;color:var(--text-dim);
+}
+.endpoint .host{
+  color:var(--teal);font-weight:600;font-size:12px;letter-spacing:.04em;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.endpoint .host::before{
+  content:"";width:7px;height:7px;border-radius:50%;
+  background:var(--teal);box-shadow:0 0 8px var(--teal);
+  animation:pulse 2.4s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ---- panel base ---- */
+.panel{
+  background:linear-gradient(180deg,var(--surface),var(--bg2));
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-bottom:14px;
+  animation:fadeUp .5s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.phead{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px;border-bottom:1px solid var(--border);
+}
+.phead .t{
+  font-family:'Chakra Petch',sans-serif;font-weight:600;
+  font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--text-dim);
+}
+.phead .eq{font-size:10.5px;color:var(--text-dim2);font-family:'Spline Sans Mono',monospace;}
+.pbody{padding:16px;}
+
+/* ---- hero campus ---- */
+.hero{display:grid;grid-template-columns:1fr 280px;gap:0;}
+@media(max-width:900px){.hero{grid-template-columns:1fr;}}
+.hero .main{
+  padding:20px 22px;display:flex;flex-direction:column;gap:14px;
+  border-right:1px solid var(--border);
+}
+@media(max-width:900px){.hero .main{border-right:none;border-bottom:1px solid var(--border);}}
+.hero .label{
+  font-size:10.5px;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;
+}
+.hero .score{
+  font-family:'Chakra Petch',sans-serif;font-weight:700;
+  font-size:54px;line-height:1;letter-spacing:-.01em;
+  margin-top:4px;display:flex;align-items:baseline;gap:10px;
+}
+.hero .score #campusH{
+  color:var(--teal);text-shadow:0 0 22px rgba(57,230,207,.4);transition:color .4s;
+}
+.hero .score .pm{font-size:20px;color:var(--amber);font-weight:500;}
+.hero .stateline{
+  font-size:11.5px;letter-spacing:.04em;color:var(--text-dim);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.hero .stateline .item{display:flex;align-items:center;gap:7px;}
+.hero .stateline b{color:var(--text);font-weight:600;}
+.hero .stateline .dot{width:8px;height:8px;border-radius:50%;background:var(--teal);
+  box-shadow:0 0 8px currentColor;color:var(--teal);}
+.scopewrap{position:relative;margin-top:6px;}
+#scope{display:block;width:100%;height:200px;border-radius:6px;}
+.flash{
+  position:absolute;inset:0;background:rgba(255,255,255,.9);
+  opacity:0;pointer-events:none;border-radius:6px;
+  mix-blend-mode:overlay;
+}
+.flash.go{animation:flash .4s ease;}
+@keyframes flash{0%{opacity:.3}100%{opacity:0}}
+.legend{
+  display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;
+  font-size:10px;color:var(--text-dim);
+}
+.legend span{display:flex;align-items:center;gap:6px;}
+.swatch{width:14px;height:3px;border-radius:2px;}
+.swatch.band{height:8px;background:rgba(57,230,207,.22);border:1px solid rgba(57,230,207,.45);}
+.swatch.est{background:var(--teal);box-shadow:0 0 6px var(--teal);}
+.swatch.truth{background:transparent;height:0;border-top:2px dotted var(--violet);}
+.swatch.scan{width:2px;height:12px;background:var(--text-dim);}
+/* hero stats column */
+.hero .stats{
+  padding:0;display:grid;grid-template-rows:repeat(4, 1fr);
+}
+.stat{
+  padding:14px 18px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);
+}
+.stat:last-child{border-bottom:none;}
+.stat .k{font-size:10px;color:var(--text-dim);letter-spacing:.08em;text-transform:uppercase;}
+.stat .v{font-size:18px;font-weight:600;font-family:'Chakra Petch',sans-serif;}
+.v.teal{color:var(--teal)}.v.amber{color:var(--amber)}.v.violet{color:var(--violet)}.v.red{color:var(--red)}.v.green{color:var(--green)}
+
+/* ---- controls ---- */
+.controls{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;}
+button{
+  font-family:'Spline Sans Mono',monospace;font-size:11px;font-weight:600;
+  letter-spacing:.04em;cursor:pointer;color:var(--text);
+  background:var(--surface2);border:1px solid var(--border);
+  padding:9px 13px;border-radius:7px;transition:.16s;
+  display:flex;align-items:center;gap:7px;
+}
+button:hover{border-color:var(--teal-d);color:#fff;transform:translateY(-1px);}
+button:active{transform:translateY(0);}
+button.primary{
+  background:linear-gradient(180deg,#1d6f66,#13524b);
+  border-color:var(--teal-d);color:#eafffb;
+}
+button.primary:hover{box-shadow:0 0 16px rgba(57,230,207,.3);}
+button.warn:hover{border-color:var(--amber);}
+.slider{display:flex;flex-direction:column;gap:4px;min-width:160px;}
+.slider .lab{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);
+  letter-spacing:.04em;text-transform:uppercase;}
+.slider .lab b{color:var(--teal);font-weight:600;}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;height:4px;border-radius:3px;
+  background:var(--border);outline:none;width:100%;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--teal);cursor:pointer;box-shadow:0 0 7px rgba(57,230,207,.55);
+}
+
+/* ---- host grid ---- */
+.host-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:11px;padding:14px;
+}
+.host-card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:9px;padding:13px;cursor:pointer;transition:.18s;
+  display:flex;flex-direction:column;gap:9px;position:relative;overflow:hidden;
+}
+.host-card:hover{border-color:var(--teal-d);transform:translateY(-1px);}
+.host-card.selected{
+  border-color:var(--teal);box-shadow:0 0 0 1px rgba(57,230,207,.25), 0 0 18px rgba(57,230,207,.12);
+}
+.host-card.offline{opacity:.55;cursor:default;}
+.host-card.offline:hover{transform:none;border-color:var(--border);}
+.host-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--teal);
+  opacity:0;transition:.2s;
+}
+.host-card.selected::before{opacity:1;}
+.hc-top{display:flex;align-items:center;justify-content:space-between;}
+.hc-name{
+  font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13px;
+  letter-spacing:.04em;color:var(--text);
+}
+.hc-role{
+  font-size:9px;color:var(--text-dim);letter-spacing:.06em;text-transform:uppercase;
+  background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 5px;
+}
+.hc-h-row{display:flex;align-items:baseline;gap:8px;}
+.hc-h{
+  font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:28px;line-height:1;
+  color:var(--teal);transition:color .3s;
+}
+.hc-sig{font-size:12px;color:var(--amber);font-weight:500;}
+.hc-meta{font-size:10px;color:var(--text-dim);display:flex;justify-content:space-between;}
+.hc-canvas-wrap{position:relative;height:38px;border-radius:4px;background:rgba(0,0,0,0.2);overflow:hidden;}
+.hc-canvas{display:block;width:100%;height:100%;}
+.hc-warn{
+  font-size:9.5px;color:var(--amber);display:flex;align-items:center;gap:5px;
+  letter-spacing:.04em;
+}
+.hc-warn.red{color:var(--red);}
+.hc-warn::before{content:"⚠";}
+.hc-offline-msg{
+  font-size:11px;color:var(--text-dim);font-style:italic;text-align:center;padding:8px 0;
+}
+
+/* ---- host detail ---- */
+.detail-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.detail-host-title{
+  font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:18px;letter-spacing:.03em;
+  display:flex;align-items:center;gap:11px;
+}
+.detail-host-title .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);
+  box-shadow:0 0 8px currentColor;color:var(--teal);}
+.detail-host-meta{font-size:10.5px;color:var(--text-dim);}
+.detail-host-meta b{color:var(--text);font-weight:600;}
+.cat-list{padding:0;}
+.cat{border-bottom:1px solid var(--border);}
+.cat:last-child{border-bottom:none;}
+.cat-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;cursor:pointer;transition:.15s;user-select:none;
+}
+.cat-head:hover{background:rgba(255,255,255,0.02);}
+.cat-head .chev{color:var(--text-dim);font-size:10px;transition:.2s;width:12px;text-align:center;}
+.cat.open .cat-head .chev{transform:rotate(90deg);}
+.cat-name{
+  font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:12px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--text);
+  display:flex;align-items:center;gap:9px;
+}
+.cat-name .alert{color:var(--amber);font-size:11px;}
+.cat-stats{font-size:10.5px;color:var(--text-dim);display:flex;gap:14px;}
+.cat-stats b{color:var(--text);font-weight:600;}
+.cat-stats .h{color:var(--teal);}
+.cat-stats .h.amber{color:var(--amber);}
+.cat-stats .h.red{color:var(--red);}
+.cat-body{display:none;padding:0 16px 12px;}
+.cat.open .cat-body{display:block;}
+
+.obs-row{
+  padding:8px 0;border-top:1px dashed var(--border2);
+}
+.obs-row:first-child{border-top:none;}
+.obs-row-top{display:flex;align-items:center;gap:10px;}
+.obs-dot{width:7px;height:7px;border-radius:50%;flex:none;}
+.obs-nm{font-size:11.5px;flex:1;color:var(--text);}
+.obs-w{
+  font-size:9px;color:var(--text-dim);background:var(--surface);
+  border:1px solid var(--border);border-radius:3px;padding:1px 5px;letter-spacing:.04em;
+}
+.obs-pv{font-size:11px;font-weight:600;width:38px;text-align:right;font-family:'Chakra Petch',sans-serif;}
+.obs-bar{
+  position:relative;height:5px;border-radius:3px;background:var(--border);
+  margin-top:5px;overflow:hidden;
+}
+.obs-bar .fill{height:100%;border-radius:3px;transition:width .25s,background .3s;}
+.obs-bar .ctick{
+  position:absolute;top:-2px;width:1.5px;height:9px;background:var(--text-dim);opacity:.55;
+}
+.obs-meta{
+  display:flex;justify-content:space-between;margin-top:4px;
+  font-size:9px;color:var(--text-dim2);letter-spacing:.03em;
+}
+.obs-meta .stale{color:var(--amber);}
+.obs-meta .stale.bad{color:var(--red);}
+
+/* ---- footer note ---- */
+.note{
+  margin-top:16px;padding:13px 16px;border:1px dashed var(--border);
+  border-radius:8px;color:var(--text-dim);font-size:10.5px;line-height:1.7;
+}
+.note b{color:var(--teal);font-weight:600;}
+.note code{color:var(--violet);font-size:10.5px;}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ NAV ============ -->
+  <div class="nav">
+    <div class="brand">
+      <span class="glyph">&#9682;</span>
+      <div>
+        <h1>aho POSTURE &mdash; CAMPUS</h1>
+        <div class="sub">endpoint compliance as an open quantum system &middot; mockup</div>
+      </div>
+    </div>
+    <div class="routes">
+      <div class="route">SUBSTRATE</div>
+      <div class="route active">POSTURE</div>
+      <div class="route">TRACES &#8599;</div>
+    </div>
+    <div class="endpoint">
+      <div class="host">nzxtcos.tail8492.ts.net</div>
+      <div>tailnet&middot;mockup&middot;<span id="navHostCount">6</span> hosts</div>
+    </div>
+  </div>
+
+  <!-- ============ HERO: CAMPUS AGGREGATE ============ -->
+  <div class="panel">
+    <div class="phead">
+      <span class="t">Campus Posture &mdash; &lang;H&rang;_campus</span>
+      <span class="eq">&Hcirc; = &Sigma; W&#8336; &middot; &lang;H&rang;&#8336; / &Sigma; W&#8336;</span>
+    </div>
+    <div class="hero">
+      <div class="main">
+        <div>
+          <div class="label">Campus expectation &mdash; aggregate of all online hosts</div>
+          <div class="score">
+            <span id="campusH">--</span>
+            <span class="pm">&plusmn;<span id="campusSig">--</span></span>
+          </div>
+        </div>
+        <div class="stateline">
+          <span class="item"><span class="dot" id="campusDot"></span><b id="campusState">initialising</b></span>
+          <span class="item">coherence <b id="campusCoh">--</b></span>
+          <span class="item">hosts online <b id="campusOnline">--</b>/<b id="campusTotal">--</b></span>
+          <span class="item">next scan <b id="nextScan">--</b>s</span>
+        </div>
+        <div class="scopewrap">
+          <canvas id="scope"></canvas>
+          <div class="flash" id="flash"></div>
+        </div>
+        <div class="legend">
+          <span><span class="swatch est"></span> &lang;H&rang;_campus estimate</span>
+          <span><span class="swatch band"></span> &plusmn;&sigma; uncertainty band</span>
+          <span><span class="swatch truth"></span> hidden ground truth</span>
+          <span><span class="swatch scan"></span> measurement / collapse</span>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="k">UNCERTAINTY &sigma;</span><span class="v amber" id="sStat">--</span></div>
+        <div class="stat"><span class="k">SINCE CAMPUS SCAN</span><span class="v teal" id="dtStat">--</span></div>
+        <div class="stat"><span class="k">DEGRADED OBSERVABLES</span><span class="v red" id="degradedStat">--</span></div>
+        <div class="stat"><span class="k">STALE OBSERVABLES</span><span class="v amber" id="staleStat">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ CONTROLS ============ -->
+  <div class="panel">
+    <div class="phead">
+      <span class="t">Measurement Control</span>
+      <span class="eq">&Delta;t between scans drives decoherence</span>
+    </div>
+    <div class="pbody controls">
+      <div class="btnrow">
+        <button class="primary" id="scanBtn">&#9678; CAMPUS SCAN</button>
+        <button class="warn" id="driftBtn">&#9889; INJECT DRIFT</button>
+        <button id="playBtn">&#10074;&#10074; PAUSE</button>
+        <button id="resetBtn">&#8635; RESET</button>
+      </div>
+      <div class="slider">
+        <div class="lab"><span>SCAN CADENCE</span><b id="cadLab">25 s</b></div>
+        <input type="range" id="cadence" min="5" max="120" step="5" value="25" />
+      </div>
+      <div class="slider">
+        <div class="lab"><span>SIM SPEED</span><b id="spdLab">2.0&times;</b></div>
+        <input type="range" id="speed" min="0.25" max="5" step="0.25" value="2" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOST GRID ============ -->
+  <div class="panel">
+    <div class="phead">
+      <span class="t">Hosts &mdash; per-host &lang;H&rang;</span>
+      <span class="eq" id="gridHint">click any host to drill into observables</span>
+    </div>
+    <div class="host-grid" id="hostGrid"></div>
+  </div>
+
+  <!-- ============ HOST DETAIL ============ -->
+  <div class="panel">
+    <div class="detail-head">
+      <div class="detail-host-title">
+        <span class="dot" id="detailDot"></span>
+        <span id="detailHost">--</span>
+      </div>
+      <div class="detail-host-meta">
+        <span>role <b id="detailRole">--</b></span> &middot;
+        <span>weight W <b id="detailWeight">--</b></span> &middot;
+        <span>observables <b id="detailObsCount">--</b></span> &middot;
+        <button id="hostScanBtn" style="margin-left:14px;padding:5px 10px;font-size:10px;">&#9678; SCAN THIS HOST</button>
+      </div>
+    </div>
+    <div class="cat-list" id="catList"></div>
+  </div>
+
+  <div class="note">
+    <b>How to read this.</b> Each host accumulates posture observables that <b>decohere</b> between
+    measurements: <code>p(t) = c + (last_outcome &minus; c)&middot;e^(&minus;&Delta;t/&tau;)</code>. The
+    campus aggregate <code>&lang;H&rang; = &Sigma;W&#8336;&middot;&lang;H&rang;&#8336; / &Sigma;W&#8336;</code>
+    averages per-host postures weighted by host class (substrate hosts heavy, peer hosts light).
+    Try <b>INJECT DRIFT</b>, then watch &mdash; the campus &lang;H&rang; stays flat while the &sigma; band
+    widens, because <i>you don't know yet</i>. The affected host's mini wave-packet also widens.
+    Run <b>CAMPUS SCAN</b> to collapse everything back to ground truth. This is the F-0.2.18-W1-004
+    failure mode (stale substrate fact baked into image without re-measuring) made visible.
+  </div>
+
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   AHO QUANTUM POSTURE — Campus Mockup
+   Self-contained: no backend. Synthetic observables driven by
+   the same decoherence math the artifact set out (p(t) = c +
+   (last_outcome − c)·e^(−Δt/τ)). Layouts and observable
+   catalog match artifacts/observability/aho-quantum-page-design.md.
+   ============================================================ */
+
+/* ---------- OBSERVABLE CATALOG (per category) ---------- */
+// Each: id, nm, w (weight), tau (sim-seconds), c (base rate)
+
+const CAT_SERVICES = [
+  {id:"svc.otel-collector", nm:"otel-collector service active", w:9,  tau:45,  c:0.98},
+  {id:"svc.jaeger",         nm:"jaeger-all-in-one active",      w:8,  tau:60,  c:0.97},
+  {id:"svc.dashboard",      nm:"aho-dashboard active",          w:8,  tau:60,  c:0.96},
+  {id:"svc.nemoclaw",       nm:"aho-nemoclaw active",           w:7,  tau:60,  c:0.95},
+  {id:"svc.openclaw",       nm:"aho-openclaw active",           w:7,  tau:60,  c:0.95},
+  {id:"svc.telegram",       nm:"aho-telegram bridge active",    w:5,  tau:90,  c:0.90},
+  {id:"svc.tailscale",      nm:"tailscaled active",             w:10, tau:30,  c:0.99},
+  {id:"svc.ollama",         nm:"ollama service active",         w:6,  tau:60,  c:0.92},
+];
+const CAT_NETWORK = [
+  {id:"net.ufw",            nm:"ufw enabled",                              w:8, tau:600, c:0.98},
+  {id:"net.ports-baseline", nm:"listening ports match baseline",           w:7, tau:90,  c:0.92},
+  {id:"net.tailnet",        nm:"tailnet reachable",                        w:9, tau:30,  c:0.99},
+  {id:"net.magicdns",       nm:"MagicDNS resolves canonical FQDNs",        w:7, tau:180, c:0.95},
+  {id:"net.ufw-otlp-rule",  nm:"ufw allow 4317/tcp on tailscale0",         w:8, tau:600, c:0.99},
+];
+const CAT_CERTS = [
+  {id:"cert.system-tls",    nm:"/etc/ssl/certs CA bundle intact",  w:7, tau:1800, c:0.99},
+  {id:"cert.ts-net-cert",   nm:"tailscale .ts.net cert not expired", w:6, tau:3600, c:0.98},
+  {id:"cert.gateway-ca",    nm:"Cloudflare Gateway CA present",     w:5, tau:1200, c:0.97},
+];
+const CAT_SECRETS = [
+  {id:"sec.age-key",          nm:"age identity at expected path",          w:10, tau:1200,  c:0.99},
+  {id:"sec.broker-socket",    nm:"SO_PEERCRED broker socket up",           w:10, tau:120,   c:0.95},
+  {id:"sec.fernet-bundle",    nm:"encrypted bundle present + decryptable", w:9,  tau:600,   c:0.97},
+  {id:"sec.tg-token-rotation",nm:"telegram bot token rotated <90d",        w:6,  tau:86400, c:0.85},
+  {id:"sec.ssh-keys-disk",    nm:"SSH private keys only in ~/.ssh/",       w:9,  tau:1800,  c:0.99},
+];
+const CAT_CONTAINER = [
+  {id:"ctr.podman-present",   nm:"podman binary on PATH",                       w:9, tau:300, c:0.99},
+  {id:"ctr.image-present",    nm:"aho:0.2.18 loaded in podman",                 w:8, tau:600, c:0.95},
+  {id:"ctr.image-fqdn-coh",   nm:"image OTEL FQDN matches current tailnet",     w:9, tau:300, c:0.90},
+  {id:"ctr.broker-mount",     nm:"broker mount path exists at expected loc",    w:7, tau:600, c:0.98},
+  {id:"ctr.tier-json",        nm:"~/.config/aho/tier.json matches host+tier",   w:8, tau:600, c:0.95},
+];
+const CAT_OTEL = [
+  {id:"otel.collector-bind", nm:"collector binds tailscale0 (not loopback)", w:9, tau:300, c:0.95},
+  {id:"otel.last-trace-age", nm:"newest trace < 60s old",                    w:5, tau:30,  c:0.92},
+  {id:"otel.last-metric-age",nm:"newest metric < 60s old",                   w:5, tau:30,  c:0.92},
+  {id:"otel.last-log-age",   nm:"newest log < 120s old",                     w:4, tau:60,  c:0.90},
+];
+
+const CATEGORIES = [
+  {key:"services",  nm:"Services",            defs:CAT_SERVICES},
+  {key:"network",   nm:"Network",             defs:CAT_NETWORK},
+  {key:"certs",     nm:"Certificates",        defs:CAT_CERTS},
+  {key:"secrets",   nm:"Secrets posture",     defs:CAT_SECRETS},
+  {key:"container", nm:"Container substrate", defs:CAT_CONTAINER},
+  {key:"otel",      nm:"OTEL meta",           defs:CAT_OTEL},
+];
+
+/* ---------- HOSTS (campus) ---------- */
+// role drives which categories apply + the host weight in the campus aggregate.
+
+const HOST_ROLES = {
+  hub:               {weight:10, cats:["services","network","certs","secrets","container","otel"], svcExcl:[]},
+  substrate:         {weight:8,  cats:["services","network","certs","secrets","container","otel"], svcExcl:[]},
+  "substrate-future":{weight:6,  cats:["services","network","certs","secrets","container"],          svcExcl:["svc.telegram"]},
+  peer:              {weight:2,  cats:["network","certs"],                                          svcExcl:[]},
+};
+
+const HOSTS_DEF = [
+  {id:"nzxtcos",       role:"hub",                online:true,  notes:"central collector / dashboard / Jaeger"},
+  {id:"a8cos",         role:"substrate",          online:true,  notes:"0.2.18 W2 deployment target"},
+  {id:"p3cos",         role:"substrate-future",   online:true,  notes:"future 0.3.1 partial-tier"},
+  {id:"dkcos",         role:"peer",               online:true,  notes:"david@"},
+  {id:"x9cos",         role:"peer",               online:true,  notes:"tagged-devices"},
+  {id:"catchy-truvis", role:"peer",               online:false, notes:"offline 17h"},
+];
+
+/* ---------- SIM PARAMS ---------- */
+const STEP = 0.5;
+const WINDOW = 120;        // visible window seconds for campus wave-packet
+const MINI_WINDOW = 60;    // window seconds for per-host mini canvases
+const MAXPTS = WINDOW/STEP;
+const MINI_MAXPTS = MINI_WINDOW/STEP;
+
+let hosts = [];            // built from HOSTS_DEF + category defs
+let sim, running, cadence = 25, speed = 2;
+let lastScan, nextAuto, scanTimes, simAcc, lastReal;
+let campusHistory;         // [{t, est, sigma, truth}]
+let selectedHostId = "a8cos";   // start with a8 selected so the drill-down is interesting
+
+/* ---------- BUILD ---------- */
+function buildHosts(){
+  hosts = HOSTS_DEF.map(hd => {
+    const role = HOST_ROLES[hd.role];
+    const obs = [];
+    for(const catKey of role.cats){
+      const cat = CATEGORIES.find(c=>c.key===catKey);
+      for(const def of cat.defs){
+        if(role.svcExcl.includes(def.id)) continue;
+        obs.push({
+          ...def,
+          category: catKey,
+          host: hd.id,
+          trueState: 1,
+          lastOutcome: 1,
+          lastScanT: 0,
+          holdUntil: 0,
+        });
+      }
+    }
+    return {
+      id: hd.id,
+      role: hd.role,
+      weight: role.weight,
+      online: hd.online,
+      notes: hd.notes,
+      observables: obs,
+      history: [],          // mini-canvas history
+    };
+  });
+  // sprinkle realistic initial degradation for visual interest
+  // (so it's not boringly all-100 at boot)
+  function degrade(hostId, obsId){
+    const h = hosts.find(x=>x.id===hostId);
+    if(!h) return;
+    const o = h.observables.find(x=>x.id===obsId);
+    if(o){ o.trueState = 0; o.holdUntil = 999999; }
+  }
+  // a8cos: secrets broker not up (install.fish hasn't finished step 5 yet),
+  // image-fqdn-coh degraded mid-rebake, dashboard not started on a8.
+  degrade("a8cos", "sec.broker-socket");
+  degrade("a8cos", "ctr.image-fqdn-coh");
+  degrade("a8cos", "svc.dashboard");
+  degrade("a8cos", "svc.nemoclaw");
+  degrade("a8cos", "svc.openclaw");
+  degrade("a8cos", "svc.jaeger");
+  degrade("a8cos", "svc.ollama");
+  degrade("a8cos", "otel.collector-bind");  // a8 has no local collector
+  // dkcos: ufw rule for OTLP not set (peer hosts don't need it; OK)
+}
+
+function reset(){
+  buildHosts();
+  sim = 0; running = true; campusHistory = [];
+  lastScan = 0; scanTimes = [0]; nextAuto = cadence; simAcc = 0;
+  lastReal = performance.now();
+  doScan();
+}
+
+/* ---------- MODEL ---------- */
+function prob(ck){
+  const dt = sim - ck.lastScanT;
+  return ck.c + (ck.lastOutcome - ck.c) * Math.exp(-dt / ck.tau);
+}
+
+function postureHost(h){
+  if(!h.online) return {est:0, sigma:0, truth:0, W:0};
+  let W=0, est=0, varc=0, truth=0;
+  for(const ck of h.observables){
+    const p = prob(ck);
+    W += ck.w; est += ck.w*p; varc += ck.w*ck.w*p*(1-p); truth += ck.w*ck.trueState;
+  }
+  if(W===0) return {est:0, sigma:0, truth:0, W:0};
+  return {est:est/W, sigma:Math.sqrt(varc)/W, truth:truth/W, W};
+}
+
+function postureCampus(){
+  let WH = 0, est = 0, varc = 0, truth = 0;
+  for(const h of hosts){
+    if(!h.online) continue;
+    const p = postureHost(h);
+    WH += h.weight;
+    est   += h.weight * p.est;
+    varc  += h.weight * h.weight * p.sigma * p.sigma;
+    truth += h.weight * p.truth;
+  }
+  if(WH===0) return {est:0, sigma:0, truth:0};
+  return {est:100*est/WH, sigma:100*Math.sqrt(varc)/WH, truth:100*truth/WH};
+}
+
+function coherenceCampus(){
+  let n=0, s=0;
+  for(const h of hosts){
+    if(!h.online) continue;
+    for(const ck of h.observables){
+      s += Math.exp(-(sim - ck.lastScanT) / ck.tau); n++;
+    }
+  }
+  return n ? s/n : 0;
+}
+
+function degradedCount(){
+  let n=0;
+  for(const h of hosts) if(h.online) for(const ck of h.observables)
+    if(ck.lastOutcome === 0) n++;
+  return n;
+}
+function staleCount(){
+  let n=0;
+  for(const h of hosts) if(h.online) for(const ck of h.observables){
+    const decohered = 1 - Math.exp(-(sim - ck.lastScanT) / ck.tau);
+    if(decohered > 0.6) n++;
+  }
+  return n;
+}
+
+function doScan(hostId = null){
+  for(const h of hosts){
+    if(hostId && h.id !== hostId) continue;
+    if(!h.online) continue;
+    for(const ck of h.observables){
+      ck.lastOutcome = ck.trueState; ck.lastScanT = sim;
+    }
+  }
+  if(!hostId){
+    lastScan = sim;
+    scanTimes.push(sim);
+    nextAuto = sim + cadence;
+    scanTimes = scanTimes.filter(t => t > sim - WINDOW - STEP);
+    const f = document.getElementById("flash");
+    f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+  }
+  pushSample();
+}
+
+function injectDrift(){
+  const candidates = [];
+  for(const h of hosts) if(h.online) for(const ck of h.observables)
+    if(ck.trueState === 1) candidates.push(ck);
+  if(!candidates.length) return;
+  const ck = candidates[Math.floor(Math.random()*candidates.length)];
+  ck.trueState = 0;
+  ck.holdUntil = sim + 25 + Math.random()*15;
+}
+
+function step(){
+  sim += STEP;
+  for(const h of hosts){
+    if(!h.online) continue;
+    for(const ck of h.observables){
+      if(ck.trueState === 1){
+        if(Math.random() < 0.04 * (STEP/ck.tau) * 30) ck.trueState = 0;
+      } else {
+        if(sim >= ck.holdUntil && Math.random() < 0.06 * STEP) ck.trueState = 1;
+      }
+    }
+  }
+  if(sim >= nextAuto) doScan();
+  pushSample();
+}
+
+function pushSample(){
+  const p = postureCampus();
+  campusHistory.push({t:sim, est:p.est, sigma:p.sigma, truth:p.truth});
+  if(campusHistory.length > MAXPTS + 2) campusHistory.shift();
+  // per-host history (for mini canvases)
+  for(const h of hosts){
+    if(!h.online){ continue; }
+    const ph = postureHost(h);
+    h.history.push({t:sim, est:100*ph.est, sigma:100*ph.sigma});
+    if(h.history.length > MINI_MAXPTS + 2) h.history.shift();
+  }
+}
+
+/* ---------- RENDER: campus scope ---------- */
+const cv = document.getElementById("scope");
+const ctx = cv.getContext("2d");
+let cw=0, ch=0, dpr=1;
+
+function sizeCanvas(){
+  dpr = window.devicePixelRatio || 1;
+  cw = cv.clientWidth; ch = cv.clientHeight;
+  cv.width = cw*dpr; cv.height = ch*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener("resize", () => {
+  sizeCanvas();
+  // also resize all mini canvases
+  for(const h of hosts){
+    const c = document.querySelector(`canvas[data-host="${h.id}"]`);
+    if(c) sizeMiniCanvas(c);
+  }
+});
+
+const PAD = {l:34,r:12,t:10,b:18};
+function X(t, history, window){
+  const latest = history.length ? history[history.length-1].t : sim;
+  const w = cw - PAD.l - PAD.r;
+  return (cw - PAD.r) - (latest - t)/window * w;
+}
+function Y(v){
+  v = Math.max(0, Math.min(100, v));
+  return (ch - PAD.b) - v/100 * (ch - PAD.t - PAD.b);
+}
+
+function drawScope(){
+  ctx.clearRect(0,0,cw,ch);
+  ctx.strokeStyle = "rgba(120,150,180,0.07)";
+  ctx.fillStyle = "#48525f";
+  ctx.lineWidth = 1;
+  ctx.font = "9px 'Spline Sans Mono', monospace";
+  for(let v=0; v<=100; v+=25){
+    const y = Y(v)+.5;
+    ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(cw-PAD.r,y); ctx.stroke();
+    ctx.fillText(String(v).padStart(3," "), 4, y+3);
+  }
+  for(let s=0; s<=WINDOW; s+=30){
+    const latest = campusHistory.length ? campusHistory[campusHistory.length-1].t : sim;
+    const x = X(latest-s, campusHistory, WINDOW)+.5;
+    if(x < PAD.l-2) continue;
+    ctx.strokeStyle = "rgba(120,150,180,0.05)";
+    ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,ch-PAD.b); ctx.stroke();
+    ctx.fillStyle = "#48525f";
+    ctx.fillText(s===0?"now":("-"+s+"s"), x-12, ch-5);
+  }
+  if(campusHistory.length<2) return;
+
+  // measurement markers
+  for(const t of scanTimes){
+    const x = X(t, campusHistory, WINDOW);
+    if(x<PAD.l||x>cw-PAD.r) continue;
+    ctx.strokeStyle = "rgba(105,117,133,0.5)";
+    ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,ch-PAD.b); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // band
+  ctx.beginPath();
+  campusHistory.forEach((h,i)=>{ const x=X(h.t,campusHistory,WINDOW),y=Y(h.est+h.sigma); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  for(let i=campusHistory.length-1;i>=0;i--){
+    const h=campusHistory[i]; ctx.lineTo(X(h.t,campusHistory,WINDOW),Y(h.est-h.sigma));
+  }
+  ctx.closePath();
+  ctx.fillStyle = "rgba(57,230,207,0.16)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(57,230,207,0.32)";
+  ctx.stroke();
+
+  // truth (dotted violet)
+  ctx.beginPath();
+  campusHistory.forEach((h,i)=>{ const x=X(h.t,campusHistory,WINDOW),y=Y(h.truth); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.strokeStyle = "rgba(157,140,255,0.85)";
+  ctx.lineWidth = 1.4; ctx.setLineDash([2,3]);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // estimate (teal glow)
+  ctx.beginPath();
+  campusHistory.forEach((h,i)=>{ const x=X(h.t,campusHistory,WINDOW),y=Y(h.est); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.shadowColor = "rgba(57,230,207,0.9)"; ctx.shadowBlur = 8;
+  ctx.strokeStyle = "#39e6cf"; ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // collapse nodes
+  for(const t of scanTimes){
+    const x = X(t, campusHistory, WINDOW);
+    if(x<PAD.l||x>cw-PAD.r) continue;
+    const h = campusHistory.reduce((a,b)=>Math.abs(b.t-t)<Math.abs(a.t-t)?b:a);
+    ctx.beginPath(); ctx.arc(x,Y(h.est),2.5,0,7); ctx.fillStyle="#eafffb"; ctx.fill();
+  }
+}
+
+/* ---------- RENDER: mini canvases per host ---------- */
+function sizeMiniCanvas(c){
+  const d = window.devicePixelRatio || 1;
+  const w = c.clientWidth, h = c.clientHeight;
+  c.width = w*d; c.height = h*d;
+  c.getContext("2d").setTransform(d,0,0,d,0,0);
+}
+function drawMini(c, host){
+  const ctx2 = c.getContext("2d");
+  const w = c.clientWidth, h = c.clientHeight;
+  ctx2.clearRect(0,0,w,h);
+  if(!host.online){
+    ctx2.fillStyle = "rgba(120,130,150,0.15)";
+    ctx2.fillRect(0,0,w,h);
+    return;
+  }
+  if(host.history.length < 2) return;
+  const latest = host.history[host.history.length-1].t;
+  const xf = t => w - (latest-t)/MINI_WINDOW * w;
+  const yf = v => h - Math.max(0,Math.min(100,v))/100 * h;
+
+  // band
+  ctx2.beginPath();
+  host.history.forEach((s,i)=>{ const x=xf(s.t),y=yf(s.est+s.sigma); i?ctx2.lineTo(x,y):ctx2.moveTo(x,y); });
+  for(let i=host.history.length-1;i>=0;i--){
+    const s=host.history[i]; ctx2.lineTo(xf(s.t),yf(s.est-s.sigma));
+  }
+  ctx2.closePath();
+  ctx2.fillStyle = "rgba(57,230,207,0.16)";
+  ctx2.fill();
+
+  // estimate
+  ctx2.beginPath();
+  host.history.forEach((s,i)=>{ const x=xf(s.t),y=yf(s.est); i?ctx2.lineTo(x,y):ctx2.moveTo(x,y); });
+  ctx2.strokeStyle = "#39e6cf"; ctx2.lineWidth = 1.5;
+  ctx2.stroke();
+}
+
+/* ---------- RENDER: hero stats ---------- */
+function renderHero(){
+  const p = postureCampus();
+  const coh = coherenceCampus();
+  document.getElementById("campusH").textContent = p.est.toFixed(1);
+  document.getElementById("campusSig").textContent = p.sigma.toFixed(1);
+  document.getElementById("sStat").textContent = "±"+p.sigma.toFixed(2);
+  document.getElementById("dtStat").textContent = (sim-lastScan).toFixed(0)+" s";
+  document.getElementById("degradedStat").textContent = degradedCount();
+  document.getElementById("staleStat").textContent = staleCount();
+  document.getElementById("campusCoh").textContent = (coh*100).toFixed(0)+"%";
+  document.getElementById("campusOnline").textContent = hosts.filter(h=>h.online).length;
+  document.getElementById("campusTotal").textContent = hosts.length;
+  document.getElementById("nextScan").textContent = Math.max(0,(nextAuto-sim)).toFixed(0);
+
+  const estEl = document.getElementById("campusH");
+  const dot = document.getElementById("campusDot");
+  const txt = document.getElementById("campusState");
+  let col, label;
+  if(p.est >= 90 && p.sigma < 3){ col="var(--teal)"; label="COHERENT &middot; campus nominal"; }
+  else if(p.est >= 75){           col="var(--amber)"; label="DECOHERING &middot; knowledge ageing"; }
+  else {                          col="var(--red)"; label="DEGRADED &middot; measurement needed"; }
+  estEl.style.color = col;
+  dot.style.background = col; dot.style.color = col;
+  txt.innerHTML = label;
+}
+
+/* ---------- RENDER: host grid ---------- */
+function colorFor(p){
+  if(p >= 0.85) return "var(--teal)";
+  if(p >= 0.65) return "var(--amber)";
+  return "var(--red)";
+}
+function colorHex(p){
+  if(p >= 0.85) return "#39e6cf";
+  if(p >= 0.65) return "#f4b145";
+  return "#ff5c6c";
+}
+
+function buildHostGrid(){
+  const grid = document.getElementById("hostGrid");
+  grid.innerHTML = "";
+  for(const h of hosts){
+    const card = document.createElement("div");
+    card.className = "host-card" + (h.online ? "" : " offline") + (h.id === selectedHostId ? " selected" : "");
+    card.dataset.host = h.id;
+    card.innerHTML = `
+      <div class="hc-top">
+        <span class="hc-name">${h.id}</span>
+        <span class="hc-role">${h.role.replace("-future"," fut")}</span>
+      </div>
+      ${h.online ? `
+        <div class="hc-h-row">
+          <span class="hc-h" data-h>--</span>
+          <span class="hc-sig" data-sig>--</span>
+        </div>
+        <div class="hc-canvas-wrap"><canvas class="hc-canvas" data-host="${h.id}"></canvas></div>
+        <div class="hc-meta">
+          <span>W ${h.weight}</span>
+          <span data-meta>${h.observables.length} obs</span>
+        </div>
+        <div class="hc-warn" data-warn style="display:none;"></div>
+      ` : `
+        <div class="hc-offline-msg">${h.notes}</div>
+      `}
+    `;
+    if(h.online){
+      card.addEventListener("click", () => {
+        selectedHostId = h.id;
+        document.querySelectorAll(".host-card").forEach(c => c.classList.remove("selected"));
+        card.classList.add("selected");
+        renderDetail();
+      });
+    }
+    grid.appendChild(card);
+  }
+  // size mini canvases (after DOM insertion)
+  for(const h of hosts){
+    if(!h.online) continue;
+    const c = document.querySelector(`canvas[data-host="${h.id}"]`);
+    if(c) sizeMiniCanvas(c);
+  }
+}
+
+function renderHostGrid(){
+  for(const h of hosts){
+    const card = document.querySelector(`.host-card[data-host="${h.id}"]`);
+    if(!card || !h.online) continue;
+    const p = postureHost(h);
+    const hEl = card.querySelector("[data-h]");
+    const sigEl = card.querySelector("[data-sig]");
+    if(hEl){
+      hEl.textContent = (p.est*100).toFixed(0);
+      hEl.style.color = colorFor(p.est);
+    }
+    if(sigEl){ sigEl.textContent = "±"+(p.sigma*100).toFixed(1); }
+    const warnEl = card.querySelector("[data-warn]");
+    if(warnEl){
+      const degraded = h.observables.filter(o => o.lastOutcome === 0).length;
+      const stale = h.observables.filter(o => {
+        const d = 1 - Math.exp(-(sim-o.lastScanT)/o.tau); return d > 0.6;
+      }).length;
+      if(degraded > 0){
+        warnEl.textContent = `${degraded} degraded`;
+        warnEl.className = "hc-warn red"; warnEl.style.display = "flex";
+      } else if(stale > 0){
+        warnEl.textContent = `${stale} stale`;
+        warnEl.className = "hc-warn"; warnEl.style.display = "flex";
+      } else {
+        warnEl.style.display = "none";
+      }
+    }
+    const c = card.querySelector(`canvas[data-host="${h.id}"]`);
+    if(c) drawMini(c, h);
+  }
+}
+
+/* ---------- RENDER: host detail (categories + observables) ---------- */
+let openCats = new Set(["secrets", "container"]);  // initially open
+
+function buildDetail(){
+  const h = hosts.find(x => x.id === selectedHostId);
+  if(!h){ return; }
+  document.getElementById("detailHost").textContent = h.id;
+  document.getElementById("detailRole").textContent = h.role;
+  document.getElementById("detailWeight").textContent = h.weight;
+  document.getElementById("detailObsCount").textContent = h.observables.length;
+
+  // group observables by category
+  const byCat = {};
+  for(const o of h.observables){
+    (byCat[o.category] ||= []).push(o);
+  }
+
+  const list = document.getElementById("catList");
+  list.innerHTML = "";
+  for(const cat of CATEGORIES){
+    const obs = byCat[cat.key];
+    if(!obs || obs.length === 0) continue;
+    const div = document.createElement("div");
+    div.className = "cat" + (openCats.has(cat.key) ? " open" : "");
+    div.dataset.cat = cat.key;
+    div.innerHTML = `
+      <div class="cat-head">
+        <div class="cat-name">
+          <span class="chev">&#9656;</span>
+          ${cat.nm}
+          <span class="alert" data-cat-alert></span>
+        </div>
+        <div class="cat-stats">
+          <span>&Sigma;w <b data-cat-w>--</b></span>
+          <span>&lang;H&rang; <b class="h" data-cat-h>--</b></span>
+          <span>&sigma; <b data-cat-sig>--</b></span>
+        </div>
+      </div>
+      <div class="cat-body" data-cat-body></div>
+    `;
+    div.querySelector(".cat-head").addEventListener("click", () => {
+      if(openCats.has(cat.key)) openCats.delete(cat.key);
+      else openCats.add(cat.key);
+      div.classList.toggle("open");
+    });
+    list.appendChild(div);
+    // populate body
+    const body = div.querySelector("[data-cat-body]");
+    for(const o of obs){
+      const row = document.createElement("div");
+      row.className = "obs-row";
+      row.dataset.obs = o.id;
+      row.innerHTML = `
+        <div class="obs-row-top">
+          <span class="obs-dot"></span>
+          <span class="obs-nm">${o.nm}</span>
+          <span class="obs-w">w ${o.w}</span>
+          <span class="obs-pv"></span>
+        </div>
+        <div class="obs-bar"><div class="fill"></div><div class="ctick"></div></div>
+        <div class="obs-meta"><span class="tau">&tau; ${o.tau}s</span><span class="dt"></span></div>
+      `;
+      body.appendChild(row);
+    }
+  }
+}
+
+function renderDetail(){
+  const h = hosts.find(x => x.id === selectedHostId);
+  if(!h){ return; }
+  // if structure not built or selected host changed, rebuild
+  const currentTitle = document.getElementById("detailHost").textContent;
+  if(currentTitle !== h.id){ buildDetail(); }
+
+  const dotCol = colorFor(postureHost(h).est);
+  document.getElementById("detailDot").style.background = dotCol;
+  document.getElementById("detailDot").style.color = dotCol;
+
+  // per category
+  const byCat = {};
+  for(const o of h.observables){ (byCat[o.category] ||= []).push(o); }
+  for(const cat of CATEGORIES){
+    const divCat = document.querySelector(`.cat[data-cat="${cat.key}"]`);
+    if(!divCat) continue;
+    const obs = byCat[cat.key];
+    if(!obs) continue;
+    let W=0, est=0, varc=0;
+    for(const o of obs){
+      const p = prob(o);
+      W += o.w; est += o.w*p; varc += o.w*o.w*p*(1-p);
+    }
+    const h_ = W ? est/W : 0;
+    const sig = W ? Math.sqrt(varc)/W : 0;
+    divCat.querySelector("[data-cat-w]").textContent = W;
+    const hEl = divCat.querySelector("[data-cat-h]");
+    hEl.textContent = (h_*100).toFixed(0)+"%";
+    hEl.className = "h " + (h_>=0.85 ? "" : h_>=0.65 ? "amber" : "red");
+    divCat.querySelector("[data-cat-sig]").textContent = (sig*100).toFixed(1);
+    const alertEl = divCat.querySelector("[data-cat-alert]");
+    const degraded = obs.filter(o => o.lastOutcome === 0).length;
+    if(degraded > 0){ alertEl.textContent = "⚠"; alertEl.style.display = "inline"; }
+    else { alertEl.style.display = "none"; }
+
+    // per observable
+    for(const o of obs){
+      const row = divCat.querySelector(`.obs-row[data-obs="${CSS.escape(o.id)}"]`);
+      if(!row) continue;
+      const p = prob(o);
+      const dt = sim - o.lastScanT;
+      const decohered = 1 - Math.exp(-dt/o.tau);
+      const fillEl = row.querySelector(".fill");
+      fillEl.style.width = (p*100).toFixed(1)+"%";
+      fillEl.style.background = colorHex(p);
+      const pvEl = row.querySelector(".obs-pv");
+      pvEl.textContent = (p*100).toFixed(0)+"%";
+      pvEl.style.color = colorHex(p);
+      const ctick = row.querySelector(".ctick");
+      ctick.style.left = "calc("+(o.c*100).toFixed(1)+"% - 1px)";
+      const dtEl = row.querySelector(".dt");
+      dtEl.textContent = "Δ "+(dt < 60 ? dt.toFixed(0)+"s" : (dt/60).toFixed(0)+"m");
+      dtEl.className = "dt " + (decohered > 0.85 ? "stale bad" : decohered > 0.5 ? "stale" : "");
+      const dot = row.querySelector(".obs-dot");
+      const col = o.lastOutcome ? "#5fe08a" : "#ff5c6c";
+      dot.style.background = col;
+      dot.style.boxShadow = "0 0 6px "+col;
+    }
+  }
+}
+
+/* ---------- LOOP ---------- */
+function frame(now){
+  const realDt = Math.min((now-lastReal)/1000, 0.1);
+  lastReal = now;
+  if(running){
+    simAcc += realDt * 4 * speed;
+    let guard = 0;
+    while(simAcc >= STEP && guard++ < 200){ simAcc -= STEP; step(); }
+  }
+  drawScope();
+  renderHero();
+  renderHostGrid();
+  renderDetail();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- CONTROLS ---------- */
+document.getElementById("scanBtn").onclick = () => doScan();
+document.getElementById("driftBtn").onclick = injectDrift;
+document.getElementById("resetBtn").onclick = () => { reset(); buildHostGrid(); buildDetail(); };
+document.getElementById("playBtn").onclick = (e) => {
+  running = !running;
+  e.currentTarget.innerHTML = running ? "&#10074;&#10074; PAUSE" : "&#9654; PLAY";
+  lastReal = performance.now();
+};
+document.getElementById("cadence").oninput = (e) => {
+  cadence = +e.target.value;
+  document.getElementById("cadLab").textContent = cadence+" s";
+  nextAuto = sim + cadence;
+};
+document.getElementById("speed").oninput = (e) => {
+  speed = +e.target.value;
+  document.getElementById("spdLab").textContent = speed.toFixed(2).replace(/0$/,"")+"×";
+};
+document.getElementById("hostScanBtn").onclick = () => {
+  doScan(selectedHostId);
+  const f = document.getElementById("flash");
+  f.classList.remove("go"); void f.offsetWidth; f.classList.add("go");
+};
+
+/* ---------- BOOT ---------- */
+reset();
+buildHostGrid();
+buildDetail();
+sizeCanvas();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

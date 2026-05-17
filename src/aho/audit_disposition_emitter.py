@@ -341,6 +341,9 @@ def emit_disposition(
         "structural_override_to_surface": audit.get(
             "structural_override_to_surface", False
         ),
+        "unsupported_halt_downgrade": audit.get(
+            "unsupported_halt_downgrade", False
+        ),
         "latency_ms": audit.get("latency_ms"),
         "body_md": body_md,
     }

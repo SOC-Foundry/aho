@@ -28,9 +28,23 @@ flagging an unverified ID — legitimate). Findings with a registered
 anchor but no fake-ID phrase stay active (the auditor is flagging
 something else about a known ID — legitimate). The filter only
 suppresses the specific F-0.2.17-W3-001 failure mode.
+
+0.2.18 W0 extension — RAG enrichment status echo (F-0.2.18-W0-006).
+A second false-positive shape: llama3.2:3b sometimes paraphrases the
+"## Registered references retrieved from project context" table into
+findings whose description is the literal status-line template
+``{ID} ({kind}) — status: `registered|unverified`.`` with no
+substantive content. These are non-findings — the auditor is just
+echoing the ground-truth context section back. The
+``_RAG_STATUS_ECHO_PATTERN`` matches that exact shape and the filter
+drops matched findings with reason ``"rag_enrichment_status_echo"``.
+The match is anchored on the entire description (with optional
+trailing punctuation), so any added substantive sentence keeps the
+finding active.
 """
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .audit_ref_extract import RefExtractError, detect_references
@@ -57,6 +71,25 @@ FAKE_ID_PHRASES: Tuple[str, ...] = (
 
 
 SUPPRESSION_REASON = "registered_id_flagged_as_fake"
+RAG_STATUS_ECHO_REASON = "rag_enrichment_status_echo"
+
+# 0.2.18 W0 (F-0.2.18-W0-006). Tight-anchored template: the description
+# must consist *entirely* of the status-line template, optionally with
+# leading/trailing whitespace and an optional trailing period. Any added
+# substantive content (a sentence after the status line) prevents the
+# match and keeps the finding active. Reference-ID alphabet covers all
+# shapes used by detect_references (ADRs, gotchas, carry-forwards,
+# deliverables, workstream IDs).
+_RAG_STATUS_ECHO_PATTERN = re.compile(
+    r"^\s*"
+    r"[A-Za-z][A-Za-z0-9._-]*"          # anchor ID
+    r"\s*\(\s*[a-z][a-z_]*\s*\)\s*"     # (kind)
+    r"[—–\-]\s*"              # em-dash, en-dash, or hyphen
+    r"status\s*:\s*"
+    r"[`'\"]?(?:registered|unverified)[`'\"]?"
+    r"\s*\.?\s*$",
+    re.IGNORECASE,
+)
 
 
 class AuditFindingFilterError(ValueError):
@@ -115,15 +148,33 @@ def _extracted_anchor_ids(description: str) -> List[str]:
 def _filter_one(
     finding: Dict[str, Any],
     registered: set,
+    *,
+    eligible_for_fake_id_rule: bool,
 ) -> Tuple[bool, Optional[Dict[str, Any]]]:
     """Decide whether to suppress one finding.
 
     Returns (suppress, suppression_record). suppression_record is the
     structured entry to append to the audit's ``suppressed_findings``
     list when ``suppress`` is True.
+
+    `eligible_for_fake_id_rule` gates the F-0.2.17-W3-001 rule only — the
+    RAG status-echo rule (F-0.2.18-W0-006) fires regardless of registered
+    set size since it's description-shape-driven, not phrase-driven.
     """
     description = finding.get("description", "") if isinstance(finding, dict) else ""
 
+    # F-0.2.18-W0-006 — RAG enrichment status echo (description-shape rule).
+    if isinstance(description, str) and _RAG_STATUS_ECHO_PATTERN.match(description):
+        return True, {
+            "reason": RAG_STATUS_ECHO_REASON,
+            "matched_description": description.strip(),
+            "finding": dict(finding),
+        }
+
+    if not eligible_for_fake_id_rule:
+        return False, None
+
+    # F-0.2.17-W3-001 — registered-ID flagged as fake (phrase + anchor).
     phrase = _matched_phrase(description)
     if phrase is None:
         return False, None
@@ -185,10 +236,11 @@ def filter_findings(
             raise AuditFindingFilterError(
                 f"finding must be dict, got {type(finding).__name__}"
             )
-        if not eligible:
-            active.append(finding)
-            continue
-        suppress, record = _filter_one(finding, registered)
+        suppress, record = _filter_one(
+            finding,
+            registered,
+            eligible_for_fake_id_rule=eligible,
+        )
         if suppress and record is not None:
             suppressed.append(record)
         else:
@@ -207,5 +259,6 @@ __all__ = [
     "AuditFindingFilterError",
     "FAKE_ID_PHRASES",
     "SUPPRESSION_REASON",
+    "RAG_STATUS_ECHO_REASON",
     "filter_findings",
 ]

@@ -33,3 +33,6 @@ htop
 
 # OS keyring backend for bin/aho-secrets-init
 libsecret
+
+# Container runtime (0.2.18 W2 — required for image load/run on container hosts)
+podman

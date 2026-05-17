@@ -1,0 +1,105 @@
+{
+  "disposition": "halt",
+  "confidence": 0.9,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-17T02:33:58.381086+00:00",
+  "audit_completed_utc": "2026-05-17T02:34:09.856983+00:00",
+  "target_artifact_sha256": "a20061a18531aff20c3c4b376669375e3a26775c73479631552a9cf2da0fdf83",
+  "findings_count": 1,
+  "evidence_trace_count": 1,
+  "audit_kind": "self",
+  "iteration": "0.2.18",
+  "workstream": "W1",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "F-0.2.18-W1-003",
+      "severity": "important",
+      "description": "Plan-doc references non-existent k8s-readiness pytest (same shape as F-0.2.18-W0-003)"
+    }
+  ],
+  "evidence_traces": [
+    "\"The 0.2.17 W1 test (artifacts/tests/test_container_k8s_readiness.py) re-runs against the new image.\""
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "pass",
+    "git_ops_hits": [],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.2.18",
+      "0.2.18",
+      "0.2.18",
+      "0.2.18",
+      "0.2.18"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "unsupported_halt_downgrade": false,
+  "latency_ms": 11474,
+  "body_md": "# Self-Audit \u2014 0.2.18 W1\n**Disposition:** halt\n**Confidence:** 0.9\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.18/acceptance/W1.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **pass**\n- three_octet_versioning_present: **pass**\n\n## Findings\n\n### Finding F-0.2.18-W1-003 (important)\n\nPlan-doc references non-existent k8s-readiness pytest (same shape as F-0.2.18-W0-003)\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201c\"The 0.2.17 W1 test (artifacts/tests/test_container_k8s_readiness.py) re-runs against the new image.\"\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 7,
+    "registered_count": 2,
+    "unverified_count": 5,
+    "truncated": false,
+    "section_chars": 1599,
+    "references": [
+      {
+        "id": "F-0.2.18-W1-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/aho-plan-0.2.17.md"
+      },
+      {
+        "id": "F-0.2.18-W0-003",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "G070",
+        "kind": "gotcha",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0010",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/dev/projects/aho/artifacts/iterations/0.2.17/W2-plan-doc.md"
+      },
+      {
+        "id": "F-0.2.18-W1-002",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W1-003",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  },
+  "suppressed_findings": [],
+  "finding_filter": {
+    "filter_enabled": true,
+    "filter_eligible": true,
+    "registered_id_count": 2,
+    "model_findings_count": 1,
+    "active_findings_count": 1,
+    "suppressed_count": 0
+  }
+}

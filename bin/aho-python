@@ -36,12 +36,16 @@ function _cmd_install
         return 1
     end
 
-    if not command -q aho
-        _error "aho CLI not found on PATH after install. Check ~/.local/bin is in PATH."
+    # Check file existence directly, not via fish's command cache —
+    # `command -q aho` was populated before pip just installed the binary
+    # and returns false even though the file is reachable from a fresh shell.
+    # (0.2.18 W2 fix — install.fish step 3 false-failure mode.)
+    if not test -x $HOME/.local/bin/aho
+        _error "aho CLI not found at $HOME/.local/bin/aho after install."
         return 1
     end
 
-    _info "Python package installed. aho CLI on PATH."
+    _info "Python package installed. aho CLI at $HOME/.local/bin/aho."
 end
 
 function _cmd_doctor

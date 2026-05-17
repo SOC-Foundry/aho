@@ -1,0 +1,268 @@
+{
+  "workstream_id": "W0",
+  "iteration": "0.2.18",
+  "title": "0.2.17 carry-forward closure + CLAUDE.md rewrite + a8geekomCos probe",
+  "audit_status": "operator_arbitrated_after_halt_cycle",
+  "audit_status_history": [
+    {"status": "pending_audit", "at": "2026-05-10T03:33:46Z", "note": "v1 acceptance archive written"},
+    {"status": "operator_arbitrated_after_halt_cycle", "at": "2026-05-10T05:00:00Z", "note": "v1+v2+v3 audits all returned halt; v1 closed structurally (F-0.2.18-W0-005); v2 closed structurally (F-0.2.18-W0-006 + W0-007); v3 narrative-lift residual operator-arbitrated to surface_to_drafter equivalent (F-0.2.18-W0-008)"}
+  ],
+  "timestamp": "2026-05-10T03:33:46Z",
+  "agents_involved": [
+    {
+      "agent": "claude-code",
+      "role": "drafter",
+      "model": "claude-opus-4-7[1m]",
+      "notes": "0.2.18 operator-explicit deviation from 0.2.17 pattern; same agent as executor — same session"
+    },
+    {
+      "agent": "claude-code",
+      "role": "executor",
+      "model": "claude-opus-4-7[1m]",
+      "notes": "Drafter+executor collapsed to claude-code per plan-doc §Role assignment for 0.2.18"
+    }
+  ],
+  "scope_notes": {
+    "bucket_1_carry_forwards": "F-0.2.17-W6-003 (gitignore mirror) verified at the W6-003 scope (`.aho-checkpoint.json` + `.claude/settings.json` no longer tracked); F-0.2.17-W5-002 (path-convention anchor) closed at the convention layer (prompt-conventions.md §7); F-0.2.17-W6-002 (council embed timeout) closed by raising default 30→120 in src/aho/council/embed.py with new lock-in test (no prior test existed). Two unrelated drift surfaces discovered during W6-003 verification (`.aho.json`, `MANIFEST.json` tracked despite gitignore working-state listing) — recorded as operator-disposition items, not in W6-003 closure scope.",
+    "bucket_2_claude_md_rewrite": "CLAUDE.md fully rewritten 0.2.16 → 0.2.18: explicit four-role table with claude-code drafter+executor deviation rationale, 0.2.17 inheritance citations (iteration-close-0.2.17.md, docs/retrospectives/0.2.17.md, ADR 0007 amended, ADRs 0009 + 0010 new), materiality counter N=5/N≥8 per ADR-0010, cross-host OTEL environment notes, Pillar 11 monitored-invariant + cross-project contamination vigilance carried forward.",
+    "bucket_3_a8geekomCos_probe": "Tailscale reachable at 1ms direct (no relay); MagicDNS short=`a8geekomcos`, FQDN=`a8geekomcos.tail78a311.ts.net`, NZXTcos FQDN=`nzxtcos.tail78a311.ts.net` recorded for W1 image bake. OS=CachyOS Linux (Arch derivative — install.fish portability holds, NOT a scope-amendment trigger). podman 5.8.2 + fish + age + tailscale present; ollama absent (W2 install path). AMD Ryzen 9 8945HS w/ Radeon 780M iGPU — no discrete GPU; nvidia-smi binary present but driver fails (tier-detect handles correctly via CalledProcessError → None → base). 950GB disk, 30GB RAM, 30GB swap.",
+    "drafter_executor_collapse": "0.2.18 W0 operates with drafter=executor=claude-code in the same session. Pillar 7 not violated: auditor remains the in-container `llama3.2:3b` seat, distinct model. Recorded for auditability."
+  },
+  "deliverable_evidence": {
+    "claude_md_sha256": "43e72947a5f32596eca0360226c89915dac45d575506f33031e4f2335025ce75",
+    "claude_md_path": "CLAUDE.md",
+    "probe_artifact_sha256": "a2dbe1f45972c3736eabf19e12fc726fc88ac500c5e08dcf43c4495e7edce77e",
+    "probe_artifact_path": "artifacts/iterations/0.2.18/probes/a8geekomCos-baseline.md",
+    "prompt_conventions_sha256": "ab6c93dc2f0e5f44319d9e298343a152a166809c05f90e3f84e1a260d5e2e0cd",
+    "prompt_conventions_path": "artifacts/harness/prompt-conventions.md",
+    "embed_module_sha256": "69110a800920c2e3ae4ac2268e5f3a3adb71102c97e8b4c30e2a962a5ac8bab4",
+    "embed_module_path": "src/aho/council/embed.py",
+    "embed_test_sha256": "efdff77cda92da1ab21df72a0694231a70f6f74a174f67e11a2b16c257c50dc9",
+    "embed_test_path": "artifacts/tests/test_council_embed_timeout.py",
+    "audit_module_sha256": "fdd601eab5f24d9cf9d48f1b91de804028679928795dbac7a64c54befb26c31a",
+    "audit_module_path": "src/aho/council/audit.py",
+    "audit_finding_filter_sha256": "4c0a103fc4b6ff04427622fc85cce06f05e204e6a8868af0707d6679cc444051",
+    "audit_finding_filter_path": "src/aho/council/audit_finding_filter.py",
+    "git_op_suppression_test_sha256": "16e04cc5dd62b0b3b02bdec65c5606cbc6d4d1df5ec88dfb9c589a3216427c4c",
+    "git_op_suppression_test_path": "artifacts/tests/test_audit_git_op_suppression.py",
+    "rag_echo_and_halt_downgrade_test_sha256": "fa0132813adfa20349bad6ca1a592f52fd7739cb0059f0f50143aff46e1afb64",
+    "rag_echo_and_halt_downgrade_test_path": "artifacts/tests/test_audit_rag_echo_and_halt_downgrade.py",
+    "w0_audit_runner_sha256": "34596a509129899ceb8570d8d53ee4fb4c8f026c74ce85456bbb0c3943c5adca",
+    "w0_audit_runner_path": "artifacts/iterations/0.2.18/probes/W0_audit.py",
+    "audit_v1_sha256": "d49beb8a003b2ff9aed82d3c507faf256d2735ebe9c03a4c8af72b11ab1feb2b",
+    "audit_v1_path": "artifacts/iterations/0.2.18/audit/W0.json",
+    "audit_v2_sha256": "297ff9de5c9ddca0c3b4494f45095fae4cfdaed65a027cbea40d296e42d0e888",
+    "audit_v2_path": "artifacts/iterations/0.2.18/audit/W0-v2.json",
+    "audit_v3_sha256": "41f75e487b60fd7b16028e0cbc6377c688f79ce6ce0c8594d7f2e13b964c42dd",
+    "audit_v3_path": "artifacts/iterations/0.2.18/audit/W0-v3.json",
+    "audit_disposition_emitter_sha256": "de397a4e010547af5431b4bf33ea3a9a8f41dfdbec407c91812428faffe08d1d",
+    "audit_disposition_emitter_path": "src/aho/audit_disposition_emitter.py"
+  },
+  "acceptance_checks": [
+    {
+      "check": "Pre-flight: AHO_ITERATION + AHO_WORKSTREAM env vars set; OTEL telemetry verified landing in Jaeger with correct resource attrs",
+      "result": "pass",
+      "evidence": "Initial session AHO_ITERATION/AHO_WORKSTREAM both empty (settings.json env block missing the two keys). Halted, surfaced to operator, patched .claude/settings.json env block to add `AHO_ITERATION: 0.2.18` and `AHO_WORKSTREAM: W0`. Operator restarted session via `claude --continue`. Post-restart confirmed: `AHO_ITERATION=0.2.18`, `AHO_WORKSTREAM=W0`. Jaeger pre-flight: queried `http://localhost:16686/api/traces?service=claude-code&limit=20&lookback=1h` — traces returned with resource-attr values `aho.iteration ∈ {0.2.18, 0.2.17}` (mixed-window expected) and `aho.workstream ∈ {W0}`. Telemetry pipeline confirmed."
+    },
+    {
+      "check": "workstream_start emitted for W0",
+      "result": "pass",
+      "evidence": "`bin/aho iteration workstream start W0 --summary \"0.2.17 carry-forward closure + CLAUDE.md rewrite + a8geekomCos probe\"` returned `workstream_start emitted for W0`. Checkpoint advanced: `current_workstream=W0`, `workstreams.W0=in_progress`."
+    },
+    {
+      "check": "Bucket 1 #1 — F-0.2.17-W6-003 .gitignore mirror + tracked-file verification",
+      "result": "pass_with_findings",
+      "evidence": ".gitignore lines 60-67 carry the working-state mirror block matching .dockerignore's working-state list. `git ls-files --error-unmatch` against `.aho-checkpoint.json` and `.claude/settings.json` (the original W6-003 targets) confirmed both untracked — original closure intent met. Two additional drift cases discovered: `.aho.json` and `MANIFEST.json` are still tracked despite being listed in the gitignore working-state mirror block AND in .dockerignore. Surfaced for operator disposition (see findings)."
+    },
+    {
+      "check": "Bucket 1 #2 — F-0.2.17-W5-002 path-convention anchor in prompt-conventions.md",
+      "result": "pass",
+      "evidence": "Added §7 Canonical Repo Paths to artifacts/harness/prompt-conventions.md. Documents canonical paths: ADRs in `artifacts/adrs/` (not `docs/adr/`); iteration artifacts in `artifacts/iterations/<version>/` (not `docs/iterations/`); retrospectives at `docs/retrospectives/<version>.md` (the one legitimate `docs/` path); harness contracts in `artifacts/harness/`. Future plan-doc drafters inherit the convention here; closure is at the convention layer, not via repeated plan-doc-side correction."
+    },
+    {
+      "check": "Bucket 1 #3 — F-0.2.17-W6-002 council embed timeout default 30s → 120s",
+      "result": "pass_with_findings",
+      "evidence": "`DEFAULT_TIMEOUT_S = 120` in src/aho/council/embed.py (was 30). Module docstring updated to record the bump and reference F-0.2.17-W6-002. Aligns with sibling council modules: triage (120), _client (120), audit (180). Plan-doc anticipated 'unit-test amendment' but no prior test for council/embed timeout existed — created new test file artifacts/tests/test_council_embed_timeout.py with 4 cases (default value lock-in; default-when-env-unset; env-override-parses; raises-on-unparseable). All 4 pass. G070 __pycache__ cleared after src/aho/ touch. Finding: plan-doc 'amendment' premise was off; this is a new test, not an amendment."
+    },
+    {
+      "check": "Bucket 2 — CLAUDE.md rewrite 0.2.16 → 0.2.18",
+      "result": "pass",
+      "evidence": "CLAUDE.md fully rewritten. Header reflects 0.2.18 + drafter+executor=claude-code + auditor=llama3.2:3b + operator=Kyle. Eleven Pillars carried forward verbatim from base.md (Pillar 11 monitored-invariant clause unchanged per plan-doc Bucket 2 #5). New §Role assignment for 0.2.18 with explicit four-role table + Pillar-7 implications statement. Adversarial Authorship section updated for drafter+executor cycle (no `pending_audit` event — checkpoint state, not separate event). State machine retained. OTEL Environment section updated for cross-host (NZXTcos Tailscale FQDN endpoint default + host.name resource attr). Cross-Project Contamination Vigilance carried forward + iteration list updated to include 0.2.16 + 0.2.17. Reference Reading section refreshed: 0.2.18 plan-doc, 0.2.17 iteration-close + retrospective, ADR 0006/0007/0009/0010, prompt-conventions §7. Findings Carried Forward replaced with 0.2.17 inheritance items. New §a8geekomCos section with deployment-target facts."
+    },
+    {
+      "check": "Bucket 3 — a8geekomCos probe complete",
+      "result": "pass",
+      "evidence": "Tailscale reachability: 1ms direct (no relay) via 172.31.255.247:41641. MagicDNS: `a8geekomcos` / `a8geekomcos.tail78a311.ts.net`. NZXTcos FQDN captured for W1 bake: `nzxtcos.tail78a311.ts.net`. SSH: required Tailscale SSH enable on target (operator ran `sudo tailscale up --ssh --accept-risk=lose-ssh`). Probe completed via Tailscale-SSH. OS: CachyOS Linux (Arch derivative, kernel 7.0.5-2-cachyos x86_64) — install.fish portability holds, NOT an ADR-0006 scope-amendment trigger. Tools: podman 5.8.2, fish, git, python3, jq, age, curl, tailscale, ssh, sudo all present; ollama ABSENT (W2 install dependency). CPU: AMD Ryzen 9 8945HS (8c16t Zen 4 / Phoenix2). iGPU: AMD Radeon 780M (RDNA3, PCI c6:00.0). nvidia-smi binary present but driver fails (no NVIDIA hardware) — tier-detect.py:28-49 handles via CalledProcessError → None → base correctly. Disk: 950GB nvme, 918GB free. Memory: 30GB RAM, 30GB swap. Probe artifact: artifacts/iterations/0.2.18/probes/a8geekomCos-baseline.md."
+    },
+    {
+      "check": "G070/G071 hygiene after src/aho/ touch",
+      "result": "pass",
+      "evidence": "After embed.py edit: `find src/aho -type d -name __pycache__ -exec rm -rf {} +` cleared all bytecode caches. No daemon imports `aho.council.embed` in this session, so G071 (daemon restart) is a no-op."
+    },
+    {
+      "check": "Pillar 11 invariant — no commits, pushes, merges, adds, secret reads from W0",
+      "result": "pass",
+      "evidence": "No `git commit`, `git push`, `git merge`, `git add`, `git rm`, secret read, or wrapper-bypass invocations from this session. All file edits via Edit/Write to working tree. Operator-only operations surfaced (see operator_action_required)."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-0.2.18-W0-001",
+      "severity": "medium",
+      "title": "Tracked-but-gitignored drift extends beyond F-0.2.17-W6-003 scope",
+      "detail": "F-0.2.17-W6-003 closed `.aho-checkpoint.json` + `.claude/settings.json` (no longer tracked). During W0 verification, two additional files in the .gitignore working-state mirror block were observed still tracked: `.aho.json` (project descriptor — likely intentionally tracked, fix is to remove from gitignore working-state block) and `MANIFEST.json` (output of `src/aho/manifest.py` live-refresh daemon — likely should be untracked via `git rm --cached`). Both files are in .dockerignore working-state listing too, so the drift is two-sided. Out of W6-003's original scope; surfaced for operator disposition.",
+      "disposition": "surface_to_operator"
+    },
+    {
+      "id": "F-0.2.18-W0-002",
+      "severity": "low",
+      "title": "Checkpoint top-level `iteration` field stale at 0.2.16 across 0.2.17 close + 0.2.18 W0 start",
+      "detail": ".aho-checkpoint.json top-level `iteration: 0.2.16` field never advanced through 0.2.17 close or 0.2.18 W0 start. Source of truth for emitted events is `_ITERATION = _resolve_iteration()` reading `AHO_ITERATION` env var (logger.py:154-184), so events are correctly attributed. Only the checkpoint metadata snapshot is stale. `bin/aho iteration workstream start` only mutates `current_workstream` + `workstreams[WID]` (workstream_events.py:117-120); no command rolls the top-level field. Cosmetic but visible in `aho iteration status` output. Pattern: the checkpoint's `iteration_status: closed` + `iteration_closed_at` fields refer to 0.2.17's close (timestamp 2026-05-01T23:36:52Z); the next aho iteration close-handling code path should refresh the top-level `iteration` to the new in-flight value when transitioning into a new iteration.",
+      "disposition": "carry_forward_to_0.2.18_or_later"
+    },
+    {
+      "id": "F-0.2.18-W0-003",
+      "severity": "low",
+      "title": "Plan-doc Bucket 1 #3 'unit-test amendment' was off — no prior test existed",
+      "detail": "Plan-doc artifacts/iterations/0.2.18/aho-plan-0.2.18.md §W0 Bucket 1 #3 specified 'Single-line change with a unit-test amendment.' No unit test for council/embed timeout existed at W0 start; git log shows embed.py was first introduced at 0.2.17 close (commit 147a224) without a paired test. Disposition: created new test file artifacts/tests/test_council_embed_timeout.py rather than amending a non-existent test. Plan-doc text remained 'amendment' but executor recorded the discrepancy here. Pattern: plan-docs should not assume tests exist for files added at iteration close — drafter could verify before drafting the closure language.",
+      "disposition": "convention_input_to_future_plan_docs"
+    },
+    {
+      "id": "F-0.2.18-W0-004",
+      "severity": "low",
+      "title": "Tailscale SSH 'check' mode requires browser approval per session",
+      "detail": "Tailscale SSH on a8geekomcos was enabled by operator at W0 probe time. Default ACL posture put it in 'check' mode — first SSH from NZXTcos→a8geekomcos blocked on a browser approval URL (https://login.tailscale.com/a/...). Probe proceeded after operator authorized. Pattern for W2: install.fish makes one-shot SSH calls (low frequency), so check-mode is tolerable. If W2 plays involve repeated SSH-driven orchestration, operator may want to relax ACL to `accept`. Not a 0.2.18 W0 deliverable; W2 visibility item.",
+      "disposition": "carry_forward_to_W2"
+    },
+    {
+      "id": "F-0.2.18-W0-005",
+      "severity": "important",
+      "title": "Pillar 11 git-op pre-check fired on enforcement narration (false-positive shape)",
+      "detail": "v1 audit auto-injected an AUDIT-PILLAR11 critical finding because the deterministic regex `_GIT_OP_PATTERNS` in src/aho/council/audit.py:115-118 matched the strings 'git commit', 'git push', 'git merge', 'git add' inside the acceptance archive's own Pillar 11 invariant narration (\"No `git commit`, `git push`, `git merge`, `git add`, `git rm`, secret read, or wrapper-bypass invocations from this session\"). The regex didn't see the negation. Closure: added `_GIT_OP_ENFORCEMENT_SENTINELS` regex with ±150-char context window in src/aho/council/audit.py — sentinels capture canonical aho enforcement vocabulary (operator-only, operator-side, operator-action, operator-executed, agent surfaces, never executes, OPR-, 'no `git'). When any sentinel hits within window of a git-op match, the hit is suppressed. 13-test lock-in at artifacts/tests/test_audit_git_op_suppression.py covers: plain hits preserved (safety property), each canonical sentinel suppresses, the literal v1 false-positive shape suppresses, hits outside window still fire, gh pr patterns subject to same rule. v2 audit confirmed `git_ops_referenced: pass` (was `fail`).",
+      "disposition": "closed_in_W0_audit_cycle"
+    },
+    {
+      "id": "F-0.2.18-W0-006",
+      "severity": "important",
+      "title": "RAG enrichment status echo as findings (small-model false-positive shape #2)",
+      "detail": "v2 audit returned 2 findings whose descriptions were the literal RAG enrichment status template `{ID} ({kind}) — status: \\`registered|unverified\\`` with no substantive content. The model paraphrased the registered-references context section as findings — the auditor was supposed to *use* that section as ground truth, not echo it. The W4 deterministic post-hoc filter (audit_finding_filter.py) was structurally narrow to the F-0.2.17-W3-001 fake-ID-phrase shape and didn't catch this. Closure: added `_RAG_STATUS_ECHO_PATTERN` regex + `RAG_STATUS_ECHO_REASON` suppression branch in src/aho/council/audit_finding_filter.py. Tight whole-description anchor: any substantive sentence beyond the template defeats the match (safety property). Refactored `_filter_one` to accept `eligible_for_fake_id_rule` keyword so the new echo rule fires regardless of registered-set size (echo is description-shape-driven, not phrase-driven). 9 echo-suppression tests in artifacts/tests/test_audit_rag_echo_and_halt_downgrade.py cover registered + unverified echoes, em-dash + hyphen variants, with-substance preservation, two-echo full-suppression, fake-ID rule still fires alongside.",
+      "disposition": "closed_in_W0_audit_cycle"
+    },
+    {
+      "id": "F-0.2.18-W0-007",
+      "severity": "important",
+      "title": "Halt disposition uncoupled from filter outcome (orchestration gap)",
+      "detail": "Even after F-0.2.18-W0-006 filter extension, the model's raw `halt` disposition stood independent of filter results — if all model findings were filter-suppressed and no pre-check fired, the halt was materially unsupported but blocked workstream_complete. The existing structural override (audit.py:704-707) only handled the inverse case (model said `clean`, pre-checks failed → escalate to `surface_to_drafter`). Closure: added `unsupported_halt_downgrade` branch in src/aho/council/audit.py — when `final_disposition == 'halt'` AND `len(model_findings_active) == 0` AND `len(extra_findings) == 0`, downgrade to `surface_to_drafter`. NEVER `clean` — the model still emitted a halt signal, so drafter/operator arbitration is the right backstop. Added `unsupported_halt_downgrade: bool` to audit return dict + emitter document for downstream observability. 6 downgrade tests cover: only-echo-findings downgrades; substantive finding keeps halt; no-findings-at-all downgrades; pre-check-fail keeps halt; clean unaffected; surface_to_drafter unaffected. Also updated existing test_audit_finding_filter.py::test_audit_integration_suppresses_fake_id_finding to reflect the new contract (was asserting old 'disposition untouched' invariant).",
+      "disposition": "closed_in_W0_audit_cycle"
+    },
+    {
+      "id": "F-0.2.18-W0-008",
+      "severity": "info",
+      "title": "Narrative-lift residual: small-model semantic-discrimination limitation (operator-arbitrated)",
+      "detail": "v3 audit (run after F-0.2.18-W0-005/006/007 fixes landed) returned halt at confidence 0.90 with 2 model findings whose descriptions were verbatim quotes from the acceptance archive's own `audit_cycle_record` and `findings[F-0.2.18-W0-006]` narrative — text added in W0 to *document* the prior false-positive cycles. The model is lifting prior-cycle narrative as if it were a current finding. This is not a structural pattern (the descriptions don't match the RAG-echo template since they're prose, not ID-status echoes); it's a semantic-discrimination problem llama3.2:3b cannot solve at base tier. Three structural shapes are now closed (W0-005, W0-006, W0-007). The narrative-lift shape is operator-arbitrated per the F-0.2.17-W2-004 pattern. Possible future structural fix: verbatim-substring suppression filter (drop findings whose description is a ≥60-char substring of the audit target). Not landed in W0 because: (a) risks over-suppression on legitimate findings that quote the artifact, (b) a small-model can always be made to surface non-quote findings with different prose anchors so structural fixes have diminishing returns. Carry forward to 0.3.x or dedicated audit-machinery iteration.",
+      "disposition": "operator_arbitrated_carry_forward_to_0.3.x"
+    }
+  ],
+  "operator_arbitration": {
+    "reason": "Three structural false-positive shapes closed in W0 audit cycle (W0-005/006/007). v3 halt is residual narrative-lift (W0-008) — small-model semantic-discrimination limitation, not a substantive defect. Operator override per F-0.2.17-W2-004 disagreement-handling pattern.",
+    "arbitrated_disposition": "surface_to_drafter (effective)",
+    "operator_signature_required": true,
+    "fresh_session_executor_instruction": "Read this acceptance archive's audit_cycle_record + operator_arbitration block. Read all three audit archives (v1/v2/v3). Emit `workstream_complete` with note that audit chain ended at operator-arbitrated surface_to_drafter, three structural fixes closed durably, narrative-lift residual carried forward as F-0.2.18-W0-008."
+  },
+  "audit_cycle_record": {
+    "v1": {
+      "audit_path": "artifacts/iterations/0.2.18/audit/W0.json",
+      "audit_sha256": "d49beb8a003b2ff9aed82d3c507faf256d2735ebe9c03a4c8af72b11ab1feb2b",
+      "disposition": "halt",
+      "confidence": 0.90,
+      "findings_count": 3,
+      "halt_drivers": [
+        "AUDIT-PILLAR11 (deterministic pre-check, false-positive on enforcement narration → F-0.2.18-W0-005)",
+        "G070 critical (model RAG-status echo, severity-inflated → F-0.2.18-W0-006)",
+        "F-0.2.17-W6-003 info (model RAG-status echo, non-finding → F-0.2.18-W0-006)"
+      ],
+      "operator_disposition": "Tune the pre-check regex (real fix), then re-audit (option 3 of 3 surfaced)"
+    },
+    "v2": {
+      "audit_path": "artifacts/iterations/0.2.18/audit/W0-v2.json",
+      "audit_sha256": "297ff9de5c9ddca0c3b4494f45095fae4cfdaed65a027cbea40d296e42d0e888",
+      "disposition": "halt",
+      "confidence": 0.90,
+      "findings_count": 2,
+      "halt_drivers": [
+        "G070 critical (RAG-status echo persists; filter didn't catch this shape — Gap A)",
+        "F-0.2.17-W6-003 info (RAG-status echo persists — Gap A)",
+        "Disposition uncoupled from filter outcome — Gap B"
+      ],
+      "v1_to_v2_delta": "Pillar 11 pre-check false-positive resolved (`git_ops_referenced: pass`, was `fail`); model RAG-echo findings persisted",
+      "operator_disposition": "Fix Gap A + Gap B (filter + disposition-downgrade rule), re-audit as v3 (option 2 of 4 surfaced)"
+    },
+    "v3": {
+      "audit_path": "artifacts/iterations/0.2.18/audit/W0-v3.json",
+      "audit_sha256": "41f75e487b60fd7b16028e0cbc6377c688f79ce6ce0c8594d7f2e13b964c42dd",
+      "disposition": "halt",
+      "confidence": 0.90,
+      "findings_count": 2,
+      "halt_drivers": [
+        "F-0.2.17-W6-003 info — description is verbatim quote from acceptance archive's audit_cycle_record.v2.halt_drivers[0]",
+        "F-0.2.18-W0-006 important — description is verbatim quote from acceptance archive's findings[F-0.2.18-W0-006].title"
+      ],
+      "narrative_lift_observed": true,
+      "narrative_lift_note": "Both v3 findings have descriptions that are verbatim from the acceptance archive's own narrative documenting the prior W0-005/006 fixes. The model is lifting prior-cycle commentary as findings. This is not a structural pattern — it's a semantic-discrimination limitation. Recorded as F-0.2.18-W0-008.",
+      "expected_disposition_chain_at_write": "model halt → filter sees no echoes (descriptions are prose, not ID-status template) → no suppression → 2 active findings → halt preserved (correct: any active finding keeps halt per W0-007 rule)",
+      "operator_disposition": "Arbitrate v3 halt as known small-model narrative-lift limitation (option A of 4 surfaced). Treat as surface_to_drafter equivalent. Three structural shapes durably closed (W0-005/006/007). Narrative-lift carried forward as F-0.2.18-W0-008."
+    }
+  },
+  "operator_action_required": [
+    {
+      "id": "OPR-W0-001",
+      "title": ".aho.json + MANIFEST.json gitignore-vs-tracked drift disposition",
+      "context": "F-0.2.18-W0-001",
+      "options": [
+        "(a) `.aho.json` belongs tracked → remove from .gitignore working-state mirror block (and from .dockerignore working-state if image bake doesn't need it removed)",
+        "(b) `.aho.json` belongs untracked → `git rm --cached .aho.json` and replace with .aho.json.tpl pattern",
+        "(c) `MANIFEST.json` is generator output → `git rm --cached MANIFEST.json` and let manifest.py regenerate locally"
+      ],
+      "agent_recommendation": "(a) for .aho.json (it's project descriptor, should be cloneable); (c) for MANIFEST.json (it's content-hash inventory, regenerated). Awaiting operator decision."
+    },
+    {
+      "id": "OPR-W0-002",
+      "title": "F-0.2.17-W1-003 — `ahomw:telegram_bot_token` rotation (pre-W2 hard gate)",
+      "context": "Carry-forward from 0.2.17 W1 D3 token-stdout exposure incident. Documented in iteration-close-0.2.17.md as hard gate before 0.3.1 (and by extension before 0.2.18 W2 since W2 lands install.fish on a new host).",
+      "agent_recommendation": "Operator rotates Telegram bot token before W2 launches. Operator action only (Pillar 11 — secrets). Agent does not execute.",
+      "resolution": {
+        "status": "resolved_on_security_gate",
+        "resolved_at_utc": "2026-05-17T01:45:00Z",
+        "actions_taken": [
+          "Operator revoked the W1 D3-exposed token at @BotFather on Telegram. Old bytes no longer authenticate against api.telegram.org — the exposure risk that motivated F-0.2.17-W1-003 is materially closed.",
+          "Operator re-issued a new token and attempted store via `aho secret set ahomw telegram_bot_token`. First attempt and re-paste both stored a URL-shaped string (`https://api.telegram.org/bot<id>:<secret>`, 71 chars / 2 colons / sha256 prefixes `1c8b3e87` then `67c8fdb4`) instead of the bare token bytes. Telegram `getMe` returns `404 Not Found` against the stored value — the bridge daemon (`aho-telegram.service`) cannot authenticate until the stored value is the bare `<digits>:<35-char alphanum>` form."
+        ],
+        "operator_arbitration": "The Telegram bridge being functional was never on the 0.2.18 graduation criterion (plan-doc §Graduation criterion steps 1–8 — install.fish + image + secrets broker + cross-host OTEL + materiality counter advance, no Telegram step). The hard-gate framing in 0.2.17 close-notes was specifically about the *exposure* of leaked bytes, not about restoring bridge functionality. With the old token revoked, the exposure risk is closed regardless of the malformed replacement. Operator arbitrates: bridge-restoration work is deferred as not-iteration-blocking; W0 closes on the security gate.",
+        "deferred_work": "Bridge restoration (re-store bare-token bytes + restart `aho-telegram.service` + verify `getMe.ok==true`) carries forward outside the W0 framework. Not a 0.2.18 dependency."
+      }
+    },
+    {
+      "id": "OPR-W0-003",
+      "title": "W1 image push to ghcr.io/soc-foundry/aho:0.2.18",
+      "context": "Plan-doc §W1: image build runs locally; final push to ghcr.io is operator-executed (Pillar 11). Surfacing now so it is on the operator radar at W1-end transition.",
+      "agent_recommendation": "Agent prepares + tags + verifies locally; operator authenticates `gh auth` (or `podman login`) on NZXTcos and runs the push command at W1 close. Pattern follows 0.2.17 W1 sequence."
+    }
+  ],
+  "deferred_for_post-W0_or_later": [
+    {
+      "id": "F-0.2.17-W5-001",
+      "title": "Structural pre-check JSON path exclusion",
+      "deferral": "Audit-time machinery refinement; not blocking a8geekomCos deployment. Carry forward to 0.3.x or dedicated audit-machinery iteration."
+    },
+    {
+      "id": "F-0.2.17-W6-001",
+      "title": "Opaque-ID metadata indexing (RAG enrichment lookup-ranking)",
+      "deferral": "Same disposition as F-0.2.17-W5-001."
+    }
+  ],
+  "checkpoint_state_at_W0_close": {
+    "expected_last_event": "pending_audit",
+    "expected_workstreams.W0": "in_progress",
+    "iteration_field_drift_recorded_in": "F-0.2.18-W0-002"
+  }
+}
