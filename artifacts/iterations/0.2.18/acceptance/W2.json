@@ -193,17 +193,31 @@
       "id": "OPR-W2-001",
       "title": "Commit harness changes that landed in W2 session (bin/aho-python patch + pacman-packages.txt podman addition)",
       "context": "Both files were edited on NZXTcos repo during W2 substrate work. Per Pillar 11, agents don't commit — operator does at iteration close.",
-      "agent_recommendation": "Bundle with broader 0.2.18 working-tree commit at iteration close (alongside W0/W1/W2 acceptance archives + Dockerfile + version strings + observability mockup artifacts).",
-      "files_to_review": [
-        "bin/aho-python (line 39+ — command -q → test -x patch)",
-        "artifacts/harness/pacman-packages.txt (added podman line at bottom)"
-      ]
+      "resolution": {
+        "status": "resolved",
+        "resolved_at_utc": "2026-05-17T15:25:00Z",
+        "commit_sha": "e8c7c2e",
+        "commit_message": "KT completed 0.2.18 and updated README",
+        "files_committed": [
+          "bin/aho-python (cache-immune CLI presence check)",
+          "artifacts/harness/pacman-packages.txt (added podman)",
+          "All 42 files / +8311 / -84 lines per commit log"
+        ],
+        "note": "Operator used `git add .` which also swept in some root-level cruft files (Screenshot_20260517_061339.png, 260510-tt-cot-v6.md, aurlist.txt, fde_ai_services_business_plan_v2.docx.md, pkglist.txt). Surfaced at commit time; operator can `git rm` later if desired. Not blocking W2 close."
+      }
     },
     {
       "id": "OPR-W2-002",
       "title": "Push aho:0.2.18 to ghcr.io (continued from OPR-W1-001)",
       "context": "Still operator-pending. Image now also lives on a8 via podman load — ghcr push is optional but useful for future cloud/cross-host deployments.",
-      "agent_recommendation": "Defer to iteration close; not blocking W3 (W3 runs locally on a8 against the loaded image)."
+      "resolution": {
+        "status": "resolved",
+        "resolved_at_utc": "2026-05-17T15:30:00Z",
+        "via_opr": "OPR-W1-001 (same push action satisfies both)",
+        "registry_tag": "ghcr.io/soc-foundry/aho:0.2.18",
+        "pushed_manifest_digest": "sha256:9f6b5844d365aaaebf4a4c558bc5857643482a786fb734b634a3bac7b0569d79",
+        "image_now_pullable_cross_host": true
+      }
     }
   ],
   "deferred_for_post-W2_or_later": [

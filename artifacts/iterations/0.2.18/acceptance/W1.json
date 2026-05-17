@@ -171,22 +171,18 @@
       "id": "OPR-W1-001",
       "title": "Push aho:0.2.18 to ghcr.io/soc-foundry/aho:0.2.18 (Pillar 11)",
       "context": "Plan-doc §W1 step 4 — agents prepare, operator pushes. Image is built locally; tagging + push is operator-side per Pillar 11.",
-      "operator_commands": [
-        "# Authenticate (one of these depending on your auth flow):",
-        "gh auth token | podman login ghcr.io -u <your-github-username> --password-stdin",
-        "# OR podman login ghcr.io  (interactive)",
-        "",
-        "# Tag local image for the registry:",
-        "podman tag aho:0.2.18 ghcr.io/soc-foundry/aho:0.2.18",
-        "",
-        "# Push:",
-        "podman push ghcr.io/soc-foundry/aho:0.2.18",
-        "",
-        "# Capture the pushed manifest digest (paste back into this archive after):",
-        "podman image inspect ghcr.io/soc-foundry/aho:0.2.18 --format '{{.Digest}}'",
-        "# CURRENT local manifest digest is sha256:9f6b5844d365aaaebf4a4c558bc5857643482a786fb734b634a3bac7b0569d79 (post-rebuild for F-0.2.18-W1-004 substrate drift; v1 digest sha256:46ef5a13... is superseded and was never pushed)."
-      ],
-      "after_push_action": "Add `pushed_manifest_digest` field to deliverable_evidence and re-write this acceptance archive (or amend in-place — operator decides)."
+      "resolution": {
+        "status": "resolved",
+        "resolved_at_utc": "2026-05-17T15:30:00Z",
+        "actions_taken": [
+          "Operator authenticated via `gh auth token | podman login ghcr.io -u sockjt --password-stdin` (Login Succeeded)",
+          "Operator tagged: `podman tag aho:0.2.18 ghcr.io/soc-foundry/aho:0.2.18`",
+          "Operator pushed: `podman push ghcr.io/soc-foundry/aho:0.2.18` — 10 blobs + config uploaded, manifest written, no errors"
+        ],
+        "pushed_manifest_digest": "sha256:9f6b5844d365aaaebf4a4c558bc5857643482a786fb734b634a3bac7b0569d79",
+        "digest_match_note": "Registry-side digest is IDENTICAL to local digest. podman preserved the manifest exactly during push — no re-serialization. (The runbook warned digests might differ; in this case they didn't. Both are valid; identical is cleaner verification.)",
+        "runbook_path": "GHCR-PUSH-0.2.18.md (repo root; can be archived to artifacts/iterations/0.2.18/ at iteration close)"
+      }
     }
   ],
   "deferred_for_post-W1_or_later": [
