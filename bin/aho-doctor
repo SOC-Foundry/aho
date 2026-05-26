@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-doctor — per-workstream pre-flight gateway. Closes F-0.3.1-W0-001
+# aho-doctor - per-workstream pre-flight gateway. Closes F-0.3.1-W0-001
 # (W1 D3 of 0.3.1).
 #
 # Invokes install.fish --check, parses the per-step JSONL output, evaluates

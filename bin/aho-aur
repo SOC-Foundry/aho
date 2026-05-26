@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-aur — Declarative AUR package manager wrapper.
+# aho-aur - Declarative AUR package manager wrapper.
 # Reads from artifacts/harness/aur-packages.txt.
 # Bootstraps yay if missing.
 # Subcommands: list, status, install, doctor

@@ -1,14 +1,14 @@
 #!/usr/bin/env fish
-# aho-web-publish-prep.fish — assemble ./public/ for firebase hosting deploy.
+# aho-web-publish-prep.fish - assemble ./public/ for firebase hosting deploy.
 #
 # Layout produced:
 #   public/
-#   ├── index.html             (quantum-posture mockup — public landing)
+#   ├── index.html             (quantum-posture mockup - public landing)
 #   └── campus/index.html      (same mockup at canonical /campus/ URL)
 #
 # 2026-05-17 architectural simplification: aho.run is PUBLIC eye-candy only
 # (campus posture mockup). claw3d and the otel/jaeger UIs live behind
-# Tailscale Serve on nzxtcos.tail8492.ts.net, tailnet-only — never on
+# Tailscale Serve on nzxtcos.tail8492.ts.net, tailnet-only - never on
 # Firebase. Previous claw3d + /web/ Flutter copies removed; /app/ skeleton
 # in repo is a 5-page Flutter stub with no wired data and will likely be
 # absorbed into claw3d's future routes.
@@ -37,7 +37,7 @@ rm -rf public
 mkdir -p public/campus
 _info "public/ scaffolded"
 
-# ── step 2: copy quantum-posture mockup (root + /campus/ — same content, two URLs) ──
+# ── step 2: copy quantum-posture mockup (root + /campus/ - same content, two URLs) ──
 _step "2. campus/ + root (quantum-posture mockup)"
 cp artifacts/observability/mockup-quantum-campus.html public/campus/index.html
 cp artifacts/observability/mockup-quantum-campus.html public/index.html
@@ -58,9 +58,9 @@ _info "Next:"
 _info "    firebase deploy --only hosting"
 _info ""
 _info "After deploy, URLs will be:"
-_info "    https://aho.run/                    (quantum posture mockup — default landing)"
+_info "    https://aho.run/                    (quantum posture mockup - default landing)"
 _info "    https://aho.run/campus/index.html   (same mockup at canonical URL)"
 _info ""
 _info "claw3d + Jaeger live on the tailnet (NOT on aho.run):"
-_info "    https://nzxtcos.tail8492.ts.net/    (Jaeger UI — current Tailscale Serve mapping)"
+_info "    https://nzxtcos.tail8492.ts.net/    (Jaeger UI - current Tailscale Serve mapping)"
 _info "    claw3d Tailscale Serve mapping TBD (see Tailscale Serve setup notes)"

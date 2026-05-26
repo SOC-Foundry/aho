@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-rag-bootstrap — ingest canonical artifact set into per-project ChromaDB
+# aho-rag-bootstrap - ingest canonical artifact set into per-project ChromaDB
 # iteration-context collection. Closes F-0.3.1-W0-002 (W1 D2 of 0.3.1).
 #
 # Subcommands:
@@ -31,7 +31,7 @@ end
 
 # Delegate to python module. Prepend canonical src/ to PYTHONPATH so this runs
 # against the canonical aho package even when a legacy editable install at a
-# pre-migration path shadows it (F-0.3.1-W0-005 — W2 remediates the editable
+# pre-migration path shadows it (F-0.3.1-W0-005 - W2 remediates the editable
 # install; W1 works around in wrappers).
 cd $project_root
 set -x PYTHONPATH "$project_root/src" $PYTHONPATH

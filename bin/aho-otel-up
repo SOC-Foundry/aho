@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
-# aho-otel-up — Start OTEL collector + Jaeger as systemd user services.
-# 0.2.10 W8 — migrated from docker-compose to native AUR packages.
+# aho-otel-up - Start OTEL collector + Jaeger as systemd user services.
+# 0.2.10 W8 - migrated from docker-compose to native AUR packages.
 
 systemctl --user start aho-otel-collector 2>&1; or echo "[WARN] aho-otel-collector failed to start"
 systemctl --user start aho-jaeger 2>&1; or echo "[WARN] aho-jaeger failed to start"

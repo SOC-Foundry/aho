@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 # aho-bootstrap - Idempotent environment installer for aho.
-# 0.2.1 — replaces 0.1.14 skeleton.
+# 0.2.1 - replaces 0.1.14 skeleton.
 
 set -l script_version "0.2.9"
 
@@ -61,7 +61,7 @@ if test -f $mcp_template
         _info ".mcp.json generated from template."
     end
 else
-    _warn ".mcp.json.tpl not found at $mcp_template — skipping MCP config generation."
+    _warn ".mcp.json.tpl not found at $mcp_template - skipping MCP config generation."
 end
 
 # 5. Per-clone age key (idempotent)

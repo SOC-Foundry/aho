@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-systemd — Install and manage aho user systemd services.
+# aho-systemd - Install and manage aho user systemd services.
 # Deploys 4 daemons from templates/systemd/.
 # Subcommands: list, status, install, doctor
 

@@ -1,4 +1,4 @@
-"""_aho_doctor_eval.py — internal evaluator invoked by bin/aho-doctor.
+"""_aho_doctor_eval.py - internal evaluator invoked by bin/aho-doctor.
 
 Reads env vars set by the fish wrapper:
   AHO_DOCTOR_JSONL              path to install-state.jsonl

@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-telegram — wrapper for the Telegram bridge daemon.
+# aho-telegram - wrapper for the Telegram bridge daemon.
 
 switch $argv[1]
     case send

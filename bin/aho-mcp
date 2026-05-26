@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 # aho-mcp - Global MCP server fleet manager for aho.
-# 0.2.4 W1 — 9-package canonical list, registry-verified.
+# 0.2.4 W1 - 9-package canonical list, registry-verified.
 
 set -g script_version "0.2.8"
 
@@ -180,7 +180,7 @@ function mcp_smoke
     # Write markdown report
     set -l iteration (python3 -c "import json; print(json.load(open('.aho.json'))['current_iteration'])" 2>/dev/null; or echo "unknown")
     set -l md_path (status dirname)/../artifacts/iterations/$iteration/mcp-readiness.md
-    printf '# MCP Fleet Readiness — %s\n\n' $iteration > $md_path
+    printf '# MCP Fleet Readiness - %s\n\n' $iteration > $md_path
     printf '**Date:** %s\n' (date -u +%Y-%m-%dT%H:%M:%SZ) >> $md_path
     printf '**Total:** %d | **Pass:** %d | **Fail:** %d\n\n' $total $passed $failed >> $md_path
     printf '| Server | CLI Smoke |\n' >> $md_path

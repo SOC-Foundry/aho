@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-probe-substrate — run the 13-fact substrate-freshness probe set
+# aho-probe-substrate - run the 13-fact substrate-freshness probe set
 # (W1 D4 of 0.3.1). Appends per-probe records to ~/.local/share/aho/observables.jsonl
 # and emits OTEL gauge aho.observable.last_verified_age_seconds.
 #

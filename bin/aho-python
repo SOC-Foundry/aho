@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-python — Python package installer wrapper.
+# aho-python - Python package installer wrapper.
 # Wraps pip install -e . and verifies aho CLI on PATH.
 # Subcommands: install, doctor
 
@@ -36,10 +36,10 @@ function _cmd_install
         return 1
     end
 
-    # Check file existence directly, not via fish's command cache —
+    # Check file existence directly, not via fish's command cache -
     # `command -q aho` was populated before pip just installed the binary
     # and returns false even though the file is reachable from a fresh shell.
-    # (0.2.18 W2 fix — install.fish step 3 false-failure mode.)
+    # (0.2.18 W2 fix - install.fish step 3 false-failure mode.)
     if not test -x $HOME/.local/bin/aho
         _error "aho CLI not found at $HOME/.local/bin/aho after install."
         return 1

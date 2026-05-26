@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-nemoclaw — wrapper for the NemoClaw orchestrator daemon.
+# aho-nemoclaw - wrapper for the NemoClaw orchestrator daemon.
 
 set sock $HOME/.local/share/aho/nemoclaw.sock
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-openclaw — wrapper for the OpenClaw global daemon.
+# aho-openclaw - wrapper for the OpenClaw global daemon.
 # Connects to the Unix socket and dispatches commands.
 
 set sock /run/user/(id -u)/openclaw.sock

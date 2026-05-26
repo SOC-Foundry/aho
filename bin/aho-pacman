@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-pacman — Declarative native package manager wrapper.
+# aho-pacman - Declarative native package manager wrapper.
 # Reads from artifacts/harness/pacman-packages.txt.
 # Subcommands: list, status, install, doctor
 

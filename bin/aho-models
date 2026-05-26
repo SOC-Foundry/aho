@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# aho-models — Declarative Ollama model fleet wrapper.
+# aho-models - Declarative Ollama model fleet wrapper.
 # Reads from artifacts/harness/model-fleet.txt.
 # Subcommands: list, status, install, vet, doctor
 #
@@ -43,7 +43,7 @@ function _check_ollama
     end
     if not curl -s http://localhost:11434/api/tags >/dev/null 2>&1
         # Ollama runs as SYSTEM-level systemd (/etc/systemd/system/ollama.service),
-        # not user. Restart requires sudo. (0.2.15 W1 F008 / E2 — documented at
+        # not user. Restart requires sudo. (0.2.15 W1 F008 / E2 - documented at
         # Tier 1.)
         _gap "Ollama daemon not reachable at localhost:11434. Start it: sudo systemctl start ollama"
         return 1
@@ -142,7 +142,7 @@ function _cmd_vet
         _info "Vet $m ..."
         # num_predict=256 leaves budget for Qwen thinking-mode (which can
         # consume 150-200 tokens on a short response) plus a brief content
-        # reply. 32 tokens is too small — 0.2.16 W0 vet run saw Qwen emit
+        # reply. 32 tokens is too small - 0.2.16 W0 vet run saw Qwen emit
         # 0-char content with num_predict=32 because thinking exhausted the
         # budget.
         set -l body '{"model":"'$m'","messages":[{"role":"user","content":"Reply with the single word: OK"}],"stream":false,"options":{"num_predict":256}}'
@@ -156,10 +156,10 @@ try:
 except Exception:
     print(0)' 2>/dev/null)
         if test -z "$chars"; or test "$chars" = "0"
-            _warn "  $m emitted 0-char content — FAIL"
+            _warn "  $m emitted 0-char content - FAIL"
             set failures (math $failures + 1)
         else
-            _info "  $m emitted $chars chars — ok"
+            _info "  $m emitted $chars chars - ok"
         end
     end
     if test $failures -gt 0
