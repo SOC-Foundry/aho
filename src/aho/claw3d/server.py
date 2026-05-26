@@ -17,6 +17,7 @@ from aho.claw3d.aggregator import get_state
 from aho.claw3d.otel_aggregator import get_otel_state, get_workstream_detail
 from aho.council.status import collect_status
 from aho.claw3d.lego.renderer import render_council_svg
+from aho.claw3d.substrate_panel import get_substrate_state, render_substrate_html
 
 
 def create_handler(project_root: Path):
@@ -68,6 +69,18 @@ def create_handler(project_root: Path):
                 self.send_header("Content-Type", "image/svg+xml")
                 self.send_header("Access-Control-Allow-Origin", "http://127.0.0.1")
                 body = svg.encode("utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            elif self.path == "/api/substrate":
+                # W1 D5 of 0.3.1 — 13-fact substrate-freshness panel.
+                self._json_response(get_substrate_state())
+            elif self.path == "/substrate":
+                # W1 D5 of 0.3.1 — HTML brick grid renderer.
+                body = render_substrate_html().encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Access-Control-Allow-Origin", "http://127.0.0.1")
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)

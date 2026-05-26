@@ -1,0 +1,123 @@
+#!/usr/bin/env fish
+# aho-doctor — per-workstream pre-flight gateway. Closes F-0.3.1-W0-001
+# (W1 D3 of 0.3.1).
+#
+# Invokes install.fish --check, parses the per-step JSONL output, evaluates
+# the required-steps list for the calling workstream, exits 0 if all
+# required pass, non-zero with structured surface otherwise.
+#
+# Per W1 amendment §D3. Forward-only: W1 produces, W2 first dogfoods at D0.
+#
+# Usage:
+#   aho-doctor                              # report-only; uses --workstream W1 default
+#   aho-doctor --workstream W2              # check required steps for W2
+#   aho-doctor --required-steps id1,id2,…   # explicit override of required-step list
+#   aho-doctor --remediate                  # invoke install.fish --step <failed> on each fail
+#   aho-doctor --json                       # machine-readable output
+#
+# Exit codes:
+#   0    all required steps pass
+#   1    one or more required steps fail
+#   2    install.fish --check did not run cleanly (substrate gap upstream)
+#   3    no required steps known for the workstream (caller error)
+
+set -g script_name "aho-doctor"
+set -g project_root (dirname (dirname (realpath (status filename))))
+set -g jsonl_file "$HOME/.local/share/aho/install-state.jsonl"
+
+# Defaults
+set -g workstream "W1"
+set -g required_steps_override ""
+set -g do_remediate 0
+set -g json_output 0
+
+# Parse flags
+set -l expect_value ""
+for arg in $argv
+    switch $arg
+        case --workstream
+            set expect_value workstream
+        case '--workstream=*'
+            set workstream (string replace -- '--workstream=' '' $arg)
+        case --required-steps
+            set expect_value required_steps_override
+        case '--required-steps=*'
+            set required_steps_override (string replace -- '--required-steps=' '' $arg)
+        case --remediate
+            set do_remediate 1
+        case --json
+            set json_output 1
+        case '*'
+            switch $expect_value
+                case workstream
+                    set workstream $arg
+                case required_steps_override
+                    set required_steps_override $arg
+                case '*'
+                    echo "[$script_name] unknown arg: $arg" >&2
+            end
+            set expect_value ""
+    end
+end
+
+# Required-step lists per workstream (per W1 amendment §D3).
+set -l required_steps ""
+if test -n "$required_steps_override"
+    set required_steps (string replace -a , " " -- $required_steps_override)
+else
+    switch $workstream
+        case W1
+            set required_steps "chromadb_importable ollama_running llama_3_2_3b_present nomic_embed_present broker_socket_present canonical_checkpoint_present python_sys_path_clean chromadb_collection_populated"
+        case W2
+            set required_steps "chromadb_importable ollama_running llama_3_2_3b_present nomic_embed_present broker_socket_present canonical_checkpoint_present python_sys_path_clean chromadb_collection_populated tier_json_present"
+        case W3
+            set required_steps "chromadb_importable ollama_running llama_3_2_3b_present nomic_embed_present broker_socket_present canonical_checkpoint_present python_sys_path_clean chromadb_collection_populated tier_json_present"
+    end
+end
+
+if test -z "$required_steps"
+    if test "$json_output" -eq 1
+        echo '{"error": "no required-steps known", "workstream": "'$workstream'"}'
+    else
+        echo "[$script_name ERROR] no required-steps known for workstream $workstream; pass --required-steps explicitly" >&2
+    end
+    exit 3
+end
+
+# Run install.fish --check to refresh JSONL.
+$project_root/install.fish --check > /dev/null 2>&1
+
+if not test -f $jsonl_file
+    if test "$json_output" -eq 1
+        echo '{"error": "install-state.jsonl absent", "jsonl_file": "'$jsonl_file'"}'
+    else
+        echo "[$script_name ERROR] install-state.jsonl not produced by install.fish --check" >&2
+    end
+    exit 2
+end
+
+# Hand off to the python evaluator. Pass required-step list + workstream + json flag via env.
+set -x AHO_DOCTOR_JSONL $jsonl_file
+set -x AHO_DOCTOR_REQUIRED $required_steps
+set -x AHO_DOCTOR_WORKSTREAM $workstream
+set -x AHO_DOCTOR_JSON_OUT $json_output
+set -x AHO_DOCTOR_FAILED_LIST_OUT /tmp/aho-doctor-failed-$fish_pid.txt
+
+PYTHONPATH=$project_root/src python3 $project_root/bin/_aho_doctor_eval.py
+set -l py_exit $status
+
+# Remediate cascade if requested + failures present.
+if test $do_remediate -eq 1; and test $py_exit -ne 0; and test -f $AHO_DOCTOR_FAILED_LIST_OUT
+    for sid in (cat $AHO_DOCTOR_FAILED_LIST_OUT)
+        if test -n "$sid"
+            echo "[$script_name] remediating step $sid"
+            $project_root/install.fish --step $sid > /dev/null 2>&1
+        end
+    end
+    rm -f $AHO_DOCTOR_FAILED_LIST_OUT
+    # Re-probe via fresh --check + re-parse (recursion via exec).
+    exec $project_root/bin/aho-doctor --workstream $workstream
+end
+
+rm -f $AHO_DOCTOR_FAILED_LIST_OUT
+exit $py_exit

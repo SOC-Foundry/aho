@@ -1,0 +1,20 @@
+#!/usr/bin/env fish
+# aho-probe-substrate — run the 13-fact substrate-freshness probe set
+# (W1 D4 of 0.3.1). Appends per-probe records to ~/.local/share/aho/observables.jsonl
+# and emits OTEL gauge aho.observable.last_verified_age_seconds.
+#
+# Usage:
+#   aho-probe-substrate                    Probe all 13 facts on all hosts
+#   aho-probe-substrate --summary          Plain summary instead of JSON list
+#   aho-probe-substrate --fact <id>        Probe one fact only
+#   aho-probe-substrate --host <hostname>  Probe one host only
+#
+# Cross-host probes via Tailscale SSH; host_unreachable is a distinct
+# outcome class and does NOT halt.
+
+set -g script_name "aho-probe-substrate"
+set -g project_root (dirname (dirname (realpath (status filename))))
+
+cd $project_root
+set -x PYTHONPATH "$project_root/src" $PYTHONPATH
+exec python3 -m aho.substrate_probes $argv

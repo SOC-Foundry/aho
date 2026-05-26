@@ -968,3 +968,89 @@ hold the full disposition text; entries below are the index.
   - Target: 0.3.1 launch (early base-tier hygiene fix, ~5min including .gitignore edit + cached-untrack)
   - Source: 0.2.17 post-W6-close iteration-close audit (drafter chat-side)
   - Audit traceability: Not in any sealed audit archive — surfaced post-W6 close in chat. W6 close note signed by operator at 2026-05-04T05:12:27Z; this carry-forward post-dates the close.
+
+## Target: 0.3.1 W1-W7 + 0.3.2+
+
+- **F-0.3.1-W0-001 — Drafter substrate prerequisite gap — W0 prompt assumed inherited substrate without explicit pre-flight verification**
+  - Severity: important
+  - W0 prompt (drafter, claude-web) assumed a8cos had inherited NZXTcos's substrate via install.fish but did not include an explicit pre-flight substrate-verification step in the W0 sequence. Surfaced as chromadb-absent halt during D9 first invocation. The W0_audit.py template ported from 0.2.18 ran on NZXTcos host Python where chromadb was substrate-resident; a8cos host Python (python3.14) had no chromadb at session start.
+  - Mechanism: Drafter authored W0 prompt without auditing a8cos's host Python dependency state. During arbitration, drafter retracted the W0 prompt's over-broad Pillar 11 interpretation: Pillar 11 scope is git operations only, plus secret decryption, /etc/sudoers, customer-lane crossings, hardware procurement, disruptive reboots. Substrate component installation is executor scope going forward across 0.3.1.
+  - Disposition: Every future W prompt includes a D0 substrate-verification deliverable that probes required components (chromadb, ollama models present, broker socket, audit dependencies importable) before any other work. Drafter chat-side process improvement applied retroactively to remaining 0.3.1 workstreams (W1-W7) and canonical pattern for 0.3.2+. Structural closure via install.fish --check mode at W1/W2 substrate-freshness work.
+  - Target: 0.3.1 W1-W7 + 0.3.2+
+  - Source: 0.3.1 W0 D9 first-invocation halt (acceptance/W0.json sha ab37497914bb9b194e7434138bd88a9d3a1278185d1cb37dd11836983731a7ff deliverables[D9].initial_halt_record) + drafter arbitration 2026-05-24
+
+## Target: 0.3.1 W1
+
+- **F-0.3.1-W0-002 — ChromaDB iteration-context collection empty post-install; RAG enrichment returns all-unverified until bootstrap**
+  - Severity: important
+  - W0 D9 audit emitted with rag_enrichment.registered_count=0 against rag_enrichment.detected_count=26. ChromaDB importable (post-install) but collection contains zero documents. Every detected reference (D1-D9, ADR-0007/0009/0011/0012, F-0.2.17-* and F-0.2.18-* carry-forwards) returned status=unverified.
+  - Mechanism: chromadb pip install creates the python module but does NOT ingest the canonical artifact set (carry-forwards-0.2.16.md, plan-docs, ADRs, close-notes) into the project collection. RAG enrichment in aho.council.audit_ref_lookup queries the empty collection and returns 0 hits per reference. Distinguishable from F-0.2.17-W6-001 (lookup-ranking-on-opaque-IDs) by: W6-001 returns SOME registered refs from a populated collection; W0-002 returns ZERO registered refs because the collection itself is empty.
+  - Disposition: 0.3.1 W1 substrate-freshness scope expands to include `aho rag bootstrap` (or equivalent) deliverable that ingests the canonical artifact set on a fresh chromadb install. Closure verified when W1 self-audit RAG enrichment shows registered_count > 0 for known-registered IDs (e.g., F-0.2.17-W1-003).
+  - Target: 0.3.1 W1
+  - Source: 0.3.1 W0 D9 self-audit (audit/W0.json sha 9749cfed8fd5268e0facf36915459f616200e7c43de21ff778f75f9e83115e14 F1 finding 'ADR-0011 unverified status echo')
+  - Audit traceability: audit/W0.json findings[1] id=ADR-0011 severity=important; rag_enrichment.unverified_count == rag_enrichment.detected_count == 26 (empty-collection signature)
+
+## Target: 0.3.1 W1 (closed)
+
+- **F-0.2.18-W1-004 — Substrate decoherence — closed by 0.3.1 W1 D4 telemetry implementation**
+  - Severity: important
+  - 0.2.18 W1: tailnet FQDN nzxtcos.tail78a311.ts.net baked into image at W0 probe time; tailnet rolled (a8 host rebuilt); seven days later W2 pre-flight tripped on stale FQDN; unscheduled image rebuild triggered. Closure target moved to 0.3.1 W1 substrate-freshness telemetry per ADR-0011 lightweight tier.
+  - Mechanism: Closure: 0.3.1 W1 D4 ships src/aho/observability.py (record_observable, last_verified_age_seconds, snapshot_all_facts) + src/aho/substrate_probes.py (13 fact probes including tailnet_domain) + bin/aho-probe-substrate fish wrapper + OTEL gauge aho.observable.last_verified_age_seconds + dashboard /api/substrate JSON + /substrate HTML brick grid. Tailnet-FQDN closure invariant verified on a8cos: probe shows last_verified_age_seconds < 1h after fresh probe (tail8492.ts.net, the post-incident tailnet domain). install.fish step substrate_facts_probed_recently invokes the probe set when observables.jsonl mtime > 24h.
+  - Disposition: Closed structurally. Re-decoherence detection now telemetry-driven: any stale fact older than its warning_age_seconds threshold surfaces in red on the dashboard brick grid + summary tile (stale_count > 0).
+  - Target: 0.3.1 W1 (closed)
+  - Source: 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D4] evidence
+  - Audit traceability: D8 self-audit (audit/W1.json sha 3a2c456d0f964ce94a26517eaf1e5b779f0521d0e0c29ce37cec1b3e79d4fe3d) rag_enrichment confirms F-0.2.18-W1-004 referenced and resolved during enrichment.
+- **F-0.3.1-W0-001 — Drafter substrate-prerequisite gap — closed by 0.3.1 W1 D3 aho-doctor wrapper**
+  - Severity: important
+  - 0.3.1 W0 D9 first-invocation halt: drafter authored W0 prompt without auditing a8cos host Python dependency state. chromadb absent surfaced as halt-and-surface; drafter retracted over-broad Pillar 11 interpretation (git-only scope going forward) and authorized executor-side substrate component installation.
+  - Mechanism: Closure: 0.3.1 W1 D3 ships bin/aho-doctor fish wrapper + bin/_aho_doctor_eval.py internal evaluator. Signature: aho-doctor --workstream W1|W2|W3 [--required-steps id_list] [--remediate] [--json]. Invokes install.fish --check, parses 19-step JSONL output, evaluates per-workstream required-step list, exits 0 if all pass / 1 if any fail / 2 if substrate-gap upstream / 3 if unknown workstream. Forward-only deployment: W2 first dogfoods at D0.
+  - Disposition: Closed structurally. install.fish --check is the canonical pre-flight surface across every W's D0. Per-workstream required-step lists documented in aho-doctor source. W0 D9 chromadb-absent class of failure now caught structurally before any substantive work.
+  - Target: 0.3.1 W1 (closed)
+  - Source: 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D3] evidence + D8 drafter arbitration
+  - Audit traceability: D8 self-audit referenced F-0.3.1-W0-001 in rag_enrichment registered set (20 of 28 detected refs resolved as registered including this one).
+- **F-0.3.1-W0-004 — Canonical-root .aho-checkpoint.json absent — closed by 0.3.1 W1 D1 install.fish step**
+  - Severity: important
+  - 0.3.1 W0 workstream_complete emit: find_project_root() correctly returned ~/Development/Projects/socfoundry/aho but no .aho-checkpoint.json existed at that path. emit_workstream_complete's checkpoint-advance code path short-circuited on ckpt_path.exists() check (fail-soft); event landed in event log but per-workstream completion state did not advance. Legacy stale checkpoint at /home/kthompson/dev/projects/aho/.aho-checkpoint.json (mtime 2026-05-16, iteration=0.2.16, W2=in_progress) untouched.
+  - Mechanism: Closure: 0.3.1 W1 D1 install.fish adds step canonical_checkpoint_present. Check: test -f $project_root/.aho-checkpoint.json. Remediation: python writer that generates initial-state checkpoint per existing schema (iteration / phase / run_type / current_workstream / workstreams / executor / auditor / started_at / status / proceed_awaited). Step runs after symlinks step; subsequent emit_workstream_complete invocations find the checkpoint and advance per-workstream state correctly.
+  - Disposition: Closed structurally. .aho-checkpoint.json now present at canonical project root with current iteration (0.3.1) / current workstream (W1) / status=active. Future emit_workstream_complete invocations advance per-workstream state.
+  - Target: 0.3.1 W1 (closed)
+  - Source: 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D1] evidence + canonical_checkpoint_present step in install.fish
+
+
+## Target: 0.3.1 W1 (closed; D8-verified)
+
+- **F-0.3.1-W0-002 — ChromaDB collection empty post-install — closed by 0.3.1 W1 D2 bootstrap; D8-verified**
+  - Severity: important
+  - 0.3.1 W0 D9 self-audit emitted with rag_enrichment.registered_count=0 against detected_count=26. ChromaDB importable (post-install) but collection contained zero documents. Every detected reference returned status=unverified.
+  - Mechanism: Closure: 0.3.1 W1 D2 ships bin/aho-rag-bootstrap fish wrapper + src/aho/rag/bootstrap.py Python module. Ingests canonical artifact set (carry-forwards files, plan-docs, close notes, iteration-close notes, ADRs, retrospectives) via existing aho.rag.index_artifact (upsert; idempotent). Subcommands: --dry-run / --rebuild / --json / --quiet. Bootstrap on a8cos: 52 of 53 artifacts indexed → 263 chunks; duration 175.9s; idempotent on re-run (263 → 263). install.fish step chromadb_collection_populated invokes the bootstrap as remediation.
+  - Disposition: Closed structurally AND verified operationally. D8 self-audit on this very W1 acceptance archive emitted with rag_enrichment.registered_count=20 (vs 0 at W0 D9 with the same audit primitive). 20/28 detected refs resolved as registered with non-null top_source_artifact_path. F-0.2.17-W1-003 + F-0.2.18-W2-004 + F-0.3.1-W0-002 + F-0.3.1-W0-001 + F-0.2.18-W0-008 all queried directly post-bootstrap return status=registered.
+  - Target: 0.3.1 W1 (closed; D8-verified)
+  - Source: 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D2] evidence + D8 audit archive (sha 3a2c456d0f964ce94a26517eaf1e5b779f0521d0e0c29ce37cec1b3e79d4fe3d) rag_enrichment.registered_count=20
+  - Audit traceability: D8 RAG enrichment shows 20 registered / 8 unverified out of 28 detected refs — the registered_count > 0 is the operational closure signal for this entry.
+
+## Target: 0.3.1 W2
+
+- **F-0.3.1-W0-003 — OTEL collector endpoint post-NZXTcos-decommission — W1 probe; W2 Beacon migration completes**
+  - Severity: important
+  - 0.3.1 W0 workstream_complete emit: OTLP span exports failed with StatusCode.UNAVAILABLE on 127.0.0.1:4317. NZXTcos decommissioned per CLAUDE.md §Deployment hosts; the OTEL collector substrate host moved off NZXTcos but no a8cos-local or alternate-host endpoint configured.
+  - Mechanism: Partial closure in W1: D4 ships substrate fact #2 (otel_collector_endpoint) as a 1h-warn-age probe. The probe currently reports fail because no a8cos-local OTLP receiver is running yet. The probe itself is the W1 telemetry surface — visibility into endpoint-reachability state lives in observables.jsonl + dashboard. Full closure in W2 via Beacon migration.
+  - Disposition: Partially closed in 0.3.1 W1 (probe + visibility). Full closure in 0.3.1 W2: extract beacon's otel/config.py + exporter.py + buffer.py pattern, copy into src/aho/observability/otlp_exporter.py, wire metrics + audit dispositions to beacon's gRPC endpoint over Tailscale per W2 plan-doc-amendment scope expansion Track 2 (Beacon integration) + Track 3 (OTEL endpoint migration). Fact #2 probe will flip from fail to ok post-W2.
+  - Target: 0.3.1 W2
+  - Source: 0.3.1 W0 close note + handoff brief observation 2 + 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D4] partial-closure section
+- **F-0.3.1-W0-005 — Legacy sys.path drift in editable-install metadata — W1 probe; W2 pip install -e re-install completes**
+  - Severity: important
+  - 0.3.1 W0 D9 substrate probe surfaced sys.path includes /home/kthompson/dev/projects/aho/src (legacy pre-migration path). Editable install at ~/.local/lib/python3.14/site-packages/aho-0.2.18.dist-info direct_url.json points at file:///home/kthompson/dev/projects/aho (legacy). Imports resolve correctly because executor probe scripts do sys.path.insert(0, str(ROOT/'src')) before importing aho, but the editable-install metadata is stale.
+  - Mechanism: Partial closure in W1: D4 ships substrate fact #13 (sys_path_clean) as a 1h-warn-age probe. The probe currently reports fail (legacy entry detected). install.fish step python_sys_path_clean is probe-only with no remediation defined — by design, W2 owns the remediation. Bin wrappers (aho-rag-bootstrap, aho-claw3d) work around in-band via PYTHONPATH prepending the canonical src/.
+  - Disposition: Partially closed in 0.3.1 W1 (probe + visibility). Full closure in 0.3.1 W2 Track 4: pip install --user --break-system-packages -e ~/Development/Projects/socfoundry/aho re-installs editable pointing at canonical path; verify post-install sys.path no longer includes legacy /home/kthompson/dev/projects/aho/src. Fact #13 probe will flip from fail to ok post-W2; per-wrapper PYTHONPATH workarounds can be removed in a subsequent cleanup pass.
+  - Target: 0.3.1 W2
+  - Source: 0.3.1 W0 handoff brief observation 3 + 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D4] partial-closure section
+
+## Target: 0.3.2 (peer to F-0.2.17-W6-001 retrieval-quality work) OR 0.3.1 W2 if chunking refinement is in scope (drafter to decide at W2 plan-doc-amendment time)
+
+- **F-0.3.1-W1-001 — D2 ingestion skip — single artifact chunk exceeded nomic-embed-text size cap**
+  - Severity: cosmetic
+  - During 0.3.1 W1 D2 bootstrap, 52 of 53 canonical artifacts indexed successfully. 1 artifact skipped: artifacts/iterations/0.2.17/iteration-close-0.2.17.md chunk-5 (out of 6 chunks) failed embed with HTTP 400 Bad Request from Ollama /api/embed. Cause: chunk content exceeds nomic-embed-text effective input size cap. Other 5 chunks of the same file did index successfully.
+  - Mechanism: aho.rag._chunk_text uses chunk_size=4000 with overlap=500. Per src/aho/rag/__init__.py docstring: nomic-embed-text in Ollama 0.20 caps around ~7000 chars for whitespace-heavy text and ~5000 for dense JSON. The 4000-char chunks usually fit but iteration-close-0.2.17.md chunk-5 evidently contained dense content that exceeded the embedder's tokenization budget. The bootstrap module's per-chunk try/except catches the embed failure, records the skip in result.skipped_paths, and continues — design works as intended.
+  - Disposition: Cosmetic visibility item. The artifact is partially queryable (5 of 6 chunks indexed). Closure could be tighter chunk sizing (3000 with 500 overlap) at bootstrap time, OR a per-chunk size guard that splits oversized chunks further before embedding. Not a structural defect; not a blocker for D8 closure gates. Track for visibility.
+  - Target: 0.3.2 (peer to F-0.2.17-W6-001 retrieval-quality work) OR 0.3.1 W2 if chunking refinement is in scope (drafter to decide at W2 plan-doc-amendment time)
+  - Source: 0.3.1 W1 acceptance archive (sha 76047d7768ed98062eea421c3c9abef1ca3cdccafa40067419795c8615ccf7ba) deliverables[D2].evidence; bootstrap result.skipped_paths in run-1 JSON output

@@ -5,5 +5,10 @@
 
 set -l project_root (dirname (dirname (realpath (status filename))))
 set -x AHO_PROJECT_ROOT $project_root
+# Prepend canonical src/ so the dashboard resolves against the canonical aho
+# package even when a legacy editable install at a pre-migration path shadows
+# it. W2 closes F-0.3.1-W0-005 by re-installing editable on the canonical
+# path; W1 wrappers work around in-band.
+set -x PYTHONPATH "$project_root/src" $PYTHONPATH
 
 python3 -m aho.claw3d.server

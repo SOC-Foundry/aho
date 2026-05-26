@@ -80,3 +80,82 @@ public/
 Screenshot_*.png
 Screenshot-*.png
 screenshot_*.png
+
+# ─────────────────────────────────────────────────────────────────────────
+# Deployment-private content — never track in a public-facing repo
+# ─────────────────────────────────────────────────────────────────────────
+#
+# These categories contain operator/host/customer/internal context (specific
+# hostnames, Tailscale IPs, lane paths, hardware fingerprints, customer
+# codenames, internal canonical artifacts). They are per-deployment or
+# chat-side staging artifacts, not part of the public product surface.
+#
+# To stop tracking files that are already in the index, run:
+#   git rm --cached <path>
+# then commit. .gitignore alone does not remove already-tracked files.
+
+# Per-deployment Claude Code drafter/executor operating instructions
+# (host fleet table, lane paths, operator identity, customer engagement notes)
+/CLAUDE.md
+/CLAUDE.md.*-archive
+/CLAUDE.md.bak
+/CLAUDE.md.bak.*
+
+# Per-deployment GEMINI.md (external-audit-slot operating instructions)
+/GEMINI.md
+
+# Top-level loose iteration narrative files (drafter chat-side, project-internal)
+/260*-*.md
+/aho-run-*.md
+
+# Tachtech-internal canonical artifacts — Chain of Trust, identity discipline,
+# multi-vault setup, organizational architecture deep-dives
+artifacts/tt-*.md
+artifacts/tteos-*.md
+
+# Pre-iteration drafter chat-side context (substrate facts, host fleet
+# inventory, deployment-time arbitration notes)
+artifacts/0.*-drafter-context.md
+artifacts/*-drafter-context.md
+
+# Drafter chat-side staging directories under iterations/ (CLAUDE.md
+# previews, plan-doc-amendments, executor handoff briefs, ADR drafts)
+artifacts/iterations/*/W*-drafter-outputs/
+artifacts/iterations/*/*-drafter-outputs/
+
+# Plan-doc amendments + executor-handoff briefs (drafter chat-side; contain
+# host references and substrate-state context not appropriate for public)
+artifacts/iterations/*/W*-plan-doc-amendment.md
+artifacts/iterations/*/W*-to-W*-handoff.md
+artifacts/iterations/*/handoff-*.md
+
+# Observability + architecture deep-dives that may reference internal infra
+# (Beacon overview, aho-quantum mockups, etc. — keep clean architectural
+# docs in docs/architecture/ instead)
+artifacts/observability/*-overview.md
+artifacts/observability/mockup-*.html
+artifacts/observability/aho-quantum-page-design.md
+
+# Probes under iterations/ — runtime scripts with hardcoded paths/hosts
+artifacts/iterations/*/probes/*-baseline.md
+
+# One-time-cleanup scripts that explicitly name internal filenames
+# (the script body lists deployment-private file paths; keep local-only)
+/bin/aho-untrack-private.fish
+/bin/aho-clean-commit-prep.fish
+/bin/aho-finalize-push-prep.fish
+/bin/aho-stage-sanitized.fish
+/bin/aho-finalize-and-push.fish
+
+# ─────────────────────────────────────────────────────────────────────────
+# Iteration record (0.3.x+) — keep local-only
+# ─────────────────────────────────────────────────────────────────────────
+# 0.3.x+ iteration tree contains host/operator/F-ID context across
+# acceptance + audit + close notes + plan-doc + probes. Sealed audit
+# archives cannot be sanitized in-place without breaking the sha-recorded
+# integrity convention. 0.1.x/0.2.x historical content already in public
+# history; 0.3.x+ stays local. Selectively un-gitignore individual files
+# if sanitized later.
+artifacts/iterations/0.3.*/
+artifacts/iterations/0.4.*/
+artifacts/iterations/0.5.*/
