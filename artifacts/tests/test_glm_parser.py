@@ -1,4 +1,4 @@
-"""W1 tests — GLM evaluator parser fix (0.2.13).
+"""W1 tests - GLM evaluator parser fix (0.2.13).
 
 Three test cases:
 1. Verified-good: clean JSON -> parser returns real dict

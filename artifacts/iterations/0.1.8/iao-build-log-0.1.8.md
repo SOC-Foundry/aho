@@ -1,4 +1,4 @@
-# Build Log — iao 0.1.8
+# Build Log - iao 0.1.8
 
 **Start:** 2026-04-10
 **Agent:** claude-code
@@ -9,7 +9,7 @@
 
 ---
 
-## W0 — Environment Hygiene
+## W0 - Environment Hygiene
 
 **Actions:**
 - Backed up 5 state files to ~/dev/projects/iao.backup-pre-0.1.8/
@@ -23,7 +23,7 @@
 
 ---
 
-## W1 — Base Harness Pillar Rewrite
+## W1 - Base Harness Pillar Rewrite
 
 **Actions:**
 - Replaced Trident mermaid block + Ten Pillars section in base.md with Eleven Pillars
@@ -36,7 +36,7 @@
 
 ---
 
-## W2 — run_report.py De-hardcoding
+## W2 - run_report.py De-hardcoding
 
 **Actions:**
 - Added `_load_pillars_from_base()` parser and `get_pillars()` cache accessor to run_report.py
@@ -44,13 +44,13 @@
 - Updated section header from "Ten Pillars" to "Eleven Pillars"
 - Fixed parser regex: `[^\n]*` instead of `.*` to prevent DOTALL cross-line header match
 - Added `check_pillars_parseable()` pre-flight check in preflight/checks.py
-- Added 6 unit tests in tests/test_run_report_pillars.py — all pass
+- Added 6 unit tests in tests/test_run_report_pillars.py - all pass
 
 **Discrepancies:** Initial regex used DOTALL `.*` in header pattern, causing it to span across lines and match wrong section content. Fixed on first retry.
 
 ---
 
-## W3 — evaluator.py and templates.py Regex Cleanup
+## W3 - evaluator.py and templates.py Regex Cleanup
 
 **Actions:**
 - Removed `PILLAR_ID_RE` definition and all usages from evaluator.py
@@ -65,10 +65,10 @@
 
 ---
 
-## W4 — Evaluator Wired to Synthesis Pass
+## W4 - Evaluator Wired to Synthesis Pass
 
 **Actions:**
-- Added `artifact_type` parameter to `evaluate_text()` — synthesis artifacts auto-reject on any retired pattern match
+- Added `artifact_type` parameter to `evaluate_text()` - synthesis artifacts auto-reject on any retired pattern match
 - Updated system prompt in loop.py: "TEN PILLARS" replaced with "ELEVEN PILLARS", use `pillars_block` key
 - Added `log_event("synthesis_evaluator_reject", ...)` calls in both two-pass and main loop paths
 - Added `artifact_type=f"{artifact}_synthesis"` to all evaluate_text calls in loop.py
@@ -80,7 +80,7 @@
 
 ---
 
-## W5 — §22 Instrumentation Expansion
+## W5 - §22 Instrumentation Expansion
 
 **Actions:**
 - Wired cli.py: log_event on every subcommand dispatch (source_agent=iao-cli)
@@ -96,19 +96,19 @@
 
 ---
 
-## W6 — W8 Agent Instrumentation Fix
+## W6 - W8 Agent Instrumentation Fix
 
 **Actions:**
 - Extracted `build_workstream_summary(checkpoint)` function in run_report.py
 - Added IAO_EXECUTOR env var fallback when per-workstream agent field is missing/null
 - Updated `log_workstream_complete` in logger.py to write agent to checkpoint on each completion
-- Added 3 unit tests: env fallback, checkpoint-preferred, no-unknown-agents — all pass
+- Added 3 unit tests: env fallback, checkpoint-preferred, no-unknown-agents - all pass
 
 **Discrepancies:** none
 
 ---
 
-## W7 — Baseline Updates for query_registry.py
+## W7 - Baseline Updates for query_registry.py
 
 **Actions:**
 - Verified known_hallucinations.json has 0 query_registry references (W3 cleaned)
@@ -120,10 +120,10 @@
 
 ---
 
-## W8 — Dogfood + Close
+## W8 - Dogfood + Close
 
 **Actions:**
-- Ran `./bin/iao iteration build-log 0.1.8` — Qwen synthesis was rejected by evaluator (W4 working as designed: caught retired pattern references in Qwen output). Qwen repeatedly generates content containing retired patterns despite instructions. Restored manual build log.
+- Ran `./bin/iao iteration build-log 0.1.8` - Qwen synthesis was rejected by evaluator (W4 working as designed: caught retired pattern references in Qwen output). Qwen repeatedly generates content containing retired patterns despite instructions. Restored manual build log.
 - Generated run report mechanically
 - 16/16 test suite passes
 

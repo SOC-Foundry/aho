@@ -1,6 +1,6 @@
 """MANIFEST.json generator and live-refresh daemon.
 
-0.2.10 W11 — Regenerates MANIFEST.json when harness or registry files change.
+0.2.10 W11 - Regenerates MANIFEST.json when harness or registry files change.
 Debounced at 5 seconds to prevent storm during bulk writes.
 """
 import hashlib

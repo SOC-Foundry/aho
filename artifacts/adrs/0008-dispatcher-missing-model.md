@@ -1,10 +1,10 @@
-# ADR 0008 — Dispatcher Behavior on Missing Model Family
+# ADR 0008 - Dispatcher Behavior on Missing Model Family
 
 **Status:** Accepted
 **Date:** 2026-05-01
 **Iteration of record:** aho 0.2.16 W4
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — dispatcher routing semantics
+**Context surface:** aho project-internal - dispatcher routing semantics
 under tiered containerized deployment. Binds 0.2.17 W3 dispatcher work.
 
 ---
@@ -27,22 +27,22 @@ moment 0.2.17 ships a base-tier container to NZXTcos: a request for
 The dispatcher needs a defined behavior for this case. Four options
 are on the table:
 
-**Option A — Hard error.**
+**Option A - Hard error.**
 Dispatcher refuses the request and raises `ModelNotAvailableError`
 (new typed exception, G083-compliant). The caller decides how to
 recover.
 
-**Option B — Local fallback.**
+**Option B - Local fallback.**
 Dispatcher routes the request to the nearest-available local model
 (by some defined nearness metric), logs a degradation warning, and
 returns the fallback's output to the caller.
 
-**Option C — Cloud route.**
+**Option C - Cloud route.**
 Dispatcher routes the request to a configured remote endpoint that
 hosts the missing model (a cloud-tier serving plane). The caller is
 unaware that the dispatch went off-host.
 
-**Option D — Hybrid (development affordance).**
+**Option D - Hybrid (development affordance).**
 On the host running aho's container, base-tier dispatches go to the
 container's bundled Ollama. Partial- or full-tier dispatches escape
 the container via the host network and reach the host's *native*
@@ -56,7 +56,7 @@ characteristics; they are not freely substitutable.
 A second forcing constraint: 0.2.17 development happens on NZXTcos,
 which is a base-tier *container host* but has historically run
 partial-tier models on the bare host. That bare-host capability does
-not vanish when the container is introduced — the operator still
+not vanish when the container is introduced - the operator still
 wants to do partial-tier development work on NZXTcos. If the
 container can only ever dispatch to base-tier models, partial-tier
 development requires leaving the container, which defeats the
@@ -66,8 +66,8 @@ container's value during the iteration that introduces it.
 
 ### Production deployment: Option A (hard error)
 
-In production deployment — i.e., the container is running on a host
-where `AHO_DISPATCH_HYBRID_MODE` is **unset** — the dispatcher
+In production deployment - i.e., the container is running on a host
+where `AHO_DISPATCH_HYBRID_MODE` is **unset** - the dispatcher
 hard-errors on a request for a model family the host's tier bundle
 does not include.
 
@@ -108,7 +108,7 @@ docker-host alias for Docker). Specifically:
    off-container hop.
 3. If hybrid mode is set but the host's Ollama also lacks the
    family, the dispatcher hard-errors with `ModelNotAvailableError`
-   the same as production behavior — hybrid mode is not a magic
+   the same as production behavior - hybrid mode is not a magic
    wand, it is a development affordance for operator-configured
    host state.
 
@@ -117,15 +117,15 @@ docker-host alias for Docker). Specifically:
 Both behaviors above can be overridden at the dispatch call site
 via an explicit parameter:
 
-- `dispatch(..., on_missing="error")` — production semantics
+- `dispatch(..., on_missing="error")` - production semantics
   regardless of env var.
-- `dispatch(..., on_missing="fallback")` — opt into Option B
-  (local fallback, future work — not implemented in 0.2.17, see
+- `dispatch(..., on_missing="fallback")` - opt into Option B
+  (local fallback, future work - not implemented in 0.2.17, see
   carry-forward below).
-- `dispatch(..., on_missing="cloud")` — opt into Option C (cloud
-  route, future work — not implemented in 0.2.17, see
+- `dispatch(..., on_missing="cloud")` - opt into Option C (cloud
+  route, future work - not implemented in 0.2.17, see
   carry-forward below).
-- `dispatch(..., on_missing="hybrid")` — opt into Option D
+- `dispatch(..., on_missing="hybrid")` - opt into Option D
   regardless of env var (used in tests to assert hybrid-mode
   routing).
 - Default (no parameter): respect `AHO_DISPATCH_HYBRID_MODE` env
@@ -182,11 +182,11 @@ carries a new resource attribute `aho.deployment.mode` with values
 in `{development, production}`. The value flows from the tier
 manifest's `deployment_mode` field, which install.fish populates:
 
-- **development** — install.fish was invoked on a developer
+- **development** - install.fish was invoked on a developer
   workstation (interactive shell, hybrid mode permitted, base- or
   partial-tier host). NZXTcos and tsP3 fall in this category for
   0.2.17 / 0.3.x.
-- **production** — install.fish was invoked in a CI/registry-build
+- **production** - install.fish was invoked in a CI/registry-build
   context (non-interactive, `AHO_INSTALL_PRODUCTION=1` set, or run
   from a deployment automation harness). Cloud-tier hosts and any
   host that ships customer-facing workflows fall in this category.
@@ -200,7 +200,7 @@ the conjunction
 `aho.dispatch.hybrid=true AND aho.deployment.mode=production`.
 
 install.fish self-detection logic for development vs. production is
-out of this ADR's scope — likely a combination of
+out of this ADR's scope - likely a combination of
 `AHO_INSTALL_PRODUCTION=1` env, TTY check, and an explicit
 `--production` flag. The contract this ADR fixes is the
 **resource-attribute taxonomy** and the **manifest field name**;
@@ -213,7 +213,7 @@ Three layers of defense against `AHO_DISPATCH_HYBRID_MODE` leaking
 into a production deployment:
 
 1. **Startup logging.** The container entrypoint logs the value of
-   `AHO_DISPATCH_HYBRID_MODE` at startup — visible in the
+   `AHO_DISPATCH_HYBRID_MODE` at startup - visible in the
    container's stdout and in OTEL events.
 
 2. **Production deployment runbook assertion.** Production deployment
@@ -232,7 +232,7 @@ into a production deployment:
 
 A hybrid-mode-enabled container running in production is therefore
 detectable by inspection (layer 1), gated by procedure (layer 2),
-and ready to be alertable (layer 3) — no silent failure path.
+and ready to be alertable (layer 3) - no silent failure path.
 
 ## Rationale
 
@@ -241,7 +241,7 @@ and ready to be alertable (layer 3) — no silent failure path.
 
 The hard-error production posture is a Pillar 8 / Pillar 9 alignment.
 A base-tier production host getting a partial-tier dispatch request
-is, in production, a real incident — a workflow has been deployed
+is, in production, a real incident - a workflow has been deployed
 to the wrong host or a workflow is requesting capability the host
 class is not provisioned for. Silently falling back to the
 nearest-available local model substitutes a quietly-wrong answer
@@ -253,12 +253,12 @@ risk of substituting a smaller model for a larger one without the
 caller knowing is the same class of risk that the harness
 explicitly rejects in its acceptance discipline. A 4B model
 classifying as a 9B model would breach Pillar 7's
-generation-vs-evaluation separation in subtle ways — for example,
+generation-vs-evaluation separation in subtle ways - for example,
 an Auditor request silently routed to a Producer-class model
 because the Auditor model is missing.
 
 Option C (cloud route) is the right answer in production *eventually*
-— Phase C / 0.3.x — but it requires a cloud serving plane that does
+- Phase C / 0.3.x - but it requires a cloud serving plane that does
 not exist today. Pre-implementing the cloud-route option in 0.2.17
 would require either mocking the cloud endpoint (which adds
 complexity for zero deployment value) or pretending the option
@@ -287,7 +287,7 @@ reserved.
 
 ### Positive
 
-- Dispatcher behavior on missing models is *defined* — currently
+- Dispatcher behavior on missing models is *defined* - currently
   the question has no documented answer.
 - Production base-tier deployments fail loudly when asked for
   capability they don't have. Loud failures land in the gotcha
@@ -296,14 +296,14 @@ reserved.
   via the hybrid mode, without the iteration's central deliverable
   (the container) being a barrier to routine development.
 - Pillar 7 (generation vs. evaluation separation) is preserved
-  without runtime ambiguity — a missing Auditor model is a hard
+  without runtime ambiguity - a missing Auditor model is a hard
   error, not a quiet swap to a Producer model.
 - Future fallback (Option B) and cloud-route (Option C)
   implementations have a parameter slot pre-reserved; adding them
   is an extension, not a redesign.
 - Tier manifest at `/opt/aho/tier.json` becomes a first-class
   artifact that other parts of the harness (dashboard, alerting,
-  installer self-test) can also consume — single source of truth
+  installer self-test) can also consume - single source of truth
   for "what tier am I."
 
 ### Negative
@@ -338,7 +338,7 @@ reserved.
 ### Neutral
 
 - Override parameter (`on_missing=...`) is implemented as a
-  no-op for `fallback` and `cloud` values in 0.2.17 — they raise
+  no-op for `fallback` and `cloud` values in 0.2.17 - they raise
   `NotImplementedError` and are reserved for future ADRs that
   define their behavior. Test coverage asserts the
   `NotImplementedError` to lock the contract.
@@ -346,7 +346,7 @@ reserved.
   amend it; the manifest version field is reserved (not added in
   0.2.17, but the dispatcher's manifest-load is forward-compatible
   with an optional `version` key).
-- Hybrid mode does not change Pillar 11 — the dispatcher still
+- Hybrid mode does not change Pillar 11 - the dispatcher still
   does not write secrets, still does not commit, still does not
   push. Hybrid is a routing decision, not a privilege escalation.
 
@@ -366,7 +366,7 @@ reserved.
   uniform hard-error.
 - **Dispatcher-side tier upgrade detection.** If install.fish
   pulls a new model post-container-start, the dispatcher
-  re-reads the manifest on SIGHUP — but there is no automatic
+  re-reads the manifest on SIGHUP - but there is no automatic
   notification from install.fish to the container. That
   interaction is a 0.2.17 W3 implementation detail, not an
   architectural decision; this ADR does not pre-decide it.
@@ -385,7 +385,7 @@ reserved.
 
 ## Alternatives Considered
 
-### Pure Option A — hard error in all modes
+### Pure Option A - hard error in all modes
 
 Drop the hybrid affordance entirely; dispatcher always
 hard-errors on missing models. Operators developing partial-tier
@@ -397,7 +397,7 @@ routine partial-tier work undermines the iteration. Explicit
 hybrid mode with leak mitigation is strictly better than a
 silent context-switch convention.
 
-### Pure Option B — silent local fallback
+### Pure Option B - silent local fallback
 
 Dispatcher routes to nearest-available family with a logged
 warning; never hard-errors.
@@ -408,7 +408,7 @@ cascade on a base-tier host and gets a Producer-class model
 back without the warning being visible at the harness level
 ships a broken Pillar 7 result without knowing it.
 
-### Pure Option C — always cloud-route
+### Pure Option C - always cloud-route
 
 Dispatcher always routes to a remote endpoint; local Ollama is
 a build-only optimization.
@@ -476,22 +476,22 @@ following become true:
 
 ## References
 
-- `artifacts/adrs/0007-containerization-architecture.md` — tier
+- `artifacts/adrs/0007-containerization-architecture.md` - tier
   classification this ADR's behavior depends on.
-- `artifacts/adrs/0006-iteration-deliverable-discipline.md` — the
+- `artifacts/adrs/0006-iteration-deliverable-discipline.md` - the
   0.2.17 graduation criterion explicitly invokes
   `AHO_DISPATCH_HYBRID_MODE=1` to validate this ADR's hybrid
   branch.
-- `src/aho/pipeline/dispatcher.py` — implementation site for
+- `src/aho/pipeline/dispatcher.py` - implementation site for
   `ModelNotAvailableError`, manifest read, hybrid-mode branch.
   0.2.17 W3 work.
-- `install.fish` — produces `/opt/aho/tier.json` or its host-path
+- `install.fish` - produces `/opt/aho/tier.json` or its host-path
   equivalent. 0.2.17 W2 work.
-- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` §W3 — calls
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` §W3 - calls
   this ADR's behavior as the W3 acceptance.
-- 0.2.15 dispatcher work — `MODEL_FAMILY_CONFIG`, longest-prefix
+- 0.2.15 dispatcher work - `MODEL_FAMILY_CONFIG`, longest-prefix
   family resolution; the manifest's `families` list maps to
   `MODEL_FAMILY_CONFIG` keys.
-- `artifacts/harness/base.md` §The Eleven Pillars — pillar 7
+- `artifacts/harness/base.md` §The Eleven Pillars - pillar 7
   (generation vs. evaluation separation) is the primary
   constraint that motivates the hard-error production posture.

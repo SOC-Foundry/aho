@@ -1,4 +1,4 @@
-"""W2 D9 / D10 — audit replay against sealed W0 / W1 archives.
+"""W2 D9 / D10 - audit replay against sealed W0 / W1 archives.
 
 Llama3.2 audits the sealed acceptance archive(s) independently. Result is
 compared structurally to Gemini's sealed audit.
@@ -123,14 +123,14 @@ def _topical_overlap_findings(
     """
     def tokens(text: str) -> set[str]:
         norm = _normalise(text)
-        # Pull alphabetic tokens of length >= 4 — drop common stopwords.
+        # Pull alphabetic tokens of length >= 4 - drop common stopwords.
         toks = {t for t in norm.split() if len(t) >= 4}
         return toks - {"that", "this", "with", "from", "have", "been",
                        "into", "more", "than", "such", "they", "will",
                        "there", "these", "their", "what", "when",
                        "would", "could", "should", "must"}
 
-    # Anchor patterns — letter/digit IDs that often co-occur across audits.
+    # Anchor patterns - letter/digit IDs that often co-occur across audits.
     anchor_re = re.compile(r"\b(?:AF\d+|AF-[0-9.]+|F-[0-9.\-A-Za-z]+|B[0-9.]+|D\d+|W\d+|G\d+)\b")
     out: List[Dict[str, Any]] = []
     for lf in l_findings:
@@ -194,7 +194,7 @@ def compare_audits(
     novel_llama_findings = [o for o in overlaps if not o["overlap_with_gemini"]]
 
     # Substantive-keyword coverage gap (Pillar 11 / secrets / git-ops).
-    # Only fires when there are NOVEL findings — keyword asymmetry on
+    # Only fires when there are NOVEL findings - keyword asymmetry on
     # already-overlapping findings is stylistic framing, not substantive.
     g_text_blob = " | ".join(f["description"] for f in g_findings)
     l_text_blob = " | ".join(f["description"] for f in l_findings)
@@ -321,7 +321,7 @@ def replay(workstream: str) -> Dict[str, Any]:
 
     print(f"[{workstream}] running llama audit (artifact size: {len(artifact)} chars)…",
           flush=True)
-    # Small-model schema violations are nondeterministic — retry up to 3
+    # Small-model schema violations are nondeterministic - retry up to 3
     # times before treating the malformed output as a real halt signal.
     last_exc = None
     llama_disp = None

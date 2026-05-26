@@ -1,4 +1,4 @@
-# aho 0.2.7 — Decisions
+# aho 0.2.7 - Decisions
 
 **Captured:** 2026-04-11
 **Source:** Kyle's responses to design doc open questions
@@ -15,27 +15,27 @@
 **Minimum viable dashboard:** banner + components matrix + daemon health = 3 sections.
 
 **Defer order (cut from end if W4 runs long):**
-1. Section 6 (model fleet) — defer first, covered by `bin/aho-models doctor`
-2. Section 5 (MCP fleet) — defer second, covered by `bin/aho-mcp list`
-3. Section 4 (recent traces) — defer third
+1. Section 6 (model fleet) - defer first, covered by `bin/aho-models doctor`
+2. Section 5 (MCP fleet) - defer second, covered by `bin/aho-mcp list`
+3. Section 4 (recent traces) - defer third
 
 **Floor:** If W4 cannot deliver 3 sections, dashboard ships as 0.2.8. 0.2.7 ships backend-only (W1+W2+W3+W5+W6+W7+W8).
 
-## 2. Components audit — fix vs document
+## 2. Components audit - fix vs document
 
 **DOCUMENT (do not fix in 0.2.7):**
-- chromadb — transitive python dep via pip step 3
-- opentelemetry-api/sdk/exporter — transitive python deps
-- All python_module entries — install transitively with the package
+- chromadb - transitive python dep via pip step 3
+- opentelemetry-api/sdk/exporter - transitive python deps
+- All python_module entries - install transitively with the package
 
 **FIX:**
-- brave-integration — real configuration step, W5 wires it via orchestrator.json
+- brave-integration - real configuration step, W5 wires it via orchestrator.json
 - Any external_service declared but not installable from install.fish (predicted: zero)
 - Any agent/daemon in components.yaml but not in bin/aho-systemd install list (predicted: zero)
 
 **Document policy:** each "document" row gets one-line "installed via: pip transitive" note. Not a TODO, not a defect.
 
-## 3. Brave token entry — interactive prompt
+## 3. Brave token entry - interactive prompt
 
 Use interactive prompt. Token is short, single-line, low risk.
 
@@ -50,7 +50,7 @@ Use interactive prompt. Token is short, single-line, low risk.
 
 Test path: `printf 'fake_token_value\n' | bin/aho-secrets-init --add-brave-token`
 
-## 4. Engine field — reserved metadata only
+## 4. Engine field - reserved metadata only
 
 0.2.7 writes, reads, and validates the field. No behavior changes. Default: "gemini".
 
@@ -61,7 +61,7 @@ orchestrator-config.md must include verbatim:
 
 **Cut order (first thing cut first):**
 1. Dashboard sections 4, 5, 6 (traces, MCP, models)
-2. W4 entirely (Flutter UI) — ship backend-only with curl+jq
+2. W4 entirely (Flutter UI) - ship backend-only with curl+jq
 3. W6/W7/W8 carry-forwards stay regardless
 
 **Do not cut:**

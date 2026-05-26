@@ -1,4 +1,4 @@
-"""0.2.18 W2 — invoke the council audit primitive against acceptance/W2.json.
+"""0.2.18 W2 - invoke the council audit primitive against acceptance/W2.json.
 
 Mirrors probes/W0_audit.py + W1_audit.py. WORKSTREAM is the only structural change.
 """

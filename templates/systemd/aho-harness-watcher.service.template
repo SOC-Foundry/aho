@@ -8,6 +8,9 @@ ExecStart=/usr/bin/python -m aho.agents.roles.harness_agent --watch %h/.local/sh
 Restart=on-failure
 RestartSec=5
 Environment=AHO_OTEL_DISABLED=0
+# OTLP endpoint + auth + resource attrs from the deployment-private env-file.
+# Leading - makes it optional: no failure if the file is absent.
+EnvironmentFile=-%h/.config/aho/beacon.env
 
 [Install]
 WantedBy=default.target

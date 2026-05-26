@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/dart.fish — CLI health check for dart mcp-server (official Dart/Flutter MCP)
+# mcp-smoke/dart.fish - CLI health check for dart mcp-server (official Dart/Flutter MCP)
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 #
 # Note: dart mcp-server requires stdin to stay open while it processes.

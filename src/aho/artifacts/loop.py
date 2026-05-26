@@ -173,7 +173,7 @@ def generate_section(section: dict, seed: dict, context: str, artifact_type: str
 
 def assemble_from_sections(sections_text: List[str], artifact_type: str, metadata: dict) -> str:
     """Concatenate sections into a single document."""
-    header = f"# {metadata.get('prefix', 'aho')} {artifact_type} — {metadata.get('iteration')}\n\n"
+    header = f"# {metadata.get('prefix', 'aho')} {artifact_type} - {metadata.get('iteration')}\n\n"
     return header + "\n\n".join(sections_text)
 
 
@@ -282,7 +282,7 @@ def run_artifact_loop(
 
         if dry_run:
             text = (
-                f"# DRY RUN — {artifact} for iteration {iteration}\n\n"
+                f"# DRY RUN - {artifact} for iteration {iteration}\n\n"
                 f"prompt length: {len(prompt)} chars\n"
             )
             if output_path is None:
@@ -310,7 +310,7 @@ def run_artifact_loop(
                     output_path=existing,
                     words=len(text.split()),
                     ok=True,
-                    message=f"immutable — using existing {existing.name} (ADR-012)",
+                    message=f"immutable - using existing {existing.name} (ADR-012)",
                 )
 
         client = client or QwenClient()

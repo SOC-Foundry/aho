@@ -1,4 +1,4 @@
-"""serve — `aho serve` ready-and-waiting mode for the W1 container.
+"""serve - `aho serve` ready-and-waiting mode for the W1 container.
 
 Sequence at start:
   1. Install SIGTERM/SIGINT handlers (aho.signal).
@@ -40,7 +40,7 @@ def _probe_council_imports_ok() -> bool:
 
 
 def _probe_secrets_broker_reachable() -> bool:
-    """Soft probe — broker reachability is required for FULL readiness, but
+    """Soft probe - broker reachability is required for FULL readiness, but
     we do not block start on the broker being absent (tests may not start it).
     Caller can disable this probe via AHO_REQUIRE_BROKER=0.
     """
@@ -94,7 +94,7 @@ def serve_main(argv: Optional[list[str]] = None) -> int:
         sys.stdout.flush()
     except tier_detect.TierDetectError as exc:
         sys.stderr.write(f"tier-detect failed: {exc}\n")
-        # Mark complete with a default of base — base-tier is the safe assumption.
+        # Mark complete with a default of base - base-tier is the safe assumption.
         _State.tier = "base"
         _State.tier_detect_complete = True
 

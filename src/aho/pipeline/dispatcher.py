@@ -1,4 +1,4 @@
-"""Pipeline dispatcher — Ollama HTTP API with multi-model support (0.2.15 W2).
+"""Pipeline dispatcher - Ollama HTTP API with multi-model support (0.2.15 W2).
 
 Direct Ollama dispatch for cascade pipeline via /api/chat endpoint.
 Per-model-family configuration: stop tokens, num_gpu, num_predict, and
@@ -7,9 +7,9 @@ for transient failures. Specific error types for each failure mode.
 
 History:
 - 0.2.14 W1.5: switched from /api/generate to /api/chat (template fix)
-- 0.2.15 W2: multi-model hardening — per-family config, error types,
+- 0.2.15 W2: multi-model hardening - per-family config, error types,
   retry/backoff, timeout enforcement, GLM template strip, model-swap handling
-- 0.2.16 W2: W3C TRACEPARENT propagation — child span off parent if
+- 0.2.16 W2: W3C TRACEPARENT propagation - child span off parent if
   TRACEPARENT env var is present, root span otherwise
 """
 import json
@@ -19,7 +19,7 @@ import urllib.request
 import urllib.error
 from typing import Optional
 
-# OTEL tracer — module-level. logger.py configures the global TracerProvider
+# OTEL tracer - module-level. logger.py configures the global TracerProvider
 # with the OTLP exporter; here we just obtain a named tracer. If the SDK is
 # unavailable (AHO_OTEL_DISABLED=1, package missing) the ProxyTracer becomes a
 # no-op and every `start_as_current_span` call is a cheap context manager.
@@ -84,7 +84,7 @@ DEFAULT_TIMEOUT = 3600  # 60 minutes per stage cap
 # (b) Qwen's effective-useful-context may be smaller than advertised
 DEFAULT_NUM_CTX = 32768
 
-# Valid num_ctx range — Ollama silently accepts invalid values (R7 finding)
+# Valid num_ctx range - Ollama silently accepts invalid values (R7 finding)
 MIN_NUM_CTX = 256
 MAX_NUM_CTX = 262144
 
@@ -104,10 +104,10 @@ TEMPLATE_LEAK_TOKENS = [
 # Per-model-family configuration
 #
 # Sources:
-#   Qwen 3.5:9B — 0.2.14 W1.5 verified, 0.2.15 W0 regression clean
-#   Llama 3.2:3B — 0.2.15 W0 probe (Llama 3.x native tokens)
-#   GLM-4.6V-Flash-9B — 0.2.15 W0 probe + W1 R11 diagnostic
-#   Nemotron-mini:4b — 0.2.15 W0 probe (ChatML-compatible)
+#   Qwen 3.5:9B - 0.2.14 W1.5 verified, 0.2.15 W0 regression clean
+#   Llama 3.2:3B - 0.2.15 W0 probe (Llama 3.x native tokens)
+#   GLM-4.6V-Flash-9B - 0.2.15 W0 probe + W1 R11 diagnostic
+#   Nemotron-mini:4b - 0.2.15 W0 probe (ChatML-compatible)
 # ---------------------------------------------------------------------------
 
 MODEL_FAMILY_CONFIG = {
@@ -135,7 +135,7 @@ MODEL_FAMILY_CONFIG = {
         # the <|begin_of_box|> prefix from the response content.
         # Confirmed via W1 R11-diagnostic.json probe 4.
         "num_predict": None,
-        "num_gpu": 30,        # partial offload — full GPU (41 layers) crashes CUDA OOM on 8GB (W1 R2)
+        "num_gpu": 30,        # partial offload - full GPU (41 layers) crashes CUDA OOM on 8GB (W1 R2)
         "strip_prefix": "<|begin_of_box|>",
     },
     "nemotron": {
@@ -199,7 +199,7 @@ def _check_template_leak(content: str) -> "str | bool":
     """Check for residual template tokens in post-processed output.
 
     Returns the leaked token string if found, False if clean. Callers that
-    want a bool field for JSON emission use bool() on the result — False
+    want a bool field for JSON emission use bool() on the result - False
     stays False, non-empty string becomes True. Never returns None so
     stage JSON writers never emit null for this field (AF002 closure).
     """
@@ -255,7 +255,7 @@ def _resolve_span_parent_context():
     return _propagator.extract(carrier={"traceparent": traceparent})
 
 
-# Back-compat alias — external callers (tests) used the previous name.
+# Back-compat alias - external callers (tests) used the previous name.
 _extract_parent_context = _resolve_span_parent_context
 
 
@@ -371,7 +371,7 @@ def dispatch(model_id: str, prompt: str, system: Optional[str] = None,
                     err = TemplateLeakError(
                         f"Template token {leaked!r} found in output after post-processing"
                     )
-                    # Template leak is systemic — do NOT retry
+                    # Template leak is systemic - do NOT retry
                     if raise_on_error:
                         raise err
                     return {
@@ -404,17 +404,17 @@ def dispatch(model_id: str, prompt: str, system: Optional[str] = None,
                     err = ModelUnavailableError(
                         f"Model {model_id!r} not found (HTTP 404)"
                     )
-                    # Model missing is not transient — do NOT retry
+                    # Model missing is not transient - do NOT retry
                     if raise_on_error:
                         raise err
                     return _error_result(model_id, family, str(err), elapsed, attempt)
-                # Other HTTP errors — retry
+                # Other HTTP errors - retry
                 last_error = f"http_{e.code}: {e.reason}"
 
             except urllib.error.URLError as e:
                 elapsed = time.monotonic() - start
                 last_error = f"connection_error: {e}"
-                # Transient — will retry
+                # Transient - will retry
 
             except (TimeoutError, OSError) as e:
                 elapsed = time.monotonic() - start
@@ -422,7 +422,7 @@ def dispatch(model_id: str, prompt: str, system: Optional[str] = None,
                     last_error = f"timeout after {timeout}s"
                 else:
                     last_error = f"os_error: {e}"
-                # Transient — will retry
+                # Transient - will retry
 
         # All retries exhausted
         if raise_on_error:
@@ -496,7 +496,7 @@ def unload_model(model_id: str, timeout: int = 10) -> bool:
     """Explicitly unload a model from Ollama VRAM via keep_alive=0.
 
     W1 R3: keep_alive:0 unloads within 5s grace period.
-    W1 F004: Nemotron auto-loads — call before loading large models.
+    W1 F004: Nemotron auto-loads - call before loading large models.
     W1 F007: GLM CUDA OOM crash kills ALL loaded models.
 
     Returns True if unload request succeeded, False on error.
@@ -558,5 +558,5 @@ def ensure_model_ready(model_id: str, evict_first: list[str] | None = None,
     return result.get("error") is None
 
 
-# Backward compatibility — old code references the module-level constant
+# Backward compatibility - old code references the module-level constant
 STOP_TOKENS = MODEL_FAMILY_CONFIG["qwen"]["stop_tokens"]

@@ -65,7 +65,7 @@ def check_artifact(path: Path, artifact_type: str) -> dict:
 
 
 def check_required_sections(content: str, required: list[str]) -> dict:
-    """Simple section presence check — useful for smoke tests."""
+    """Simple section presence check - useful for smoke tests."""
     errors = [s for s in required if s not in content]
     status = "FAIL" if errors else "PASS"
     log_event("structural_gate", "structural-gates", "inline", "check_required_sections",

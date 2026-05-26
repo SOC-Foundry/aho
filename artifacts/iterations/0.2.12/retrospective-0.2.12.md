@@ -1,7 +1,7 @@
-# Retrospective — aho 0.2.12
+# Retrospective - aho 0.2.12
 
 **Phase:** 0 | **Iteration:** 0.2.12 | **Executor:** gemini-cli
-**Theme:** Council Activation — Discovery, Visibility, Design, Measurement
+**Theme:** Council Activation - Discovery, Visibility, Design, Measurement
 **Status:** Closed (Rescoped at W8)
 
 ---

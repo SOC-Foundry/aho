@@ -1,4 +1,4 @@
-# Investigation 5 — W3 Ambiguous Pile Archaeology
+# Investigation 5 - W3 Ambiguous Pile Archaeology
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
@@ -44,7 +44,7 @@ No. The `resume` subcommand was never added to the CLI. This was supposed to be 
 "W3": {"status": "paused", "reason": "ambiguous_review"}
 ```
 
-The checkpoint records W3 as "paused" with reason "ambiguous_review", which matches the designed pause behavior. However, the pause mechanism was supposed to WRITE the ambiguous list before pausing — that never happened.
+The checkpoint records W3 as "paused" with reason "ambiguous_review", which matches the designed pause behavior. However, the pause mechanism was supposed to WRITE the ambiguous list before pausing - that never happened.
 
 ### What actually got migrated?
 
@@ -61,7 +61,7 @@ The checkpoint records W3 as "paused" with reason "ambiguous_review", which matc
 | iaomw-G114 | G62 | Self-grading bias accepted as Tier-1 |
 | iaomw-G115 | G71 | Agent asks for permission |
 
-These are a mix — some are clearly universal (G1: "Heredocs break agents", G19: "Gemini runs bash by default") while others are kjtcom-specific (G39: "Detail panel provider", G41: "Widget rebuild triggers event handlers"). This suggests the Nemotron classification may not have worked correctly, or the migration script ran without the classification step and just ported entries sequentially until it stopped.
+These are a mix - some are clearly universal (G1: "Heredocs break agents", G19: "Gemini runs bash by default") while others are kjtcom-specific (G39: "Detail panel provider", G41: "Widget rebuild triggers event handlers"). This suggests the Nemotron classification may not have worked correctly, or the migration script ran without the classification step and just ported entries sequentially until it stopped.
 
 ### What does the build log say?
 
@@ -69,7 +69,7 @@ These are a mix — some are clearly universal (G1: "Heredocs break agents", G19
 $ grep -rn "ambiguous" docs/iterations/0.1.4/
 ```
 
-The design document (not the build log) describes the ambiguous pile mechanism in detail at lines 500-501 and 539-546. The build log does not mention "ambiguous" — it likely doesn't contain an entry for the W3 pause because the pause mechanism never fired properly.
+The design document (not the build log) describes the ambiguous pile mechanism in detail at lines 500-501 and 539-546. The build log does not mention "ambiguous" - it likely doesn't contain an entry for the W3 pause because the pause mechanism never fired properly.
 
 ### Does kjtcom have more gotchas to migrate?
 
@@ -80,7 +80,7 @@ The kjtcom gotcha archive at `~/dev/projects/kjtcom/data/gotcha_archive.json` ha
 
 ### Does Nemotron classification work in isolation?
 
-From the smoke tests: Nemotron (nemotron-mini:4b) responded in 2.1 seconds to a simple prompt. The `classify()` function in `src/iao/artifacts/nemotron_client.py` is structurally correct — it sends a classification prompt, extracts the category, and returns it. The function is usable.
+From the smoke tests: Nemotron (nemotron-mini:4b) responded in 2.1 seconds to a simple prompt. The `classify()` function in `src/iao/artifacts/nemotron_client.py` is structurally correct - it sends a classification prompt, extracts the category, and returns it. The function is usable.
 
 ---
 
@@ -97,7 +97,7 @@ From the smoke tests: Nemotron (nemotron-mini:4b) responded in 2.1 seconds to a 
    - Stopped after migrating the first batch (perhaps hitting an error or reaching a stopping point)
    - Classified entries but didn't implement the file-writing and pause mechanism
    - Was killed or timed out before reaching the ambiguous entries
-4. The Gemini executor then set the checkpoint to `"paused"` with `"reason": "ambiguous_review"` — recording the designed state rather than the achieved state.
+4. The Gemini executor then set the checkpoint to `"paused"` with `"reason": "ambiguous_review"` - recording the designed state rather than the achieved state.
 5. Since `iao iteration resume W3` was never implemented, there was no path to continue W3 even if Kyle wanted to.
 
 ---
@@ -111,17 +111,17 @@ From the smoke tests: Nemotron (nemotron-mini:4b) responded in 2.1 seconds to a 
 ### (b) Where did it fail?
 
 At multiple points:
-1. The `iao iteration resume W3` CLI command was never implemented (supposed to be a W1 deliverable — not in the W1 spec, but referenced in W3's design).
+1. The `iao iteration resume W3` CLI command was never implemented (supposed to be a W1 deliverable - not in the W1 spec, but referenced in W3's design).
 2. The migration script appears to have ported entries without Nemotron classification or incomplete classification.
 3. The `/tmp/` file write never executed.
-4. The kjtcom source data structure is unclear — `data/gotcha_archive.json` in kjtcom is empty.
+4. The kjtcom source data structure is unclear - `data/gotcha_archive.json` in kjtcom is empty.
 
 ### (c) What would 0.1.6 need to do to resume or restart the migration?
 
 1. **Find the actual kjtcom gotcha source.** The file at `~/dev/projects/kjtcom/data/gotcha_archive.json` is empty. Check `~/dev/projects/kjtcom/template/gotcha/gotcha_registry.json` or other locations.
-2. **Implement the Nemotron classification step** in the migration script — the `classify()` function works.
-3. **Decide the ambiguous pile UX** — file-based review is fragile. Consider interactive review or a simpler "skip ambiguous, review later" approach.
-4. **Consider whether `resume` is needed** — a fresh migration pass that skips already-migrated entries (by checking `kjtcom_source_id`) may be simpler than a resume mechanism.
+2. **Implement the Nemotron classification step** in the migration script - the `classify()` function works.
+3. **Decide the ambiguous pile UX** - file-based review is fragile. Consider interactive review or a simpler "skip ambiguous, review later" approach.
+4. **Consider whether `resume` is needed** - a fresh migration pass that skips already-migrated entries (by checking `kjtcom_source_id`) may be simpler than a resume mechanism.
 
 ### (d) Is the kjtcom migration possible right now?
 

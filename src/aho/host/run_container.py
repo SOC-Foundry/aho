@@ -1,4 +1,4 @@
-"""run_container — host wrapper that registers + launches + unregisters a container.
+"""run_container - host wrapper that registers + launches + unregisters a container.
 
 Flow:
   1. Compute the host-visible UID the container will appear as. For default

@@ -1,4 +1,4 @@
-# Build Log — iao 0.1.9
+# Build Log - iao 0.1.9
 
 **Start:** 2026-04-10T14:13:41Z
 **Agent:** Gemini CLI
@@ -9,7 +9,7 @@
 
 ---
 
-## W0 — Environment Hygiene + 0.1.8 Cleanup
+## W0 - Environment Hygiene + 0.1.8 Cleanup
 
 **Start:** 2026-04-10T14:13:41Z
 
@@ -24,7 +24,7 @@
 
 ---
 
-## W1 — Python Source Rename
+## W1 - Python Source Rename
 
 **Actions:**
 - mv src/iao src/aho
@@ -38,7 +38,7 @@
 
 ---
 
-## W2 — Data Files and Paths Rename
+## W2 - Data Files and Paths Rename
 
 **Actions:**
 - Renamed .iao.json → .aho.json
@@ -52,7 +52,7 @@
 
 ---
 
-## W3 — Gotcha Code Prefix Rename
+## W3 - Gotcha Code Prefix Rename
 
 **Actions:**
 - Renamed all iaomw-G* gotcha codes to aho-G* in data/gotcha_archive.json
@@ -65,7 +65,7 @@
 
 ---
 
-## W4 — ChromaDB Archive Rebuild and Rename
+## W4 - ChromaDB Archive Rebuild and Rename
 
 **Actions:**
 - Wrote scripts/rebuild_aho_archive.py with diagnostic-appendix filter
@@ -81,7 +81,7 @@
 
 ---
 
-## W5 — Markdown and Harness Rename Sweep
+## W5 - Markdown and Harness Rename Sweep
 
 **Actions:**
 - Surgical identifier rename across base.md, prompts/*.md.j2, README, CHANGELOG, MANIFEST, COMPATIBILITY
@@ -93,11 +93,11 @@
 
 ---
 
-## W6 — Build Log Synthesis Filename Split + ADR-042
+## W6 - Build Log Synthesis Filename Split + ADR-042
 
-## W8 — Dogfood + Close
+## W8 - Dogfood + Close
 
-## W6 — Build Log Synthesis Filename Split + ADR-042
+## W6 - Build Log Synthesis Filename Split + ADR-042
 
 **Actions:**
 - Updated loop.py to write synthesis to -synthesis filename
@@ -110,7 +110,7 @@
 
 ---
 
-## W7 — Evaluator Baseline Refresh + Forbidden-Chunks Filter
+## W7 - Evaluator Baseline Refresh + Forbidden-Chunks Filter
 
 **Actions:**
 - Implemented dynamic CLI command and script discovery in evaluator.py
@@ -122,7 +122,7 @@
 
 ---
 
-## W8 — Dogfood + Close
+## W8 - Dogfood + Close
 
 **Actions:**
 - Renamed 0.1.9 artifacts to aho- prefix

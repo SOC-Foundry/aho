@@ -1,18 +1,18 @@
-"""0.2.18 W0 — RAG-status-echo filter + unsupported-halt-downgrade.
+"""0.2.18 W0 - RAG-status-echo filter + unsupported-halt-downgrade.
 
 Two structural fixes lock-in:
 
-A. F-0.2.18-W0-006 — RAG enrichment status echo. The model paraphrased
+A. F-0.2.18-W0-006 - RAG enrichment status echo. The model paraphrased
    the registered-references context section as findings whose
-   description was the literal template `{ID} ({kind}) — status:
+   description was the literal template `{ID} ({kind}) - status:
    `registered|unverified``. Filter extension drops these with reason
    `rag_enrichment_status_echo`. Tight whole-description anchor; any
    substantive content beyond the template keeps the finding active.
 
-B. F-0.2.18-W0-007 — unsupported-halt downgrade. When the model returns
+B. F-0.2.18-W0-007 - unsupported-halt downgrade. When the model returns
    `halt` but every model finding is filter-suppressed and no
    deterministic pre-check fired, the halt is materially unsupported.
-   Downgrade to `surface_to_drafter` (never `clean` — preserves the
+   Downgrade to `surface_to_drafter` (never `clean` - preserves the
    human-review backstop). Any active finding (model or pre-check)
    keeps the halt.
 """
@@ -28,7 +28,7 @@ from aho.council.audit_finding_filter import (
 
 
 # ---------------------------------------------------------------------------
-# Gap A — RAG enrichment status echo suppression
+# Gap A - RAG enrichment status echo suppression
 # ---------------------------------------------------------------------------
 
 def _rag_with_registered(*ids: str) -> dict:
@@ -47,7 +47,7 @@ def test_rag_echo_registered_suppressed():
     findings = [{
         "id": "F-0.2.17-W6-003",
         "severity": "info",
-        "description": "F-0.2.17-W6-003 (carry_forward_full) — status: `registered`",
+        "description": "F-0.2.17-W6-003 (carry_forward_full) - status: `registered`",
     }]
     out = filter_findings(findings, _rag_with_registered("F-0.2.17-W6-003"))
     assert out["active_findings"] == []
@@ -56,12 +56,12 @@ def test_rag_echo_registered_suppressed():
 
 
 def test_rag_echo_unverified_suppressed_even_without_registered_set():
-    """Echo rule fires regardless of registered-set membership — it's a
+    """Echo rule fires regardless of registered-set membership - it's a
     description-shape rule, not a registered-anchor rule."""
     findings = [{
         "id": "G070",
         "severity": "critical",
-        "description": "G070 (gotcha) — status: `unverified`",
+        "description": "G070 (gotcha) - status: `unverified`",
     }]
     out = filter_findings(findings, _rag_empty())
     assert out["active_findings"] == []
@@ -73,19 +73,19 @@ def test_rag_echo_with_trailing_period_suppressed():
     findings = [{
         "id": "ADR-0007",
         "severity": "info",
-        "description": "ADR-0007 (adr) — status: `registered`.",
+        "description": "ADR-0007 (adr) - status: `registered`.",
     }]
     out = filter_findings(findings, _rag_with_registered("ADR-0007"))
     assert out["active_findings"] == []
 
 
 def test_rag_echo_with_substantive_content_kept():
-    """Any sentence beyond the template defeats the anchor — keep active."""
+    """Any sentence beyond the template defeats the anchor - keep active."""
     findings = [{
         "id": "F-0.2.17-W6-003",
         "severity": "info",
         "description": (
-            "F-0.2.17-W6-003 (carry_forward_full) — status: `registered`. "
+            "F-0.2.17-W6-003 (carry_forward_full) - status: `registered`. "
             "However, the closure notes claim a test was amended but no test existed."
         ),
     }]
@@ -98,7 +98,7 @@ def test_rag_echo_em_dash_variant_suppressed():
     findings = [{
         "id": "G071",
         "severity": "info",
-        "description": "G071 (gotcha) — status: `unverified`",
+        "description": "G071 (gotcha) - status: `unverified`",
     }]
     out = filter_findings(findings, _rag_empty())
     assert out["active_findings"] == []
@@ -150,12 +150,12 @@ def test_two_echo_findings_both_suppressed():
         {
             "id": "G070",
             "severity": "critical",
-            "description": "G070 (gotcha) — status: `unverified`",
+            "description": "G070 (gotcha) - status: `unverified`",
         },
         {
             "id": "F-0.2.17-W6-003",
             "severity": "info",
-            "description": "F-0.2.17-W6-003 (carry_forward_full) — status: `registered`",
+            "description": "F-0.2.17-W6-003 (carry_forward_full) - status: `registered`",
         },
     ]
     out = filter_findings(findings, _rag_with_registered("F-0.2.17-W6-003"))
@@ -165,7 +165,7 @@ def test_two_echo_findings_both_suppressed():
 
 
 # ---------------------------------------------------------------------------
-# Gap B — unsupported-halt downgrade (audit.py orchestration rule)
+# Gap B - unsupported-halt downgrade (audit.py orchestration rule)
 # ---------------------------------------------------------------------------
 
 def _audit_with_mocked_model(
@@ -214,7 +214,7 @@ def test_halt_with_only_echo_findings_downgrades_to_surface_to_drafter():
         model_confidence=0.9,
         model_findings=[
             {"id": "G070", "severity": "info",
-             "description": "G070 (gotcha) — status: `unverified`"},
+             "description": "G070 (gotcha) - status: `unverified`"},
         ],
     )
     assert out["disposition"] == "surface_to_drafter"
@@ -252,9 +252,9 @@ def test_halt_with_pre_check_fail_keeps_halt():
         model_confidence=0.9,
         model_findings=[
             {"id": "G070", "severity": "info",
-             "description": "G070 (gotcha) — status: `unverified`"},
+             "description": "G070 (gotcha) - status: `unverified`"},
         ],
-        artifact_text="Workstream landed beautifully — all tests pass.",
+        artifact_text="Workstream landed beautifully - all tests pass.",
     )
     # G081 banned phrase → AUDIT-G081 extra_finding → halt preserved
     assert out["disposition"] == "halt"
@@ -272,14 +272,14 @@ def test_clean_disposition_unaffected_by_downgrade_rule():
 
 
 def test_surface_to_drafter_with_only_echoes_stays_surface_to_drafter():
-    """Downgrade rule is halt-specific — surface_to_drafter is already
+    """Downgrade rule is halt-specific - surface_to_drafter is already
     the human-review disposition; no further demotion."""
     out = _audit_with_mocked_model(
         model_disposition="surface_to_drafter",
         model_confidence=0.9,
         model_findings=[
             {"id": "G070", "severity": "info",
-             "description": "G070 (gotcha) — status: `unverified`"},
+             "description": "G070 (gotcha) - status: `unverified`"},
         ],
     )
     assert out["disposition"] == "surface_to_drafter"

@@ -26,7 +26,7 @@ as ground truth. Sealed archives untouched.
 
 Three findings dispositioned in `audit/W0.json`:
 
-- **AF001 (info)** — F-0.2.17-W0-003 (GitHub Packages API
+- **AF001 (info)** - F-0.2.17-W0-003 (GitHub Packages API
   per-version DELETE rejects on last-tagged packages;
   package-level DELETE via
   `/orgs/<org>/packages/container/<name>` is the correct
@@ -36,12 +36,12 @@ Three findings dispositioned in `audit/W0.json`:
   Closes via the carry-forwards list update recorded below;
   acceptance and audit archives remain sealed at their stated
   shas.
-- **AF002 (info)** — Plan §B4 narrative retains 11 "Pattern C"
+- **AF002 (info)** - Plan §B4 narrative retains 11 "Pattern C"
   residues describing the rename action itself
   (bucket title, §Rationale, §Out-of-scope sealed-archive
   pointers). Auditor accepts as intentional rename-announcement
   context. No edits required.
-- **AF003 (important)** — B2.3 GPU passthrough deferred across
+- **AF003 (important)** - B2.3 GPU passthrough deferred across
   the post-W0 reboot boundary (NVIDIA driver/library version
   mismatch; Plasma/Wayland prevent module reload mid-session).
   Acceptable for 0.2.17 W0 and W3 because ADR 0008 hybrid-mode
@@ -83,7 +83,7 @@ Three findings dispositioned in `audit/W0.json`:
   package; package-level DELETE via
   `/orgs/<org>/packages/container/<name>` is the correct
   fallback. Source: 0.2.17 W0 Bucket 2 B2.5 cycle. Disposition:
-  deployment-doc lesson — applies to any future container-build
+  deployment-doc lesson - applies to any future container-build
   operation that cleans up after a registry round-trip
   pre-flight. AF001 closes by virtue of this list update;
   acceptance and audit archives are not amended.
@@ -110,7 +110,7 @@ Three findings dispositioned in `audit/W0.json`:
   than as an archive amendment, preserving the audit's sealed
   state.
 
-### B2.3 verified post-reboot — addendum-pending
+### B2.3 verified post-reboot - addendum-pending
 
 - **What changed.** B2.3 (Podman GPU passthrough probe) was
   sealed in `acceptance/W0.json` with `result=deferred` per
@@ -123,7 +123,7 @@ Three findings dispositioned in `audit/W0.json`:
   --device nvidia.com/gpu=all
   docker.io/nvidia/cuda:12.6.3-base-ubuntu24.04 nvidia-smi`
   shows the host RTX 2080 SUPER inside the container, driver
-  595.71.05, 51 MiB / 8192 MiB, P8 idle — same GPU state as
+  595.71.05, 51 MiB / 8192 MiB, P8 idle - same GPU state as
   host `nvidia-smi`.
 - **Where the verification record lives.** A separate
   amendment artifact at
@@ -132,7 +132,7 @@ Three findings dispositioned in `audit/W0.json`:
   `41c3424f019d8d4800e56de59d17f7178daa06aecba196c2e380479ee22940a5`).
   Sealed `acceptance/W0.json` (sha256 `cd4e3f96…`) and sealed
   `audit/W0.json` (sha256 `1e2b2f49…`) are not modified. The
-  amendment is a fresh artifact, not a re-seal — `result=deferred`
+  amendment is a fresh artifact, not a re-seal - `result=deferred`
   in the sealed acceptance archive is not retroactively
   re-classified.
 - **Tag-drift surface.** Original B2.3 plan-text and ADR 0007
@@ -142,7 +142,7 @@ Three findings dispositioned in `audit/W0.json`:
   `12.6.3-base-ubuntu24.04` as the verified-current tag. Tag
   drift recorded as **F-0.2.17-W0-005** in
   `carry-forwards-0.2.16.md` under the 0.2.x cleanup section
-  (paired with F-0.2.17-W0-003 — both are pre-flight
+  (paired with F-0.2.17-W0-003 - both are pre-flight
   automation hardening lessons).
 - **Status.** Addendum-pending operator counter-sign on the
   amendment artifact. Counter-sign confirms acceptance of (a)
@@ -161,7 +161,7 @@ Three findings dispositioned in `audit/W0.json`:
   uses the host GPU directly. W0 and W3 do not depend on
   container-side GPU passthrough.
 - **What deferral gates:** 0.3.x production-tier deployment
-  readiness — container GPU passthrough is load-bearing once
+  readiness - container GPU passthrough is load-bearing once
   workloads run inside the container rather than against the
   host's native Ollama.
 - **Validation path:** One-command. Validation completed
@@ -172,7 +172,7 @@ Three findings dispositioned in `audit/W0.json`:
   empirical NVML driver/library version-mismatch state at
   deferral time (userspace 595.71.05 vs. running kernel
   module 595.58.03), which remain historically accurate as
-  the audit-time snapshot — post-reboot the kernel module
+  the audit-time snapshot - post-reboot the kernel module
   rolled forward to 595.71.05 and NVML init went clean.
 
 ## State at close
@@ -182,7 +182,7 @@ Three findings dispositioned in `audit/W0.json`:
   superseded by audit archive's `pass_with_findings`.
 - Audit archive: sealed.
 - Carry-forwards list: updated across three close-note-era
-  additions — F-0.2.17-W0-003 (added at close-note authoring,
+  additions - F-0.2.17-W0-003 (added at close-note authoring,
   GitHub Packages last-tag DELETE behavior; closes audit
   AF001), F-0.2.17-W0-004 (added during workstream_complete
   emit, CLI argparse `--status` choices gap), and

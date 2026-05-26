@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# 0.2.18 W1 — base-tier production container image for aho.
+# 0.2.18 W1 - base-tier production container image for aho.
 #
 # Multistage. Builder compiles deps into a venv; runtime layer copies the
 # venv plus source. Targets <800MB final size. Python 3.14-slim base.
@@ -63,7 +63,7 @@ VOLUME /var/lib/aho/chroma
 EXPOSE 8080
 
 LABEL org.opencontainers.image.source="https://github.com/soc-foundry/aho" \
-      org.opencontainers.image.description="aho base-tier container — 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix)" \
+      org.opencontainers.image.description="aho base-tier container - 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix)" \
       io.aho.iteration="0.2.18" \
       io.aho.workstream="W1"
 

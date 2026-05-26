@@ -1,4 +1,4 @@
-# Council Vetting Results — 0.2.14 W1
+# Council Vetting Results - 0.2.14 W1
 
 **Date:** 2026-04-13
 **Vetting method:** Direct invocation per council-inventory.md W1 invocation column.
@@ -11,8 +11,8 @@
 | Member | Invocation | Status | Latency | Evidence |
 |--------|-----------|--------|---------|----------|
 | Qwen-3.5:9B | `POST /api/generate model=qwen3.5:9b` | **operational** | 7.7s | Response: "Qwen3.5". Correct self-identification. Coherent. |
-| Nemotron-mini:4b | `POST /api/generate model=nemotron-mini:4b` | **substrate-compromised** | 1.4s | Response: "Sure, I can help you with that! What's the name of the AI model you're referring to?" — evasive, doesn't self-identify. 0.2.13 W2.5: 80% "feature" default on classification. |
-| GLM-4.6V-Flash-9B | `POST /api/generate model=haervwe/GLM-4.6V-Flash-9B` | **substrate-compromised** | 34.6s | Response: "GLM-4.5V" (identity mismatch — model reports 4.5V, Ollama tag says 4.6V-Flash). 0.2.13 W2.5: 80% timeout, wrong JSON schema for structured output. |
+| Nemotron-mini:4b | `POST /api/generate model=nemotron-mini:4b` | **substrate-compromised** | 1.4s | Response: "Sure, I can help you with that! What's the name of the AI model you're referring to?" - evasive, doesn't self-identify. 0.2.13 W2.5: 80% "feature" default on classification. |
+| GLM-4.6V-Flash-9B | `POST /api/generate model=haervwe/GLM-4.6V-Flash-9B` | **substrate-compromised** | 34.6s | Response: "GLM-4.5V" (identity mismatch - model reports 4.5V, Ollama tag says 4.6V-Flash). 0.2.13 W2.5: 80% timeout, wrong JSON schema for structured output. |
 | OpenClaw (Qwen wrapper) | Socket `/run/user/1000/openclaw.sock` cmd=status | **operational** | <1s | Status: 0 sessions (creates on demand). Wraps Qwen 3.5:9B via QwenClient. Configurable via `~/.config/aho/orchestrator.json` `openclaw.default_model`. |
 
 ## MCPs (9)
@@ -33,7 +33,7 @@
 
 | Member | Invocation | Status | Latency | Evidence |
 |--------|-----------|--------|---------|----------|
-| Nemoclaw socket | `cmd=status` then `cmd=dispatch role=assistant task="Say hello"` | **operational** | status <1s, dispatch 18.5s | 3 sessions (assistant, code_runner, reviewer). Dispatch with explicit `role` bypasses Nemotron classify — routes directly to OpenClaw/Qwen. Full stack: Nemoclaw → OpenClaw → Qwen → response. |
+| Nemoclaw socket | `cmd=status` then `cmd=dispatch role=assistant task="Say hello"` | **operational** | status <1s, dispatch 18.5s | 3 sessions (assistant, code_runner, reviewer). Dispatch with explicit `role` bypasses Nemotron classify - routes directly to OpenClaw/Qwen. Full stack: Nemoclaw → OpenClaw → Qwen → response. |
 | ChromaDB | `chromadb.Client()` | **operational** | <1s | v1.5.5. 0 collections. In-process client works. |
 | nomic-embed-text | `POST /api/embeddings model=nomic-embed-text` | **operational** | <1s | 768-dimensional embeddings. Produces valid float vectors. |
 
@@ -43,12 +43,12 @@
 
 **Question:** Can Nemoclaw dispatch to a specific model without Nemotron classify-then-route?
 
-**Finding: Classification B** — explicit role routing already supported, minor change needed for explicit model_id.
+**Finding: Classification B** - explicit role routing already supported, minor change needed for explicit model_id.
 
 **Evidence:**
-- `nemoclaw.py:49-51`: `dispatch(task, role=None)` — when `role` is provided, skips `self.route()` entirely (line 50-51: `if role is None: role = self.route(task)`)
+- `nemoclaw.py:49-51`: `dispatch(task, role=None)` - when `role` is provided, skips `self.route()` entirely (line 50-51: `if role is None: role = self.route(task)`)
 - Socket handler passes `role` through: `req.get("role")` at line 116
-- Tested: `{"cmd": "dispatch", "task": "Say hello", "role": "assistant"}` — works, 18.5s, no Nemotron involvement
+- Tested: `{"cmd": "dispatch", "task": "Say hello", "role": "assistant"}` - works, 18.5s, no Nemotron involvement
 - **Gap:** No `model_id` parameter. All OpenClaw sessions use same Qwen model from config. Adding model-specific routing requires ~20 lines: pass `model` through dispatch → session constructor (which already accepts it)
 
 **Implication for cascade:** Nemoclaw with explicit `role` works for smoke test (all roles → Qwen anyway). Explicit model_id routing is a 0.2.15 enhancement when matrix testing needs different models per role.

@@ -54,7 +54,7 @@ def test_migration_aborts_on_size_mismatch():
         new_file = new_dir / _EVENT_LOG_FILENAME
         old_file.write_text('{"event":"test"}\n')
 
-        # Pre-create new file (migration should return False — already exists)
+        # Pre-create new file (migration should return False - already exists)
         new_file.write_text('{"event":"different"}\n')
 
         from aho.logger import migrate_event_log

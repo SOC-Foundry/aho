@@ -1,4 +1,4 @@
-"""Smoke test NemoClaw — orchestration via Nemotron."""
+"""Smoke test NemoClaw - orchestration via Nemotron."""
 import sys
 import os
 

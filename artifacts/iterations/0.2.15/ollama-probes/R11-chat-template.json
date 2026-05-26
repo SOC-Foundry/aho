@@ -40,10 +40,10 @@
       "error": "HTTP 500: llama runner process has terminated",
       "diagnostic_attempted": true,
       "diagnostic_stop_tokens": ["<|begin_of_box|>", "<|end_of_box|>"],
-      "note": "GLM cannot load — template diagnostic impossible. W0 showed template token leakage (<|begin_of_box|>/<|end_of_box|>). Cannot determine if stop-token fix resolves it (W2 scope) or if issue is structural."
+      "note": "GLM cannot load - template diagnostic impossible. W0 showed template token leakage (<|begin_of_box|>/<|end_of_box|>). Cannot determine if stop-token fix resolves it (W2 scope) or if issue is structural."
     }
   ],
   "glm_template_verdict": "INDETERMINATE. GLM fails to load, making the critical W1 diagnostic (stop-token fix vs structural issue) impossible. W0 evidence showed template leakage was the only defect. If GLM becomes loadable on higher-VRAM hardware, the stop-token diagnostic should be re-run.",
-  "evidence_summary": "3/3 loadable models apply chat templates correctly — no template token leakage in /api/chat responses. GLM is untestable due to load failure. The GLM template leak question (stop-token fixable vs structural) remains unanswered.",
+  "evidence_summary": "3/3 loadable models apply chat templates correctly - no template token leakage in /api/chat responses. GLM is untestable due to load failure. The GLM template leak question (stop-token fixable vs structural) remains unanswered.",
   "shippability_impact": "Template application works for the 3-model subset. GLM template question deferred until GLM load issue is resolved."
 }

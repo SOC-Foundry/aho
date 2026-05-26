@@ -1,10 +1,10 @@
-# ADR 0006 — Iteration Deliverable + Graduation Criterion Discipline
+# ADR 0006 - Iteration Deliverable + Graduation Criterion Discipline
 
 **Status:** Accepted
 **Date:** 2026-05-01
 **Iteration of record:** aho 0.2.16 W4
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — iteration-plan-doc structure;
+**Context surface:** aho project-internal - iteration-plan-doc structure;
 binds every iteration plan from 0.2.17 onward.
 
 ---
@@ -16,8 +16,8 @@ aho's workstreams have crisp deliverables. Every workstream plan section in
 every workstream closes against an `acceptance/W{N}.json` archive whose shape
 is harness-enforced.
 
-aho's iterations have not. What an iteration delivers — what *exists* at
-iteration close that did not exist at iteration start — has been emergent
+aho's iterations have not. What an iteration delivers - what *exists* at
+iteration close that did not exist at iteration start - has been emergent
 across 0.2.x. The iteration's *theme* is captured in design and plan docs,
 but the binary "did this iteration ship" question has no canonical artifact;
 sign-off ticks five workstreams and the close command rolls forward.
@@ -27,7 +27,7 @@ Two consequences of that gap surfaced in 0.2.x:
 1. **Iteration scope drifted mid-flight without a structural alarm.** 0.2.16
    originally scoped W4 to a Mercor export pack assembly. Mid-iteration the
    scope was deprioritized to ADRs and plan-outline work. That is a
-   reasonable scope decision — but at the workstream level a comparable
+   reasonable scope decision - but at the workstream level a comparable
    mid-flight scope change (a new file added to an in-progress workstream's
    deliverable list, say) would land as a hard meta-rule violation. At the
    iteration level there is no equivalent guardrail because there is no
@@ -40,7 +40,7 @@ Two consequences of that gap surfaced in 0.2.x:
    a single-paragraph contract.
 
 This conflicts with aho's own governance thesis. The harness-as-IQ pillar
-(2) states that the harness *is* the contract — and aho has applied that
+(2) states that the harness *is* the contract - and aho has applied that
 discipline to workstream contracts but not to iteration contracts. Pillar 6
 (transitions are durable) and pillar 8 (efficacy is measured in cost delta)
 both presuppose that "did this iteration succeed" is a question with a
@@ -63,12 +63,12 @@ workstream summary table:
 A single plain-language paragraph stating what exists at iteration close
 that did not exist at iteration start. The paragraph is written at
 plan-doc creation time (before W0), names concrete artifacts (files,
-commands, dashboards, alert rules — whatever the iteration produces), and
+commands, dashboards, alert rules - whatever the iteration produces), and
 is the canonical answer to "did this iteration ship."
 
 The paragraph is a contract, not an aspiration. Workstream amendments do
 not amend it. The paragraph can only be amended by the same hard meta-rule
-exception that governs workstream-scope amendments — kyle-explicit, halt
+exception that governs workstream-scope amendments - kyle-explicit, halt
 the iteration, surface the change as a first-class scope decision.
 
 ### (2) Graduation criterion
@@ -87,13 +87,13 @@ Forms in order of preference:
 
 3. **Manual verification checklist with acceptance evidence.** A numbered
    list of human-verifiable conditions, each with a named evidence artifact
-   that records the verification. Form of last resort — used only when (1)
+   that records the verification. Form of last resort - used only when (1)
    and (2) genuinely do not apply.
 
 The graduation criterion lives at the top of the plan doc immediately
 after the deliverable paragraph. At iteration close, the drafter verifies
 the criterion and records the verification in the retrospective. If the
-criterion fails, the iteration does not close — it stays open until the
+criterion fails, the iteration does not close - it stays open until the
 criterion passes or until the criterion itself is amended (same hard
 meta-rule treatment as above).
 
@@ -110,14 +110,14 @@ equivalent), the drafter:
    retrospective under a §Graduation criterion section.
 4. If FAIL: halts close, surfaces to Kyle, does not advance.
 
-Sign-off from Kyle remains Pillar 11 work — the drafter validates, Kyle
+Sign-off from Kyle remains Pillar 11 work - the drafter validates, Kyle
 commits.
 
 ## Rationale
 
 > Workstream scope amendments are a hard meta-rule violation. Iteration
-> scope amendments — i.e., changing the iteration deliverable mid-iteration
-> — are now the same class of violation.
+> scope amendments - i.e., changing the iteration deliverable mid-iteration
+> - are now the same class of violation.
 
 aho's governance signal is consistent across scope levels or it is not
 consistent at all. Workstream scope is fixed at workstream-start; that
@@ -133,7 +133,7 @@ answer to "did 0.2.16 ship" is "five workstreams have audit_result ∈
 {pass, pass_with_findings}". That is a workstream-level success aggregation,
 not an iteration-level success assertion. With this ADR, "did 0.2.16
 ship" is "the graduation criterion in `aho-plan-0.2.16.md` evaluates true"
-— a single question with a single answer.
+- a single question with a single answer.
 
 The runnable-test preference for the criterion mirrors the workstream
 acceptance archive's preference for measured evidence over rhetorical
@@ -156,8 +156,8 @@ the test.
   trip. Drift becomes detectable at the iteration level.
 - The Adversarial Authorship protocol (renamed in 0.2.17 W0 from
   "Pattern C") now has a corresponding pattern at the iteration
-  level — drafter writes contract → drafter executes → drafter verifies →
-  Kyle signs — paralleling the workstream protocol. Governance signal is
+  level - drafter writes contract → drafter executes → drafter verifies →
+  Kyle signs - paralleling the workstream protocol. Governance signal is
   consistent.
 - 0.3.x and onward inherit a uniform iteration-plan-doc opening shape,
   which makes the iteration-bundle archive shape across phases more
@@ -176,7 +176,7 @@ the test.
   signal than for an execution-focused iteration. Acceptable; flagged.
 - Retroactive application is impossible for closed iterations. 0.2.x prior
   iterations stay narratively-described in their own retrospectives. The
-  0.2.16 retrospective applies the discipline retroactively to *itself* —
+  0.2.16 retrospective applies the discipline retroactively to *itself* -
   the deliverable paragraph and graduation criterion are written at
   retrospective time and the criterion is evaluated against repo state.
 
@@ -193,7 +193,7 @@ the test.
 
 ## Examples
 
-### Example 1 — 0.2.16 (retroactive)
+### Example 1 - 0.2.16 (retroactive)
 
 **Iteration deliverable (retroactive):**
 
@@ -207,7 +207,7 @@ the test.
 > containerization, 0008 dispatcher missing-model) are recorded; the
 > 0.2.17 plan and 0.3 phase plan are seeded.
 
-**Graduation criterion (retroactive — form 2, observable artifact
+**Graduation criterion (retroactive - form 2, observable artifact
 existence + content check):**
 
 ```
@@ -235,18 +235,18 @@ existence + content check):**
 The 0.2.16 retrospective evaluates each numbered condition against current
 repo state and records PASS/FAIL.
 
-### Example 2 — 0.2.17 (proposed, drafted in 0.2.16 W4)
+### Example 2 - 0.2.17 (proposed, drafted in 0.2.16 W4)
 
 **Iteration deliverable (proposed):**
 
 > At 0.2.17 close, aho ships as a base-tier signed container image in a
 > registry, pullable and runnable on NZXTcos as a base-tier host.
 > install.fish detects GPU capacity and pulls the appropriate model bundle
-> at install time. The harness runs end-to-end inside the container — `aho`
+> at install time. The harness runs end-to-end inside the container - `aho`
 > CLI works, telemetry pipelines emit, dashboard renders, dispatcher routes
 > correctly per ADR 0008's hybrid-mode dispatch behavior.
 
-**Graduation criterion (proposed — form 1, runnable test):**
+**Graduation criterion (proposed - form 1, runnable test):**
 
 ```
 podman pull <registry>/aho:0.2.17-base \
@@ -259,7 +259,7 @@ podman pull <registry>/aho:0.2.17-base \
 
 Exit 0 on a clean working directory on NZXTcos = iteration shipped.
 
-### Example 3 — 0.3.1 (proposed, drafted in 0.2.16 W4)
+### Example 3 - 0.3.1 (proposed, drafted in 0.2.16 W4)
 
 **Iteration deliverable (proposed):**
 
@@ -269,7 +269,7 @@ Exit 0 on a clean working directory on NZXTcos = iteration shipped.
 > (base + qwen3.5:9b + GLM-4.6V-Flash-9B), and a paired-Auditor cascade
 > runs end-to-end inside the container with full Jaeger trace.
 
-**Graduation criterion (proposed — form 1, runnable test):**
+**Graduation criterion (proposed - form 1, runnable test):**
 
 ```
 On tsP3:
@@ -308,8 +308,8 @@ cascade command; existence-check is folded into the runner's exit code.
 
 - **Phase-level deliverable paragraphs and graduation criteria.** This
   ADR governs iteration plan docs. Phase plans (e.g., the 0.3 phase plan
-  drafted in W4) inherit a similar discipline informally — the 0.3
-  phase plan opens with a phase-deliverable paragraph by analogy — but
+  drafted in W4) inherit a similar discipline informally - the 0.3
+  phase plan opens with a phase-deliverable paragraph by analogy - but
   this ADR does not formally bind phase plans. Candidate for a separate
   ADR if Phase 0 close (whenever 0.x → 1.0 transitions) reveals the
   same emergent-vs-designed gap at the phase level.
@@ -355,7 +355,7 @@ content-check assertions is honestly stronger for those iterations.
 
 ### Put the deliverable + criterion in the design doc, not the plan doc
 
-`aho-design-{iter}.md` already opens with §Charter — argued the
+`aho-design-{iter}.md` already opens with §Charter - argued the
 deliverable and criterion belong there.
 
 **Rejected.** §Charter is narrative-scoping; the deliverable paragraph
@@ -380,25 +380,25 @@ This ADR is superseded or amended when any of the following become true:
 
 3. **An iteration is forced open (graduation criterion fails) for more
    than two close-attempts.** Signal that the criterion shape is wrong
-   for that iteration class — either it is encoding aspirations the
+   for that iteration class - either it is encoding aspirations the
    iteration cannot deliver, or the iteration is genuinely failing.
    Either way, the experience generates a refinement.
 
 ## References
 
-- `artifacts/harness/base.md` §The Eleven Pillars — pillar 2 (harness is
+- `artifacts/harness/base.md` §The Eleven Pillars - pillar 2 (harness is
   the contract), pillar 6 (transitions are durable), pillar 8 (efficacy
   in cost delta).
-- `artifacts/harness/adversarial-authorship-protocol.md` — workstream-level
+- `artifacts/harness/adversarial-authorship-protocol.md` - workstream-level
   analog of the discipline this ADR lifts to iteration. (Renamed from
   `pattern-c-protocol.md` in 0.2.17 W0.)
-- `artifacts/adrs/0004-iteration-close-confirm-redesign.md` — the close
+- `artifacts/adrs/0004-iteration-close-confirm-redesign.md` - the close
   command redesign that a future ADR may couple with this one.
-- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` — example of an
+- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` - example of an
   iteration plan doc *without* the discipline (pre-this-ADR shape).
-- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` — first iteration
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` - first iteration
   plan doc *with* the discipline (post-this-ADR shape; drafted in
   0.2.16 W4 alongside this ADR).
 - `artifacts/iterations/0.2.16/retrospective-0.2.16.md` §Graduation
-  criterion — first retroactive application; drafted in 0.2.16 W4
+  criterion - first retroactive application; drafted in 0.2.16 W4
   alongside this ADR.

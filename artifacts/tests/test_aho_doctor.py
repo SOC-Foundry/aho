@@ -1,4 +1,4 @@
-"""test_aho_doctor.py — W1 D7 of 0.3.1.
+"""test_aho_doctor.py - W1 D7 of 0.3.1.
 
 Tests bin/aho-doctor:
 - Invokes install.fish --check, parses JSONL output

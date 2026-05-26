@@ -14,7 +14,7 @@
       "done_reason": "stop",
       "stop_tokens_visible": false,
       "result": "pass",
-      "note": "With num_predict=500, response was empty — Qwen thinking-mode consumed token budget. With num_predict=2000, clean 487-char response. ~150 thinking tokens consumed internally."
+      "note": "With num_predict=500, response was empty - Qwen thinking-mode consumed token budget. With num_predict=2000, clean 487-char response. ~150 thinking tokens consumed internally."
     },
     {
       "model": "qwen3.5:9b",

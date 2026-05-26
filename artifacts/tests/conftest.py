@@ -1,11 +1,11 @@
-"""Test-suite conftest — autouse checkpoint isolation.
+"""Test-suite conftest - autouse checkpoint isolation.
 
 Allowlisted test modules that call emit_workstream_start / emit_workstream_complete
 get a per-test tmp_path scoped via AHO_TEST_CHECKPOINT_DIR. The source-code
 guard in workstream_events._resolve_checkpoint_root() raises TestIsolationError
-on any other test module that emits without isolation — making the failure mode
+on any other test module that emits without isolation - making the failure mode
 loud rather than silently corrupting the real .aho-checkpoint.json. Third-
-recurrence fix for test_workstream_events.py — prior occurrences in 0.2.13,
+recurrence fix for test_workstream_events.py - prior occurrences in 0.2.13,
 0.2.14, 0.2.15 W0/W3, plus a fourth recurrence in 0.2.16 W0. The 0.2.17 W0
 fix (F-W0-004 closure) hardens the source side so allowlist drift cannot
 re-introduce the failure mode.

@@ -1,4 +1,4 @@
-# iao 0.1.2 — Bundle Index
+# iao 0.1.2 - Bundle Index
 
 **Iteration:** 0.1.2
 **Project:** iao (code: iaomw)

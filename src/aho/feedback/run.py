@@ -1,4 +1,4 @@
-"""Run report generation — the iteration's feedback artifact."""
+"""Run report generation - the iteration's feedback artifact."""
 import json
 import os
 import re as _re
@@ -98,7 +98,7 @@ def generate_run(iteration: str, workstreams: list[dict] = None, agent_questions
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     lines = [
-        f"# Run File — {prefix} {iteration}",
+        f"# Run File - {prefix} {iteration}",
         "",
         f"**Generated:** {now}",
         f"**Iteration:** {iteration}",
@@ -149,7 +149,7 @@ def generate_run(iteration: str, workstreams: list[dict] = None, agent_questions
         for q in agent_questions:
             lines.append(f"- {q}")
     else:
-        lines.append("(none — no questions surfaced during execution)")
+        lines.append("(none - no questions surfaced during execution)")
 
     lines += [
         "",

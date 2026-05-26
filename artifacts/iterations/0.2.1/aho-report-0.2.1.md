@@ -1,4 +1,4 @@
-# Report — aho 0.2.1
+# Report - aho 0.2.1
 
 **Generated:** 2026-04-11T14:34:28Z
 **Iteration:** 0.2.1
@@ -130,7 +130,7 @@ install.fish: install.fish syntax OK
 Artifacts: All Qwen-generated artifacts present |
 | manifest_current | ok | all 71 file hashes current |
 | pillars_present | ok | Eleven pillars present in design and README |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | ok | README updated during this iteration (mtime: 2026-04-11T14:22:10.679480+00:00) |
 | run_complete | deferred | Kyle's notes section not yet filled in |
 | run_quality | ok | Run file passes quality gate |

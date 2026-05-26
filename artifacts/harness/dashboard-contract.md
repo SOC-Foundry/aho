@@ -66,4 +66,4 @@ Deferred. In Phase 1, clones will push heartbeat summaries to aho.run for centra
 
 ---
 
-*Dashboard contract for aho Phase 0 — authored during 0.2.3 W3.*
+*Dashboard contract for aho Phase 0 - authored during 0.2.3 W3.*

@@ -1,19 +1,19 @@
-"""council.dispatch — real implementation (W2).
+"""council.dispatch - real implementation (W2).
 
 Routes work to a council seat by (work_shape, role, tier). Returns the
 component's result plus dispatch metadata. Three hard rules:
 
 1. Substantive drafting at base tier RAISES CouncilDispatchEscalateRequired.
    Base tier doesn't host substantive drafters; it escalates out.
-2. Role-collapse trip-wire — if drafter and auditor in the same iteration
+2. Role-collapse trip-wire - if drafter and auditor in the same iteration
    would land on the same model family, RAISES CouncilRoleCollapseError.
 3. Unknown (work_shape, role, tier) RAISES CouncilDispatchUnknownRouteError.
 
 No silent fallbacks anywhere. G083 discipline.
 
 Wire-up env:
-- AHO_ITERATION — dispatch state keys off this for role-collapse tracking
-- AHO_TIER — defaults to base if unset
+- AHO_ITERATION - dispatch state keys off this for role-collapse tracking
+- AHO_TIER - defaults to base if unset
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ class CouncilDispatchUnknownRouteError(RuntimeError):
 
 
 class CouncilDispatchEscalateRequired(RuntimeError):
-    """Tier cannot service the work — escalate to a higher tier or external
+    """Tier cannot service the work - escalate to a higher tier or external
     drafter. The exception carries `target` describing the escalation hop.
     """
 
@@ -49,13 +49,13 @@ class CouncilDispatchEscalateRequired(RuntimeError):
 
 class CouncilRoleCollapseError(RuntimeError):
     """Drafter and auditor would collapse onto the same model family in
-    this iteration — the harness's anti-rubber-stamp invariant. Trip-wires
+    this iteration - the harness's anti-rubber-stamp invariant. Trip-wires
     fire here, never silently approve.
     """
 
 
 # ---------------------------------------------------------------------------
-# Routing table — (work_shape, role, tier) → (model_id, family, handler_kind)
+# Routing table - (work_shape, role, tier) → (model_id, family, handler_kind)
 #
 # handler_kind is a string the dispatch loop uses to pick the actual
 # callable lazily (avoids circular imports at module load).
@@ -89,7 +89,7 @@ ROUTING_TABLE: Dict[Tuple[str, str, str], Dict[str, str]] = {
     },
 }
 
-# Work-shapes that are known but NOT routable at base tier — they escalate.
+# Work-shapes that are known but NOT routable at base tier - they escalate.
 ESCALATE_AT_BASE: Dict[str, str] = {
     "substantive_drafting": "partial_tier_or_external_drafter",
     "deep_synthesis": "partial_tier_or_external_drafter",
@@ -200,7 +200,7 @@ class CouncilDispatch:
                 f"no route for (work_shape={work_shape}, role={role}, tier={self.tier})"
             )
 
-        # Role-collapse tracking — drafter/auditor only.
+        # Role-collapse tracking - drafter/auditor only.
         # Note: handlers in the base routing table are not 'drafter' role,
         # so a base-tier dispatch normally won't trip this. The invariant
         # surfaces when a downstream caller (or a test fixture) manually
@@ -276,7 +276,7 @@ class CouncilDispatch:
 
 
 # ---------------------------------------------------------------------------
-# Handler resolution — lazy to avoid circular imports
+# Handler resolution - lazy to avoid circular imports
 # ---------------------------------------------------------------------------
 
 def _resolve_handler(kind: str) -> Callable[[Any], Any]:
@@ -313,7 +313,7 @@ _GLOBAL_DISPATCH: Optional[CouncilDispatch] = None
 
 def get_dispatch(*, fresh: bool = False) -> CouncilDispatch:
     """Return the process-global dispatch instance. `fresh=True` discards
-    the existing instance — useful for tests.
+    the existing instance - useful for tests.
     """
     global _GLOBAL_DISPATCH
     if fresh or _GLOBAL_DISPATCH is None:

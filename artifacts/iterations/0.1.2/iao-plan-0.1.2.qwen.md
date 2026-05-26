@@ -1,4 +1,4 @@
-# iao 0.1.2 — Plan Document
+# iao 0.1.2 - Plan Document
 
 **Iteration:** 0.1.2
 **Project:** iao (code: iaomw)

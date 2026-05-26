@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/context7.fish — CLI health check for @upstash/context7-mcp
+# mcp-smoke/context7.fish - CLI health check for @upstash/context7-mcp
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 
 set -l server_name "context7"

@@ -1,10 +1,10 @@
-# ADR 0005 — Gemini CLI OTEL Asymmetry
+# ADR 0005 - Gemini CLI OTEL Asymmetry
 
 **Status:** Accepted
 **Date:** 2026-04-23
 **Iteration of record:** aho 0.2.16 W2
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — distributed tracing posture;
+**Context surface:** aho project-internal - distributed tracing posture;
 downstream reference pack consumers inherit the same asymmetry and should
 plan around it.
 
@@ -38,7 +38,7 @@ Specifically:
 
 Harness-watcher wraps Gemini invocations today and records wall-clock
 start/end into `aho_event_log.jsonl` with `source_agent=gemini-cli`. That
-captures *when* the audit ran and *how long* — nothing about model-level
+captures *when* the audit ran and *how long* - nothing about model-level
 cost, token count, or trace context.
 
 ## Decision
@@ -54,7 +54,7 @@ Specifically:
 
 2. **Harness-watcher event wrappers capture wall-clock only.** Existing
    `gemini_invocation_start` / `gemini_invocation_end` events in
-   `aho_event_log.jsonl` stay as they are — a durable record of audit
+   `aho_event_log.jsonl` stay as they are - a durable record of audit
    latency, nothing more. No synthetic span emission to OTLP on Gemini's
    behalf.
 
@@ -106,7 +106,7 @@ flags the gap.
   reasoning about whether a measurement is real or synthetic.
 
 - The moment Google ships OTEL support in Gemini CLI (or an equivalent
-  cost/event surface), this ADR is superseded by a new decision — not by
+  cost/event surface), this ADR is superseded by a new decision - not by
   retrofit of the harness output to match real data.
 
 - The reference pack documents the boundary: `drafter=claude-code`
@@ -126,7 +126,7 @@ flags the gap.
 - **No audit latency visible in Jaeger.** An operator debugging "why did
   this workstream take 2 hours" will see Claude drafting for 45 minutes
   and a gap. They'll need to consult `aho_event_log.jsonl` to see the
-  audit block. Annoying but explicit — no phantom span to mislead.
+  audit block. Annoying but explicit - no phantom span to mislead.
 
 - **No `TRACEPARENT` continuity across the audit boundary.** If a future
   workstream involves an audit-triggered re-draft (drafter → audit →
@@ -176,7 +176,7 @@ Capture Gemini's end-of-session cost summary (which it does print) and
 parse it into an OTEL event.
 
 **Rejected for now.** Parsing a CLI's human-readable summary is a fragile
-contract — Google can change the format at any time without breaking
+contract - Google can change the format at any time without breaking
 their users and we'd silently lose the metric. If this becomes necessary,
 the correct design is a pinned wrapper script with explicit format
 version pinning and a failure mode when the format changes. Out of scope
@@ -185,7 +185,7 @@ becomes load-bearing.
 
 ### File a vendor feature request
 
-Not an alternative to *this* ADR — it's complementary. An upstream
+Not an alternative to *this* ADR - it's complementary. An upstream
 feature request to Google for OTEL support in Gemini CLI is the right
 escalation path. That action is operator-driven and not captured in code;
 this ADR does not block on it.
@@ -210,15 +210,15 @@ This ADR is superseded when any of the following become true:
 
 ## References
 
-- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` §W2.7 — ADR task.
-- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` §W2 — design-level
+- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` §W2.7 - ADR task.
+- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` §W2 - design-level
   context for the asymmetry.
-- `artifacts/iterations/0.2.16/trace-integration-notes.md` — W2
+- `artifacts/iterations/0.2.16/trace-integration-notes.md` - W2
   implementation notes referencing this ADR from the Gemini asymmetry
   section.
 - `artifacts/adrs/0003-otel-scaffolding-posture.md` §Known limitations
-  (3) — W0 anticipated this ADR and pointed forward to W2.
-- `.claude/settings.json` — drafter managed-settings env block (no
+  (3) - W0 anticipated this ADR and pointed forward to W2.
+- `.claude/settings.json` - drafter managed-settings env block (no
   parallel exists for auditor).
-- `~/.local/share/aho/events/aho_event_log.jsonl` — durable audit wall-
+- `~/.local/share/aho/events/aho_event_log.jsonl` - durable audit wall-
   clock record; current ground truth for Gemini invocation timing.

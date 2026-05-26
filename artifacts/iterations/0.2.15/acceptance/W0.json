@@ -35,7 +35,7 @@
     {
       "check": "Llama 3.2 3B first-integration status documented",
       "result": "pass",
-      "evidence": "Integration is implicit — dispatcher model-agnostic at /api/chat level. No code changes needed. Llama dispatches and responds correctly."
+      "evidence": "Integration is implicit - dispatcher model-agnostic at /api/chat level. No code changes needed. Llama dispatches and responds correctly."
     },
     {
       "check": "GLM re-test is clean-slate (not recycled 0.2.13 findings)",
@@ -55,12 +55,12 @@
     {
       "check": "baseline_regression_check clean (12 baseline failures carried)",
       "result": "pass",
-      "evidence": "12 failures, 303 passed, 1 skipped. 11 of 13 baseline failures present. 2 baseline failures absent (daemon_healthy likely skipped, gate_verbosity possibly fixed). 1 environmental failure (test_cascade_end_to_end — model swap during vetting). No new failures from W0 code changes (W0 made no src/aho/ code changes)."
+      "evidence": "12 failures, 303 passed, 1 skipped. 11 of 13 baseline failures present. 2 baseline failures absent (daemon_healthy likely skipped, gate_verbosity possibly fixed). 1 environmental failure (test_cascade_end_to_end - model swap during vetting). No new failures from W0 code changes (W0 made no src/aho/ code changes)."
     },
     {
       "check": "No G083 sites introduced",
       "result": "pass",
-      "evidence": "W0 introduced no new code in src/aho/. Pre-existing G083 site noted at workstream_events.py:70-71 (except Exception: pass) — not W0-introduced."
+      "evidence": "W0 introduced no new code in src/aho/. Pre-existing G083 site noted at workstream_events.py:70-71 (except Exception: pass) - not W0-introduced."
     },
     {
       "check": "No git operations performed",
@@ -80,7 +80,7 @@
     {
       "id": "F001",
       "severity": "info",
-      "description": "Checkpoint iteration field not updated by emit_workstream_start — required manual bump from 0.2.14 to 0.2.15"
+      "description": "Checkpoint iteration field not updated by emit_workstream_start - required manual bump from 0.2.14 to 0.2.15"
     },
     {
       "id": "F002",
@@ -110,7 +110,7 @@
     {
       "id": "F007",
       "severity": "info",
-      "description": "test_cascade_end_to_end failure is environmental — GLM 8GB model load during vetting displaced Qwen from VRAM. Not a code regression."
+      "description": "test_cascade_end_to_end failure is environmental - GLM 8GB model load during vetting displaced Qwen from VRAM. Not a code regression."
     }
   ],
   "roster_summary": {

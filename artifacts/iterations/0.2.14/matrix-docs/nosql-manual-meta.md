@@ -1,4 +1,4 @@
-# NoSQL Manual — Extraction Metadata
+# NoSQL Manual - Extraction Metadata
 
 **Source:** `artifacts/iterations/0.2.14/matrix-docs/source/NoSQL_DataPipelines_Technical_Manual.pdf`
 **Extracted text:** `artifacts/iterations/0.2.14/matrix-docs/nosql-manual.txt`
@@ -43,4 +43,4 @@ pipelines.
 
 - Page count matches expected (201).
 - Extraction produced non-trivial text (247K chars from 201 pages).
-- First 500 chars contain title, subtitle, version, and beginning of Section 1 content — confirms extraction succeeded.
+- First 500 chars contain title, subtitle, version, and beginning of Section 1 content - confirms extraction succeeded.

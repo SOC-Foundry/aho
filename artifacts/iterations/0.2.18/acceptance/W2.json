@@ -20,7 +20,7 @@
     "deliverable": "a8cos brought to deployable state: image loaded, install.fish completed all 9 steps, tier.json + broker socket provisioned per ADR-0009, end-to-end OTLP path proven from container to NZXTcos collector via THREE distinct routes (Tailscale FQDN, Tailscale IP, LAN IP).",
     "prep_landed_in_w1_session_per_f_w1_005": "Collector rebind to 0.0.0.0:4317 on NZXTcos + initial ufw allow on tailscale0 happened in W1 session (per F-0.2.18-W1-005 operator-arbitrated W2-prep-in-W1-session). W2 work in this session: image transfer, install.fish run, tier.json + broker provisioning, and the NZXTcos ufw extension to also allow port 4317 on enp5s0 from LAN subnet (for jumbo-capable LAN-direct OTLP).",
     "substrate_drift_discoveries": "a8cos was rebuilt between W0 probe and W2 (F-0.2.18-W1-004): missing podman/age (added to pacman-packages.txt + manually installed), missing fingerprint of W0 SSH host key, hostname renamed a8geekomcos→a8cos, Tailscale IP rotated 100.74.161.116→100.124.234.113. Tailnet domain also rolled tail78a311→tail8492.ts.net (F-0.2.18-W1-004). Treated as substrate-rebuild; harness adapted in-session.",
-    "harness_gaps_filed_for_0.3.1": "Multiple plan-doc/reality gaps in install.fish surface for a8cos base-tier deployment — bin/aho-models is Tier-1-only (W2-002); ollama upstream install.sh broken with 404 on .tgz fallback (W2-002); install.fish has no tier.json writer (W2-003); no aho-secrets-broker.service template in templates/systemd/ (W2-004); plan-doc broker socket path differs from code default (W2-005); bin/aho-python uses fish command-cache check (W2-007, patched). Manual workarounds landed on a8 to meet W2 acceptance; harness consolidation deferred to 0.3.1 alongside partial-tier on p3cos."
+    "harness_gaps_filed_for_0.3.1": "Multiple plan-doc/reality gaps in install.fish surface for a8cos base-tier deployment - bin/aho-models is Tier-1-only (W2-002); ollama upstream install.sh broken with 404 on .tgz fallback (W2-002); install.fish has no tier.json writer (W2-003); no aho-secrets-broker.service template in templates/systemd/ (W2-004); plan-doc broker socket path differs from code default (W2-005); bin/aho-python uses fish command-cache check (W2-007, patched). Manual workarounds landed on a8 to meet W2 acceptance; harness consolidation deferred to 0.3.1 alongside partial-tier on p3cos."
   },
   "deliverable_evidence": {
     "image_tag": "aho:0.2.18",
@@ -55,7 +55,7 @@
       {"name": "llama3.2:3b", "id": "a80c4f17acd5", "size": "2.0 GB"},
       {"name": "nomic-embed-text:latest", "id": "0a109f422b47", "size": "274 MB"}
     ],
-    "ollama_install_method": "pacman ollama 0.23.2-1.1 from cachyos-extra-znver4 (deviation from pacman-packages.txt comment that points to upstream curl|sh — upstream install.sh currently broken, F-0.2.18-W2-002)",
+    "ollama_install_method": "pacman ollama 0.23.2-1.1 from cachyos-extra-znver4 (deviation from pacman-packages.txt comment that points to upstream curl|sh - upstream install.sh currently broken, F-0.2.18-W2-002)",
     "aho_services_active_on_a8": [
       "aho-openclaw.service",
       "aho-nemoclaw.service",
@@ -88,7 +88,7 @@
     {
       "check": "tier.json on a8cos matches plan-doc §W2 expected shape",
       "result": "pass",
-      "evidence": "jq -e validated: host_id == 'a8cos', tier == 'base', deployment_mode == 'production', families == ['llama3','nomic'], bundle == ['llama3.2:3b','nomic-embed-text']. NOTE: tier.json was written manually by provision-w2-acceptance.fish since no aho subcommand creates it — filed as F-0.2.18-W2-003 harness gap."
+      "evidence": "jq -e validated: host_id == 'a8cos', tier == 'base', deployment_mode == 'production', families == ['llama3','nomic'], bundle == ['llama3.2:3b','nomic-embed-text']. NOTE: tier.json was written manually by provision-w2-acceptance.fish since no aho subcommand creates it - filed as F-0.2.18-W2-003 harness gap."
     },
     {
       "check": "Host-local secrets broker socket exists",
@@ -98,32 +98,32 @@
     {
       "check": "NZXTcos collector accepts inbound Tailscale traffic on 4317",
       "result": "pass",
-      "evidence": "Carry-forward from F-0.2.18-W1-005. Collector binds 0.0.0.0:4317; ufw allows inbound on tailscale0. Verified end-to-end via three paths in this session (FQDN, Tailscale IP, LAN IP — all OPEN from container)."
+      "evidence": "Carry-forward from F-0.2.18-W1-005. Collector binds 0.0.0.0:4317; ufw allows inbound on tailscale0. Verified end-to-end via three paths in this session (FQDN, Tailscale IP, LAN IP - all OPEN from container)."
     },
     {
       "check": "a8cos → NZXTcos OTLP reachability via tailscale FQDN",
       "result": "pass",
-      "evidence": "From inside aho:0.2.18 container on a8 (default-net + --network host both succeed): python socket connect to nzxtcos.tail8492.ts.net:4317 returns OPEN. Also OPEN via 100.101.73.2:4317 (Tailscale IP) and 172.31.255.135:4317 (LAN IP — after NZXTcos ufw extension to enp5s0)."
+      "evidence": "From inside aho:0.2.18 container on a8 (default-net + --network host both succeed): python socket connect to nzxtcos.tail8492.ts.net:4317 returns OPEN. Also OPEN via 100.101.73.2:4317 (Tailscale IP) and 172.31.255.135:4317 (LAN IP - after NZXTcos ufw extension to enp5s0)."
     },
     {
       "check": "install.fish portability disposition recorded",
       "result": "pass_with_findings",
-      "evidence": "a8cos is CachyOS (Arch-derivative) — OS-family portability holds per W0 probe. NO substantive new code (>50 lines) of OS-family-specific branching needed. But TIER-family adaptation gaps surfaced (Tier-1-only assumptions in bin/aho-models, model-fleet.txt, install.fish; tier.json + broker not written by harness) — these are a NEW dimension the plan-doc did not anticipate. Multiple in-session manual workarounds (install-base-tier-models.fish, provision-w2-acceptance.fish, podman added to pacman-packages.txt, bin/aho-python cache-immune patch). Disposition: 'clean-Arch portability, base-tier harness adaptation needed in 0.3.1.'"
+      "evidence": "a8cos is CachyOS (Arch-derivative) - OS-family portability holds per W0 probe. NO substantive new code (>50 lines) of OS-family-specific branching needed. But TIER-family adaptation gaps surfaced (Tier-1-only assumptions in bin/aho-models, model-fleet.txt, install.fish; tier.json + broker not written by harness) - these are a NEW dimension the plan-doc did not anticipate. Multiple in-session manual workarounds (install-base-tier-models.fish, provision-w2-acceptance.fish, podman added to pacman-packages.txt, bin/aho-python cache-immune patch). Disposition: 'clean-Arch portability, base-tier harness adaptation needed in 0.3.1.'"
     },
     {
       "check": "Base-tier model bundle (llama3.2:3b + nomic-embed-text) pulled via ollama",
       "result": "pass",
-      "evidence": "ollama list shows both models present. llama3.2:3b (2.0 GB, ID a80c4f17acd5), nomic-embed-text:latest (274 MB, ID 0a109f422b47). Pulled via install-base-tier-models.fish (manual workaround; bin/aho-models Tier-1-only — F-0.2.18-W2-002)."
+      "evidence": "ollama list shows both models present. llama3.2:3b (2.0 GB, ID a80c4f17acd5), nomic-embed-text:latest (274 MB, ID 0a109f422b47). Pulled via install-base-tier-models.fish (manual workaround; bin/aho-models Tier-1-only - F-0.2.18-W2-002)."
     },
     {
       "check": "G070/G071 hygiene after src/aho/ touches",
       "result": "pass",
-      "evidence": "bin/aho-python patched (test -x replaces command -q for CLI presence check) — file is fish, no __pycache__ concern. pacman-packages.txt updated with podman (no .pyc impact). G070 N/A; G071 N/A this session."
+      "evidence": "bin/aho-python patched (test -x replaces command -q for CLI presence check) - file is fish, no __pycache__ concern. pacman-packages.txt updated with podman (no .pyc impact). G070 N/A; G071 N/A this session."
     },
     {
-      "check": "Pillar 11 — no git ops, no agent-initiated secret mgmt, no ghcr push, no iteration close from W2",
+      "check": "Pillar 11 - no git ops, no agent-initiated secret mgmt, no ghcr push, no iteration close from W2",
       "result": "pass",
-      "evidence": "No git commit/push/merge/add/rm from session. `aho secret unlock` + `aho secret set ahomw placeholder placeholder` on a8 were operator-executed (Kyle's ssh, Kyle's passphrase choice, Kyle's bytes — not agent). No ghcr push (OPR-W1-001 still pending). No iteration close. All harness-modifying scripts ran with operator authorization. Operator-only sudo work (NZXT ufw add, a8 sshd enable, a8 pacman ollama install, a8 loginctl enable-linger) all executed by Kyle via his terminal."
+      "evidence": "No git commit/push/merge/add/rm from session. `aho secret unlock` + `aho secret set ahomw placeholder placeholder` on a8 were operator-executed (Kyle's ssh, Kyle's passphrase choice, Kyle's bytes - not agent). No ghcr push (OPR-W1-001 still pending). No iteration close. All harness-modifying scripts ran with operator authorization. Operator-only sudo work (NZXT ufw add, a8 sshd enable, a8 pacman ollama install, a8 loginctl enable-linger) all executed by Kyle via his terminal."
     }
   ],
   "findings": [
@@ -131,7 +131,7 @@
       "id": "F-0.2.18-W2-001",
       "severity": "important",
       "title": "Skip-restart attribution gap continued from W1 (now spanning W0+W1+W2)",
-      "detail": "Per F-0.2.18-W1-001 precedent. settings.json env was updated to AHO_WORKSTREAM=W2 last night but session never restarted, so claude-code's OTEL_RESOURCE_ATTRIBUTES still carry aho.workstream=W0 (the boot-time value from W0 — never even re-flowed to W1 because that restart also didn't happen). Aho-emitted structured events (workstream_start/complete, audit, acceptance archives) correctly tag W2 as event content. Cost-attribution per Pillar 8 lands all W0+W1+W2 spend on W0 in this session. Recoverable post-hoc via timestamp reconciliation; materiality (ADR-0010) unaffected (counts archives by content, not span tags). Pattern is now extensively documented; carry-forward to ADR formalizing 'session-restart vs in-session-deviation' contract for future iterations.",
+      "detail": "Per F-0.2.18-W1-001 precedent. settings.json env was updated to AHO_WORKSTREAM=W2 last night but session never restarted, so claude-code's OTEL_RESOURCE_ATTRIBUTES still carry aho.workstream=W0 (the boot-time value from W0 - never even re-flowed to W1 because that restart also didn't happen). Aho-emitted structured events (workstream_start/complete, audit, acceptance archives) correctly tag W2 as event content. Cost-attribution per Pillar 8 lands all W0+W1+W2 spend on W0 in this session. Recoverable post-hoc via timestamp reconciliation; materiality (ADR-0010) unaffected (counts archives by content, not span tags). Pattern is now extensively documented; carry-forward to ADR formalizing 'session-restart vs in-session-deviation' contract for future iterations.",
       "disposition": "operator_arbitrated_accepted_with_finding"
     },
     {
@@ -146,7 +146,7 @@
       "id": "F-0.2.18-W2-003",
       "severity": "important",
       "title": "install.fish has no tier.json writer; plan-doc §W2 expects it but no aho subcommand creates it",
-      "detail": "Plan-doc §W2 explicitly says install.fish writes ~/.config/aho/tier.json with host_id/tier/deployment_mode/families/bundle. grep of src/aho/ + bin/ found no writer for that path. tier-detect.py writes a marker file at /var/run/aho/tier (different path, different shape — just the tier label). Manual workaround this session: provision-w2-acceptance.fish writes the file with correct shape.",
+      "detail": "Plan-doc §W2 explicitly says install.fish writes ~/.config/aho/tier.json with host_id/tier/deployment_mode/families/bundle. grep of src/aho/ + bin/ found no writer for that path. tier-detect.py writes a marker file at /var/run/aho/tier (different path, different shape - just the tier label). Manual workaround this session: provision-w2-acceptance.fish writes the file with correct shape.",
       "disposition": "carry_forward_to_0.3.1",
       "0.3.1_scope": "Add `aho install tier-manifest` subcommand (or fold into install.fish step 7 systemd as a pre-service step) that calls tier-detect, gathers per-host metadata, writes ~/.config/aho/tier.json. Update plan-doc references to match actual writer name."
     },
@@ -154,7 +154,7 @@
       "id": "F-0.2.18-W2-004",
       "severity": "important",
       "title": "No aho-secrets-broker.service template in templates/systemd/; ADR-0009 broker-per-host not realized by install.fish",
-      "detail": "templates/systemd/ holds 7 templates (openclaw, nemoclaw, telegram, harness-watcher, jaeger, otel-collector, dashboard) but no aho-secrets-broker.service. bin/aho-systemd installs 4 (openclaw, nemoclaw, telegram, harness-watcher) — broker not in that set. ADR-0009 says every host runs its own broker — implementation gap. Manual workaround this session: provision-w2-acceptance.fish writes the unit on a8 and starts it.",
+      "detail": "templates/systemd/ holds 7 templates (openclaw, nemoclaw, telegram, harness-watcher, jaeger, otel-collector, dashboard) but no aho-secrets-broker.service. bin/aho-systemd installs 4 (openclaw, nemoclaw, telegram, harness-watcher) - broker not in that set. ADR-0009 says every host runs its own broker - implementation gap. Manual workaround this session: provision-w2-acceptance.fish writes the unit on a8 and starts it.",
       "disposition": "carry_forward_to_0.3.1",
       "0.3.1_scope": "Add templates/systemd/aho-secrets-broker.service.template to repo. Add 'secrets-broker' to bin/aho-systemd $daemons list. Verify unit installs cleanly on NZXTcos + a8 + future hosts."
     },
@@ -162,7 +162,7 @@
       "id": "F-0.2.18-W2-005",
       "severity": "low",
       "title": "Plan-doc broker socket path (~/.local/share/aho/broker/broker.sock) differs from aho code default ($XDG_RUNTIME_DIR/aho-secrets.sock)",
-      "detail": "Plan-doc §W2 #3 says broker socket exists at ~/.local/share/aho/broker/broker.sock. Code (src/aho/host/secrets_broker.py default_socket_path) returns $XDG_RUNTIME_DIR/aho-secrets.sock — typically /run/user/UID/aho-secrets.sock. XDG_RUNTIME_DIR is on tmpfs with mode 0700 perms — better engineering than persistent-fs storage for runtime sockets. This W2 acceptance used the code default; plan-doc path treated as aspirational.",
+      "detail": "Plan-doc §W2 #3 says broker socket exists at ~/.local/share/aho/broker/broker.sock. Code (src/aho/host/secrets_broker.py default_socket_path) returns $XDG_RUNTIME_DIR/aho-secrets.sock - typically /run/user/UID/aho-secrets.sock. XDG_RUNTIME_DIR is on tmpfs with mode 0700 perms - better engineering than persistent-fs storage for runtime sockets. This W2 acceptance used the code default; plan-doc path treated as aspirational.",
       "disposition": "reconcile_in_0.3.1_via_adr_amendment",
       "0.3.1_scope": "ADR-0009 amendment to document canonical broker socket path = $XDG_RUNTIME_DIR/aho-secrets.sock. Update plan-doc templates accordingly."
     },
@@ -170,21 +170,21 @@
       "id": "F-0.2.18-W2-006",
       "severity": "info",
       "title": "Substrate-operational learnings during W2 (pre-install + post-install sidequests)",
-      "detail": "Multiple operational discoveries during W2 substrate work, none harness-relevant but worth recording: (a) Kyle's sudo locked out via PAM faillock default deny=3 from samba-setup attempts — recovered via reboot (faillock state in /run tmpfs) and biometrics login; provisioned `break_glass` wheel-group user as future insurance (recorded in feedback-break-glass-account-a8 memory). (b) Dolphin file-mount sidequest: SMB install on a8 (samba 4.24.2) reached running state but smbd loopback-only due to samba's `bind interfaces only` + tun device flakiness; Kyle pivoted to fish:// (KDE's SSH-based KIO) which Just Worked — samba removed from both hosts. (c) Enabled real sshd on a8 + added LAN-direct ufw rules + /etc/hosts overrides for jumbo-capable LAN bypass of Tailscale 1280-MTU tunnel; NZXTcos NIC reconfigured to MTU 9000 with persistent NM setting. (d) bin/aho-python had a fish-command-cache bug masking newly-installed CLI as 'not on PATH' — patched in repo (test -x replaces command -q).",
+      "detail": "Multiple operational discoveries during W2 substrate work, none harness-relevant but worth recording: (a) Kyle's sudo locked out via PAM faillock default deny=3 from samba-setup attempts - recovered via reboot (faillock state in /run tmpfs) and biometrics login; provisioned `break_glass` wheel-group user as future insurance (recorded in feedback-break-glass-account-a8 memory). (b) Dolphin file-mount sidequest: SMB install on a8 (samba 4.24.2) reached running state but smbd loopback-only due to samba's `bind interfaces only` + tun device flakiness; Kyle pivoted to fish:// (KDE's SSH-based KIO) which Just Worked - samba removed from both hosts. (c) Enabled real sshd on a8 + added LAN-direct ufw rules + /etc/hosts overrides for jumbo-capable LAN bypass of Tailscale 1280-MTU tunnel; NZXTcos NIC reconfigured to MTU 9000 with persistent NM setting. (d) bin/aho-python had a fish-command-cache bug masking newly-installed CLI as 'not on PATH' - patched in repo (test -x replaces command -q).",
       "disposition": "recorded_for_history_no_action"
     },
     {
       "id": "F-0.2.18-W2-007",
       "severity": "low",
-      "title": "bin/aho-python used fish's cached `command -q` to check CLI presence — patched in-session",
-      "detail": "bin/aho-python step's post-install check was `command -q aho` (fish builtin). The check returned stale-negative because fish's command lookup cache was populated before pip installed aho into ~/.local/bin/. Patched to `test -x $HOME/.local/bin/aho` (file existence check, cache-immune). The doctor path (_cmd_doctor) at bin/aho-python:48 has the same pattern but is only hit in a fresh-shell context where the cache is clean — left alone but worth sweeping in 0.3.1.",
+      "title": "bin/aho-python used fish's cached `command -q` to check CLI presence - patched in-session",
+      "detail": "bin/aho-python step's post-install check was `command -q aho` (fish builtin). The check returned stale-negative because fish's command lookup cache was populated before pip installed aho into ~/.local/bin/. Patched to `test -x $HOME/.local/bin/aho` (file existence check, cache-immune). The doctor path (_cmd_doctor) at bin/aho-python:48 has the same pattern but is only hit in a fresh-shell context where the cache is clean - left alone but worth sweeping in 0.3.1.",
       "disposition": "patched_in_session_followup_sweep_0.3.1"
     },
     {
       "id": "F-0.2.18-W2-008",
       "severity": "low",
       "title": "pacman-packages.txt was missing podman; added in-session",
-      "detail": "a8 was rebuilt between W0 probe and W2, losing podman. install.fish's bin/aho-pacman doesn't install podman because pacman-packages.txt didn't declare it. Added `podman` to the list with a 0.2.18-W2 comment. Carry-forward applies to future deployments — they pick up podman automatically on first install.fish run.",
+      "detail": "a8 was rebuilt between W0 probe and W2, losing podman. install.fish's bin/aho-pacman doesn't install podman because pacman-packages.txt didn't declare it. Added `podman` to the list with a 0.2.18-W2 comment. Carry-forward applies to future deployments - they pick up podman automatically on first install.fish run.",
       "disposition": "closed_in_session"
     }
   ],
@@ -192,7 +192,7 @@
     {
       "id": "OPR-W2-001",
       "title": "Commit harness changes that landed in W2 session (bin/aho-python patch + pacman-packages.txt podman addition)",
-      "context": "Both files were edited on NZXTcos repo during W2 substrate work. Per Pillar 11, agents don't commit — operator does at iteration close.",
+      "context": "Both files were edited on NZXTcos repo during W2 substrate work. Per Pillar 11, agents don't commit - operator does at iteration close.",
       "resolution": {
         "status": "resolved",
         "resolved_at_utc": "2026-05-17T15:25:00Z",
@@ -209,7 +209,7 @@
     {
       "id": "OPR-W2-002",
       "title": "Push aho:0.2.18 to ghcr.io (continued from OPR-W1-001)",
-      "context": "Still operator-pending. Image now also lives on a8 via podman load — ghcr push is optional but useful for future cloud/cross-host deployments.",
+      "context": "Still operator-pending. Image now also lives on a8 via podman load - ghcr push is optional but useful for future cloud/cross-host deployments.",
       "resolution": {
         "status": "resolved",
         "resolved_at_utc": "2026-05-17T15:30:00Z",
@@ -236,11 +236,11 @@
       "findings_count": 1,
       "structural_pre_checks": "all pass",
       "halt_drivers": [
-        "G071 'critical' — description is verbatim auditor prompt-instruction text: 'Did the executor reference a gotcha / ADR / carry-forward by ID? Does the ID look real (matches naming conventions)?'. Not a real finding — the small model echoed its own prompt's question as a finding entry."
+        "G071 'critical' - description is verbatim auditor prompt-instruction text: 'Did the executor reference a gotcha / ADR / carry-forward by ID? Does the ID look real (matches naming conventions)?'. Not a real finding - the small model echoed its own prompt's question as a finding entry."
       ],
       "prompt_echo_observed": true,
-      "prompt_echo_note": "New audit-shape false-positive (sibling to F-0.2.18-W0-008 narrative-lift): llama3.2:3b emits an auditor-prompt question verbatim, labels it with a gotcha ID (G071) and severity 'critical', as if the question were a finding. Post-hoc filter (audit_finding_filter) does not catch this shape — it's not a RAG-status echo, not a fake-ID phrase, just prompt-content reflection. Filed as F-0.2.18-W2-009 for 0.3.x audit-machinery work.",
-      "operator_disposition": "Operator-arbitrate per F-0.2.18-W0-008 precedent. Treat as surface_to_drafter equivalent. Three structural false-positive shapes (W0-005/006/007) closed; narrative-lift + prompt-echo remain as small-model semantic limitations. No re-audit warranted — same input → same shape from same model."
+      "prompt_echo_note": "New audit-shape false-positive (sibling to F-0.2.18-W0-008 narrative-lift): llama3.2:3b emits an auditor-prompt question verbatim, labels it with a gotcha ID (G071) and severity 'critical', as if the question were a finding. Post-hoc filter (audit_finding_filter) does not catch this shape - it's not a RAG-status echo, not a fake-ID phrase, just prompt-content reflection. Filed as F-0.2.18-W2-009 for 0.3.x audit-machinery work.",
+      "operator_disposition": "Operator-arbitrate per F-0.2.18-W0-008 precedent. Treat as surface_to_drafter equivalent. Three structural false-positive shapes (W0-005/006/007) closed; narrative-lift + prompt-echo remain as small-model semantic limitations. No re-audit warranted - same input → same shape from same model."
     }
   },
   "operator_arbitration": {
@@ -253,7 +253,7 @@
     "id": "F-0.2.18-W2-009",
     "severity": "info",
     "title": "New audit-shape false-positive: llama3.2:3b prompt-instruction-echo",
-    "detail": "v1 audit emitted a finding whose description was the literal auditor-prompt question verbatim. Not a real finding — the small model treated its own prompt as if it were an artifact entry. Sibling to F-0.2.18-W0-008 narrative-lift in the family of 'small-model semantic-discrimination limitations the post-hoc filter doesn't catch'. Carry-forward to 0.3.x audit-machinery iteration: extend audit_finding_filter with a prompt-text-substring detector (drop findings whose description matches >40 chars of the registered prompt template). Caveat: may over-suppress on real findings that paraphrase the prompt — needs careful threshold tuning. Defer to dedicated work.",
+    "detail": "v1 audit emitted a finding whose description was the literal auditor-prompt question verbatim. Not a real finding - the small model treated its own prompt as if it were an artifact entry. Sibling to F-0.2.18-W0-008 narrative-lift in the family of 'small-model semantic-discrimination limitations the post-hoc filter doesn't catch'. Carry-forward to 0.3.x audit-machinery iteration: extend audit_finding_filter with a prompt-text-substring detector (drop findings whose description matches >40 chars of the registered prompt template). Caveat: may over-suppress on real findings that paraphrase the prompt - needs careful threshold tuning. Defer to dedicated work.",
     "disposition": "operator_arbitrated_carry_forward_to_0.3.x"
   },
   "checkpoint_state_at_W2_close": {

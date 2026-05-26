@@ -1,4 +1,4 @@
-# aho 0.1.16 — Design
+# aho 0.1.16 - Design
 
 **Phase:** 0 | **Iteration:** 0.1.16 | **Theme:** Close sequence repair + iteration 1 graduation
 **Agent:** Claude Code single-agent throughout
@@ -13,15 +13,15 @@ Fix the close sequence ordering bug surfaced in 0.1.15 (postflight ran before ar
 
 ## Workstreams
 
-### W0 — Close sequence repair + canonical artifacts + hygiene
+### W0 - Close sequence repair + canonical artifacts + hygiene
 
 Refactored close sequence into explicit ordered steps. Created canonical_artifacts_current.py postflight gate and canonical_artifacts.yaml. Wired run file through report_builder. Version bumps, README fixes, pyproject URLs, aho_json.py helper.
 
-### W1 — Iteration 1 graduation ceremony
+### W1 - Iteration 1 graduation ceremony
 
 Created iteration-1-close.md, iteration-2-charter.md, updated phase-0 charter with iteration boundaries, added README iteration roadmap.
 
-### W2 — Dogfood close sequence
+### W2 - Dogfood close sequence
 
 Run corrected close on 0.1.16, verify zero false positives, validate run file attribution.
 

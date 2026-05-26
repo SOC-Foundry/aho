@@ -1,7 +1,7 @@
-# Persona 3 Validation Findings — aho 0.2.9 W8
+# Persona 3 Validation Findings - aho 0.2.9 W8
 
 **Date:** 2026-04-11
-**Scope:** Validate aho's persona 3 (impromptu assistant — pwd-scoped work against arbitrary files)
+**Scope:** Validate aho's persona 3 (impromptu assistant - pwd-scoped work against arbitrary files)
 **Result:** Persona 3 entry point does not exist. All 4 test tasks failed at the same point.
 
 ---
@@ -18,9 +18,9 @@ Searched all CLI commands, bin/ wrappers, and daemon dispatch paths for any mech
 | `bin/aho-openclaw execute "code"` | Partial | Can run code that reads files, but no LLM reasoning about content. Disconnected from chat. |
 | `bin/aho-nemoclaw dispatch "task"` | No | Daemon-dependent, iteration-scoped routing. No file awareness. |
 | `bin/aho-conductor dispatch "task"` | No | Full pipeline (nemoclaw → workstream → evaluator → telegram). Iteration-scoped. No file input. |
-| Telegram free-text → openclaw | No | Same as openclaw chat — no filesystem access on the receiving end. |
+| Telegram free-text → openclaw | No | Same as openclaw chat - no filesystem access on the receiving end. |
 | `aho rag query "question"` | No | Queries the ChromaDB archive of aho's own artifacts. Not a general-purpose tool. |
-| Claude Code / Gemini CLI | Yes (external) | These ARE persona 3 tools, but they're not aho — they're the agent runtimes aho orchestrates. |
+| Claude Code / Gemini CLI | Yes (external) | These ARE persona 3 tools, but they're not aho - they're the agent runtimes aho orchestrates. |
 
 **Verdict:** aho has zero persona 3 implementation surface. The gap is structural, not a missing flag.
 
@@ -29,8 +29,8 @@ Searched all CLI commands, bin/ wrappers, and daemon dispatch paths for any mech
 ## Finding 2: Chat and Execute Are Disconnected
 
 OpenClaw has two capabilities that persona 3 would need:
-1. **chat** — LLM reasoning (Qwen via Ollama). Cannot read files.
-2. **execute** — subprocess code execution. Can read files. Cannot reason.
+1. **chat** - LLM reasoning (Qwen via Ollama). Cannot read files.
+2. **execute** - subprocess code execution. Can read files. Cannot reason.
 
 These two capabilities are not connected. There is no "read this file then reason about its contents" dispatch path. A persona 3 entry point would need to:
 1. Accept a task description + file/directory references
@@ -45,9 +45,9 @@ None of these four steps are wired together today.
 ## Finding 3: Test Environment and Task Results
 
 **Test environment:** `/tmp/aho-persona-3-test/`
-- `sample-contract.pdf` — 1-page professional services agreement (generated via reportlab)
-- `sample-emails.txt` — 8 emails with 7 unique email addresses
-- `sow-template.md` — empty file for SOW output
+- `sample-contract.pdf` - 1-page professional services agreement (generated via reportlab)
+- `sample-emails.txt` - 8 emails with 7 unique email addresses
+- `sow-template.md` - empty file for SOW output
 
 **Task results:**
 
@@ -62,7 +62,7 @@ None of these four steps are wired together today.
 ```fish
 aho-openclaw execute "with open('/tmp/aho-persona-3-test/sample-emails.txt') as f: print(f.read())"
 ```
-Result: **Success** — file contents returned. But this is raw code execution with no LLM reasoning. A user would need to write the Python themselves, defeating the purpose of an LLM assistant.
+Result: **Success** - file contents returned. But this is raw code execution with no LLM reasoning. A user would need to write the Python themselves, defeating the purpose of an LLM assistant.
 
 ---
 
@@ -98,7 +98,7 @@ The gap sits at the intersection of:
 - OpenClaw's execute capability (has files, no LLM)
 - The CLI surface (has neither a "do" command nor file-passing conventions)
 
-**Effort estimate:** Small module (~150 lines) + CLI integration (~30 lines) + tests (~100 lines). Not a large workstream. The primitives (QwenClient, file I/O, CLI argparse) all exist — they just aren't composed for this use case.
+**Effort estimate:** Small module (~150 lines) + CLI integration (~30 lines) + tests (~100 lines). Not a large workstream. The primitives (QwenClient, file I/O, CLI argparse) all exist - they just aren't composed for this use case.
 
 ---
 

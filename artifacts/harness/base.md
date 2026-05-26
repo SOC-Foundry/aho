@@ -1,7 +1,7 @@
 # aho - Base Harness
 
 **Version:** 0.2.10
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -13,7 +13,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -25,9 +25,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 

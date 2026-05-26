@@ -83,7 +83,28 @@ debconf: (This frontend requires a controlling tty.)
 debconf: falling back to frontend: Noninteractive
 Fetched 4884 kB in 0s (20.8 MB/s)
 Selecting previously unselected package libbrotli1:amd64.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
 Preparing to unpack .../00-libbrotli1_1.1.0-2+b7_amd64.deb ...
 Unpacking libbrotli1:amd64 (1.1.0-2+b7) ...
 Selecting previously unselected package libkrb5support0:amd64.
@@ -187,7 +208,7 @@ Processing triggers for libc-bin (2.41-12+deb13u2) ...
 --> b8f640ba63dc
 [2/2] STEP 10/13: EXPOSE 8080
 --> 574fa4e8567b
-[2/2] STEP 11/13: LABEL org.opencontainers.image.source="https://github.com/soc-foundry/aho"       org.opencontainers.image.description="aho base-tier container — 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix)"       io.aho.iteration="0.2.18"       io.aho.workstream="W1"
+[2/2] STEP 11/13: LABEL org.opencontainers.image.source="https://github.com/soc-foundry/aho"       org.opencontainers.image.description="aho base-tier container - 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix)"       io.aho.iteration="0.2.18"       io.aho.workstream="W1"
 --> 6f8cad69a36e
 [2/2] STEP 12/13: ENTRYPOINT ["aho"]
 --> 146fe3a4057b

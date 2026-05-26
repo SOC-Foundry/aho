@@ -1,23 +1,23 @@
-# iao — Design 0.1.7
+# iao - Design 0.1.7
 
 **Iteration:** 0.1.7
 **Phase:** 0 (NZXT-only authoring)
-**Theme:** Let Qwen Cook — make the artifact loop Qwen-friendly instead of Qwen-punishing
+**Theme:** Let Qwen Cook - make the artifact loop Qwen-friendly instead of Qwen-punishing
 **Date:** April 09, 2026
-**Repo:** ~/dev/projects/iao (local only — Phase 0 has no remote)
+**Repo:** ~/dev/projects/iao (local only - Phase 0 has no remote)
 **Machine:** NZXTcos
 **Wall clock target:** ~10 hours soft cap (no hard cap)
-**Run mode:** Single executor — Gemini CLI primary, Claude Code available as fallback
-**Iteration counter jump:** 0.1.4 → 0.1.7 (0.1.5 drafted-never-executed, 0.1.6 forensic-audit-only, both preserved on disk as historical record — see §2.11)
+**Run mode:** Single executor - Gemini CLI primary, Claude Code available as fallback
+**Iteration counter jump:** 0.1.4 → 0.1.7 (0.1.5 drafted-never-executed, 0.1.6 forensic-audit-only, both preserved on disk as historical record - see §2.11)
 **Significance:** The iteration that repairs the pipeline supporting Qwen. Streaming, repetition detection, word-count inversion, anti-hallucination evaluator, rich seed, RAG freshness, two-pass generation (experimental), component checklist, OpenClaw Ollama-native rebuild, full dogfood.
 
 ---
 
 ## What is iao
 
-iao (Iterative Agentic Orchestration) is a methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision during execution. The harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator, model fleet — is the product. The executing model (Gemini, Claude, Qwen) is the engine. iao was extracted from `kjtcom` (a location-intelligence platform) during kjtcom Phase 10 and is currently in **Phase 0 — NZXT-only authoring**.
+iao (Iterative Agentic Orchestration) is a methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision during execution. The harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator, model fleet - is the product. The executing model (Gemini, Claude, Qwen) is the engine. iao was extracted from `kjtcom` (a location-intelligence platform) during kjtcom Phase 10 and is currently in **Phase 0 - NZXT-only authoring**.
 
-0.1.7 is the iteration that addresses a specific failure mode visible in every prior iteration: Qwen's artifact loop ships structurally-plausible documents full of confabulation, padding, hallucinated file references, and degenerate repetition loops. The failure mode was never characterized because nobody was looking at the output critically until the 0.1.6 forensic audit dumped the 0.1.5 drafts on the table. Now we have receipts — see Appendix A — and 0.1.7 is built to eliminate every failure class visible in those receipts.
+0.1.7 is the iteration that addresses a specific failure mode visible in every prior iteration: Qwen's artifact loop ships structurally-plausible documents full of confabulation, padding, hallucinated file references, and degenerate repetition loops. The failure mode was never characterized because nobody was looking at the output critically until the 0.1.6 forensic audit dumped the 0.1.5 drafts on the table. Now we have receipts - see Appendix A - and 0.1.7 is built to eliminate every failure class visible in those receipts.
 
 A junior engineer reading this document should understand that 0.1.7 is the iteration where iao learns to use its own model fleet as a support system for Qwen instead of treating Qwen as a single-shot generator. Streaming gives visibility. Repetition detection kills degenerate loops. Structural gates replace word-count minimums that rewarded padding. An evaluator pass catches hallucinated file references. A richer seed gives Qwen ground truth to anchor against. RAG freshness weighting prevents stale context from poisoning new generations. Two-pass generation lets each section have its own tight context budget. Together these change the question from "will Qwen produce a usable artifact" to "did the pipeline catch what Qwen got wrong, and did Qwen have the context it needed to get most of it right."
 
@@ -28,7 +28,7 @@ A junior engineer reading this document should understand that 0.1.7 is the iter
 The Phase 0 charter was authored in iao 0.1.3 W6 and lives at `docs/phase-charters/iao-phase-0.md`. This iteration does not revise the charter; it executes against it.
 
 **Current phase status:**
-- Phase: 0 — NZXT-only authoring
+- Phase: 0 - NZXT-only authoring
 - Charter version: 0.1 (retroactive, written in 0.1.3)
 - Iterations completed in phase: 0.1.0, 0.1.2, 0.1.3, 0.1.4 (formally closed via `./bin/iao iteration close --confirm` on 2026-04-09)
 - Iterations attempted but not executed: 0.1.5 (Qwen produced degenerate drafts, never run)
@@ -51,26 +51,26 @@ The Phase 0 charter was authored in iao 0.1.3 W6 and lives at `docs/phase-charte
 - [x] Phase 0 charter committed (0.1.3 W6)
 - [x] Model fleet installed and integrated (0.1.4 W2)
 - [x] Telegram notifications functional (0.1.4 W4, notification scope only)
-- [ ] **Qwen loop produces production-weight artifacts without padding, hallucination, or repetition (0.1.7 W1-W6 — this iteration)**
-- [ ] **Component traceability per run (0.1.7 W7 — this iteration)**
-- [ ] **OpenClaw and NemoClaw functional without open-interpreter/tiktoken dependency (0.1.7 W8 — this iteration)**
+- [ ] **Qwen loop produces production-weight artifacts without padding, hallucination, or repetition (0.1.7 W1-W6 - this iteration)**
+- [ ] **Component traceability per run (0.1.7 W7 - this iteration)**
+- [ ] **OpenClaw and NemoClaw functional without open-interpreter/tiktoken dependency (0.1.7 W8 - this iteration)**
 - [ ] Telegram bot framework with bidirectional review bridge (deferred to 0.1.8)
 - [ ] kjtcom gotcha registry full migration with cross-project lookup (deferred to 0.1.8)
 - [ ] Cross-platform installer (fish/bash/zsh/PowerShell) (0.1.9 or later)
-- [ ] Novice operability validation pass — Luke/Alex dogfood (after artifact loop is trustworthy)
+- [ ] Novice operability validation pass - Luke/Alex dogfood (after artifact loop is trustworthy)
 - [ ] iao 0.6.x ships to soc-foundry/iao public repo (Phase 0 exit)
 
 ---
 
 ## §2. Why 0.1.7 Exists
 
-0.1.4 closed with six of eight workstreams actually shipping (W1, W2, W3, W6, W7 plus partial W4/W5) and the W1 cleanup work landing cleanly — BUNDLE_SPEC expanded to 21 sections, three-octet validator rejecting four-octet drift, `iao doctor` CLI wired, `age` installed, run report render-time checkpoint read fix in place. That's real progress. The run report lied about W3 being paused (it never actually paused because the pause mechanism was never implemented) and about W5 (which shipped as stubs that raise `NotImplementedError`), but the bones of the iteration held.
+0.1.4 closed with six of eight workstreams actually shipping (W1, W2, W3, W6, W7 plus partial W4/W5) and the W1 cleanup work landing cleanly - BUNDLE_SPEC expanded to 21 sections, three-octet validator rejecting four-octet drift, `iao doctor` CLI wired, `age` installed, run report render-time checkpoint read fix in place. That's real progress. The run report lied about W3 being paused (it never actually paused because the pause mechanism was never implemented) and about W5 (which shipped as stubs that raise `NotImplementedError`), but the bones of the iteration held.
 
 0.1.5 was supposed to be the follow-on iteration. Gemini CLI ran `iao iteration design 0.1.5` and `iao iteration plan 0.1.5`, Qwen generated both, and the drafts were left on disk when the Gemini session ran out of steam. The 0.1.6 forensic audit dumped those drafts in front of me. I read them. They are the cleanest diagnostic corpus iao has ever produced because they show exactly how the artifact loop fails.
 
-0.1.7 exists because the artifact loop is not slow or hung — it is **silently rewarding bad Qwen output**. Every failure mode below is supported by a direct quote from Appendix A.
+0.1.7 exists because the artifact loop is not slow or hung - it is **silently rewarding bad Qwen output**. Every failure mode below is supported by a direct quote from Appendix A.
 
-### 2.1 — The plan document's runaway repetition loop
+### 2.1 - The plan document's runaway repetition loop
 
 From `docs/iterations/0.1.5/iao-plan-0.1.5.md` starting around line 390, the same 12-line footer block repeats identically fifteen-plus times until the generation truncates mid-word at line 600 (`Predecessor:] iao-plan-0.1.`):
 
@@ -85,9 +85,9 @@ From `docs/iterations/0.1.5/iao-plan-0.1.5.md` starting around line 390, the sam
 
 This is not a slow generation. It is Qwen hitting the end of its useful content around word 2500, then running into the 3000-word minimum threshold enforced by `src/iao/artifacts/schemas.py`, and the retry loop forcing it to keep generating until word count is satisfied. Qwen satisfied the count by repeating the footer. **The word count gate rewarded degeneration.** The loop had no rolling-window similarity check, so the repetition ran unchecked for minutes.
 
-Fix: W1 streaming with token-by-token output, plus a rolling-window repetition detector that kills generation the moment the last 200 tokens are more than 70% a repeat of the preceding 200. W2 inverts the word count gate — count becomes a maximum, not a minimum. Hitting the max is a warning that Qwen ran out of content, not a success signal.
+Fix: W1 streaming with token-by-token output, plus a rolling-window repetition detector that kills generation the moment the last 200 tokens are more than 70% a repeat of the preceding 200. W2 inverts the word count gate - count becomes a maximum, not a minimum. Hitting the max is a warning that Qwen ran out of content, not a success signal.
 
-### 2.2 — The design document's infinite file-list hallucination
+### 2.2 - The design document's infinite file-list hallucination
 
 From `docs/iterations/0.1.5/iao-design-0.1.5.md` Appendix J, Qwen generates a plausible file list then degrades into repetition:
 
@@ -107,11 +107,11 @@ From `docs/iterations/0.1.5/iao-design-0.1.5.md` Appendix J, Qwen generates a pl
 - src/iao/eval/[src/iao/ case
 ```
 
-Every path except `src/iao/agents/` is a **hallucination**. iao has no `chain/`, no `eval/`, no `llm/`, no `vector/`, no `agent/` (singular) subpackage. Qwen produced these names because they sound like what an LLM orchestration project might contain. The generation cuts off mid-word, mid-path — classic token exhaustion during a degenerate loop.
+Every path except `src/iao/agents/` is a **hallucination**. iao has no `chain/`, no `eval/`, no `llm/`, no `vector/`, no `agent/` (singular) subpackage. Qwen produced these names because they sound like what an LLM orchestration project might contain. The generation cuts off mid-word, mid-path - classic token exhaustion during a degenerate loop.
 
-Fix: W3 anti-hallucination evaluator. Nemotron-mini:4b extracts every file reference, CLI command, script path, and ADR id from Qwen's output. Each reference is grep-validated against the actual codebase and harness documents. Hallucinations exceed a threshold → the artifact is rejected and regenerated with the hallucinated terms explicitly listed in the prompt as `DO NOT use these phrases:`. This implements iaomw-G114 (self-grading bias) properly — a different model does the grading, not Qwen grading itself.
+Fix: W3 anti-hallucination evaluator. Nemotron-mini:4b extracts every file reference, CLI command, script path, and ADR id from Qwen's output. Each reference is grep-validated against the actual codebase and harness documents. Hallucinations exceed a threshold → the artifact is rejected and regenerated with the hallucinated terms explicitly listed in the prompt as `DO NOT use these phrases:`. This implements iaomw-G114 (self-grading bias) properly - a different model does the grading, not Qwen grading itself.
 
-### 2.3 — The pervasive `query_registry.py` hallucination
+### 2.3 - The pervasive `query_registry.py` hallucination
 
 Every workstream section in Qwen's 0.1.5 design document contains language like:
 
@@ -121,9 +121,9 @@ Every workstream section in Qwen's 0.1.5 design document contains language like:
 
 This is a RAG freshness problem and a seed problem, simultaneously. ChromaDB's `iaomw_archive` has 17 documents (per Investigation 7); `kjtco_archive` has 282. When Qwen's RAG layer retrieves top-k similar content, the sheer document count gives kjtcom entries a retrieval advantage even when iao-specific content exists. And Qwen's system prompt had no explicit anti-hallucination list telling it "iao does not have a query_registry.py script."
 
-Fix: W4 rich structured seed adds an `anti_hallucination_list` field populated with known-wrong phrases. W5 adds recency weighting to ChromaDB retrieval — 0.1.4 content outranks 0.1.2 content when generating 0.1.7 artifacts. Together they prevent the query_registry.py-class error.
+Fix: W4 rich structured seed adds an `anti_hallucination_list` field populated with known-wrong phrases. W5 adds recency weighting to ChromaDB retrieval - 0.1.4 content outranks 0.1.2 content when generating 0.1.7 artifacts. Together they prevent the query_registry.py-class error.
 
-### 2.4 — The fabricated changelog
+### 2.4 - The fabricated changelog
 
 Qwen's 0.1.5 design document Appendix H contains:
 
@@ -137,11 +137,11 @@ Qwen's 0.1.5 design document Appendix H contains:
 - Introduced Versioning Bug: A bug was introduced in the versioning logic.
 ```
 
-None of this is real. 0.1.1 was never an iao iteration. 0.1.3 did not "introduce a `run_report` bug" as a feature — the run report feature was added in 0.1.3 W5 and had bugs that surfaced during dogfood and were fixed in 0.1.4 W1. Qwen plausibly filled in the blanks because the seed told it nothing about actual iteration history.
+None of this is real. 0.1.1 was never an iao iteration. 0.1.3 did not "introduce a `run_report` bug" as a feature - the run report feature was added in 0.1.3 W5 and had bugs that surfaced during dogfood and were fixed in 0.1.4 W1. Qwen plausibly filled in the blanks because the seed told it nothing about actual iteration history.
 
 Fix: W4 rich structured seed includes `carryover_debts` parsed from the previous run report's workstream summary table, plus `iteration_theme` (one sentence) and `scope_hints` (free-text from chat planning). This gives Qwen real ground truth instead of forcing it to invent.
 
-### 2.5 — The duplicated risk boilerplate
+### 2.5 - The duplicated risk boilerplate
 
 Qwen's 0.1.5 design has eight workstream sections. Six of them contain the identical risk paragraph:
 
@@ -151,13 +151,13 @@ Qwen ran out of distinct risk content around workstream W2 and fell into copy-pa
 
 Fix: W6 two-pass generation (experimental behind `--two-pass` flag). Pass 1 generates an outline (JSON with section headers and 1-sentence summaries). Pass 2 generates each section independently with that section's scope as the entire prompt and RAG retrieval scoped to that section's topic. Each section gets a <500 word budget instead of the whole artifact sharing a 3000-word budget. Sections concatenate into the final artifact. Because each section's generation is tight and grounded, the copy-paste failure mode cannot occur.
 
-### 2.6 — The mis-labeled phase
+### 2.6 - The mis-labeled phase
 
 Qwen's 0.1.5 design header reads: *"Phase: 1 (Production Readiness)"*. iao is in Phase 0. Qwen inferred "Phase 1" because 0.1.5 comes after 0.1.4 and "Production Readiness" sounds like a plausible next milestone. Pure confabulation.
 
 Fix: W4 structured seed includes explicit `phase: 0` field, and W3 evaluator greps for phase-label mentions and cross-checks against the `.iao.json` phase value.
 
-### 2.7 — The revived split-agent handoff
+### 2.7 - The revived split-agent handoff
 
 Qwen's 0.1.5 plan document section §Executive Summary contains:
 
@@ -167,7 +167,7 @@ Split-agent handoff was a **0.1.3 design pattern that was explicitly retired in 
 
 Fix: W4 structured seed includes `retired_patterns` list alongside `anti_hallucination_list`. W5 RAG freshness weighting pushes 0.1.4 content to the top of retrieval results, so "split-agent retired" appears in context before "split-agent recommended."
 
-### 2.8 — The stub OpenClaw that blocks the review loop
+### 2.8 - The stub OpenClaw that blocks the review loop
 
 iao 0.1.4 W5 shipped `src/iao/agents/openclaw.py` and `nemoclaw.py` as stubs. `OpenClaw.chat()` raises `NotImplementedError` with the message "open-interpreter failed to install due to Python 3.14 / missing Rust for tiktoken." `NemoClawOrchestrator.dispatch()` delegates to OpenClaw and therefore returns error strings for every call. Nothing downstream of these stubs works.
 
@@ -175,7 +175,7 @@ iao 0.1.4 W5 shipped `src/iao/agents/openclaw.py` and `nemoclaw.py` as stubs. `O
 
 Fix: W8 rebuilds OpenClaw and NemoClaw Ollama-native. No `pip install open-interpreter`. New `src/iao/agents/openclaw.py` uses `QwenClient` for model calls and `subprocess` for code execution with a restricted PATH and working directory. `src/iao/agents/nemoclaw.py` uses Nemotron to classify incoming tasks and route to OpenClaw sessions with different role prompts. `scripts/smoke_nemoclaw.py` proves the primitive works end-to-end. W8 runs after W1–W6 so the repaired Qwen loop is available for NemoClaw's orchestration and the evaluator is available to validate output.
 
-### 2.9 — The missing component traceability
+### 2.9 - The missing component traceability
 
 Kyle's Note #1 from the 0.1.4 run report:
 
@@ -185,15 +185,15 @@ This is real. When 0.1.4 closed, nobody could easily answer "what models did thi
 
 Fix: W7 adds BUNDLE_SPEC §22 "Agentic Components" auto-generated from the event log. During iteration execution, every model call, every CLI command, every agent instance, every harness interaction writes an event with type `agent_interaction` or `model_call` or `tool_call`. At iteration close, the §22 generator reads the event log, groups by component (qwen3.5:9b, nemotron-mini:4b, glm-4.6v, openclaw, nemoclaw, etc.), and produces a table with component | tasks assigned | status | notes. BUNDLE_SPEC expands from 21 to 22 sections.
 
-### 2.10 — The stale global `iao` binary
+### 2.10 - The stale global `iao` binary
 
-`which iao` on NZXT resolves to `/home/kthompson/iao-middleware/bin/iao` — a bash dispatcher script from a **legacy predecessor project** (iao-middleware) that predates the current source layout. The bash script knows about 6 subcommands. The real pip entry point at `~/.local/bin/iao` knows about 16 subcommands but is shadowed in PATH.
+`which iao` on NZXT resolves to `/home/kthompson/iao-middleware/bin/iao` - a bash dispatcher script from a **legacy predecessor project** (iao-middleware) that predates the current source layout. The bash script knows about 6 subcommands. The real pip entry point at `~/.local/bin/iao` knows about 16 subcommands but is shadowed in PATH.
 
 This is why Kyle's `iao iteration close --confirm` failed with "invalid choice: 'iteration'" while `./bin/iao iteration close --confirm` worked. It's a PATH ordering trap that has been confusing agents for months.
 
 Fix: W0 removes `~/iao-middleware/bin` from the fish PATH config and verifies `which iao` resolves to the pip entry point afterward. This is a 30-second fix that has been stalling every agent session.
 
-### 2.11 — 0.1.5 and 0.1.6 disposition
+### 2.11 - 0.1.5 and 0.1.6 disposition
 
 0.1.5 was attempted. Qwen produced a 5132-word design and a 3273-word plan. Neither was ever executed as an iteration. The drafts are preserved on disk at `docs/iterations/0.1.5/iao-design-0.1.5.md` and `iao-plan-0.1.5.md` and quoted as exhibits in Appendix A of this document.
 
@@ -202,7 +202,7 @@ Fix: W0 removes `~/iao-middleware/bin` from the fish PATH config and verifies `w
 **Disposition decision for 0.1.7 W0:**
 - Create `docs/iterations/0.1.5/INCOMPLETE.md` marker explaining that 0.1.5 was attempted but never executed
 - Preserve 0.1.5 design and plan drafts verbatim as historical record
-- Leave the 0.1.6 precursors directory in place — it is not an iteration in the canonical sense, but it is the diagnostic corpus that made 0.1.7 possible
+- Leave the 0.1.6 precursors directory in place - it is not an iteration in the canonical sense, but it is the diagnostic corpus that made 0.1.7 possible
 - `.iao.json` jumps `current_iteration` from `0.1.4` to `0.1.7` directly (the three-octet validator does not require sequential iteration numbers, only three-octet format)
 - `.iao-checkpoint.json` initialized fresh for 0.1.7 with W0–W9 workstream entries
 
@@ -222,18 +222,18 @@ graph BT
 
 ---
 
-## §4. The Ten Pillars (current — review pending)
+## §4. The Ten Pillars (current - review pending)
 
-1. **iaomw-Pillar-1 (Trident)** — Cost / Delivery / Performance triangle governs every decision.
-2. **iaomw-Pillar-2 (Artifact Loop)** — design → plan → build → report → bundle. Every iteration produces all five.
-3. **iaomw-Pillar-3 (Diligence)** — First action: `iao registry query "<topic>"`. Read before you code.
-4. **iaomw-Pillar-4 (Pre-Flight Verification)** — Validate the environment before execution. Pre-flight failures block launch.
-5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** — The harness is the product; the model is the engine.
-6. **iaomw-Pillar-6 (Zero-Intervention Target)** — Interventions are failures in planning. The agent does not ask permission.
-7. **iaomw-Pillar-7 (Self-Healing Execution)** — Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
-8. **iaomw-Pillar-8 (Phase Graduation)** — Formalized via MUST-have deliverables + Qwen graduation analysis.
-9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** — Build is a gatekeeper. Existence checks are necessary but insufficient (ADR-009).
-10. **iaomw-Pillar-10 (Continuous Improvement)** — Run Report → Kyle's notes → seed next iteration design. Feedback loop is first-class artifact.
+1. **iaomw-Pillar-1 (Trident)** - Cost / Delivery / Performance triangle governs every decision.
+2. **iaomw-Pillar-2 (Artifact Loop)** - design → plan → build → report → bundle. Every iteration produces all five.
+3. **iaomw-Pillar-3 (Diligence)** - First action: `iao registry query "<topic>"`. Read before you code.
+4. **iaomw-Pillar-4 (Pre-Flight Verification)** - Validate the environment before execution. Pre-flight failures block launch.
+5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** - The harness is the product; the model is the engine.
+6. **iaomw-Pillar-6 (Zero-Intervention Target)** - Interventions are failures in planning. The agent does not ask permission.
+7. **iaomw-Pillar-7 (Self-Healing Execution)** - Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
+8. **iaomw-Pillar-8 (Phase Graduation)** - Formalized via MUST-have deliverables + Qwen graduation analysis.
+9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** - Build is a gatekeeper. Existence checks are necessary but insufficient (ADR-009).
+10. **iaomw-Pillar-10 (Continuous Improvement)** - Run Report → Kyle's notes → seed next iteration design. Feedback loop is first-class artifact.
 
 **Note on pillar currency:** Kyle flagged in the 0.1.3 review that several pillars are kjtcom-era phrasings. Specifically Pillar 3 references `query_registry.py` which is exactly the file Qwen hallucinates about iao. The pillar review is scheduled as a conversational chat turn, not a workstream. The current pillars are referenced verbatim per ADR-034 for historical accuracy.
 
@@ -272,7 +272,7 @@ graph BT
 | nemotron-mini:4b | 2.7 GB | Evaluator for W3 anti-hallucination pass, classifier for W8 NemoClaw, extractor for W4 seed | PASS (2.1s) |
 | haervwe/GLM-4.6V-Flash-9B | 8.0 GB | Tier-2 evaluator fallback when Nemotron classifications are borderline | PASS (14.7s, special tokens in output noted) |
 | nomic-embed-text | 274 MB | ChromaDB embeddings | PASS (sub-second) |
-| open-interpreter | N/A | **NOT USED** — 0.1.7 W8 rebuilds OpenClaw without this dependency | Blocked by Python 3.14 / tiktoken / Rust, not our problem anymore |
+| open-interpreter | N/A | **NOT USED** - 0.1.7 W8 rebuilds OpenClaw without this dependency | Blocked by Python 3.14 / tiktoken / Rust, not our problem anymore |
 
 ### Known debts entering 0.1.7 (from 0.1.6 Investigation 10)
 
@@ -314,12 +314,12 @@ graph BT
 
 ## §6. Workstreams (W0–W9)
 
-### W0 — Environment Hygiene
+### W0 - Environment Hygiene
 
 **Goal:** Clean up every environmental trap that has been eating agent sessions. PATH fix, stale pyc cleanup, 0.1.4 formal close, 0.1.5 INCOMPLETE marker, 0.1.7 bookkeeping.
 
 **Deliverables:**
-- `~/iao-middleware/bin` removed from fish PATH (edit `~/.config/fish/conf.d/` or wherever PATH is set — check with `echo $PATH` first, do NOT cat the full fish config)
+- `~/iao-middleware/bin` removed from fish PATH (edit `~/.config/fish/conf.d/` or wherever PATH is set - check with `echo $PATH` first, do NOT cat the full fish config)
 - `which iao` resolves to `~/.local/bin/iao` (the pip entry point)
 - `which iao` and `./bin/iao --version` return the same version
 - Stale `.pyc` files deleted: `src/iao/postflight/__pycache__/claw3d_version_matches.*.pyc`, `deployed_claw3d_matches.*.pyc`, `deployed_flutter_matches.*.pyc`, `map_tab_renders.*.pyc`, `firestore_baseline.*.pyc`
@@ -336,7 +336,7 @@ graph BT
 
 **Dependencies:** None (entry point).
 
-**Executor:** Gemini CLI (or Claude Code — W0 is executor-agnostic).
+**Executor:** Gemini CLI (or Claude Code - W0 is executor-agnostic).
 
 **Acceptance checks:**
 - `iao --version` returns `iao 0.1.7`
@@ -353,23 +353,23 @@ graph BT
 
 ---
 
-### W1 — Stream + Heartbeat + Repetition Detection
+### W1 - Stream + Heartbeat + Repetition Detection
 
 **Goal:** Rebuild the Qwen HTTP interaction layer to provide visibility during generation and kill degenerate loops before they run for minutes. Directly addresses Appendix A §A.1 (plan footer repetition) and the "Gemini thinks the process is hung" failure mode from 0.1.5.
 
 **Deliverables:**
 
-**W1.1 — Streaming QwenClient:**
+**W1.1 - Streaming QwenClient:**
 - Update `src/iao/artifacts/qwen_client.py`:
   - `QwenClient.generate()` switches from `stream: false` to `stream: true`
   - HTTP response read token-by-token via `requests.post(..., stream=True)` and `.iter_lines()`
-  - Each line is a JSON object with `"response": "<token>"` — accumulate the full text while printing each token to stderr
+  - Each line is a JSON object with `"response": "<token>"` - accumulate the full text while printing each token to stderr
   - Track elapsed time, emit heartbeat to stderr every 30 seconds: `[qwen] generating… 00:01:30 elapsed, 450 tokens, 330 words so far`
   - Timeout reduced from 1800s to 600s
   - `num_ctx` bumped from 8192 to 16384 (option_ctx in Ollama options)
   - Function signature unchanged so call sites don't break
 
-**W1.2 — Rolling-window repetition detector:**
+**W1.2 - Rolling-window repetition detector:**
 - New module: `src/iao/artifacts/repetition_detector.py`
 - `RepetitionDetector(window_size=200, similarity_threshold=0.70)` class
 - `add_tokens(tokens: list[str])` accumulates tokens as they stream in
@@ -378,18 +378,18 @@ graph BT
 - `QwenClient.generate()` constructs a `RepetitionDetector` at the start of each call and feeds tokens into it during streaming
 - On `DegenerateGenerationError`, abort the HTTP stream, log the failure to event log with type `generation_degenerate`, and raise up to the caller
 
-**W1.3 — Loop-level handling of degenerate generation:**
+**W1.3 - Loop-level handling of degenerate generation:**
 - Update `src/iao/artifacts/loop.py`:
   - Catch `DegenerateGenerationError` at the generation call site
   - Do NOT retry with the identical prompt (Pillar 7: retry with diagnostic feedback, not identical input)
   - If the error is caught, write a placeholder file marker `<!-- DEGENERATE: last attempt triggered repetition detector at <time>, see event log -->` and surface to the run report's Agent Questions section
   - Do not mark the iteration as failed on a single degenerate generation; surface the failure and let post-flight decide
 
-**W1.4 — Progress echo for human observers:**
+**W1.4 - Progress echo for human observers:**
 - Add a thin CLI wrapper around generation calls so `./bin/iao iteration design 0.1.7` tails stderr and prints status lines visibly
 - This ensures Gemini CLI and Claude Code both see progress output and do not time out their own CLI waits
 
-**W1.5 — Smoke test:**
+**W1.5 - Smoke test:**
 - `scripts/smoke_streaming_qwen.py` generates a small artifact (100-200 word prompt, no word count gate) and verifies:
   - Tokens stream to stderr
   - Heartbeat fires at least once
@@ -411,30 +411,30 @@ graph BT
 
 ---
 
-### W2 — Word Count Inversion + Structural Gates
+### W2 - Word Count Inversion + Structural Gates
 
 **Goal:** Replace word count minimums with word count maximums and add structural post-flight gates. Directly addresses Appendix A §A.1 and §A.5 (padding and repetition driven by the 3000-word minimum).
 
 **Deliverables:**
 
-**W2.1 — Invert `schemas.py` thresholds:**
+**W2.1 - Invert `schemas.py` thresholds:**
 - Update `src/iao/artifacts/schemas.py`:
   - `design`: max 3000 words (was min 5000)
   - `plan`: max 2500 words (was min 3000)
-  - `build-log`: max 1500 words (was min 1500 — this was already roughly right, make it explicit max)
+  - `build-log`: max 1500 words (was min 1500 - this was already roughly right, make it explicit max)
   - `report`: max 1000 words (was min 1200)
   - `bundle`: max does not apply (bundle is assembled, not generated)
   - `run-report`: min 1500 bytes (this stays as minimum because run report is structural, not Qwen-generated)
 - Add a `required_sections` field to each artifact schema listing the section headers that MUST appear
 
-**W2.2 — Update loop validation logic:**
+**W2.2 - Update loop validation logic:**
 - Update `src/iao/artifacts/loop.py`:
   - Remove word-count-minimum retry logic for Qwen-generated artifacts
-  - Add word-count-maximum warning: if generation exceeds the max, log warning `[iao.loop] {artifact} exceeded max words ({actual} > {max}), truncating or flagging for review` — do NOT automatically truncate, do flag for W3 evaluator review
+  - Add word-count-maximum warning: if generation exceeds the max, log warning `[iao.loop] {artifact} exceeded max words ({actual} > {max}), truncating or flagging for review` - do NOT automatically truncate, do flag for W3 evaluator review
   - Add structural validation: for each `required_section` in the schema, check that the generated text contains a heading matching the expected pattern (e.g. `"## Executive Summary"`, `"## Workstream Definitions"`)
   - Missing sections → retry once with a structured reminder prompt: `"The previous attempt was missing these required sections: [...]. Regenerate with all sections present."`
 
-**W2.3 — Structural post-flight gate:**
+**W2.3 - Structural post-flight gate:**
 - New module: `src/iao/postflight/structural_gates.py`
 - `check_design(path)` validates a design document has all required sections
 - `check_plan(path)` validates a plan document has all required sections
@@ -443,11 +443,11 @@ graph BT
 - Wire into `iao doctor postflight` via the plugin loader
 - Required sections per artifact (the canonical list):
   - design: `What is iao`, `§1`, `§2`, `§3`, `§4`, `§5`, `§6`, `§7`, `§8`, `§9`, `§10`
-  - plan: `What is iao`, `Section A — Pre-flight`, `Section B — Launch Protocol`, `Section C — Workstream Execution`, `Section D — Post-flight`, `Section E — Rollback`
+  - plan: `What is iao`, `Section A - Pre-flight`, `Section B - Launch Protocol`, `Section C - Workstream Execution`, `Section D - Post-flight`, `Section E - Rollback`
   - build log: `# Build Log`, at least one `## W` workstream heading, closing timestamp
   - report: `# Report`, `## Workstream Scores`, `## Summary`
 
-**W2.4 — Update prompt templates to honor the new gates:**
+**W2.4 - Update prompt templates to honor the new gates:**
 - Update `prompts/design.md.j2`:
   - Explicit "required sections" list with exact headers Qwen should produce
   - Explicit "target length: 2000-3000 words, DO NOT PAD IF YOU RUN OUT OF CONTENT" instruction
@@ -470,13 +470,13 @@ graph BT
 
 ---
 
-### W3 — Anti-Hallucination Evaluator Pass
+### W3 - Anti-Hallucination Evaluator Pass
 
 **Goal:** Catch confabulated file references, CLI commands, script names, and ADR ids before artifacts are accepted. Directly addresses Appendix A §A.2 (infinite file list), §A.3 (`query_registry.py`), §A.4 (fabricated changelog), §A.6 (phase label), §A.7 (split-agent revival).
 
 **Deliverables:**
 
-**W3.1 — Reference extractor (Nemotron):**
+**W3.1 - Reference extractor (Nemotron):**
 - New module: `src/iao/artifacts/evaluator.py`
 - `extract_references(text: str) -> dict` uses `nemotron_client.classify` and `extract` to pull:
   - `file_paths`: paths that look like `src/iao/...`, `scripts/...`, `docs/...`, `data/...`
@@ -488,7 +488,7 @@ graph BT
   - `phase_labels`: any mention of "Phase N" or "Phase: N"
   - `retired_patterns`: explicit list from the seed's `retired_patterns` field
 
-**W3.2 — Grep validator:**
+**W3.2 - Grep validator:**
 - `validate_references(refs: dict, project_root: Path, seed: dict) -> dict` checks:
   - `file_paths`: each path is grep-validated against the filesystem. Missing paths → hallucination.
   - `cli_commands`: extracted subcommand must appear in `src/iao/cli.py`. Missing → hallucination.
@@ -501,14 +501,14 @@ graph BT
 - Returns `{"valid": [...], "hallucinated": [...], "severity": "clean" | "warn" | "reject"}`
 - Severity = "clean" if hallucinated is empty, "warn" if ≤3 entries, "reject" if >3 entries
 
-**W3.3 — Loop integration:**
+**W3.3 - Loop integration:**
 - Update `src/iao/artifacts/loop.py`:
   - After Qwen generates an artifact, call `extract_references()` → `validate_references()`
   - If severity == "reject", retry generation with a corrective prompt that includes the hallucinated phrases as `DO NOT use these phrases or references: ...`
   - Max 1 retry per artifact (total 2 generations per artifact). If second attempt still has severity == "reject", write the artifact anyway but include a discrepancy marker at the top and populate Agent Questions in the run report.
   - Log the reference validation result to the event log with type `evaluator_result`
 
-**W3.4 — Known hallucinations baseline:**
+**W3.4 - Known hallucinations baseline:**
 - Create `data/known_hallucinations.json` with the initial list harvested from 0.1.5 Appendix A:
   ```json
   {
@@ -532,7 +532,7 @@ graph BT
   ```
 - `validate_references()` reads this file and treats any match as a hallucination regardless of grep check
 
-**W3.5 — Test harness:**
+**W3.5 - Test harness:**
 - `tests/test_evaluator.py` with:
   - Fixture of the Qwen 0.1.5 plan document footer
   - Assertion that `extract_references() → validate_references()` returns `severity: "reject"` with specific hallucinated phrases flagged
@@ -554,13 +554,13 @@ graph BT
 
 ---
 
-### W4 — Rich Structured Seed
+### W4 - Rich Structured Seed
 
 **Goal:** Replace the thin `iao iteration seed` output with a structured JSON that Qwen can anchor against. Directly addresses Appendix A §A.4 (fabricated changelog) and §A.3 (query_registry.py hallucination) by giving Qwen explicit ground truth in its system prompt instead of forcing it to confabulate.
 
 **Deliverables:**
 
-**W4.1 — Updated seed module:**
+**W4.1 - Updated seed module:**
 - Update `src/iao/feedback/seed.py` (exists as stub per Investigation 1)
 - New structured output:
   ```json
@@ -568,7 +568,7 @@ graph BT
     "source_iteration": "0.1.4",
     "target_iteration": "0.1.7",
     "phase": 0,
-    "iteration_theme": "Let Qwen Cook — repair the artifact loop",
+    "iteration_theme": "Let Qwen Cook - repair the artifact loop",
     "kyles_notes": "...",
     "agent_questions": [...],
     "carryover_debts": [
@@ -588,14 +588,14 @@ graph BT
   }
   ```
 
-**W4.2 — Carryover extraction from previous run report:**
+**W4.2 - Carryover extraction from previous run report:**
 - `extract_carryover_debts(run_report_path: Path) -> list[dict]`:
   - Parse the workstream summary table
   - For each row with status != "complete", extract the workstream id and create a debt entry
   - For each item in the Agent Questions section, create a debt entry
   - Return ranked list (blocking first, then partial, then partial-doc)
 
-**W4.3 — `iao iteration seed --edit`:**
+**W4.3 - `iao iteration seed --edit`:**
 - New CLI flag: `iao iteration seed --edit`
 - Writes the structured seed JSON to a temp file
 - Opens `$EDITOR` (fallback: `nano`, `vim`, `kate`) with the temp file
@@ -604,7 +604,7 @@ graph BT
 - Validates the JSON is well-formed
 - Writes to `docs/iterations/{target}/seed.json` as the canonical seed for the next iteration
 
-**W4.4 — Seed as system prompt:**
+**W4.4 - Seed as system prompt:**
 - Update `src/iao/artifacts/loop.py`:
   - Before calling Qwen to generate an artifact, load `docs/iterations/{target}/seed.json` if it exists
   - Convert the seed to a markdown-formatted system prompt section:
@@ -629,7 +629,7 @@ graph BT
     ```
   - Prepend to the Qwen prompt as a system message or high-priority context block
 
-**W4.5 — Template updates:**
+**W4.5 - Template updates:**
 - Update `prompts/design.md.j2` to reference `{{ seed }}` context
 - Update `prompts/plan.md.j2` similarly
 - Update `prompts/build-log.md.j2` and `prompts/report.md.j2` similarly
@@ -649,17 +649,17 @@ graph BT
 
 ---
 
-### W5 — RAG Freshness Weighting
+### W5 - RAG Freshness Weighting
 
 **Goal:** Prevent ChromaDB retrieval from pulling stale 0.1.2-era context into 0.1.7 generations. Directly addresses Appendix A §A.3 (query_registry.py came from kjtcom-era retrieval) and §A.7 (split-agent revived from 0.1.3 context).
 
 **Deliverables:**
 
-**W5.1 — Iteration metadata on all archive documents:**
+**W5.1 - Iteration metadata on all archive documents:**
 - Verify `iaomw_archive`, `kjtco_archive`, `tripl_archive` collections have `iteration` field in metadata (Investigation 7 says they do)
-- If any collection is missing the field, re-seed with the metadata attached (no data loss — embeddings are deterministic from content)
+- If any collection is missing the field, re-seed with the metadata attached (no data loss - embeddings are deterministic from content)
 
-**W5.2 — Freshness-weighted query function:**
+**W5.2 - Freshness-weighted query function:**
 - Update `src/iao/rag/archive.py`:
   - `query_archive(project_code, query, top_k=5, prefer_recent=True)` new signature
   - When `prefer_recent=True`, perform the semantic query with a larger `top_k * 3` pool, then re-rank results by blending semantic similarity with iteration recency
@@ -667,13 +667,13 @@ graph BT
   - Final score = `0.6 * similarity + 0.4 * recency`
   - Return top `top_k` by final score
 
-**W5.3 — Context module uses recency:**
+**W5.3 - Context module uses recency:**
 - Update `src/iao/artifacts/context.py`:
   - `build_context_for_artifact()` calls `query_archive(..., prefer_recent=True)` by default
   - For the current iteration's target artifact type (e.g. "design" for 0.1.7), retrieve from `iaomw_archive` with heavy recency bias
   - Do NOT retrieve from `kjtco_archive` for iao artifact generation (cross-project retrieval is for W8 evaluator use cases, not primary context)
 
-**W5.4 — Sanity test:**
+**W5.4 - Sanity test:**
 - `scripts/test_rag_recency.py`:
   - Query `iaomw_archive` for "artifact loop" with `prefer_recent=False` and with `prefer_recent=True`
   - Compare the top-3 results
@@ -693,13 +693,13 @@ graph BT
 
 ---
 
-### W6 — Two-Pass Generation (Experimental Flag)
+### W6 - Two-Pass Generation (Experimental Flag)
 
 **Goal:** Offer a generation mode where Qwen produces an outline first, then fills each section independently with a tight context budget. Directly addresses Appendix A §A.5 (duplicated risk boilerplate driven by whole-artifact content exhaustion). Feature-flagged so single-pass remains the default.
 
 **Deliverables:**
 
-**W6.1 — Outline generation:**
+**W6.1 - Outline generation:**
 - New function in `src/iao/artifacts/loop.py`: `generate_outline(artifact_type, seed, context)`
 - Prompts Qwen to produce a JSON outline:
   ```json
@@ -715,29 +715,29 @@ graph BT
 - Validates the JSON matches schema (all sections have id/title/summary/target_words)
 - Returns the parsed outline
 
-**W6.2 — Section-by-section generation:**
+**W6.2 - Section-by-section generation:**
 - New function: `generate_section(section, seed, context, artifact_type)`
 - For each section in the outline:
   - Build a tight prompt: section title, section summary, target word count, relevant RAG context (scoped to the section topic), seed's ground truth
   - Call Qwen with streaming
   - Enforce target_words as a soft max (warn if exceeded by 30%+)
   - Return the section text
-- Call generations sequentially (not in parallel — Qwen 9B on one GPU can't serve two requests well)
+- Call generations sequentially (not in parallel - Qwen 9B on one GPU can't serve two requests well)
 
-**W6.3 — Section assembly:**
+**W6.3 - Section assembly:**
 - New function: `assemble_from_sections(sections_text, artifact_type, metadata)`
 - Concatenates section texts with proper `##` header prefixes
 - Adds the artifact's top-matter (title, iteration, phase, date)
 - Adds the artifact's footer (sign-off, etc.)
 - Returns the assembled artifact text
 
-**W6.4 — CLI flag:**
+**W6.4 - CLI flag:**
 - `iao iteration design 0.1.7 --two-pass`
 - `iao iteration plan 0.1.7 --two-pass`
 - Default remains single-pass
 - Flag is documented as experimental in `iao iteration --help`
 
-**W6.5 — Smoke test:**
+**W6.5 - Smoke test:**
 - `scripts/smoke_two_pass.py` generates a tiny artifact (a fake "design-0.1.99" with three sections) via two-pass mode, validates the result assembles correctly
 
 **Dependencies:** W4 (seed is passed to both outline and section prompts), W5 (RAG context is scoped per section).
@@ -756,13 +756,13 @@ graph BT
 
 ---
 
-### W7 — Component Checklist as BUNDLE_SPEC §22
+### W7 - Component Checklist as BUNDLE_SPEC §22
 
 **Goal:** Auto-generate a per-run component manifest from the event log and include it as a new bundle section. Directly addresses Kyle's Note #1 from 0.1.4 run report.
 
 **Deliverables:**
 
-**W7.1 — Event log instrumentation:**
+**W7.1 - Event log instrumentation:**
 - Audit `src/iao/artifacts/`, `src/iao/rag/`, `src/iao/agents/`, `src/iao/telegram/`, `src/iao/cli.py` for places where model calls, CLI commands, or agent interactions happen
 - At each site, ensure an event is written to `data/iao_event_log.jsonl` (create file if missing) with fields:
   ```json
@@ -770,7 +770,7 @@ graph BT
   ```
 - Types: `model_call`, `cli_command`, `agent_interaction`, `tool_call`, `evaluator_result`, `generation_degenerate`
 
-**W7.2 — Component manifest generator:**
+**W7.2 - Component manifest generator:**
 - New module: `src/iao/bundle/components_section.py`
 - `generate_components_section(iteration: str, event_log_path: Path) -> str`:
   - Reads the event log
@@ -779,7 +779,7 @@ graph BT
   - For each component, produces a row: component | type (model/agent/CLI/tool) | tasks assigned (comma-separated) | status summary | notes summary
   - Returns markdown with H2 header `## §22. Agentic Components`
 
-**W7.3 — BUNDLE_SPEC expansion:**
+**W7.3 - BUNDLE_SPEC expansion:**
 - Update `src/iao/bundle.py`:
   - Expand `BUNDLE_SPEC` to 22 sections
   - Add `BundleSection(22, "Agentic Components", generator=generate_components_section)` at the end
@@ -787,7 +787,7 @@ graph BT
 - Update `prompts/bundle.md.j2` with the new section order (22 entries)
 - Update `src/iao/postflight/bundle_quality.py` to check for 22 sections
 
-**W7.4 — ADR amendment:**
+**W7.4 - ADR amendment:**
 - Append to `docs/harness/base.md`:
   ```markdown
   ### iaomw-ADR-028 Amendment (0.1.7)
@@ -809,13 +809,13 @@ graph BT
 
 ---
 
-### W8 — OpenClaw + NemoClaw Ollama-Native Rebuild
+### W8 - OpenClaw + NemoClaw Ollama-Native Rebuild
 
 **Goal:** Replace the 0.1.4 stubs with functional implementations that bypass open-interpreter entirely. No tiktoken, no Rust, no Python-3.14-vs-3.13 dependency drama. OpenClaw becomes a thin Qwen/Ollama wrapper with a subprocess code sandbox. NemoClaw becomes an orchestrator that uses Nemotron to classify tasks and routes them to OpenClaw sessions.
 
 **Deliverables:**
 
-**W8.1 — OpenClaw Ollama-native implementation:**
+**W8.1 - OpenClaw Ollama-native implementation:**
 - Replace `src/iao/agents/openclaw.py`:
   - New `OpenClawSession` class
   - Constructor: `OpenClawSession(model="qwen3.5:9b", role="assistant", system_prompt=None)`
@@ -830,7 +830,7 @@ graph BT
   - Does NOT import `interpreter` (the open-interpreter package). No tiktoken anywhere.
   - Logs all chat and execute calls to the event log as `agent_interaction` events
 
-**W8.2 — NemoClaw orchestrator:**
+**W8.2 - NemoClaw orchestrator:**
 - Replace `src/iao/agents/nemoclaw.py`:
   - New `NemoClawOrchestrator` class
   - Constructor: `NemoClawOrchestrator(session_count=1, roles=None)`
@@ -842,19 +842,19 @@ graph BT
   - `collect() -> dict` method: returns `{role_name: [history]}` for all sessions
   - Logs dispatch decisions and classification results to event log
 
-**W8.3 — Role definitions:**
+**W8.3 - Role definitions:**
 - Update `src/iao/agents/roles/`:
   - `base_role.py`: `AgentRole(name, system_prompt, allowed_tools=["chat", "execute_code"])`
   - `assistant.py`: general-purpose helper role (already exists as stub, expand)
-  - `code_runner.py`: NEW — role specialized for code execution tasks
-  - `reviewer.py`: NEW — role specialized for reviewing artifacts (but not implemented as full review agent; that's 0.1.8 W5)
+  - `code_runner.py`: NEW - role specialized for code execution tasks
+  - `reviewer.py`: NEW - role specialized for reviewing artifacts (but not implemented as full review agent; that's 0.1.8 W5)
 
-**W8.4 — Smoke test:**
+**W8.4 - Smoke test:**
 - `scripts/smoke_openclaw.py`: single OpenClaw session, send "What is 2+2?", assert response contains "4"
 - `scripts/smoke_nemoclaw.py`: single NemoClaw orchestrator with assistant role, dispatch "List files in /tmp and count how many are empty", assert response contains a number
 - Both scripts run to completion and exit 0
 
-**W8.5 — Docs:**
+**W8.5 - Docs:**
 - New document: `docs/harness/agents-architecture.md` (≥1500 words)
 - Describes OpenClaw as execution primitive (Qwen + subprocess sandbox, no open-interpreter)
 - Describes NemoClaw as orchestration (Nemotron-driven task routing)
@@ -862,7 +862,7 @@ graph BT
 - Event log integration for auditability
 - Future roadmap: 0.1.8 W5 adds review agent role on top of these primitives, 0.1.8 W6 adds telegram bridge
 
-**W8.6 — ADRs:**
+**W8.6 - ADRs:**
 - Append to `docs/harness/base.md`:
   ```markdown
   ### iaomw-ADR-040: OpenClaw/NemoClaw Ollama-Native Rebuild
@@ -889,13 +889,13 @@ graph BT
 
 ---
 
-### W9 — Dogfood + Closing Sequence
+### W9 - Dogfood + Closing Sequence
 
 **Goal:** Run the repaired artifact loop against 0.1.7 itself. Validate every fix is actually in place by generating build log, report, run report, bundle with visible streaming, no degenerate loops, no hallucinations flagged by the evaluator, all structural gates passing, component manifest populated.
 
 **Deliverables:**
 
-**W9.1 — Build log generation (streaming, evaluator validated):**
+**W9.1 - Build log generation (streaming, evaluator validated):**
 - `./bin/iao iteration build-log 0.1.7`
 - Stream output visible in terminal
 - Repetition detector active (but should not fire on good content)
@@ -903,13 +903,13 @@ graph BT
 - Build log meets structural gate (has all required sections)
 - Word count ≤1500 (NOT forced to hit a minimum)
 
-**W9.2 — Report generation:**
+**W9.2 - Report generation:**
 - `./bin/iao iteration report 0.1.7`
 - Same streaming, same evaluator validation, same structural gates
 - Word count ≤1000
 - Contains workstream scores table with one row per W0-W9
 
-**W9.3 — Run report generation:**
+**W9.3 - Run report generation:**
 - `./bin/iao iteration close` (without --confirm)
 - Generates run report at `docs/iterations/0.1.7/iao-run-report-0.1.7.md`
 - Workstream summary table populated with real status from checkpoint
@@ -918,31 +918,31 @@ graph BT
 - Sign-off checkboxes present but unticked
 - Telegram notification sent
 
-**W9.4 — Bundle generation:**
+**W9.4 - Bundle generation:**
 - Bundle contains 22 sections including §22 Agentic Components
 - §22 shows all components used during 0.1.7 run (qwen3.5:9b for artifacts, nemotron-mini:4b for evaluator and NemoClaw classification, glm-4.6v for anything, chromadb for retrieval, openclaw for W8 smoke tests, etc.)
 - Bundle size reasonable (~100-300 KB expected)
 
-**W9.5 — Post-flight validation:**
+**W9.5 - Post-flight validation:**
 - `iao doctor postflight` passes including:
-  - `bundle_quality` — 22 sections
-  - `run_report_quality` — ≥1500 bytes, sign-off section present
-  - `structural_gates` — all artifacts have required sections (NEW from W2)
-  - `gemini_compat` — CLI commands present
+  - `bundle_quality` - 22 sections
+  - `run_report_quality` - ≥1500 bytes, sign-off section present
+  - `structural_gates` - all artifacts have required sections (NEW from W2)
+  - `gemini_compat` - CLI commands present
   - `ten_pillars_present`
   - `readme_current`
 
-**W9.6 — Manual bug fix validation:**
+**W9.6 - Manual bug fix validation:**
 - Inspect the generated build log: does streaming output match the final content?
 - Inspect the report: does it have distinct, substantive content per workstream (not copy-paste risk paragraphs)?
 - Inspect the run report: workstream table populated, Agent Questions present or explicit empty marker
 - Inspect the bundle: 22 `## §` headers, §22 present with real components
 
-**W9.7 — CHANGELOG update:**
+**W9.7 - CHANGELOG update:**
 - Append 0.1.7 entry summarizing all 10 workstreams
 - Notable facts: artifact loop repaired, streaming + heartbeat + repetition detector, word count inverted, evaluator landed, rich seed, RAG recency, two-pass experimental, component checklist in bundle, OpenClaw rebuilt, 0.1.5 marked incomplete
 
-**W9.8 — Stop in review pending state:**
+**W9.8 - Stop in review pending state:**
 - Print closing message with run report path, bundle path, telegram confirmation, next-steps instructions
 - Exit cleanly
 - Iteration is in PENDING REVIEW state until Kyle runs `./bin/iao iteration close --confirm`
@@ -970,13 +970,13 @@ graph BT
 
 **Likelihood:** Medium. Existing tests may assume a non-streaming interface.
 
-**Mitigation:** W1 keeps `QwenClient.generate()` signature unchanged (returns a string). The streaming happens internally — callers still get a complete string back at the end. Tests that mock with `return_value="..."` continue to work.
+**Mitigation:** W1 keeps `QwenClient.generate()` signature unchanged (returns a string). The streaming happens internally - callers still get a complete string back at the end. Tests that mock with `return_value="..."` continue to work.
 
 ### Risk: Nemotron's reference extraction has false positives
 
 **Likelihood:** Medium. Nemotron may extract strings that look like file paths but aren't (e.g. "src/iao/" in a sentence about the src layout generally).
 
-**Mitigation:** The grep validator checks the actual filesystem. False positives that correspond to real files return valid. False positives that don't correspond to real files are flagged as hallucinations — but if the overall hallucination count is ≤3, severity is "warn" not "reject." Tuning the extraction prompt to be more conservative is a follow-up adjustment if false positives are too noisy.
+**Mitigation:** The grep validator checks the actual filesystem. False positives that correspond to real files return valid. False positives that don't correspond to real files are flagged as hallucinations - but if the overall hallucination count is ≤3, severity is "warn" not "reject." Tuning the extraction prompt to be more conservative is a follow-up adjustment if false positives are too noisy.
 
 ### Risk: Two-pass generation in W6 takes longer than the time budget
 
@@ -1033,19 +1033,19 @@ graph BT
 
 Same as 0.1.4. At iteration close, the run report's W9 entry contains a graduation recommendation block with: recommendation (GRADUATE / GRADUATE WITH CONDITIONS / DO NOT GRADUATE), reasoning, conditions if any, Phase 0 progress summary, Phase 0 recommendation.
 
-Expected outcome for 0.1.7: **GRADUATE** if W1-W9 ship clean and dogfood proves the loop is repaired. **GRADUATE WITH CONDITIONS** if W6 and W8 ship partial but W1-W5 and W7 and W9 are solid. **DO NOT GRADUATE** if the dogfood in W9 fails (degenerate loop or hallucination the evaluator missed) — in which case Kyle closes manually and 0.1.8 carries the debt.
+Expected outcome for 0.1.7: **GRADUATE** if W1-W9 ship clean and dogfood proves the loop is repaired. **GRADUATE WITH CONDITIONS** if W6 and W8 ship partial but W1-W5 and W7 and W9 are solid. **DO NOT GRADUATE** if the dogfood in W9 fails (degenerate loop or hallucination the evaluator missed) - in which case Kyle closes manually and 0.1.8 carries the debt.
 
 ---
 
 ## §10. Sign-off
 
-This design document is the canonical input for iao 0.1.7. It is immutable per ADR-012 once W0 begins. The plan document operationalizes this design. GEMINI.md and CLAUDE.md are the agent briefs for the two supported executors — either can run this iteration.
+This design document is the canonical input for iao 0.1.7. It is immutable per ADR-012 once W0 begins. The plan document operationalizes this design. GEMINI.md and CLAUDE.md are the agent briefs for the two supported executors - either can run this iteration.
 
 0.1.7 is the iteration where iao learns to use its own model fleet to support Qwen instead of treating Qwen as a single-shot generator. The evidence in Appendix A makes the failure modes concrete. The workstreams address each failure mode with a specific fix. The dogfood in W9 validates every fix by running the repaired loop against 0.1.7's own artifacts.
 
-The bet is that by iteration close, Qwen's output will look nothing like Appendix A — no runaway repetition, no hallucinated file paths, no fabricated history, no mislabeled phase, no revived retired patterns, no copy-paste risk boilerplate. If that bet pays off, iao has crossed a threshold: the harness now **supports** the model instead of just wrapping it. That is the Phase 0 exit criterion that matters most.
+The bet is that by iteration close, Qwen's output will look nothing like Appendix A - no runaway repetition, no hallucinated file paths, no fabricated history, no mislabeled phase, no revived retired patterns, no copy-paste risk boilerplate. If that bet pays off, iao has crossed a threshold: the harness now **supports** the model instead of just wrapping it. That is the Phase 0 exit criterion that matters most.
 
-— iao 0.1.7 planning chat, 2026-04-09
+- iao 0.1.7 planning chat, 2026-04-09
 
 ---
 
@@ -1053,7 +1053,7 @@ The bet is that by iteration close, Qwen's output will look nothing like Appendi
 
 This appendix contains verbatim excerpts from `docs/iterations/0.1.5/iao-design-0.1.5.md` and `iao-plan-0.1.5.md`, which were generated by Qwen via the artifact loop during a 0.1.5 attempt that was never completed. The full drafts remain on disk at those paths with an `INCOMPLETE.md` marker (added in 0.1.7 W0) explaining that the iteration was drafted but never executed. The drafts are preserved as historical record and referenced here as the diagnostic corpus that made 0.1.7 possible.
 
-### §A.1 — The plan document's runaway footer repetition loop
+### §A.1 - The plan document's runaway footer repetition loop
 
 From `iao-plan-0.1.5.md` line 389 onward, the following 12-line block repeats identically **15 or more times** until the generation truncates mid-word at line 600 (`Predecessor:] iao-plan-0.1.`):
 
@@ -1081,7 +1081,7 @@ This is the degenerate generation failure mode. Qwen hit the end of its useful c
 
 0.1.7 W1 adds a rolling-window repetition detector that would have killed this generation within 30 seconds of the second footer appearing. 0.1.7 W2 inverts the word count gate from minimum to maximum, so the underlying incentive to repeat is eliminated.
 
-### §A.2 — The design document's infinite file-list hallucination
+### §A.2 - The design document's infinite file-list hallucination
 
 From `iao-design-0.1.5.md` Appendix J, the last section of the document:
 
@@ -1118,11 +1118,11 @@ From `iao-design-0.1.5.md` Appendix J, the last section of the document:
 - [src/iao/eval/](./src/iao/ case
 ```
 
-Every path listed except `src/iao/telegram/`, `src/iao/agents/`, and `src/iao/models/` is a **hallucination** — iao has no `harness/`, no `doctor/`, no `report/`, no `registry/`, no `loop/`, no `cli/` subpackage (cli is a file), no `config/`, no `utils/`, no `tools/`, no `eval/`, no `llm/`, no `vector/`, no `agent/` (singular), and no `chain/`. Qwen generated plausible-sounding paths from its training data on LLM orchestration projects, then entered a degenerate repetition of `eval/`, `llm/`, `vector/`, `agent/`, `chain/` cycling three times before truncating mid-word at `src/iao/ case`.
+Every path listed except `src/iao/telegram/`, `src/iao/agents/`, and `src/iao/models/` is a **hallucination** - iao has no `harness/`, no `doctor/`, no `report/`, no `registry/`, no `loop/`, no `cli/` subpackage (cli is a file), no `config/`, no `utils/`, no `tools/`, no `eval/`, no `llm/`, no `vector/`, no `agent/` (singular), and no `chain/`. Qwen generated plausible-sounding paths from its training data on LLM orchestration projects, then entered a degenerate repetition of `eval/`, `llm/`, `vector/`, `agent/`, `chain/` cycling three times before truncating mid-word at `src/iao/ case`.
 
 0.1.7 W3 adds an evaluator pass that grep-checks every file reference. Every hallucinated path in this list would be flagged. With four or more hallucinations, severity is "reject" and the artifact is regenerated with the hallucinated phrases explicitly banned in the prompt.
 
-### §A.3 — The pervasive `query_registry.py` hallucination
+### §A.3 - The pervasive `query_registry.py` hallucination
 
 The 0.1.5 design document mentions `query_registry.py` in **every single workstream section**. Representative quote from W0:
 
@@ -1136,11 +1136,11 @@ And from W6:
 
 > *"The `query_registry.py` script (Pillar 3) will be run to ensure that the registry is aware of the new sync."*
 
-`query_registry.py` is a **kjtcom script**. iao does not have it and has never had it. iao's Pillar 3 invocation is `iao registry query` — the CLI subcommand, not a Python script. The confusion arose because kjtcom's harness documents in the ChromaDB `kjtco_archive` (282 documents) outnumber iao's `iaomw_archive` (17 documents) by more than 16x, so RAG retrieval pulled kjtcom context into iao's generation prompt with no flag indicating the cross-project boundary.
+`query_registry.py` is a **kjtcom script**. iao does not have it and has never had it. iao's Pillar 3 invocation is `iao registry query` - the CLI subcommand, not a Python script. The confusion arose because kjtcom's harness documents in the ChromaDB `kjtco_archive` (282 documents) outnumber iao's `iaomw_archive` (17 documents) by more than 16x, so RAG retrieval pulled kjtcom context into iao's generation prompt with no flag indicating the cross-project boundary.
 
 0.1.7 W5 adds recency weighting so 0.1.4 iao content (which uses the correct `iao registry query` CLI command) outranks 0.1.2 kjtcom-era content in retrieval. 0.1.7 W4 adds `anti_hallucination_list` to the seed which explicitly bans `query_registry.py`. 0.1.7 W3 grep-validates the reference and flags it as a hallucination.
 
-### §A.4 — The fabricated changelog
+### §A.4 - The fabricated changelog
 
 From 0.1.5 design Appendix H:
 
@@ -1171,11 +1171,11 @@ From 0.1.5 design Appendix H:
 - Initial Release: The initial release of the `iao` project.
 ```
 
-This is pure confabulation. 0.1.1 was never an iao iteration (0.1.0 → 0.1.2 directly, as documented in the Phase 0 charter). 0.1.3 did not "introduce a run_report bug" as a feature — run_report was added in 0.1.3 W5 and had bugs that surfaced during dogfood and were fixed in 0.1.4 W1. 0.1.2 did not "introduce the legacy harness" (there is no "legacy harness," there is just the harness that's been evolving continuously). The dates are wrong.
+This is pure confabulation. 0.1.1 was never an iao iteration (0.1.0 → 0.1.2 directly, as documented in the Phase 0 charter). 0.1.3 did not "introduce a run_report bug" as a feature - run_report was added in 0.1.3 W5 and had bugs that surfaced during dogfood and were fixed in 0.1.4 W1. 0.1.2 did not "introduce the legacy harness" (there is no "legacy harness," there is just the harness that's been evolving continuously). The dates are wrong.
 
 0.1.7 W4 adds `carryover_debts` to the seed with real iteration history parsed from the previous run report, plus `iteration_theme` and `scope_hints` fields that give Qwen ground truth to work from instead of forcing it to invent plausible blanks.
 
-### §A.5 — The duplicated risk boilerplate
+### §A.5 - The duplicated risk boilerplate
 
 The 0.1.5 design has 8 workstream sections. Six of them contain the identical risk paragraph:
 
@@ -1185,7 +1185,7 @@ Appearing in W0, W1, W2, W3, W4, and W6 verbatim. Qwen ran out of distinct risk 
 
 0.1.7 W6 (experimental, behind `--two-pass` flag) adds two-pass generation where each section is generated independently with its own <500 word budget. Copy-paste across sections becomes impossible because each generation only sees its own section's scope.
 
-### §A.6 — The mislabeled phase
+### §A.6 - The mislabeled phase
 
 0.1.5 design document header:
 
@@ -1201,7 +1201,7 @@ iao is in Phase 0, not Phase 1. "Production Readiness" is not an iao phase name.
 
 0.1.7 W4 seed includes an explicit `phase` field. W3 evaluator extracts any phase label in the generated text and compares to `.iao.json` phase. Mismatch → flagged hallucination.
 
-### §A.7 — The revived split-agent handoff
+### §A.7 - The revived split-agent handoff
 
 0.1.5 plan document Executive Summary:
 

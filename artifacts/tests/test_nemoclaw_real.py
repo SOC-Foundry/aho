@@ -1,4 +1,4 @@
-"""Tests for NemoClaw real implementation — routing, dispatch, daemon."""
+"""Tests for NemoClaw real implementation - routing, dispatch, daemon."""
 import json
 import socket
 import tempfile

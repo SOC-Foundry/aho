@@ -1,6 +1,6 @@
 # Build Log Synthesis (Qwen-generated)
 
-# iao — Build Log 0.1.4
+# iao - Build Log 0.1.4
 
 **Iteration:** 0.1.4  
 **Project:** iao (code: iaomw)  
@@ -16,12 +16,12 @@
 ## Start: 2026-04-09T17:19:21Z
 
 ```
-iao-build-log-0.1.4.md — Build Log Generation Started
+iao-build-log-0.1.4.md - Build Log Generation Started
 ```
 
 ---
 
-## W0: iteration bookkeeping — bump version 0.1.4
+## W0: iteration bookkeeping - bump version 0.1.4
 
 **Timestamp:** 2026-04-09T17:19:21Z  
 **Duration:** 47 seconds  
@@ -29,19 +29,19 @@ iao-build-log-0.1.4.md — Build Log Generation Started
 
 ### Attempted Actions
 
-1. **Verify repository state** — Confirmed `~/dev/projects/iao` is clean, no uncommitted changes from 0.1.3 cleanup.
-2. **Bump VERSION file** — Updated `VERSION` from `0.1.3` to `0.1.4`.
-3. **Update pyproject.toml** — Modified `__version__` field in `pyproject.toml` to match.
-4. **Update CHANGELOG** — Added entry for 0.1.4 release notes.
-5. **Update iao MANIFEST** — Regenerated `iao MANIFEST` with new version.
-6. **Verify checksums** — Ran `sha256sum` on VERSION and pyproject.toml to ensure consistency.
+1. **Verify repository state** - Confirmed `~/dev/projects/iao` is clean, no uncommitted changes from 0.1.3 cleanup.
+2. **Bump VERSION file** - Updated `VERSION` from `0.1.3` to `0.1.4`.
+3. **Update pyproject.toml** - Modified `__version__` field in `pyproject.toml` to match.
+4. **Update CHANGELOG** - Added entry for 0.1.4 release notes.
+5. **Update iao MANIFEST** - Regenerated `iao MANIFEST` with new version.
+6. **Verify checksums** - Ran `sha256sum` on VERSION and pyproject.toml to ensure consistency.
 
 ### What Worked
 
-All six actions completed without error. The version bump was atomic — no partial updates occurred. The `VERSION` file now contains `0.1.4` and `pyproject.toml` reflects this in the `__version__` field. The CHANGELOG entry was appended with the standard format:
+All six actions completed without error. The version bump was atomic - no partial updates occurred. The `VERSION` file now contains `0.1.4` and `pyproject.toml` reflects this in the `__version__` field. The CHANGELOG entry was appended with the standard format:
 
 ```
-## [0.1.4] — 2026-04-09
+## [0.1.4] - 2026-04-09
 ### Added
 - Model fleet integration (ChromaDB, Nemotron, GLM clients)
 - kjtcom harness migration to universal layer
@@ -67,7 +67,7 @@ The version bump is the first workstream because it establishes the iteration id
 
 ---
 
-## W1: 0.1.3 cleanup — fix run report bugs, iao doctor, versioning
+## W1: 0.1.3 cleanup - fix run report bugs, iao doctor, versioning
 
 **Timestamp:** 2026-04-09T17:20:08Z  
 **Duration:** 3 minutes 12 seconds  
@@ -75,17 +75,17 @@ The version bump is the first workstream because it establishes the iteration id
 
 ### Attempted Actions
 
-1. **Identify 0.1.3 artifacts** — Listed all files containing `0.1.3` in their metadata.
-2. **Fix run_report.py** — Corrected the postflight gate logic that was missing in 0.1.3.
-3. **Update iao doctor** — Added version check to ensure the harness matches the iteration.
-4. **Clean up old bundles** — Removed `iao-bundle-0.1.3.md` from the working directory.
-5. **Verify cleanup** — Ran `grep -r "0.1.3" .` to ensure no stray references remain.
+1. **Identify 0.1.3 artifacts** - Listed all files containing `0.1.3` in their metadata.
+2. **Fix run_report.py** - Corrected the postflight gate logic that was missing in 0.1.3.
+3. **Update iao doctor** - Added version check to ensure the harness matches the iteration.
+4. **Clean up old bundles** - Removed `iao-bundle-0.1.3.md` from the working directory.
+5. **Verify cleanup** - Ran `grep -r "0.1.3" .` to ensure no stray references remain.
 
 ### What Worked
 
-- **run_report.py fix** — The postflight gate was missing a call to `verify_postflight_gates()`. This was added. The function now correctly validates that all Phase 9 deliverables are present before marking the build as complete.
-- **iao doctor** — The version check now compares `VERSION` against the harness manifest. If they mismatch, `iao doctor` exits with code 1 and prints a warning.
-- **Cleanup** — All 0.1.3 references were removed. The `grep` command returned zero matches.
+- **run_report.py fix** - The postflight gate was missing a call to `verify_postflight_gates()`. This was added. The function now correctly validates that all Phase 9 deliverables are present before marking the build as complete.
+- **iao doctor** - The version check now compares `VERSION` against the harness manifest. If they mismatch, `iao doctor` exits with code 1 and prints a warning.
+- **Cleanup** - All 0.1.3 references were removed. The `grep` command returned zero matches.
 
 ### Retry Event (Pillar 7: Self-Healing Execution)
 
@@ -101,11 +101,11 @@ The plan anticipated a clean cleanup, but the manifest file was not updated in W
 
 ### Notes for Junior Engineers
 
-The `run_report.py` bug was a critical issue. In 0.1.3, the postflight gate would pass even if deliverables were missing. This was fixed in W1. Always verify that `run_report.py` calls `verify_postflight_gates()` before marking a build as complete. The `iao doctor` tool is your friend — run it before each iteration to catch version mismatches.
+The `run_report.py` bug was a critical issue. In 0.1.3, the postflight gate would pass even if deliverables were missing. This was fixed in W1. Always verify that `run_report.py` calls `verify_postflight_gates()` before marking a build as complete. The `iao doctor` tool is your friend - run it before each iteration to catch version mismatches.
 
 ---
 
-## W2: model fleet integration — ChromaDB, Nemotron, GLM clients
+## W2: model fleet integration - ChromaDB, Nemotron, GLM clients
 
 **Timestamp:** 2026-04-09T17:23:20Z  
 **Duration:** 12 minutes 45 seconds  
@@ -113,19 +113,19 @@ The `run_report.py` bug was a critical issue. In 0.1.3, the postflight gate woul
 
 ### Attempted Actions
 
-1. **Install dependencies** — Ran `pip install chromadb nemotron-glm-client` to add model fleet clients.
-2. **Configure ChromaDB** — Initialized a local ChromaDB instance at `~/dev/projects/iao/chroma/`.
-3. **Test Nemotron client** — Sent a simple query to the Nemotron endpoint and verified response.
-4. **Test GLM client** — Sent a simple query to the GLM endpoint and verified response.
-5. **Update src/iao/models/** — Added client modules for ChromaDB, Nemotron, and GLM.
-6. **Verify model routing** — Ran a test that routes queries to the appropriate model based on availability.
+1. **Install dependencies** - Ran `pip install chromadb nemotron-glm-client` to add model fleet clients.
+2. **Configure ChromaDB** - Initialized a local ChromaDB instance at `~/dev/projects/iao/chroma/`.
+3. **Test Nemotron client** - Sent a simple query to the Nemotron endpoint and verified response.
+4. **Test GLM client** - Sent a simple query to the GLM endpoint and verified response.
+5. **Update src/iao/models/** - Added client modules for ChromaDB, Nemotron, and GLM.
+6. **Verify model routing** - Ran a test that routes queries to the appropriate model based on availability.
 
 ### What Worked
 
-- **ChromaDB** — The local vector database was initialized successfully. It now stores embeddings for the iao harness registry.
-- **Nemotron** — The client connected to the Nemotron endpoint and returned responses within 2 seconds.
-- **GLM** — The client connected to the GLM endpoint and returned responses within 3 seconds.
-- **Model routing** — The routing logic correctly selects the fastest available model. If ChromaDB is unavailable, it falls back to Nemotron. If Nemotron is unavailable, it falls back to GLM.
+- **ChromaDB** - The local vector database was initialized successfully. It now stores embeddings for the iao harness registry.
+- **Nemotron** - The client connected to the Nemotron endpoint and returned responses within 2 seconds.
+- **GLM** - The client connected to the GLM endpoint and returned responses within 3 seconds.
+- **Model routing** - The routing logic correctly selects the fastest available model. If ChromaDB is unavailable, it falls back to Nemotron. If Nemotron is unavailable, it falls back to GLM.
 
 ### Deviations from Plan
 
@@ -137,7 +137,7 @@ The model fleet integration allows iao to work with multiple local models. This 
 
 ---
 
-## W3: kjtcom harness migration — gotcha registry sync
+## W3: kjtcom harness migration - gotcha registry sync
 
 **Timestamp:** 2026-04-09T17:36:05Z  
 **Duration:** 8 minutes 33 seconds  
@@ -145,18 +145,18 @@ The model fleet integration allows iao to work with multiple local models. This 
 
 ### Attempted Actions
 
-1. **Export kjtcom registry** — Ran `kjtcom export --registry` to export the harness registry from the kjtcom project.
-2. **Merge with iao registry** — Combined the kjtcom registry with the iao universal layer.
-3. **Sync gotcha registry** — Migrated all gotchas from kjtcom to the iao gotcha registry.
-4. **Verify migration** — Ran `iao doctor --registry` to ensure all entries are present.
-5. **Update iao MANIFEST** — Regenerated the manifest with the new registry entries.
+1. **Export kjtcom registry** - Ran `kjtcom export --registry` to export the harness registry from the kjtcom project.
+2. **Merge with iao registry** - Combined the kjtcom registry with the iao universal layer.
+3. **Sync gotcha registry** - Migrated all gotchas from kjtcom to the iao gotcha registry.
+4. **Verify migration** - Ran `iao doctor --registry` to ensure all entries are present.
+5. **Update iao MANIFEST** - Regenerated the manifest with the new registry entries.
 
 ### What Worked
 
-- **Export** — The kjtcom registry was exported successfully. It contained 12 harness entries and 5 gotcha entries.
-- **Merge** — The merge was atomic. No entries were lost. The iao universal layer now contains all kjtcom harnesses.
-- **Gotcha sync** — All gotchas were migrated. The gotcha registry now includes entries for "missing postflight gate" and "version mismatch".
-- **Verification** — The `iao doctor --registry` command confirmed that all entries are present.
+- **Export** - The kjtcom registry was exported successfully. It contained 12 harness entries and 5 gotcha entries.
+- **Merge** - The merge was atomic. No entries were lost. The iao universal layer now contains all kjtcom harnesses.
+- **Gotcha sync** - All gotchas were migrated. The gotcha registry now includes entries for "missing postflight gate" and "version mismatch".
+- **Verification** - The `iao doctor --registry` command confirmed that all entries are present.
 
 ### Deviations from Plan
 
@@ -164,11 +164,11 @@ The plan anticipated a clean migration. In reality, one gotcha entry was missing
 
 ### Notes for Junior Engineers
 
-The kjtcom harness migration is important because it brings mature harnesses into iao. The gotcha registry is a critical artifact — it contains known issues and their fixes. Always check the gotcha registry before running a new iteration. If you encounter an error that's in the gotcha registry, you can skip the fix and move on.
+The kjtcom harness migration is important because it brings mature harnesses into iao. The gotcha registry is a critical artifact - it contains known issues and their fixes. Always check the gotcha registry before running a new iteration. If you encounter an error that's in the gotcha registry, you can skip the fix and move on.
 
 ---
 
-## W4: telegram framework generalization — src/iao/telegram/
+## W4: telegram framework generalization - src/iao/telegram/
 
 **Timestamp:** 2026-04-09T17:44:38Z  
 **Duration:** 6 minutes 17 seconds  
@@ -176,18 +176,18 @@ The kjtcom harness migration is important because it brings mature harnesses int
 
 ### Attempted Actions
 
-1. **Create src/iao/telegram/** — Initialized the directory structure for the telegram framework.
-2. **Implement telegram client** — Wrote `telegram_client.py` with basic send/receive functionality.
-3. **Implement telegram harness** — Wrote `telegram_harness.py` to wrap iao iterations in a telegram bot.
-4. **Test send/receive** — Sent a test message to a telegram bot and verified receipt.
-5. **Update README** — Added documentation for the telegram framework.
+1. **Create src/iao/telegram/** - Initialized the directory structure for the telegram framework.
+2. **Implement telegram client** - Wrote `telegram_client.py` with basic send/receive functionality.
+3. **Implement telegram harness** - Wrote `telegram_harness.py` to wrap iao iterations in a telegram bot.
+4. **Test send/receive** - Sent a test message to a telegram bot and verified receipt.
+5. **Update README** - Added documentation for the telegram framework.
 
 ### What Worked
 
-- **Directory structure** — The `src/iao/telegram/` directory was created with the expected structure.
-- **Telegram client** — The client successfully sent and received messages.
-- **Telegram harness** — The harness wraps iao iterations and sends progress updates to the telegram bot.
-- **Documentation** — The README was updated with usage examples.
+- **Directory structure** - The `src/iao/telegram/` directory was created with the expected structure.
+- **Telegram client** - The client successfully sent and received messages.
+- **Telegram harness** - The harness wraps iao iterations and sends progress updates to the telegram bot.
+- **Documentation** - The README was updated with usage examples.
 
 ### Deviations from Plan
 
@@ -199,7 +199,7 @@ The telegram framework allows you to receive progress updates from iao iteration
 
 ---
 
-## W5: OpenClaw + NemoClaw foundations — agentic loop groundwork
+## W5: OpenClaw + NemoClaw foundations - agentic loop groundwork
 
 **Timestamp:** 2026-04-09T17:50:55Z  
 **Duration:** 9 minutes 42 seconds  
@@ -207,18 +207,18 @@ The telegram framework allows you to receive progress updates from iao iteration
 
 ### Attempted Actions
 
-1. **Create src/iao/claw/** — Initialized the directory structure for OpenClaw and NemoClaw.
-2. **Implement OpenClaw client** — Wrote `openclaw_client.py` with basic agent communication functionality.
-3. **Implement NemoClaw client** — Wrote `nemoclaw_client.py` with basic agent communication functionality.
-4. **Test agent communication** — Sent a test message to an OpenClaw agent and verified receipt.
-5. **Update README** — Added documentation for the claw frameworks.
+1. **Create src/iao/claw/** - Initialized the directory structure for OpenClaw and NemoClaw.
+2. **Implement OpenClaw client** - Wrote `openclaw_client.py` with basic agent communication functionality.
+3. **Implement NemoClaw client** - Wrote `nemoclaw_client.py` with basic agent communication functionality.
+4. **Test agent communication** - Sent a test message to an OpenClaw agent and verified receipt.
+5. **Update README** - Added documentation for the claw frameworks.
 
 ### What Worked
 
-- **Directory structure** — The `src/iao/claw/` directory was created with the expected structure.
-- **OpenClaw client** — The client successfully communicated with agents.
-- **NemoClaw client** — The client successfully communicated with agents.
-- **Documentation** — The README was updated with usage examples.
+- **Directory structure** - The `src/iao/claw/` directory was created with the expected structure.
+- **OpenClaw client** - The client successfully communicated with agents.
+- **NemoClaw client** - The client successfully communicated with agents.
+- **Documentation** - The README was updated with usage examples.
 
 ### Deviations from Plan
 
@@ -230,7 +230,7 @@ The OpenClaw and NemoClaw frameworks are the foundations for remote agent commun
 
 ---
 
-## W6: Gemini-primary sync — README, install.fish, postflight
+## W6: Gemini-primary sync - README, install.fish, postflight
 
 **Timestamp:** 2026-04-09T17:59:37Z  
 **Duration:** 5 minutes 28 seconds  
@@ -238,17 +238,17 @@ The OpenClaw and NemoClaw frameworks are the foundations for remote agent commun
 
 ### Attempted Actions
 
-1. **Update README** — Rewrote the README to reflect Gemini as the primary executor.
-2. **Update install.fish** — Modified the install script to install Gemini CLI dependencies.
-3. **Update postflight** — Modified the postflight checks to work with Gemini.
-4. **Verify README** — Ran `cat README.md` to ensure it's correct.
-5. **Verify install.fish** — Ran `install.fish` in a clean environment and verified it works.
+1. **Update README** - Rewrote the README to reflect Gemini as the primary executor.
+2. **Update install.fish** - Modified the install script to install Gemini CLI dependencies.
+3. **Update postflight** - Modified the postflight checks to work with Gemini.
+4. **Verify README** - Ran `cat README.md` to ensure it's correct.
+5. **Verify install.fish** - Ran `install.fish` in a clean environment and verified it works.
 
 ### What Worked
 
-- **README** — The README now reflects that Gemini is the primary executor. It includes instructions for installing the Gemini CLI.
-- **install.fish** — The install script now installs the Gemini CLI dependencies. It also installs the model fleet clients.
-- **Postflight** — The postflight checks now work with Gemini. They verify that the harness is correct and that the iteration is complete.
+- **README** - The README now reflects that Gemini is the primary executor. It includes instructions for installing the Gemini CLI.
+- **install.fish** - The install script now installs the Gemini CLI dependencies. It also installs the model fleet clients.
+- **Postflight** - The postflight checks now work with Gemini. They verify that the harness is correct and that the iteration is complete.
 
 ### Deviations from Plan
 
@@ -260,7 +260,7 @@ The README is the first artifact a junior engineer reads. It should be clear and
 
 ---
 
-## W7: dogfood + closing sequence — 0.1.4 artifact loop
+## W7: dogfood + closing sequence - 0.1.4 artifact loop
 
 **Timestamp:** 2026-04-09T18:05:05Z  
 **Duration:** 7 minutes 28 seconds  
@@ -268,18 +268,18 @@ The README is the first artifact a junior engineer reads. It should be clear and
 
 ### Attempted Actions
 
-1. **Run full iteration** — Executed the full iteration loop with Gemini as the executor.
-2. **Verify all artifacts** — Checked that all 21 bundle sections are present.
-3. **Run postflight** — Ran the postflight checks to ensure the iteration is complete.
-4. **Generate bundle** — Generated the `iao-bundle-0.1.4.md` artifact.
-5. **Close iteration** — Marked the iteration as complete and archived the bundle.
+1. **Run full iteration** - Executed the full iteration loop with Gemini as the executor.
+2. **Verify all artifacts** - Checked that all 21 bundle sections are present.
+3. **Run postflight** - Ran the postflight checks to ensure the iteration is complete.
+4. **Generate bundle** - Generated the `iao-bundle-0.1.4.md` artifact.
+5. **Close iteration** - Marked the iteration as complete and archived the bundle.
 
 ### What Worked
 
-- **Full iteration** — The full iteration loop completed successfully. All workstreams were executed in order.
-- **All artifacts** — All 21 bundle sections were generated. The bundle is complete.
-- **Postflight** — The postflight checks passed. The iteration is complete.
-- **Bundle** — The bundle was generated and archived.
+- **Full iteration** - The full iteration loop completed successfully. All workstreams were executed in order.
+- **All artifacts** - All 21 bundle sections were generated. The bundle is complete.
+- **Postflight** - The postflight checks passed. The iteration is complete.
+- **Bundle** - The bundle was generated and archived.
 
 ### Deviations from Plan
 
@@ -294,7 +294,7 @@ The dogfood iteration is the final step. It verifies that the iteration works en
 ## End: 2026-04-09T18:12:33Z
 
 ```
-iao-build-log-0.1.4.md — Build Log Generation Complete
+iao-build-log-0.1.4.md - Build Log Generation Complete
 ```
 
 ---
@@ -309,12 +309,12 @@ iao-build-log-0.1.4.md — Build Log Generation Complete
 
 **Key Achievements:**
 
-1. **Model Fleet Integration** — ChromaDB, Nemotron, and GLM clients are now available.
-2. **kjtcom Harness Migration** — All kjtcom harnesses are now in the iao universal layer.
-3. **Telegram Framework** — The telegram framework is now available for remote monitoring.
-4. **OpenClaw + NemoClaw** — The foundations for remote agent communication are now in place.
-5. **Gemini-Primary Sync** — The README, install.fish, and postflight are now Gemini-compatible.
-6. **0.1.3 Cleanup** — All 0.1.3 artifacts are cleaned up. The run report bugs are fixed.
+1. **Model Fleet Integration** - ChromaDB, Nemotron, and GLM clients are now available.
+2. **kjtcom Harness Migration** - All kjtcom harnesses are now in the iao universal layer.
+3. **Telegram Framework** - The telegram framework is now available for remote monitoring.
+4. **OpenClaw + NemoClaw** - The foundations for remote agent communication are now in place.
+5. **Gemini-Primary Sync** - The README, install.fish, and postflight are now Gemini-compatible.
+6. **0.1.3 Cleanup** - All 0.1.3 artifacts are cleaned up. The run report bugs are fixed.
 
 **Lessons Learned:**
 
@@ -349,27 +349,27 @@ iao-build-log-0.1.4.md — Build Log Generation Complete
 
 The following artifacts were generated during this iteration:
 
-1. `iao-bundle-0.1.4.md` — The bundle for iteration 0.1.4
-2. `iao-build-log-0.1.4.md` — This build log
-3. `iao-manifest-0.1.4.json` — The manifest for iteration 0.1.4
-4. `VERSION` — The version file (0.1.4)
-5. `pyproject.toml` — The project configuration
-6. `CHANGELOG` — The changelog
-7. `README.md` — The README
-8. `install.fish` — The install script
-9. `src/iao/telegram/telegram_client.py` — The telegram client
-10. `src/iao/telegram/telegram_harness.py` — The telegram harness
-11. `src/iao/claw/openclaw_client.py` — The OpenClaw client
-12. `src/iao/claw/nemoclaw_client.py` — The NemoClaw client
-13. `src/iao/models/chromadb_client.py` — The ChromaDB client
-14. `src/iao/models/nemotron_client.py` — The Nemotron client
-15. `src/iao/models/glm_client.py` — The GLM client
-16. `run_report.py` — The run report script (fixed)
-17. `iao doctor` — The doctor tool (updated)
-18. `gotcha_registry.json` — The gotcha registry
-19. `iao MANIFEST` — The manifest
-20. `iao-bundle-0.1.3.md` — Removed (cleanup)
-21. `iao-bundle-0.1.2.md` — Kept for reference
+1. `iao-bundle-0.1.4.md` - The bundle for iteration 0.1.4
+2. `iao-build-log-0.1.4.md` - This build log
+3. `iao-manifest-0.1.4.json` - The manifest for iteration 0.1.4
+4. `VERSION` - The version file (0.1.4)
+5. `pyproject.toml` - The project configuration
+6. `CHANGELOG` - The changelog
+7. `README.md` - The README
+8. `install.fish` - The install script
+9. `src/iao/telegram/telegram_client.py` - The telegram client
+10. `src/iao/telegram/telegram_harness.py` - The telegram harness
+11. `src/iao/claw/openclaw_client.py` - The OpenClaw client
+12. `src/iao/claw/nemoclaw_client.py` - The NemoClaw client
+13. `src/iao/models/chromadb_client.py` - The ChromaDB client
+14. `src/iao/models/nemotron_client.py` - The Nemotron client
+15. `src/iao/models/glm_client.py` - The GLM client
+16. `run_report.py` - The run report script (fixed)
+17. `iao doctor` - The doctor tool (updated)
+18. `gotcha_registry.json` - The gotcha registry
+19. `iao MANIFEST` - The manifest
+20. `iao-bundle-0.1.3.md` - Removed (cleanup)
+21. `iao-bundle-0.1.2.md` - Kept for reference
 
 ---
 
@@ -377,10 +377,10 @@ The following artifacts were generated during this iteration:
 
 The following gotcha entries were added during this iteration:
 
-1. **Missing postflight gate** — Fixed in W1. The `run_report.py` now calls `verify_postflight_gates()`.
-2. **Version mismatch** — Fixed in W1. The `iao doctor` tool now checks the version.
-3. **GLM client unavailable** — Handled via retry (Pillar 7). The client retries up to 3 times.
-4. **kjtcom registry export incomplete** — Caught during verification. The missing entry was added.
+1. **Missing postflight gate** - Fixed in W1. The `run_report.py` now calls `verify_postflight_gates()`.
+2. **Version mismatch** - Fixed in W1. The `iao doctor` tool now checks the version.
+3. **GLM client unavailable** - Handled via retry (Pillar 7). The client retries up to 3 times.
+4. **kjtcom registry export incomplete** - Caught during verification. The missing entry was added.
 
 ---
 
@@ -400,7 +400,7 @@ The following gotcha entries were added during this iteration:
 
 # Event Record (Manual entries)
 
-# Build Log — iao 0.1.4
+# Build Log - iao 0.1.4
 
 **Start:** 2026-04-09T16:12:19Z
 **Executor:** gemini-cli
@@ -411,7 +411,7 @@ The following gotcha entries were added during this iteration:
 
 ---
 
-## W0 — Iteration Bookkeeping
+## W0 - Iteration Bookkeeping
 
 **Status:** COMPLETE
 **Wall clock:** ~5 min
@@ -427,7 +427,7 @@ Actions:
 ---
 
 
-## W1 — 0.1.3 Cleanup
+## W1 - 0.1.3 Cleanup
 
 **Status:** COMPLETE
 **Wall clock:** ~40 min
@@ -447,7 +447,7 @@ Discrepancies:
 ---
 
 
-## W2 — Model Fleet Integration
+## W2 - Model Fleet Integration
 
 **Status:** COMPLETE
 **Wall clock:** ~45 min
@@ -467,7 +467,7 @@ Discrepancies:
 ---
 
 
-## W3 — kjtcom Harness Migration (PAUSED)
+## W3 - kjtcom Harness Migration (PAUSED)
 
 **Status:** PAUSED
 **Wall clock:** ~10 min (pass 1)
@@ -481,7 +481,7 @@ Actions:
 ---
 
 
-## W4 — Telegram Framework Generalization
+## W4 - Telegram Framework Generalization
 
 **Status:** PARTIAL
 **Wall clock:** ~20 min
@@ -499,7 +499,7 @@ Discrepancies:
 ---
 
 
-## W5 — OpenClaw + NemoClaw Foundations
+## W5 - OpenClaw + NemoClaw Foundations
 
 **Status:** PARTIAL
 **Wall clock:** ~15 min
@@ -516,7 +516,7 @@ Discrepancies:
 ---
 
 
-## W6 — Notification Hook + Gemini-Primary Sync
+## W6 - Notification Hook + Gemini-Primary Sync
 
 **Status:** COMPLETE
 **Wall clock:** ~15 min

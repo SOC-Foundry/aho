@@ -134,7 +134,7 @@ def validate_references(refs: dict, project_root: Path, seed: dict = None) -> di
     elif len(errors) <= 3:
         return {"severity": "warn", "errors": errors, "message": f"{len(errors)} minor hallucinations"}
     else:
-        return {"severity": "reject", "errors": errors, "message": f"{len(errors)} hallucinations — artifact rejected"}
+        return {"severity": "reject", "errors": errors, "message": f"{len(errors)} hallucinations - artifact rejected"}
 
 
 def evaluate_text(text: str, project_root: Path = None, seed: dict = None, artifact_type: str = None) -> dict:

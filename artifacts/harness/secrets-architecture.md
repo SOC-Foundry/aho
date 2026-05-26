@@ -114,13 +114,13 @@ cd aho
 
 # 4. Choose a passphrase and unlock
 aho secret unlock
-# (prompts for passphrase — remember this, you'll need it after reboots)
+# (prompts for passphrase - remember this, you'll need it after reboots)
 
 # 5. Set the required secrets
 aho secret set ahomw telegram_bot_token "YOUR_TOKEN"
 aho secret set ahomw telegram_chat_id "YOUR_CHAT_ID"
 
-# 6. Re-run install.fish — it resumes from step 5
+# 6. Re-run install.fish - it resumes from step 5
 ./install.fish
 
 # 7. After reboot, unlock again before using aho services
@@ -142,7 +142,7 @@ src/aho/secrets/
     └── keyring_linux.py  # LinuxKeyringStore: keyctl padd/request/pipe/unlink for session keyring
 ```
 
-The `FernetBackend` is the active encryption backend. The `AgeBackend` exists but is not currently wired as the primary — it's available for future age-based workflows (e.g., encrypting artifacts for remote transfer). The `LinuxKeyringStore` is the only passphrase store; macOS/Windows stores are stubbed in `session.py`.
+The `FernetBackend` is the active encryption backend. The `AgeBackend` exists but is not currently wired as the primary - it's available for future age-based workflows (e.g., encrypting artifacts for remote transfer). The `LinuxKeyringStore` is the only passphrase store; macOS/Windows stores are stubbed in `session.py`.
 
 ## Security Properties
 
@@ -150,7 +150,7 @@ The `FernetBackend` is the active encryption backend. The `AgeBackend` exists bu
 - **In session:** Passphrase cached in kernel keyring (not on disk, not in environment).
 - **In transit:** Secrets are read into Python process memory only when needed. No temp files.
 - **On reboot:** Session keyring cleared by kernel. User must `aho secret unlock` again.
-- **On clone:** New machine has no secrets. `install.fish` halts with CAPABILITY GAP. Secrets must be set manually — there is no secret sync mechanism (by design for Phase 0).
+- **On clone:** New machine has no secrets. `install.fish` halts with CAPABILITY GAP. Secrets must be set manually - there is no secret sync mechanism (by design for Phase 0).
 
 ## Future (0.4.x+)
 

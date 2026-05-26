@@ -1,4 +1,4 @@
-# Report — aho 0.2.4
+# Report - aho 0.2.4
 
 **Generated:** 2026-04-11T17:33:06Z
 **Iteration:** 0.2.4
@@ -145,7 +145,7 @@ Artifacts: Missing artifacts: report.md |
 | manifest_current | fail | stale hashes: .aho-checkpoint.json, .aho.json, .gitignore |
 | mcp_canonical_registry_verify | ok | all 9 MCP packages registry-verified |
 | pillars_present | fail | 7 errors: Design doc missing Pillar 6; Design doc missing Pillar 7; Design doc missing Pillar 8 |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-11T17:32:43.353705+00:00 < iteration start 2026-04-11T19:00:00Z |
 | run_complete | deferred | Sign-off incomplete: Kyle runs sudo npm commands (capability gap), Kyle git commit + push |
 | run_quality | ok | Run file passes quality gate |
@@ -172,7 +172,7 @@ Artifacts: Missing artifacts: report.md |
 
 From 0.2.4 Kyle's Notes:
 
-*(empty — Kyle fills after review)*
+*(empty - Kyle fills after review)*
 
 ---
 

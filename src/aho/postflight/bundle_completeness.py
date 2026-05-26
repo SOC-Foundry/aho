@@ -1,9 +1,9 @@
 """Postflight gate: verify bundle includes all iteration artifacts.
 
 Two failure categories:
-1. Sidecar drift — file exists on disk in artifacts/iterations/<version>/
+1. Sidecar drift - file exists on disk in artifacts/iterations/<version>/
    but is not included in the bundle's §12. Fix: regenerate bundle.
-2. Canonical missing — a §1-§5 canonical section references a file that
+2. Canonical missing - a §1-§5 canonical section references a file that
    does not exist on disk. Fix: generate the underlying artifact first,
    then regenerate bundle.
 
@@ -48,7 +48,7 @@ def check():
     bundle_content = bundle_path.read_text()
     failures = []
 
-    # Category 1: Sidecar drift — .md files in iteration dir not in bundle §12
+    # Category 1: Sidecar drift - .md files in iteration dir not in bundle §12
     sidecar_missing = []
     for md_file in sorted(iter_dir.glob("*.md")):
         name_lower = md_file.name.lower()
@@ -60,8 +60,8 @@ def check():
         if md_file.name not in bundle_content:
             sidecar_missing.append(md_file.name)
 
-    # Category 2: Canonical missing — expected canonical files not on disk
-    # report/run are alternates — either satisfies the report requirement
+    # Category 2: Canonical missing - expected canonical files not on disk
+    # report/run are alternates - either satisfies the report requirement
     _CANONICAL_ALTERNATES = {
         "report": ["report", "run"],
     }
@@ -75,7 +75,7 @@ def check():
         if not any(c.exists() for c in candidates):
             canonical_missing.append(f"{prefix}-{doc_type}-{iteration}.md")
 
-    # Category 3: ADRs — check artifacts/adrs/ files appear in bundle §6
+    # Category 3: ADRs - check artifacts/adrs/ files appear in bundle §6
     adrs_dir = artifacts / "adrs"
     adr_missing = []
     if adrs_dir.exists():

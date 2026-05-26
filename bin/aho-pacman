@@ -97,6 +97,102 @@ function _cmd_doctor
     return 0
 end
 
+function _ignorepkg_present
+    # Read-only check: is <pkg> in an active (uncommented) IgnorePkg line within
+    # the [options] section of /etc/pacman.conf? No sudo required to read.
+    set -l pkg $argv[1]
+    python3 -c '
+import sys, re
+pkg = sys.argv[1]
+section = None
+try:
+    with open("/etc/pacman.conf") as f:
+        for line in f:
+            s = line.strip()
+            m = re.match(r"^\[(\w+)\]", s)
+            if m:
+                section = m.group(1)
+                continue
+            if section == "options" and s.startswith("IgnorePkg"):
+                # right-hand side after =
+                rhs = s.split("=", 1)[1] if "=" in s else ""
+                names = re.split(r"[\s,]+", rhs.strip())
+                if pkg in names:
+                    sys.exit(0)
+    sys.exit(1)
+except OSError:
+    sys.exit(2)
+' $pkg
+end
+
+function _cmd_pin
+    # pin <pkg> - ensure `IgnorePkg = <pkg>` is active in pacman.conf [options].
+    # Idempotent: if already pinned, exits 0 with no write (and no sudo). If not
+    # pinned, the edit requires sudo (a system-file modification) - surfaced to
+    # the operator rather than performed silently.
+    set -l pkg $argv[1]
+    if test -z "$pkg"
+        _error "usage: $script_name pin <package>"
+        return 2
+    end
+    if _ignorepkg_present $pkg
+        _info "IgnorePkg already includes '$pkg' in [options]. No change."
+        return 0
+    end
+    _warn "IgnorePkg does not include '$pkg'. Editing /etc/pacman.conf needs sudo."
+    _warn "Operator action: run the following to pin (system-file write):"
+    echo "    sudo $script_name pin-apply $pkg"
+    return 1
+end
+
+function _cmd_pin_apply
+    # pin-apply <pkg> - the privileged half of pin. Must run under sudo. Inserts
+    # <pkg> into the [options] IgnorePkg line (creating it if absent). Idempotent.
+    set -l pkg $argv[1]
+    if test -z "$pkg"
+        _error "usage: sudo $script_name pin-apply <package>"
+        return 2
+    end
+    if _ignorepkg_present $pkg
+        _info "IgnorePkg already includes '$pkg'. No change."
+        return 0
+    end
+    python3 -c '
+import sys, re
+pkg = sys.argv[1]
+path = "/etc/pacman.conf"
+with open(path) as f:
+    lines = f.readlines()
+out, section, inserted = [], None, False
+for line in lines:
+    s = line.rstrip("\n")
+    m = re.match(r"^\[(\w+)\]", s.strip())
+    if m:
+        # leaving the [options] section without having inserted -> add a line
+        if section == "options" and not inserted:
+            out.append(f"IgnorePkg = {pkg}\n")
+            inserted = True
+        section = m.group(1)
+        out.append(line)
+        continue
+    if section == "options" and s.strip().startswith("IgnorePkg") and not inserted:
+        rhs = s.split("=", 1)[1].strip() if "=" in s else ""
+        names = [n for n in re.split(r"[\s,]+", rhs) if n]
+        if pkg not in names:
+            names.append(pkg)
+        out.append("IgnorePkg = " + " ".join(names) + "\n")
+        inserted = True
+        continue
+    out.append(line)
+if not inserted:
+    # no [options] IgnorePkg line encountered; append at end (rare)
+    out.append(f"\n[options]\nIgnorePkg = {pkg}\n")
+with open(path, "w") as f:
+    f.writelines(out)
+print(f"pinned {pkg} in {path}")
+' $pkg
+end
+
 # Subcommand dispatch
 switch "$argv[1]"
     case list
@@ -107,7 +203,11 @@ switch "$argv[1]"
         _cmd_install
     case doctor
         _cmd_doctor
+    case pin
+        _cmd_pin $argv[2]
+    case pin-apply
+        _cmd_pin_apply $argv[2]
     case '*'
-        echo "Usage: $script_name {list|status|install|doctor}"
+        echo "Usage: $script_name {list|status|install|doctor|pin <pkg>|pin-apply <pkg>}"
         exit 1
 end

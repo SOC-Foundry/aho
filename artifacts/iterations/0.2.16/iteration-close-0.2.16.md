@@ -1,4 +1,4 @@
-# Iteration Close — aho 0.2.16
+# Iteration Close - aho 0.2.16
 
 **Iteration:** 0.2.16
 **Closed:** 2026-05-01T23:36:52Z
@@ -6,7 +6,7 @@
 **Theme:** Claude Code OTEL Integration & 0.2.15 Close-Out
 **Pattern:** C modified (Claude drafts, Gemini audits, Kyle signs)
 **Iteration deliverable status:** SHIPPED (against amended Form 2 criterion;
-see §Form 2 criterion amendment below — criterion was amended at close
+see §Form 2 criterion amendment below - criterion was amended at close
 under ADR 0006 hard-meta-rule treatment, not met as originally written).
 
 This is the first iteration close performed under ADR 0006's
@@ -63,7 +63,7 @@ close. Evidence:
 | 2 | claw3d Workstream Telemetry + api-otel-sample.json | PASS (amended) | `api-otel-sample.json` parses as valid JSON, top-level keys include `iteration`, `workstreams`, `iteration_rollup`. `web/claw3d/lib/main.dart` contains literal string `'Workstream Telemetry'` at line 434 and 442; surrounding scope renders cost (`$x.xxxx`), tokens (input/output/cache-read/cache-creation/total), and cache-ratio. |
 | 3 | TRACEPARENT in dispatcher + router with tests | PASS | `grep -l TRACEPARENT src/aho/pipeline/dispatcher.py src/aho/pipeline/router.py` matched both. Both test files exist with documented `test_absent` / `test_present` / parent-trace-id-inheritance coverage. |
 | 4 | Five alert rules + bridge code | PASS | `pillar-11-violations.yaml` contains `Pillar11CommitViolation` + `Pillar11PullRequestViolation` (2 rules); `anomaly-rules.yaml` contains `ClaudeAPIErrorSpike` + `ClaudeCostAnomaly` + `ToolDurationOutlier` (3 rules). Total 5. `telegram_alerts.py` matches 11 occurrences of typed-error / HTTPStatus / status_code symbols. |
-| 5 | ADRs 0003–0008 | PASS | 0003/0005/0006/0007/0008 = `Status: Accepted`; 0004 = `Status: Proposed (design only; implementation deferred to 0.2.16 W4)` — explicitly noted per criterion text. |
+| 5 | ADRs 0003–0008 | PASS | 0003/0005/0006/0007/0008 = `Status: Accepted`; 0004 = `Status: Proposed (design only; implementation deferred to 0.2.16 W4)` - explicitly noted per criterion text. |
 | 6 | acceptance + audit archives W0..W4 | PASS | All ten files exist on disk. W0/W3/W4 audits = `pass`; W1/W2 audits = `pass_with_findings`. |
 
 All six criterion lines PASS. Iteration is shipped against the amended
@@ -78,7 +78,7 @@ machine.
 |---|---|---|---|---|
 | W0 | 0.2.15 close-out + substrate closure + OTEL scaffolding | pass | gemini-cli | `~/.local/share/aho/events/aho_event_log.jsonl` |
 | W1 | Pillar 8 cost + token dashboard | pass_with_findings | gemini-cli | (same log) |
-| W2 | Distributed tracing — TRACEPARENT propagation | pass_with_findings | gemini-cli | (same log) |
+| W2 | Distributed tracing - TRACEPARENT propagation | pass_with_findings | gemini-cli | (same log) |
 | W3 | Pillar 11 enforcement + anomaly detection | pass_with_findings | gemini-cli | (same log) |
 | W4 | ADR-heavy close (re-scoped from cross-model cascade re-run) | pass | gemini-cli | (same log) |
 
@@ -103,8 +103,8 @@ co-located with the sealed acceptance archives at
   AF004 (`dispatch.duration_ms` error-path measurement gap, info).
 - W3: AF001 (Rule 3 expression repair, cosmetic), AF002 (Rule 5
   baseline larger n, info), AF003 (Rule 5 metric-source gap, info).
-- W4: AF001 (deviation-count coherence, info — acknowledged, no
-  carry-forward), AF002 (CLI gap on `pending_audit` state, info —
+- W4: AF001 (deviation-count coherence, info - acknowledged, no
+  carry-forward), AF002 (CLI gap on `pending_audit` state, info -
   carry-forward to 0.2.x cleanup, future ADR candidate).
 
 Detail and Kyle's verbatim dispositions live in
@@ -125,7 +125,7 @@ this close, including the new W4-AF002 entry under the "0.2.x cleanup
   §Cross-iteration carry tracking).
 - engine-selection ADR + bridge live wire-up (0.2.17 or 0.3): 8 items
   (W3-AF001, W3-AF002, W3-AF003, W3-CF1 through W3-CF5).
-- 0.2.x cleanup (future ADR candidate): 1 item (W4-AF002 — `pending_audit`
+- 0.2.x cleanup (future ADR candidate): 1 item (W4-AF002 - `pending_audit`
   CLI gap; pairs with the iteration-level graduation-criterion CLI gap
   surfaced at this close).
 - next collector config touch: 1 item (OTLP alias deprecation warning).
@@ -148,7 +148,7 @@ Two failure modes:
 1. The file at the named path does not exist. Only `api-otel-sample.json`
    exists in `dashboards/`.
 2. The retrospective §3 ship-honest table claimed "Grafana JSON exists
-   in the export pack" — but `export/claude-otel-reference-pack/`
+   in the export pack" - but `export/claude-otel-reference-pack/`
    contains only `alerts/`. No Grafana JSON ships in the export pack.
 
 **Rationale for amendment.** The retrospective's Form 2 criterion was
@@ -160,19 +160,19 @@ a Workstream Telemetry section instead. That redirect was Kyle-approved
 and dispositioned at W1 audit time (the W1 acceptance archive ships
 the claw3d-extension surface as W1's deliverable). The retroactive
 criterion derivation in W4 reverted to the plan-doc wording without
-folding the W1 audit-time disposition forward — a derivation error,
+folding the W1 audit-time disposition forward - a derivation error,
 not a scope drift.
 
 The criterion-as-written is wrong against W1 ship reality. Amending it
 to match what actually shipped is historical correction. The
-as-shipped surfaces — Flutter claw3d Workstream Telemetry section +
-the on-disk OTEL response fixture — are the artifacts the amended
+as-shipped surfaces - Flutter claw3d Workstream Telemetry section +
+the on-disk OTEL response fixture - are the artifacts the amended
 criterion now names. Both exist; both verify; the iteration ships
 against the amended criterion line.
 
 **ADR 0006 hard-meta-rule treatment authorized by Kyle.**
 Per ADR 0006 §Decision: "If the criterion fails, the iteration does
-not close — it stays open until the criterion passes or until the
+not close - it stays open until the criterion passes or until the
 criterion itself is amended (same hard meta-rule treatment as above)."
 Kyle authorized the amendment explicitly at close-time with the message
 text "Option 2 (amend the criterion). Authorizing under ADR 0006
@@ -190,7 +190,7 @@ originally written. The amendment is a first-class scope decision made
 at close-time, not a silent fix. ADR 0006's hard-meta-rule treatment
 made the amendment a structural artifact rather than retroactive
 backfill. This close is the convention's first stress test; the
-convention worked — the gap surfaced at the gate, was characterized
+convention worked - the gap surfaced at the gate, was characterized
 honestly, and was dispositioned explicitly.
 
 ## Procedural observations for future ADR
@@ -198,7 +198,7 @@ honestly, and was dispositioned explicitly.
 Two CLI gaps surfaced through this iteration's close that pair into a
 single future-ADR candidate:
 
-1. **Workstream-level `pending_audit` gap.** W4 audit AF002 — Pattern
+1. **Workstream-level `pending_audit` gap.** W4 audit AF002 - Pattern
    C state machine includes `pending_audit` (drafter writes acceptance
    archive; checkpoint advances to that state pending Gemini audit),
    but `aho iteration workstream` exposes only `start` / `complete`.
@@ -210,7 +210,7 @@ single future-ADR candidate:
    the graduation criterion against current repo state" before
    emitting `iteration_complete`. `aho iteration close --confirm`
    exists but does not mechanically read the criterion or assert each
-   line — that work is done by hand in this artifact. A pre-confirm
+   line - that work is done by hand in this artifact. A pre-confirm
    subcommand that parses a structured graduation block and runs the
    assertions would close the gap. Out of scope for ADR 0006 itself
    (called out in §Out of Scope as the future enhancement that may
@@ -220,11 +220,11 @@ Both gaps belong to the same future-ADR candidate. Recorded in
 `carry-forwards-0.2.16.md` under target "0.2.x cleanup (future ADR
 candidate)" alongside W4-AF002.
 
-## Editorial note — Pattern C → Adversarial Authorship rename
+## Editorial note - Pattern C → Adversarial Authorship rename
 
-"Pattern C" terminology used throughout this iteration — including
+"Pattern C" terminology used throughout this iteration - including
 this artifact, the W4 acceptance archive, the retrospective, and all
-sealed audit dispositions — is being renamed to **Adversarial
+sealed audit dispositions - is being renamed to **Adversarial
 Authorship** prospectively in 0.2.17 W0. The rename is verbal /
 external as of this close (Kyle uses the new term in conversation, IR
 materials, README revisions, and external positioning); the
@@ -244,7 +244,7 @@ W0 for the planned find/replace scope.
 
 ## Iteration deliverable status
 
-**SHIPPED** — against the amended Form 2 criterion above. All six
+**SHIPPED** - against the amended Form 2 criterion above. All six
 criterion lines verified. Five workstreams reached
 `workstream_complete`. Sealed acceptance archives intact. Carry-
 forwards routed to future iterations with explicit targets. Pattern C
@@ -256,7 +256,7 @@ hard-meta-rule amendment path the ADR contemplates.
 ---
 
 *Iteration close artifact 0.2.16. Companion artifacts:
-`retrospective-0.2.16.md` (amended at close — see §1.2 line 2 and §3
+`retrospective-0.2.16.md` (amended at close - see §1.2 line 2 and §3
 row 2 footnotes), `carry-forwards-0.2.16.md`, `acceptance/W{0..4}.json`,
 `audit/W{0..4}.json`, `acceptance/W{1,2,3,4}-audit-dispositions.md`,
 ADRs 0003 / 0004 / 0005 / 0006 / 0007 / 0008 under `artifacts/adrs/`.*

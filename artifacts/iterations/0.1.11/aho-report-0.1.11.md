@@ -24,19 +24,19 @@ Iteration 0.1.11 graduated clean. The primary objective was the finalization of 
 
 ## Outcomes
 
-**W0 — Environment Hygiene**
+**W0 - Environment Hygiene**
 W0 confirmed the current project root state. The system detected that the project root remained at `~/dev/projects/iao` rather than the target `~/dev/projects/aho`. This discrepancy was logged as non-blocking, allowing the iteration to proceed while surfacing the manual task for the human orchestrator. Version and checkpoint bumps were executed successfully. The manual build log was initialized to track progress.
 
-**W1 — Run File Filename Rename**
+**W1 - Run File Filename Rename**
 W1 executed the core artifact rename. The output path in `src/aho/feedback/run_report.py` (renamed to `run.py`) was updated to generate `aho-run-{version}.md`. Postflight modules `run_report_complete` and `run_report_quality` were renamed to `run_complete` and `run_quality`. The bundle specification was updated to reference the new filename. The prompt template was renamed from `run-report.md.j2` to `run.md.j2`. Historical artifacts were preserved to maintain audit trails. No lingering references to the old naming convention remain in active code.
 
-**W2 — Test Suite Hygiene**
+**W2 - Test Suite Hygiene**
 W2 addressed two specific failures. `test_secrets_backends` was modified to skip the age integration test when no TTY is available, preventing headless agent failures in the CI environment. `test_artifacts_loop` was updated to expect the current "Phase 0" string in the design body, resolving a schema validation mismatch. The full test suite now passes with zero failures, restoring confidence in the baseline.
 
-**W3 — Qwen Degenerate Synthesis Investigation**
+**W3 - Qwen Degenerate Synthesis Investigation**
 W3 analyzed the "Wait, checking..." loop from 0.1.10. The rolling-window detector was found to be evaded by slight token variations. A secondary information density check was implemented in `repetition_detector.py`. If the ratio of unique tokens to total tokens drops below 10% over a 500-token window, the loop is flagged as degenerate. This prevents the agent from spinning indefinitely on low-information output, reducing resource waste and improving loop stability.
 
-**W4 — Dogfood + Close**
+**W4 - Dogfood + Close**
 W4 executed the dogfood run against 0.1.11 itself. All six verification checks passed: the run file was named correctly, the bundle referenced the new name, no old references existed in source, tests were green, §22 had sufficient components, and the manual build log was present. The iteration was closed and bundled.
 
 ## Lessons & Next Steps

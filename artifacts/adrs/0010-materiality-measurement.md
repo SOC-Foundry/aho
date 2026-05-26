@@ -1,10 +1,10 @@
-# ADR 0010 — Materiality Measurement Protocol
+# ADR 0010 - Materiality Measurement Protocol
 
 **Status:** Accepted (qualified validation; full validation deferred)
 **Date:** 2026-05-03
 **Iteration of record:** aho 0.2.17 W5 (consolidating 0.2.17 W2/W3/W4 evidence build)
 **Decision owner:** Kyle Thompson (signs), Claude web (drafted), Claude Code (executed at W2/W3/W4), llama3.2 + RAG + filter (audits at W5)
-**Context surface:** aho project-internal — falsifiability protocol for
+**Context surface:** aho project-internal - falsifiability protocol for
 the architecture's "harness-as-IQ" claim. Binds 0.2.17 W2 D12 (counter
 landing), W3 (RAG enrichment partial closure), W4 D1 (deterministic
 post-hoc filter structural closure), 0.3.x materiality validation
@@ -14,8 +14,8 @@ runway.
 
 ## Context
 
-The architecture's load-bearing claim — "the harness produces better
-project outcomes than a single-agent executor on the same work" — is
+The architecture's load-bearing claim - "the harness produces better
+project outcomes than a single-agent executor on the same work" - is
 a claim about output quality across iterations. Token-spend reduction
 (an early framing hypothesis) is a *downstream artifact* of better
 outcomes, not the design driver. A harness that costs more tokens but
@@ -64,7 +64,7 @@ MeterProvider, with resource attributes `aho.iteration`,
 |---|---|---|---|
 | **caught-by-llama** | `aho.materiality.claim_vs_artifact_mismatches.caught_by_llama` | In-container llama auditor surfaces a claim/artifact mismatch during audit pass. | W2 D12 (real flow inside `aho.council.audit`). |
 | **caught-by-drafter** | `aho.materiality.claim_vs_artifact_mismatches.caught_by_drafter` | Drafter (gap-net) flags a defect that auditor dispositioned `clean` on the prior planning turn. | W2 D12 wires placeholder (`gap_carry_forward_writer`); W3 wires real-flow integration. |
-| **escaped** | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Defect surfaces retrospectively — neither auditor nor drafter caught it during sealing. | W2 D12 placeholder; W3 wires retrospective-fold-in increment path. |
+| **escaped** | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Defect surfaces retrospectively - neither auditor nor drafter caught it during sealing. | W2 D12 placeholder; W3 wires retrospective-fold-in increment path. |
 | **carry-forward resolution rate** | `aho.materiality.carry_forward_resolution_rate` | Carry-forward explicitly closed by reference in a workstream output. | W2 D12 placeholder; W3 wires `carry_forwards_closed` inside acceptance archive emit. |
 
 Counter primitives are created at module-import time in
@@ -75,7 +75,7 @@ Each counter exposes a record function (`record_caught_by_llama`,
 `record_carry_forward_resolution`) that the consuming primitives call
 with severity and an extras dict. The OTEL Counter instruments are
 non-functional under `_otel_available=False` (e.g., import failure
-or no MeterProvider) — the record functions fail closed (no-op) so
+or no MeterProvider) - the record functions fail closed (no-op) so
 materiality wiring does not block iteration execution under degraded
 telemetry.
 
@@ -110,7 +110,7 @@ data but the threshold is not yet validated. At N ≥ 8:
    flagging.** Carry-forwards opened in workstream W{N} must reach a
    `closed` state in the carry-forwards file within iteration W{N+2}
    at a ≥60% rate. Items that persist beyond 2 iterations without
-   closure are evidence of unbounded flagging — the carry-forward
+   closure are evidence of unbounded flagging - the carry-forward
    register becomes append-only-with-no-resolution and the protocol
    degrades to a logging surface rather than a feedback surface.
 
@@ -124,7 +124,7 @@ ADR is amended (or replaced) with the empirical finding.
 contribution to the materiality protocol. Recorded honestly, the
 build is:
 
-#### W2 (baseline) — auditor without enhancement
+#### W2 (baseline) - auditor without enhancement
 
 W2 deployed the in-container llama3.2:3b auditor for the first time
 (D11 self-audit), with counter wiring landing in D12 verification
@@ -132,7 +132,7 @@ probe. Self-audit produced a **false positive**: F-0.2.17-W1-003
 flagged as "looks placeholder" despite being sealed-real and
 registered in the carry-forwards file. The counter
 `claim_vs_artifact_mismatches.caught_by_llama` incremented for this
-finding — counted in the bucket, but the increment recorded a defect
+finding - counted in the bucket, but the increment recorded a defect
 the model fabricated, not a defect the artifact contained.
 
 W2 acceptance archive sha256:
@@ -140,10 +140,10 @@ W2 acceptance archive sha256:
 
 The materiality protocol was active and recording; the
 auditor-as-deployed at W2 had a known capability gap
-(F-0.2.17-W2-006 — reference-resolution gap; small-model
+(F-0.2.17-W2-006 - reference-resolution gap; small-model
 pattern-matching on ID syntax without registry access).
 
-#### W3 (partial fix) — RAG enrichment
+#### W3 (partial fix) - RAG enrichment
 
 W3 wired `aho.council.audit_ref_lookup` (W3 D2) and
 `aho.council.audit_ref_extract` (W3 D2) into the audit prompt
@@ -160,7 +160,7 @@ positives:
   ID).
 - W2 self-audit replay: F-0.2.17-W1-003 false positive
   **persisted** under same prompt rule, same context shape, same
-  model. Small-model prompt-following inconsistency at base tier —
+  model. Small-model prompt-following inconsistency at base tier -
   llama3.2:3b honors the registered-references rule on some prompts
   but not others. Mechanism: the rule is paragraph-form text at
   the end of a large system prompt, and the model selectively
@@ -173,13 +173,13 @@ W3 surfaced F-0.2.17-W3-001 (residual prompt-following
 inconsistency); F-0.2.17-W2-006 stays open until W4 closes both via
 structural fix.
 
-#### W4 (structural closure) — deterministic post-hoc filter
+#### W4 (structural closure) - deterministic post-hoc filter
 
-W4 D1 landed `aho.council.audit_finding_filter` — a deterministic
+W4 D1 landed `aho.council.audit_finding_filter` - a deterministic
 post-pass that drops findings whose anchor IDs are listed
 `registered` in the prompt context AND whose description matches the
 fake-ID phrase set ('not real', 'looks placeholder', 'matches naming
-conventions', etc.). Filter is structural — it does not bet the
+conventions', etc.). Filter is structural - it does not bet the
 architecture on small-model prompt-following.
 
 Filter verified against:
@@ -209,7 +209,7 @@ mode is still contained because the filter reads the same RAG context
 the prompt section was built from and applies the suppression
 deterministically.
 
-### N=4 caveat — qualified validation, not full validation
+### N=4 caveat - qualified validation, not full validation
 
 The 0.2.17 evidence build spans **four iterations** (W0 / W1 / W2 /
 W3) with the auditor primitive deploying first at W2 and stabilizing
@@ -225,7 +225,7 @@ evidence build is **qualified validation, not full validation**:
   RAG replays close structurally at W4.
 
 But the falsifiability threshold (≥30% reduction in escaped, non-zero
-catch buckets, ≥60% resolution rate) is **not yet exercised** — the
+catch buckets, ≥60% resolution rate) is **not yet exercised** - the
 N≥8 window has not closed. 0.3.x continues the evidence build under
 partial-tier auditor deployment. Full validation lands when the
 falsifiability threshold has been exercised against an N≥8 evidence
@@ -317,7 +317,7 @@ protocol is designed to surface and reward.
 
 - 0.2.17 evidence is recorded in W2/W3/W4 sealed archives plus this
   ADR; future iterations append. The protocol itself is stable
-  across iterations — counter names, schema, and threshold
+  across iterations - counter names, schema, and threshold
   definition are versioned with this ADR.
 - Migration to a partial-tier auditor (qwen3.5:9b at 0.3.x) does
   not change the counter shape; only the model behind the
@@ -421,9 +421,9 @@ following become true:
 ## References
 
 - `artifacts/adrs/0007-containerization-architecture.md` §Council
-  roles — auditor/drafter/triage/retrieval seats; the protocol
+  roles - auditor/drafter/triage/retrieval seats; the protocol
   measures their joint output.
-- `artifacts/adrs/0009-secrets-broker-boundary.md` — boundary
+- `artifacts/adrs/0009-secrets-broker-boundary.md` - boundary
   between container and host; orthogonal to materiality but cited
   for repo-resident architectural completeness.
 - `artifacts/iterations/0.2.17/acceptance/W2.json` (sha256
@@ -440,16 +440,16 @@ following become true:
   `9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`)
   llama self-audit verbatim disposition.
 - `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
-  F-0.2.17-W2-006, F-0.2.17-W3-001, F-0.2.17-W3-002 — the auditor
+  F-0.2.17-W2-006, F-0.2.17-W3-001, F-0.2.17-W3-002 - the auditor
   capability-gap evidence chain.
-- `src/aho/materiality.py` — counter primitives (W4-close sha
+- `src/aho/materiality.py` - counter primitives (W4-close sha
   `0ef021e3ee85d5c4390a7d40b19523d874ea84d6bdaeeb56b3f0a31fcac912b8`).
-- `src/aho/materiality_baseline_extract.py` — baseline extraction
+- `src/aho/materiality_baseline_extract.py` - baseline extraction
   (W4-close sha
   `0fecabc9c73de9148478517e03cc402d8145acd33951a33c7bd654bd76722030`).
 - `artifacts/harness/base.md` §Pillar 7 ("generation and evaluation
-  are separate roles") — binding constraint on the catch-locus
+  are separate roles") - binding constraint on the catch-locus
   distinction.
 - `artifacts/harness/base.md` §Pillar 8 ("efficacy is measured in
-  cost delta") — adjacent pillar; cost telemetry is separate from
+  cost delta") - adjacent pillar; cost telemetry is separate from
   materiality but feeds the same dashboard surface.

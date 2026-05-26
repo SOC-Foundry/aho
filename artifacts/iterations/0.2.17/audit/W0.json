@@ -8,13 +8,13 @@
   "scope_matches_plan": true,
   "substance_matches_scope": true,
   "spot_checks_performed": [
-    "src/aho/dashboard/otel_aggregator.py — verified AF004/AF005 logic",
-    "src/aho/workstream_events.py — verified TestIsolationError guard",
-    "src/aho/workstream_init.py — verified settings.json rewrite logic",
-    "CLAUDE.md / GEMINI.md — verified Adversarial Authorship rename",
-    "aho:hello — verified image exists and runs version 0.2.14",
-    "regression suite — 116 passed, 1 deselected",
-    "logs.jsonl — spot-checked 0.2.17/W0 attribution"
+    "src/aho/dashboard/otel_aggregator.py - verified AF004/AF005 logic",
+    "src/aho/workstream_events.py - verified TestIsolationError guard",
+    "src/aho/workstream_init.py - verified settings.json rewrite logic",
+    "CLAUDE.md / GEMINI.md - verified Adversarial Authorship rename",
+    "aho:hello - verified image exists and runs version 0.2.14",
+    "regression suite - 116 passed, 1 deselected",
+    "logs.jsonl - spot-checked 0.2.17/W0 attribution"
   ],
   "otel_spot_checks": [
     "~/.local/share/aho/logs/logs.jsonl spot-checked: resource.attributes correctly contains aho.iteration=0.2.17 and aho.workstream=W0. No ${VAR} residue."

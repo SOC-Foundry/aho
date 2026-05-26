@@ -1,4 +1,4 @@
-"""aho.substrate_probes — concrete probes for the 13 substrate facts in
+"""aho.substrate_probes - concrete probes for the 13 substrate facts in
 W1 D4 scope. Each probe is a callable returning (probe_outcome, value_observed,
 extra_dict).
 
@@ -114,7 +114,7 @@ def probe_tailnet_domain(host: Optional[str] = None) -> Tuple[str, Any, Dict[str
 def probe_otel_collector_endpoint(host: Optional[str] = None) -> Tuple[str, Any, Dict[str, Any]]:
     h = host or _local_hostname()
     endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:4317")
-    # OTLP gRPC port 4317 — bare TCP connect probe (gRPC requires TLS+HTTP2; tcp connect tells us "is something listening").
+    # OTLP gRPC port 4317 - bare TCP connect probe (gRPC requires TLS+HTTP2; tcp connect tells us "is something listening").
     target = endpoint.replace("http://", "").replace("https://", "")
     if ":" in target:
         addr, port_s = target.rsplit(":", 1)
@@ -221,7 +221,7 @@ def probe_cloudflarewarp_dns(host: Optional[str] = None) -> Tuple[str, Any, Dict
 
 
 def probe_chromadb_doc_count(host: Optional[str] = None) -> Tuple[str, Any, Dict[str, Any]]:
-    # Local probe only — chroma collection lives on the host running aho.
+    # Local probe only - chroma collection lives on the host running aho.
     project = os.environ.get("AHO_PROJECT", "ahomw")
     try:
         # Import in function to avoid hard dependency at module load.
@@ -235,7 +235,7 @@ def probe_chromadb_doc_count(host: Optional[str] = None) -> Tuple[str, Any, Dict
 
 
 def probe_checkpoint_mtime(host: Optional[str] = None) -> Tuple[str, Any, Dict[str, Any]]:
-    # Local probe — check the canonical-root .aho-checkpoint.json mtime.
+    # Local probe - check the canonical-root .aho-checkpoint.json mtime.
     root = Path(__file__).resolve().parents[2]  # <root>/src/aho/ → <root>
     ckpt = root / ".aho-checkpoint.json"
     if not ckpt.exists():
@@ -248,8 +248,35 @@ def probe_checkpoint_mtime(host: Optional[str] = None) -> Tuple[str, Any, Dict[s
         return "fail", None, {"detail": str(exc)}
 
 
+def probe_beacon_otlp_reachable(host: Optional[str] = None) -> Tuple[str, Any, Dict[str, Any]]:
+    # Local probe of the configured OTLP endpoint (W2 D7, fact #14).
+    # Outcomes: ok (TCP connect succeeds), unreachable (no endpoint configured
+    # OR connect fails), auth_failed (reserved - a full OTLP handshake with
+    # token rejection would set this; the lightweight probe does TCP-connect
+    # only and leaves auth verification to the exporter at emit time).
+    endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "").strip()
+    if not endpoint:
+        return "unreachable", None, {"detail": "no_endpoint_configured"}
+    target = endpoint.replace("https://", "").replace("http://", "")
+    if "/" in target:
+        target = target.split("/", 1)[0]
+    if ":" in target:
+        addr, port_s = target.rsplit(":", 1)
+        try:
+            port = int(port_s)
+        except ValueError:
+            return "unreachable", endpoint, {"detail": "endpoint_parse_fail"}
+    else:
+        addr, port = target, 4317
+    try:
+        with socket.create_connection((addr, port), timeout=5):
+            return "ok", endpoint, {"addr": addr, "port": port}
+    except OSError as exc:
+        return "unreachable", endpoint, {"addr": addr, "port": port, "detail": f"{type(exc).__name__}"}
+
+
 def probe_sys_path_clean(host: Optional[str] = None) -> Tuple[str, Any, Dict[str, Any]]:
-    # Local probe — detect a legacy pre-migration path entry in sys.path. The
+    # Local probe - detect a legacy pre-migration path entry in sys.path. The
     # marker is configurable per deployment via AHO_SYS_PATH_LEGACY_MARKER;
     # default catches the common "/dev/projects/aho/src" editable-install drift.
     legacy_marker = os.environ.get(
@@ -275,6 +302,7 @@ PROBE_REGISTRY: Dict[str, Callable[..., Tuple[str, Any, Dict[str, Any]]]] = {
     "chromadb_doc_count": probe_chromadb_doc_count,
     "checkpoint_mtime": probe_checkpoint_mtime,
     "sys_path_clean": probe_sys_path_clean,
+    "beacon_otlp_reachable": probe_beacon_otlp_reachable,
 }
 
 # Facts that are local-only (cannot meaningfully be remoted).
@@ -282,6 +310,7 @@ LOCAL_ONLY_FACTS = {
     "chromadb_doc_count",
     "checkpoint_mtime",
     "sys_path_clean",
+    "beacon_otlp_reachable",
 }
 
 
@@ -347,8 +376,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         n_unr = sum(1 for r in out if r["outcome"] == "host_unreachable")
         print(f"{len(out)} probes: ok={n_ok}, fail={n_fail}, host_unreachable={n_unr}")
         for r in out:
-            tag = {"ok": "·", "fail": "X", "host_unreachable": "~"}.get(r["outcome"], "?")
-            v = r["value"] if r["value"] is not None else "—"
+            tag = {"ok": "·", "fail": "X", "host_unreachable": "~",
+                   "unreachable": "~", "auth_failed": "!"}.get(r["outcome"], "?")
+            v = r["value"] if r["value"] is not None else "-"
             print(f"  {tag} {r['fact_id']:30s} host={r['host']:8s} value={v}")
     else:
         print(json.dumps(out, indent=2, default=str))

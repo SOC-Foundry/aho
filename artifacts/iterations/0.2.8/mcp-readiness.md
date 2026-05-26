@@ -1,4 +1,4 @@
-# MCP Fleet Readiness — 0.2.8
+# MCP Fleet Readiness - 0.2.8
 
 **Date:** 2026-04-12T02:29:38Z
 **Total:** 9 | **Pass:** 9 | **Fail:** 0

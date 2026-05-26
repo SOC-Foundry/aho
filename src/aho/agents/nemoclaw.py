@@ -1,4 +1,4 @@
-"""NemoClaw — Nemotron-driven orchestrator for OpenClaw sessions.
+"""NemoClaw - Nemotron-driven orchestrator for OpenClaw sessions.
 
 aho 0.1.7 W8 rebuild, 0.2.2 W2 global daemon.
 Routes tasks to OpenClaw sessions by role using Nemotron classification.
@@ -78,7 +78,7 @@ class NemoClawOrchestrator:
                     TimeoutError, ConnectionError, OSError) as e:
                 # Observed failure modes: HTTP transport (connection, timeout,
                 # pipe), response body decode (json/unicode). F003 0.2.16 W0
-                # narrowing — broader Exception would have masked programmer
+                # narrowing - broader Exception would have masked programmer
                 # errors and classification failures.
                 span.set_attribute("status", "error")
                 span.record_exception(e)
@@ -148,7 +148,7 @@ class NemoClawHandler(socketserver.StreamRequestHandler):
             except (DispatchError, json.JSONDecodeError, TypeError, OSError) as e:
                 # DispatchError from router, JSONDecodeError/TypeError from
                 # malformed req parsing, OSError for socket/I/O. F003 0.2.16 W0
-                # narrowing — mirrors the already-narrow route-branch pattern.
+                # narrowing - mirrors the already-narrow route-branch pattern.
                 self._reply({
                     "ok": False,
                     "error": str(e),

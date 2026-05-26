@@ -1,4 +1,4 @@
-"""Tests for pipeline schemas — RoleAssignment, PipelineTrace, DeltaItem (0.2.14 W1)."""
+"""Tests for pipeline schemas - RoleAssignment, PipelineTrace, DeltaItem (0.2.14 W1)."""
 import pytest
 from pydantic import ValidationError
 
@@ -58,7 +58,7 @@ def test_delta_item_invalid_proposer():
     from aho.pipeline.schemas import DeltaItem
     with pytest.raises(ValidationError):
         DeltaItem(
-            proposer_role="producer",  # invalid — must be indexer_in or indexer_out
+            proposer_role="producer",  # invalid - must be indexer_in or indexer_out
             confidence=0.5,
         )
 

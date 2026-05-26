@@ -1,4 +1,4 @@
-# aho — Design 0.1.11
+# aho - Design 0.1.11
 
 **Run:** 0.1.11
 **Phase:** 0
@@ -11,7 +11,7 @@
 
 ## §1. Why 0.1.11 exists
 
-0.1.10 graduated clean — the first clean graduation since 0.1.7. All internal identifiers are `aho`/`ahomw`. §22 instrumentation is restored to 6 components. ADR-042 enforcement is in code. The rename arc's internal work is done.
+0.1.10 graduated clean - the first clean graduation since 0.1.7. All internal identifiers are `aho`/`ahomw`. §22 instrumentation is restored to 6 components. ADR-042 enforcement is in code. The rename arc's internal work is done.
 
 Three items remain from the post-0.1.8 review and the 0.1.10 close:
 
@@ -29,13 +29,13 @@ Additionally, Qwen synthesis went degenerate in 0.1.10 W5 ("Wait, checking..." l
 
 Five workstreams. Wall clock target: ~3 hours.
 
-### W0 — Environment hygiene + project root confirmation (20 min)
+### W0 - Environment hygiene + project root confirmation (20 min)
 
 **Goal:** Confirm project root is at `~/dev/projects/aho` (if Kyle ran the W6 commands) or surface the interrupt again if it's still at `~/dev/projects/iao`. Bump checkpoint to 0.1.11. Initialize manual build log.
 
-**Success:** `command pwd` returns either `/home/kthompson/dev/projects/aho` (rename done) or `/home/kthompson/dev/projects/iao` (rename pending — log as discrepancy, continue). `./bin/aho --version` returns `aho 0.1.11`.
+**Success:** `command pwd` returns either `/home/kthompson/dev/projects/aho` (rename done) or `/home/kthompson/dev/projects/iao` (rename pending - log as discrepancy, continue). `./bin/aho --version` returns `aho 0.1.11`.
 
-### W1 — Run file filename rename (60 min)
+### W1 - Run file filename rename (60 min)
 
 **Goal:** Rename the run report artifact from `aho-run-report-*.md` to `aho-run-*.md` going forward. Update all code and templates that generate or reference this filename.
 
@@ -46,14 +46,14 @@ Five workstreams. Wall clock target: ~3 hours.
 - `src/aho/bundle/__init__.py`: §5 "Run Report" section updated to look for `aho-run-{version}.md`
 - `prompts/run-report.md.j2`: if the template references the output filename, update it
 - Any `__init__.py` imports in `postflight/` that reference the old module names
-- Historical files (`aho-run-report-0.1.9.md`, `aho-run-report-0.1.10.md`) stay with their original names — only going-forward naming changes
+- Historical files (`aho-run-report-0.1.9.md`, `aho-run-report-0.1.10.md`) stay with their original names - only going-forward naming changes
 
 **Success:**
 - `./bin/aho iteration close` (in a future dogfood) produces `aho-run-0.1.11.md`, not `aho-run-report-0.1.11.md`
 - `rg "run-report" src/aho/` returns 0 matches (or only within historical-context prose)
 - `pytest tests/ -v` passes (minus the two pre-existing failures addressed in W2)
 
-### W2 — Test suite hygiene (45 min)
+### W2 - Test suite hygiene (45 min)
 
 **Goal:** Fix the two pre-existing test failures so the test suite is fully green.
 
@@ -65,25 +65,25 @@ Five workstreams. Wall clock target: ~3 hours.
 
 **Success:** `pytest tests/ -v` passes with 0 failures.
 
-### W3 — Qwen degenerate synthesis investigation (45 min)
+### W3 - Qwen degenerate synthesis investigation (45 min)
 
 **Goal:** Investigate the "Wait, checking..." degenerate pattern from 0.1.10 W5. Determine whether the repetition detector's threshold or pattern needs tuning.
 
 **Deliverables:**
-- Read `src/aho/artifacts/repetition_detector.py` — document the current window size, threshold, and detection algorithm
+- Read `src/aho/artifacts/repetition_detector.py` - document the current window size, threshold, and detection algorithm
 - Review the 0.1.10 event log for the degenerate event: what was the Qwen prompt, how long did it run before being killed, what was the output
 - Determine: does "Wait, checking..." vary enough per token to evade the rolling-window detector? If yes, add a secondary detector for non-repeating but non-productive output patterns (low information density over a time window)
 - If the fix is straightforward, implement it. If it requires significant architecture (e.g. an information-density scorer), document the finding and defer the implementation
 
 **Success:** Either the repetition detector now catches the "Wait, checking..." pattern, OR the investigation is documented in the build log with a concrete fix proposal for a future run.
 
-### W4 — Dogfood + close (60 min)
+### W4 - Dogfood + close (60 min)
 
 **Goal:** Run the loop against 0.1.11 itself. Verify the run file rename landed. Verify test suite is green.
 
 **Deliverables:**
 - Manual build log is present (written workstream-by-workstream during W0-W3)
-- `./bin/aho iteration build-log 0.1.11` generates synthesis (may or may not succeed — ADR-042 non-blocking)
+- `./bin/aho iteration build-log 0.1.11` generates synthesis (may or may not succeed - ADR-042 non-blocking)
 - `./bin/aho iteration report 0.1.11` generates report
 - `./bin/aho iteration close` generates run file and bundle
 
@@ -103,19 +103,19 @@ Five workstreams. Wall clock target: ~3 hours.
 ## §3. Scope boundaries
 
 - No new amendments from the post-0.1.8 review (Nemotron evaluator, token tracking, scoring registry, etc.). Those are candidates for future runs.
-- No CLAUDE.md / GEMINI.md updates — per-phase, not per-run.
+- No CLAUDE.md / GEMINI.md updates - per-phase, not per-run.
 - No new ADRs unless the W3 investigation produces a concrete architecture change.
-- If the project root rename hasn't happened yet, 0.1.11 does NOT re-surface it as a workstream — it logs it as a discrepancy and continues. Kyle executes the rename on his own schedule.
+- If the project root rename hasn't happened yet, 0.1.11 does NOT re-surface it as a workstream - it logs it as a discrepancy and continues. Kyle executes the rename on his own schedule.
 
 ---
 
 ## §4. Graduation criteria
 
-**GRADUATE** — All six verification checks pass, test suite green (0 failures), run file filename is `aho-run-0.1.11.md`.
+**GRADUATE** - All six verification checks pass, test suite green (0 failures), run file filename is `aho-run-0.1.11.md`.
 
-**GRADUATE WITH CONDITIONS** — Five of six checks pass, or test suite has ≤1 failure. Conditions documented.
+**GRADUATE WITH CONDITIONS** - Five of six checks pass, or test suite has ≤1 failure. Conditions documented.
 
-**DO NOT GRADUATE** — Run file still named `aho-run-report-*.md` after W1 (the primary objective of this run didn't land), or test suite has more failures than it started with.
+**DO NOT GRADUATE** - Run file still named `aho-run-report-*.md` after W1 (the primary objective of this run didn't land), or test suite has more failures than it started with.
 
 ---
 

@@ -1,4 +1,4 @@
-"""acceptance.py — AcceptanceCheck primitive for verifiable workstream completion.
+"""acceptance.py - AcceptanceCheck primitive for verifiable workstream completion.
 
 Replaces prose acceptance claims with executable assertions. Each check
 specifies a shell command, expected exit code, and optional stdout regex.

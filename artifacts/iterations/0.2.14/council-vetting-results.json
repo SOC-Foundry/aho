@@ -109,7 +109,7 @@
       "status": "operational",
       "invocation": "socket ~/.local/share/aho/nemoclaw.sock cmd=dispatch",
       "latency_ms": 18500,
-      "notes": "3 sessions. Explicit role param bypasses Nemotron classify. Classification: B — minor change for model_id routing."
+      "notes": "3 sessions. Explicit role param bypasses Nemotron classify. Classification: B - minor change for model_id routing."
     },
     {
       "name": "ChromaDB",

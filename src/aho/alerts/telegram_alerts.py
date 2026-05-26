@@ -1,4 +1,4 @@
-"""aho-alerts-bridge — Alertmanager-webhook → dedicated Telegram channel.
+"""aho-alerts-bridge - Alertmanager-webhook → dedicated Telegram channel.
 
 Posts each alert from an Alertmanager-shaped webhook payload to the dedicated
 alerts chat (distinct from the routine-notification chat used by
@@ -7,13 +7,13 @@ alerts chat (distinct from the routine-notification chat used by
 with ``event_type`` of ``pillar_11_violation`` or ``anomaly``.
 
 0.2.16 W3 status: bridge code + mocked unit tests. Live engine wire-up is
-DEFERRED — no alert engine is yet present on the host. The dedicated secrets
+DEFERRED - no alert engine is yet present on the host. The dedicated secrets
 ``ahomw:telegram_alerts_bot_token`` / ``ahomw:telegram_alerts_chat_id`` are
 also pending Kyle creation per Pillar 11. Both deferrals are tracked as
 W3 carry-forwards in ``artifacts/iterations/0.2.16/pillar-11-monitoring-notes.md``
 §"Deferred verification".
 
-Failure model (G083 — no ``except Exception``):
+Failure model (G083 - no ``except Exception``):
 - Missing secret → ``AlertSecretMissingError`` → HTTP 503 to engine
 - Telegram timeout / connection error / non-2xx → ``TelegramAPIError`` → HTTP 502
 - Malformed webhook payload → ``WebhookPayloadError`` → HTTP 400
@@ -42,6 +42,21 @@ TOKEN_KEY = "telegram_alerts_bot_token"
 CHAT_KEY = "telegram_alerts_chat_id"
 TELEGRAM_API = "https://api.telegram.org/bot{token}/sendMessage"
 SOURCE_AGENT = "aho-alerts-bridge"
+
+# W2 D3: bidirectional alert bridge to a central aggregator (Beacon).
+# Both directions are env-driven and additive. If BEACON_WEBHOOK_URL is unset
+# the outbound mirror is a no-op and the Telegram-only path is unchanged.
+import os  # noqa: E402 - local to the bridge-config block
+
+
+def _beacon_webhook_url() -> str | None:
+    url = os.environ.get("BEACON_WEBHOOK_URL", "").strip()
+    return url or None
+
+
+def _beacon_webhook_token() -> str | None:
+    tok = os.environ.get("BEACON_WEBHOOK_TOKEN", "").strip()
+    return tok or None
 
 PILLAR_11_ALERTNAMES = frozenset({
     "Pillar11CommitViolation",
@@ -152,15 +167,62 @@ def event_log_append(alert: dict, event_type: str) -> None:
     )
 
 
+def beacon_post(alert: dict, *, timeout: float = 10.0) -> bool:
+    """Mirror one alert outbound to the central aggregator (Beacon) webhook.
+
+    No-op (returns False) when BEACON_WEBHOOK_URL is unset - the Telegram path
+    is the always-on default and Beacon mirroring is additive. Returns True on
+    a 2xx from Beacon. Network/HTTP failures are swallowed with an event-log
+    note: a Beacon-side outage must never block Telegram delivery (which has
+    already succeeded by the time this is called).
+    """
+    url = _beacon_webhook_url()
+    if not url:
+        return False
+    headers = {"Content-Type": "application/json"}
+    token = _beacon_webhook_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    labels = alert.get("labels") or {}
+    annotations = alert.get("annotations") or {}
+    body = {
+        "source": "aho",
+        "alertname": labels.get("alertname") or "(unknown)",
+        "severity": labels.get("severity") or "info",
+        "status": alert.get("status") or "firing",
+        "summary": annotations.get("summary") or "",
+        "description": annotations.get("description") or "",
+        "labels": labels,
+    }
+    try:
+        resp = requests.post(url, json=body, headers=headers, timeout=timeout)
+        if 200 <= resp.status_code < 300:
+            return True
+        log_event(
+            event_type="anomaly", source_agent=SOURCE_AGENT, target="beacon-webhook",
+            action="beacon_mirror", input_summary=body["alertname"],
+            output_summary=f"beacon non-2xx status={resp.status_code}", status="error",
+        )
+        return False
+    except (requests.Timeout, requests.ConnectionError, requests.RequestException) as e:
+        log_event(
+            event_type="anomaly", source_agent=SOURCE_AGENT, target="beacon-webhook",
+            action="beacon_mirror", input_summary=body["alertname"],
+            output_summary=f"beacon unreachable: {type(e).__name__}", status="error",
+        )
+        return False
+
+
 def webhook_handler(payload: dict) -> dict:
     """Process one Alertmanager webhook POST body.
 
-    Returns a counts dict ``{"ok": True, "delivered": N, "events_logged": N}``.
-    Order: Telegram post first, then event-log append. If Telegram fails, the
-    event-log entry is not written and the engine will retry per its own
+    Returns a counts dict ``{"ok": True, "delivered": N, "events_logged": N,
+    "beacon_mirrored": N}``. Order per alert: Telegram post first (always-on),
+    then event-log append, then best-effort Beacon mirror. If Telegram fails,
+    the event-log entry is not written and the engine retries per its own
     policy. If event-log append fails AFTER Telegram succeeded, the OSError
-    propagates so the operator knows audit is broken even though the alert
-    was delivered.
+    propagates. Beacon mirror failure never propagates (Telegram already
+    delivered) - it is logged and counted but does not fail the request.
     """
     if not isinstance(payload, dict):
         raise WebhookPayloadError("payload root must be a JSON object")
@@ -170,6 +232,7 @@ def webhook_handler(payload: dict) -> dict:
 
     delivered = 0
     logged = 0
+    mirrored = 0
     for alert in alerts:
         if not isinstance(alert, dict):
             raise WebhookPayloadError("each alert entry must be an object")
@@ -182,8 +245,53 @@ def webhook_handler(payload: dict) -> dict:
         delivered += 1
         event_log_append(alert, event_type)
         logged += 1
+        if beacon_post(alert):
+            mirrored += 1
 
-    return {"ok": True, "delivered": delivered, "events_logged": logged}
+    return {"ok": True, "delivered": delivered, "events_logged": logged,
+            "beacon_mirrored": mirrored}
+
+
+def beacon_inbound_handler(payload: dict) -> dict:
+    """Process one Beacon-shaped inbound webhook (Beacon -> aho -> Telegram).
+
+    Beacon escalations (host-down, GPU-stuck, etc.) reach the same Telegram
+    channel the operator already watches. Tolerant of shape variation: extracts
+    title/summary/message + severity from common key names. The exact Beacon
+    webhook schema is a Track B input (Beacon dev surfaces it); this handler
+    accepts the documented-generic shape and degrades gracefully on unknown
+    keys.
+
+    Returns ``{"ok": True, "delivered": N}``.
+    """
+    if not isinstance(payload, dict):
+        raise WebhookPayloadError("payload root must be a JSON object")
+
+    # A Beacon payload may be a single alert object or carry an "alerts" list.
+    items = payload.get("alerts")
+    if not isinstance(items, list):
+        items = [payload]
+
+    delivered = 0
+    for item in items:
+        if not isinstance(item, dict):
+            raise WebhookPayloadError("each beacon alert entry must be an object")
+        title = item.get("title") or item.get("alertname") or item.get("summary") or "(beacon alert)"
+        severity = item.get("severity") or "info"
+        message = item.get("message") or item.get("description") or item.get("summary") or ""
+        text = f"*[beacon:{severity}]* {title}"
+        if message:
+            text += f"\n{message}"
+        telegram_post(text)
+        delivered += 1
+        log_event(
+            event_type="anomaly", source_agent=SOURCE_AGENT,
+            target="telegram-alerts-channel", action="beacon_inbound_relay",
+            input_summary=str(title)[:200], output_summary=str(message)[:200],
+            status="success",
+        )
+
+    return {"ok": True, "delivered": delivered}
 
 
 # --- HTTP server entry point ---
@@ -194,7 +302,7 @@ def webhook_handler(payload: dict) -> dict:
 class BridgeHandler(BaseHTTPRequestHandler):
     """HTTP receiver for engine-emitted webhooks."""
 
-    def do_POST(self) -> None:  # noqa: N802 — stdlib API
+    def do_POST(self) -> None:  # noqa: N802 - stdlib API
         length_header = self.headers.get("Content-Length", "0")
         try:
             length = int(length_header)
@@ -208,8 +316,13 @@ class BridgeHandler(BaseHTTPRequestHandler):
             self._reply(400, {"ok": False, "error": f"json decode: {e}"})
             return
 
+        # Path routing: /beacon = Beacon-shaped inbound relay to Telegram;
+        # anything else = Alertmanager-shaped (the existing default path).
+        route_path = self.path.split("?")[0].rstrip("/")
+        handler = beacon_inbound_handler if route_path == "/beacon" else webhook_handler
+
         try:
-            result = webhook_handler(payload)
+            result = handler(payload)
         except WebhookPayloadError as e:
             self._reply(400, {"ok": False, "error": str(e)})
             return

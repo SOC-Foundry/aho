@@ -11,7 +11,7 @@
 
 0.2.6 is a live-fire hardening iteration with no separate design doc. Scope was discovered during install.fish execution on NZXTcos after 0.2.5 close. Three defects surfaced:
 
-1. CachyOS ollama pacman package corrupt — upstream install sufficient
+1. CachyOS ollama pacman package corrupt - upstream install sufficient
 2. bin/aho-secrets-init checking wrong secrets store (`.age` files vs fernet)
 3. Doctor missing telegram bot identity for user verification
 
@@ -59,7 +59,7 @@ All 9 steps pass. Second run is idempotent (all steps skip or no-op).
 ```
 aho doctor quick: CLEAN
 aho doctor preflight:
-  aho-telegram: aho-telegram running — @aho_run_bot
+  aho-telegram: aho-telegram running - @aho_run_bot
 ```
 
 ### bin/aho-pacman doctor
@@ -72,7 +72,7 @@ All 4 declared models present.
 
 ## §7. Gotcha Registry
 
-19 entries (unchanged from 0.2.5). No new gotchas — all three issues were operational, not harness-level patterns.
+19 entries (unchanged from 0.2.5). No new gotchas - all three issues were operational, not harness-level patterns.
 
 ## §8. Definition of Done
 
@@ -88,4 +88,4 @@ All 4 declared models present.
 
 ---
 
-*aho 0.2.6 bundle — install.fish live-fire hardening.*
+*aho 0.2.6 bundle - install.fish live-fire hardening.*

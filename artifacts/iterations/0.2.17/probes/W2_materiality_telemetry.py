@@ -1,11 +1,11 @@
-"""W2 D12 — verify all four materiality counters emit during W2 execution.
+"""W2 D12 - verify all four materiality counters emit during W2 execution.
 
 Sets up an InMemoryMetricReader, runs a representative slice of W2's audit
 + carry-forward + placeholder paths, then asserts each of the four
 counters has at least one recorded measurement with the expected resource
 attributes.
 
-Note: this script must be self-contained — import ordering matters
+Note: this script must be self-contained - import ordering matters
 because the global MeterProvider can only be set once. The probe sets it
 BEFORE importing aho.materiality.
 """
@@ -51,10 +51,10 @@ from aho.gap_carry_forward_writer import append_to_file  # noqa: E402
 def main() -> int:
     print(f"counters built: {materiality.counters_introspect()}")
 
-    # 1) caught_by_llama — invoke audit on a fixture-bad artifact (G081)
+    # 1) caught_by_llama - invoke audit on a fixture-bad artifact (G081)
     audit_mod.audit("Sample artifact with banned phrase: shipped clean close.")
 
-    # 2) caught_by_drafter — synthetic carry-forward append
+    # 2) caught_by_drafter - synthetic carry-forward append
     src = ROOT / "artifacts" / "iterations" / "0.2.16" / "carry-forwards-0.2.16.md"
     with tempfile.TemporaryDirectory() as tmp:
         copy = Path(tmp) / "cf.md"
@@ -72,10 +72,10 @@ def main() -> int:
             },
         )
 
-    # 3) escaped — placeholder bump (W3 wires to real escaped-finding flow)
+    # 3) escaped - placeholder bump (W3 wires to real escaped-finding flow)
     materiality.record_escaped(severity="info")
 
-    # 4) carry_forward_resolution_rate — placeholder bump
+    # 4) carry_forward_resolution_rate - placeholder bump
     materiality.record_carry_forward_resolution(extra={"aho.cf.resolved_id": "probe"})
 
     # Force-collect metrics from the in-memory reader
@@ -104,7 +104,7 @@ def main() -> int:
         if attrs:
             print(f'    sample attrs: {attrs}')
 
-    # Acceptance gate — all four counters must have >= 1 emission
+    # Acceptance gate - all four counters must have >= 1 emission
     missing = [n for n in materiality.COUNTER_NAMES if counter_emissions.get(n, 0) < 1]
     if missing:
         print()

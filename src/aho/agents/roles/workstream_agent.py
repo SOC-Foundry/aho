@@ -1,6 +1,6 @@
-"""WorkstreamAgent — Qwen-bound workstream executor.
+"""WorkstreamAgent - Qwen-bound workstream executor.
 
-0.2.3 W2: Pillar 1 enforcement — the local fleet does the work.
+0.2.3 W2: Pillar 1 enforcement - the local fleet does the work.
 Wraps OpenClawSession with role="workstream", LLM=qwen3.5:9b.
 """
 import json

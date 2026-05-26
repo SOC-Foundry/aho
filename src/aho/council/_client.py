@@ -1,4 +1,4 @@
-"""council._client — shared HTTP client helpers for council components.
+"""council._client - shared HTTP client helpers for council components.
 
 Thin layer over Ollama's /api/chat. Council components share a single
 client surface so timeout, base URL, and error taxonomy live in one place.
@@ -45,7 +45,7 @@ def chat(
 
     `format_json=True` sets Ollama's `format: "json"` constraint, which makes
     the model emit JSON-shaped output. Still validate the parse on the
-    caller side — Ollama's json mode is best-effort, not contractual.
+    caller side - Ollama's json mode is best-effort, not contractual.
     """
     url = f"{ollama_base_url()}/api/chat"
     payload: Dict[str, Any] = {

@@ -1,0 +1,225 @@
+{
+  "disposition": "halt",
+  "confidence": 0.85,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-24T11:54:11.631301+00:00",
+  "audit_completed_utc": "2026-05-24T12:03:27.950592+00:00",
+  "target_artifact_sha256": "a73d31605d63c47329687d1f48a28fa79165fa05f83499493708d73d0961b2c5",
+  "findings_count": 2,
+  "evidence_trace_count": 2,
+  "audit_kind": "self",
+  "iteration": "0.3.1",
+  "workstream": "W0",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "D9",
+      "severity": "critical",
+      "description": "The executor invoked the audit primitive with RAG enrichment enabled, but the chromadb module is absent from the a8cos host Python, causing the audit to halt."
+    },
+    {
+      "id": "ADR-0011",
+      "severity": "important",
+      "description": "The artifact references ADR-0011 as a registered reference, but its status is unverified in the project context."
+    }
+  ],
+  "evidence_traces": [
+    "RAG backend unavailable: chromadb not importable in a8cos host Python. Audit primitive's RAG enrichment step raised RagBackendUnavailable \u2192 RefLookupError before any model invocation.",
+    "find /home/kthompson/.local/lib /usr/lib/python3.14 -name 'chromadb*' \u2192 empty"
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "pass",
+    "git_ops_hits": [],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.3.1",
+      "0.2.17",
+      "0.2.18",
+      "0.3.1",
+      "0.3.1"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "unsupported_halt_downgrade": false,
+  "latency_ms": 556316,
+  "body_md": "# Self-Audit \u2014 0.3.1 W0\n**Disposition:** halt\n**Confidence:** 0.85\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/acceptance/W0.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **pass**\n- three_octet_versioning_present: **pass**\n\n## Findings\n\n### Finding D9 (critical)\n\nThe executor invoked the audit primitive with RAG enrichment enabled, but the chromadb module is absent from the a8cos host Python, causing the audit to halt.\n\n### Finding ADR-0011 (important)\n\nThe artifact references ADR-0011 as a registered reference, but its status is unverified in the project context.\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201cRAG backend unavailable: chromadb not importable in a8cos host Python. Audit primitive's RAG enrichment step raised RagBackendUnavailable \u2192 RefLookupError before any model invocation.\u201d\n- \u201cfind /home/kthompson/.local/lib /usr/lib/python3.14 -name 'chromadb*' \u2192 empty\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 26,
+    "registered_count": 0,
+    "unverified_count": 26,
+    "truncated": false,
+    "section_chars": 2900,
+    "references": [
+      {
+        "id": "D9",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0011",
+        "kind": "adr",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0012",
+        "kind": "adr",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D7",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D8",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D1",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D2",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D3",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W5-002",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D4",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D5",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D6",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W6-002",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W1-004",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-002",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-003",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-004",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-005",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "ADR-0009",
+        "kind": "adr",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-007",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W0-008",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-009",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W5-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W6-001",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.17-W6-003",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  },
+  "suppressed_findings": [],
+  "finding_filter": {
+    "filter_enabled": true,
+    "filter_eligible": false,
+    "registered_id_count": 0,
+    "model_findings_count": 2,
+    "active_findings_count": 2,
+    "suppressed_count": 0
+  }
+}

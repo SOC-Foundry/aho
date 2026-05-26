@@ -1,6 +1,6 @@
 """Source-side guard against accidental real-checkpoint mutation.
 
-0.2.17 W0 Bucket 1 — F-W0-004 closure. The conftest allowlist
+0.2.17 W0 Bucket 1 - F-W0-004 closure. The conftest allowlist
 (_CHECKPOINT_MUTATING_MODULES) keeps known emit-using test modules
 isolated. This test exercises the source-code guard in
 workstream_events._resolve_checkpoint_root() that catches anything the
@@ -54,7 +54,7 @@ def test_guard_accepts_explicit_test_checkpoint_dir(monkeypatch, tmp_path):
 
 def test_guard_accepts_tmpdir_resolved_root(monkeypatch, tmp_path):
     """find_project_root resolving under the system tempdir is acceptable
-    inside pytest — that is the conftest happy path.
+    inside pytest - that is the conftest happy path.
     """
     monkeypatch.delenv("AHO_TEST_CHECKPOINT_DIR", raising=False)
     monkeypatch.setattr("aho.paths.find_project_root", lambda *a, **k: tmp_path)

@@ -6,7 +6,7 @@ from aho.components.manifest import load_components, attribute_workload, render_
 
 
 def test_load_components_from_project():
-    """Load components from the real components.yaml — should have ≥30 entries."""
+    """Load components from the real components.yaml - should have ≥30 entries."""
     from aho.paths import get_harness_dir
     yaml_path = get_harness_dir() / "components.yaml"
     components = load_components(yaml_path)

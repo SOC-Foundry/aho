@@ -17,7 +17,7 @@
     "0215_finding": "Zero timeouts, correct JSON schema, template token leakage only",
     "conclusion": "0.2.13 W2.5 finding was a substrate artifact of broken dispatcher (/api/generate, 4K context). Fixed dispatcher resolves both timeout and schema issues. Template leakage is a new, less severe concern addressable in W2."
   },
-  "retain_remove_decision": "RETAIN — model is functional with known template token concern. W2 dispatcher hardening addresses the leakage. Candidate for Auditor role in W4 cross-model cascade.",
+  "retain_remove_decision": "RETAIN - model is functional with known template token concern. W2 dispatcher hardening addresses the leakage. Candidate for Auditor role in W4 cross-model cascade.",
   "probes": {
     "probe_a_identity": {
       "prompt": "Respond with your model name and nothing else.",

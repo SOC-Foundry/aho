@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/playwright.fish — CLI health check for @playwright/mcp
+# mcp-smoke/playwright.fish - CLI health check for @playwright/mcp
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 
 set -l server_name "playwright"

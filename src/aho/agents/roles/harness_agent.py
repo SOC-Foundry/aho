@@ -1,4 +1,4 @@
-"""HarnessAgent — Nemotron-bound harness watcher.
+"""HarnessAgent - Nemotron-bound harness watcher.
 
 0.2.3 W2: Long-lived daemon that monitors the event log and proposes
 gotchas, ADRs, and component registrations. LLM=nemotron-mini:4b.
@@ -114,7 +114,7 @@ class HarnessAgent:
             return
 
         def _poll_watcher():
-            """Simple polling watcher — checks mtimes every 10s."""
+            """Simple polling watcher - checks mtimes every 10s."""
             mtimes = {}
             while True:
                 for watch_dir in existing_dirs:

@@ -132,7 +132,7 @@ class TestDispatcherTraceparentPresent(unittest.TestCase):
 
 
 class TestDispatcherTraceparentMalformed(unittest.TestCase):
-    """Malformed TRACEPARENT produces root span — propagator returns an invalid
+    """Malformed TRACEPARENT produces root span - propagator returns an invalid
     context which OTEL treats as no parent. Dispatcher does not raise on
     parse failure because the SDK's propagator handles malformed input by
     returning a NonRecordingSpan context."""

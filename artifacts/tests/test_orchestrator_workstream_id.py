@@ -34,7 +34,7 @@ def _dispatch_result(response: str = "stage output") -> dict:
 
 
 def test_default_workstream_id_is_w0(tmp_path):
-    """Default parameter is 'W0' — no more hardcoded 'W1'."""
+    """Default parameter is 'W0' - no more hardcoded 'W1'."""
     doc = tmp_path / "doc.txt"
     doc.write_text("dummy")
 

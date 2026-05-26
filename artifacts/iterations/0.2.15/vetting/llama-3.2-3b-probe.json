@@ -8,10 +8,10 @@
     "endpoint": "/api/chat",
     "num_ctx": 32768,
     "stop_tokens": ["<|endoftext|>", "<|im_end|>"],
-    "stop_tokens_note": "Qwen stop tokens sent to Llama model. No template leakage observed — Ollama /api/chat handles template server-side. W2 should add Llama-native stop tokens (<|eot_id|>, <|end_of_text|>) for correctness."
+    "stop_tokens_note": "Qwen stop tokens sent to Llama model. No template leakage observed - Ollama /api/chat handles template server-side. W2 should add Llama-native stop tokens (<|eot_id|>, <|end_of_text|>) for correctness."
   },
   "classification": "operational",
-  "integration_status": "implicit — dispatcher is model-agnostic at /api/chat level; Llama dispatches without code changes",
+  "integration_status": "implicit - dispatcher is model-agnostic at /api/chat level; Llama dispatches without code changes",
   "first_integration": true,
   "probes": {
     "probe_a_identity": {
@@ -31,7 +31,7 @@
       "schema_match": true,
       "extraction_needed": false,
       "result": "pass",
-      "notes": "Exact JSON, no wrapping, correct schema. Notably fast (0.71s vs Qwen 27.31s — 3B vs 9B parameter difference)"
+      "notes": "Exact JSON, no wrapping, correct schema. Notably fast (0.71s vs Qwen 27.31s - 3B vs 9B parameter difference)"
     },
     "probe_c_language": {
       "prompt": "Briefly describe the ACID properties of a database transaction. Respond in English only.",
@@ -44,7 +44,7 @@
     }
   },
   "w2_concerns": [
-    "Dispatcher sends Qwen stop tokens to Llama — no leakage observed because Ollama /api/chat applies template server-side, but W2 should add Llama-native stop tokens for correctness",
+    "Dispatcher sends Qwen stop tokens to Llama - no leakage observed because Ollama /api/chat applies template server-side, but W2 should add Llama-native stop tokens for correctness",
     "Llama 3.x native stop tokens: <|eot_id|> (end of turn), <|end_of_text|> (end of text)"
   ],
   "timestamp": "2026-04-13T16:45:00Z"

@@ -13,7 +13,7 @@ aho uses a **hybrid** systemd deployment:
 - **System services** (require sudo): Ollama (`ollama.service`). Installed via upstream installer, managed by systemd system scope.
 - **User services** (no sudo): All aho daemons (`aho-otel-collector.service`, future `aho-telegram.service`, etc.). Managed by `systemctl --user`, enabled via `loginctl enable-linger`.
 
-This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
+This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement - both one-time setup steps documented as capability gaps.
 
 ## 2. Install Paths
 
@@ -73,12 +73,12 @@ Uninstall is non-destructive to user data. Re-running `bin/aho-bootstrap` after 
 
 Every install operation is safe to re-run:
 
-- `mkdir -p` — no-op if exists
-- `pip install -e .` — upgrades in place
-- Unit file generation — overwrites with identical content
-- `systemctl --user daemon-reload` — safe always
-- `systemctl --user enable --now` — no-op if already running
-- Model pulls — skipped if `ollama list` shows model present
+- `mkdir -p` - no-op if exists
+- `pip install -e .` - upgrades in place
+- Unit file generation - overwrites with identical content
+- `systemctl --user daemon-reload` - safe always
+- `systemctl --user enable --now` - no-op if already running
+- Model pulls - skipped if `ollama list` shows model present
 
 Second run of `bin/aho-bootstrap` produces identical state to first run. No side effects, no error output.
 

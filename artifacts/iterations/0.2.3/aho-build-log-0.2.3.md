@@ -1,4 +1,4 @@
-# Build Log — aho 0.2.3
+# Build Log - aho 0.2.3
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 3
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
@@ -6,17 +6,17 @@
 
 ---
 
-### W0 — Hygiene + carryover cleanup — PASS
+### W0 - Hygiene + carryover cleanup - PASS
 
 - Bumped 8 canonical artifacts (base.md, agents-architecture.md, model-fleet.md, global-deployment.md, phase-0 charter, README.md, pyproject.toml, CLAUDE.md) to 0.2.3
 - Bumped GEMINI.md to 0.2.3
 - aho-install script_version bumped to 0.2.3
 - Added secrets session locked row to global-deployment.md capability gap inventory
-- Build log dedupe checked — only `aho-build-log-{iteration}.md` variant exists, already canonical
+- Build log dedupe checked - only `aho-build-log-{iteration}.md` variant exists, already canonical
 - 108 tests passing at W0 exit
 - Completed: 2026-04-11
 
-### W1 — MCP server fleet — PASS
+### W1 - MCP server fleet - PASS
 
 - 12 MCP servers added to components.yaml (kind: mcp_server)
 - `bin/aho-mcp` rewritten from skeleton to full implementation (list/status/doctor/install subcommands)
@@ -27,12 +27,12 @@
 - 108 tests passing at W1 exit
 - Completed: 2026-04-11
 
-### W2 — Three-agent role split — PASS
+### W2 - Three-agent role split - PASS
 
-- `src/aho/agents/roles/workstream_agent.py` — WorkstreamAgent(OpenClawSession), Qwen-bound
-- `src/aho/agents/roles/evaluator_agent.py` — EvaluatorAgent(OpenClawSession), GLM-bound
-- `src/aho/agents/roles/harness_agent.py` — HarnessAgent, Nemotron-bound, --watch mode
-- `src/aho/agents/conductor.py` — Conductor orchestrator (dispatch → route → execute → review → notify)
+- `src/aho/agents/roles/workstream_agent.py` - WorkstreamAgent(OpenClawSession), Qwen-bound
+- `src/aho/agents/roles/evaluator_agent.py` - EvaluatorAgent(OpenClawSession), GLM-bound
+- `src/aho/agents/roles/harness_agent.py` - HarnessAgent, Nemotron-bound, --watch mode
+- `src/aho/agents/conductor.py` - Conductor orchestrator (dispatch → route → execute → review → notify)
 - `bin/aho-conductor` wrapper created
 - `aho-harness-watcher.service.template` created
 - 4 components added (workstream-agent, evaluator-agent, harness-agent, conductor)
@@ -42,11 +42,11 @@
 - 123 tests passing at W2 exit
 - Completed: 2026-04-11
 
-### W3 — Localhost arch + dashboard plumbing — PASS
+### W3 - Localhost arch + dashboard plumbing - PASS
 
 - .aho.json extended: dashboard_port=7800, aho_role="localhost", port_range=[7800,7899]
 - `src/aho/config.py` extended: get_dashboard_port(), get_aho_role(), check_port_available()
-- `src/aho/logger.py` extended: emit_heartbeat() — daemon thread, 30s interval
+- `src/aho/logger.py` extended: emit_heartbeat() - daemon thread, 30s interval
 - Heartbeat wired into all 4 daemons (openclaw, nemoclaw, telegram, harness-watcher)
 - `artifacts/harness/dashboard-contract.md` created as canonical artifact #10
 - Added to canonical_artifacts.yaml
@@ -55,7 +55,7 @@
 - 123 tests passing at W3 exit
 - Completed: 2026-04-11
 
-### W4 — Per-clone age + bundle expansion + doctor — PASS
+### W4 - Per-clone age + bundle expansion + doctor - PASS
 
 - `bin/aho-install` section 4: age keygen with [CAPABILITY GAP] halt on first run
 - Bundle §24 Infrastructure (8 files embedded)
@@ -68,7 +68,7 @@
 - 137 tests passing at W4 exit
 - Completed: 2026-04-11
 
-### W5 — Dogfood + close — PASS
+### W5 - Dogfood + close - PASS
 
 - Full test suite: 137 passed, 1 skipped
 - Bundle: 401KB with §24-§26 populated, 26 sections, validates clean

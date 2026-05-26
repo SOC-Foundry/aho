@@ -11,7 +11,7 @@
 .aho.json
 .aho-checkpoint.json
 
-# Iteration artifacts (not needed in image — harness baked in only at /opt/aho/src)
+# Iteration artifacts (not needed in image - harness baked in only at /opt/aho/src)
 artifacts
 projects.json
 MANIFEST.json
@@ -46,7 +46,7 @@ build
 # Containers context already-built images (avoid recursive baking)
 containers/Dockerfile.hello
 
-# Credentials — defensive even though none should ever live in repo root
+# Credentials - defensive even though none should ever live in repo root
 **/id_ed25519
 **/id_rsa
 **/age-identity*

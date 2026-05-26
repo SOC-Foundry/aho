@@ -1,4 +1,4 @@
-# Build Log — iao 0.1.3.1
+# Build Log - iao 0.1.3.1
 
 **Start:** 2026-04-09T14:00:00Z
 **Agent:** claude-code (Claude Opus 4.6)
@@ -12,7 +12,7 @@
 ## Pre-flight
 
 Pre-flight checks completed with the following state:
-- Working directory: `/home/kthompson/dev/projects/iao` — confirmed
+- Working directory: `/home/kthompson/dev/projects/iao` - confirmed
 - Backup created: `~/dev/projects/iao.backup-pre-0.1.3` (1.2 MB)
 - Git state: not a git repository (Phase 0, no remote yet)
 - Python: 3.14.3 at `/usr/bin/python3`
@@ -22,15 +22,15 @@ Pre-flight checks completed with the following state:
 - Tools: jq present, age not found (non-blocking)
 
 **Discrepancies encountered:**
-- `.iao-checkpoint.json` showed iteration 0.1.2 (not 0.1.3.1) — Gemini CLI W0–W5 had not been executed. The design and plan docs existed at `artifacts/docs/iterations/0.1.3/` in the pre-W1 location, confirming the planning phase completed but execution hadn't started.
-- `iao doctor quick` command does not exist in the CLI — the `doctor` subcommand was never added to argparse, though `doctor.py` has `run_all()`. Post-flight and pre-flight work via separate subcommands.
+- `.iao-checkpoint.json` showed iteration 0.1.2 (not 0.1.3.1) - Gemini CLI W0–W5 had not been executed. The design and plan docs existed at `artifacts/docs/iterations/0.1.3/` in the pre-W1 location, confirming the planning phase completed but execution hadn't started.
+- `iao doctor quick` command does not exist in the CLI - the `doctor` subcommand was never added to argparse, though `doctor.py` has `run_all()`. Post-flight and pre-flight work via separate subcommands.
 - The `age` binary was not found, though the secrets backend module exists. Non-blocking for this iteration.
 
 **Decision:** Execute all 8 workstreams (W0–W7) as a single-agent run with Claude Code, since Gemini's W0–W5 was not completed. Kyle confirmed this approach.
 
 ---
 
-## W0 — Iteration Bookkeeping
+## W0 - Iteration Bookkeeping
 
 **Status:** COMPLETE
 **Wall clock:** ~2 min
@@ -45,7 +45,7 @@ Actions:
 
 ---
 
-## W1 — Folder Consolidation
+## W1 - Folder Consolidation
 
 **Status:** COMPLETE
 **Wall clock:** ~10 min
@@ -54,7 +54,7 @@ Actions:
 - Created `docs/{iterations,phase-charters,archive,drafts}` directories
 - Moved `artifacts/docs/iterations/*` → `docs/iterations/` (0.1.2 and 0.1.3 directories)
 - Removed empty `artifacts/docs/iterations`, `artifacts/docs`, `artifacts/` via rmdir
-- `iao/docs/harness/` not empty (contains `local-global-model.md`) — left intact as package-internal doc
+- `iao/docs/harness/` not empty (contains `local-global-model.md`) - left intact as package-internal doc
 - Updated path references:
   - `iao/artifacts/loop.py`: `_iteration_dir()` now reads from `docs/iterations/`
   - `iao/logger.py`: build log path updated to `docs/iterations/<version>/`
@@ -63,7 +63,7 @@ Actions:
 
 ---
 
-## W2 — src-layout Refactor
+## W2 - src-layout Refactor
 
 **Status:** COMPLETE
 **Wall clock:** ~8 min
@@ -81,7 +81,7 @@ Actions:
 
 ---
 
-## W3 — Universal Bundle Spec + Quality Gates
+## W3 - Universal Bundle Spec + Quality Gates
 
 **Status:** COMPLETE
 **Wall clock:** ~20 min
@@ -106,7 +106,7 @@ Actions:
 
 ---
 
-## W4 — Universal Pipeline Scaffolding
+## W4 - Universal Pipeline Scaffolding
 
 **Status:** COMPLETE
 **Wall clock:** ~15 min
@@ -118,14 +118,14 @@ Actions:
   - `validate.py`: `validate_pipeline()` checks all phases have files with `main()`
   - `registry.py`: `list_pipelines()` and `get_pipeline_status()` from `.iao.json`
 - Added `iao pipeline` CLI subparser with `init`, `list`, `validate`, `status` commands
-- Created `src/iao/postflight/pipeline_present.py` — returns SKIP for projects without pipelines
+- Created `src/iao/postflight/pipeline_present.py` - returns SKIP for projects without pipelines
 - Appended `iaomw-ADR-030` (Universal Pipeline Pattern) to base.md
 - Smoke test: `iao pipeline init demo` in `/tmp` → 10 phase files + checkpoint + README, `iao pipeline validate demo` passes
 - All 30 tests pass
 
 ---
 
-## W5 — Human Feedback Loop + Run Report
+## W5 - Human Feedback Loop + Run Report
 
 **Status:** COMPLETE
 **Wall clock:** ~15 min
@@ -139,14 +139,14 @@ Actions:
 - Created `prompts/run-report.md.j2` Jinja template
 - Added `iao iteration close` (generates run report + bundle + summary) and `iao iteration close --confirm` (validates sign-off) to CLI
 - Added `iao iteration seed` command
-- Created `src/iao/postflight/run_report_complete.py` — returns DEFERRED until Kyle fills in notes
+- Created `src/iao/postflight/run_report_complete.py` - returns DEFERRED until Kyle fills in notes
 - Appended `iaomw-ADR-031` (Run Report as Canonical Artifact) and `iaomw-ADR-032` (Human Sign-off Required) to base.md
 - Reframed `iaomw-Pillar-10` text in base.md to reference run report feedback loop
 - All 30 tests pass
 
 ---
 
-## W6 — README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
+## W6 - README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
 
 **Status:** COMPLETE
 **Wall clock:** ~20 min
@@ -159,8 +159,8 @@ Actions:
   - Roadmap, installation, contributing, license
 - Created `docs/phase-charters/iao-phase-0.md` from design doc §1 with updated exit criteria checkboxes
 - Created 2 new post-flight checks:
-  - `src/iao/postflight/ten_pillars_present.py` — verifies trident + all 10 pillars in design doc and README
-  - `src/iao/postflight/readme_current.py` — verifies README mtime > iteration start
+  - `src/iao/postflight/ten_pillars_present.py` - verifies trident + all 10 pillars in design doc and README
+  - `src/iao/postflight/readme_current.py` - verifies README mtime > iteration start
 - Updated `src/iao/artifacts/templates.py` with `_load_harness_blocks()` to extract trident and pillars from base.md at render time
 - Appended to base.md: `iaomw-ADR-033` (README Currency), `iaomw-ADR-034` (Trident/Pillars Verbatim), `iaomw-Pattern-33` (README Drift)
 - Added `iaomw-G106` to gotcha registry (README falls behind)
@@ -169,7 +169,7 @@ Actions:
 
 ---
 
-## W7 — Qwen Loop Hardening + Dogfood + Closing Sequence
+## W7 - Qwen Loop Hardening + Dogfood + Closing Sequence
 
 **Status:** COMPLETE
 **Wall clock:** ~30 min

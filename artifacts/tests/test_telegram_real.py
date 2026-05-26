@@ -1,4 +1,4 @@
-"""Tests for Telegram bridge real implementation — send, capability_gap, close_complete."""
+"""Tests for Telegram bridge real implementation - send, capability_gap, close_complete."""
 import json
 from unittest.mock import MagicMock, patch
 

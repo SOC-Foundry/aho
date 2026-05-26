@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""W3 bucket 6 — calibration probe for ToolDurationOutlier rule (rule 5).
+"""W3 bucket 6 - calibration probe for ToolDurationOutlier rule (rule 5).
 
 Computes the p99 of ``claude_code.tool_result`` ``duration_ms`` event
 attributes recorded in ``~/.local/share/aho/logs/logs.jsonl``, filtered to
@@ -10,7 +10,7 @@ The plan §W3 row 5 expression names ``claude_code_tool_result_duration_ms_bucke
 which would be a Prometheus-style histogram metric. Survey of the live
 ``metrics.jsonl`` (W3 bucket 6 baseline survey) found the current Claude Code
 emission set is ``claude_code.{active_time.total, cost.usage, token.usage,
-session.count, lines_of_code.count, code_edit_tool.decision}`` — no
+session.count, lines_of_code.count, code_edit_tool.decision}`` - no
 ``tool_result.duration_ms`` histogram. The duration value is present only as
 a ``duration_ms`` attribute on the ``claude_code.tool_result`` log event. The
 rule's metric reference is therefore aspirational against the current
@@ -176,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if not durations:
         print()
-        print("no samples in target workstreams — cannot calibrate", file=sys.stderr)
+        print("no samples in target workstreams - cannot calibrate", file=sys.stderr)
         return 1
 
     durations.sort()

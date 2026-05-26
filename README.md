@@ -4,9 +4,9 @@ Governance infrastructure for LLM-driven engineering. The harness that does the 
 
 ## Origin
 
-aho began as an extraction. SOC-Foundry builds data and SIEM migration pipelines — moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
+aho began as an extraction. SOC-Foundry builds data and SIEM migration pipelines - moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
 
-Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects — using the same multi-modal models — produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline — the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture — was doing the work. The pipeline was useful, but the harness was load-bearing.
+Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects - using the same multi-modal models - produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline - the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture - was doing the work. The pipeline was useful, but the harness was load-bearing.
 
 aho is the extraction of that harness from pipeline-specific contexts into general-purpose governed agentic engineering infrastructure. The thesis: richer harnesses produce smarter behavior from the same models. Same Claude, same Gemini, materially different output, because the scaffolding around them is structured rather than vibes-based.
 
@@ -19,24 +19,24 @@ aho is governance infrastructure for LLM-driven engineering. The four properties
 - **Monitored invariants enforced as policy.** Pillar 11 (no agent git operations) is the prototype. Future invariants extend the same pattern. Policy as gate, not dashboard.
 - **Sealed acceptance and audit archives, immutable event log.** The artifacts are the record. They cannot be retroactively edited. Disputes resolve by reading the archive, not by re-asking the agent.
 
-The combination — and the compliance-shaped framing — is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
+The combination - and the compliance-shaped framing - is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
 ## Status (0.3.1 in flight)
 
 - **Current iteration:** 0.3.1, seven workstreams. W0 closed (documentary substrate + ADR placements + CLAUDE.md rewrite). W1 closed (substrate freshness, 13-fact telemetry, ChromaDB bootstrap, `bin/aho-doctor`, idempotent `install.fish`). W2–W7 remaining.
 - **Latest closed iteration:** 0.2.18 (image rebuild + 0.2.17 carry-forward closures). Container image `ghcr.io/soc-foundry/aho:0.2.18`.
-- **Auditor primitive:** in-container `llama3.2:3b` at base tier with W3-0.2.17 RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions. Seven deployments to date; bootstrap test 11 in the architecture progression. **First non-vacuous filter-eligibility check** at 0.3.1 W1 D8 — RAG enrichment `registered_count=20` of 28 detected refs against the populated ChromaDB collection (vs 0/26 at 0.3.1 W0 D9 with empty collection). W4-0.2.17 filter regression check passes non-vacuously.
-- **Materiality status:** N=5 below the N≥8 threshold per ADR-0010 — **qualified validation, not full validation**.
+- **Auditor primitive:** in-container `llama3.2:3b` at base tier with W3-0.2.17 RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions. Seven deployments to date; bootstrap test 11 in the architecture progression. **First non-vacuous filter-eligibility check** at 0.3.1 W1 D8 - RAG enrichment `registered_count=20` of 28 detected refs against the populated ChromaDB collection (vs 0/26 at 0.3.1 W0 D9 with empty collection). W4-0.2.17 filter regression check passes non-vacuously.
+- **Materiality status:** N=5 below the N≥8 threshold per ADR-0010 - **qualified validation, not full validation**.
 - **Partial-tier auditor seat:** `qwen3.5:9b` planned for partial-tier host deployment at 0.3.1 W3.
 - **Substrate freshness:** ADR-0011 lightweight tier shipped at W1 of 0.3.1. 13 substrate facts emit `aho.observable.last_verified_age_seconds` OTEL gauge. Dashboard brick grid at `/substrate`.
 
-## Why aho — cost and token utilization
+## Why aho - cost and token utilization
 
 Token cost matters. Claude and Gemini API spend at scale is the dominant operating cost of LLM-driven engineering, and single-agent execution wastes it in characteristic ways:
 
-- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model — fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints — turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
+- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model - fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints - turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
 - **No model-cost gradient.** Single-agent execution sends every decision to the same expensive model. Routing, classification, triage, substantive reasoning, and architectural decisions all priced identically. aho's council pattern routes triage and classification to small local models (Nemotron-class), substantive work to mid-tier (Qwen, GLM), audit to a confidence-floor-locked llama seat, premium dispatches to Claude or Gemini. The cost gradient is visible per-workstream.
-- **Re-execution waste from undetected drift.** Single-agent failure modes — hallucinated state, stale assumptions, lost context, mid-task looping — are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Adversarial Authorship audit catches drift at bucket boundaries, before downstream waste accumulates.
+- **Re-execution waste from undetected drift.** Single-agent failure modes - hallucinated state, stale assumptions, lost context, mid-task looping - are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Adversarial Authorship audit catches drift at bucket boundaries, before downstream waste accumulates.
 - **Scope creep priced as features.** Single-agent execution under "do this large complex thing" expands scope as it works. aho's no-mid-flight-scope-amendment rule keeps tokens on the requested scope.
 
 These are mechanism claims, not benchmark claims. The mechanisms compound across iterations.
@@ -54,7 +54,7 @@ aho's operating principles. Numbered, named, and binding. Pillars 1–11 from `a
 7. **Generation and evaluation are separate roles.** Drafter and reviewer are different agents.
 8. **Efficacy is measured in cost delta.** Wall clock, token cost, and delegate ratio are ground truth.
 9. **The gotcha registry is the harness's memory.** Failure modes are indexed with mitigations.
-10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt. _**W6 amendment** clarifies: capability gap = information only the operator can provide. Missing-but-installable substrate components are NOT capability gaps — install and proceed._
+10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt. _**W6 amendment** clarifies: capability gap = information only the operator can provide. Missing-but-installable substrate components are NOT capability gaps - install and proceed._
 11. **The human holds the keys.** No agent writes to git. _**W6 amendment** narrows scope to git operations only, plus a small operator-only host-action list (secret decryption, /etc/sudoers, hardware procurement, disruptive reboots). Substrate component installation is executor scope._
 12. **Substrate is probed, never assumed.** Every workstream's first deliverable verifies required substrate components via `install.fish --check` (idempotent end-to-end) or `bin/aho-doctor`. Inheritance of substrate state from prior iterations or sibling hosts is not assumed; it is measured. _New at W6 of 0.3.1._
 13. **Hosts are fungible.** The substrate exists to be rebuilt. Artifacts and registries are durable; host machines are not. The harness does not gate on host-preservation concerns; idempotent `install.fish` + sealed archives + gotcha registry persist across host rebuilds. _New at W6 of 0.3.1._
@@ -70,7 +70,7 @@ Codified as binding operational discipline alongside Pillars 10/11:
 - Reflexive arbitration on clear-path situations is a failure mode that wastes operator tokens and breaks iteration momentum
 - Drafter reciprocally commits to not manufacturing ambiguity where execution is obvious
 
-## Architecture — current shape
+## Architecture - current shape
 
 aho today runs across an engineer fleet over Tailscale, no public-internet exposure. Per-host deployment via `install.fish` (19 steps; check-first / remediate-on-fail / re-check semantics; structured per-step JSON output at `~/.local/share/aho/install-state.jsonl` since 0.3.1 W1).
 
@@ -80,45 +80,45 @@ Hosts are typed by capacity tier (base / partial / full per ADR-0007), substrate
 
 ### In-container (`ghcr.io/soc-foundry/aho:0.2.18`)
 
-- **aho harness** — Adversarial Authorship state machine, dispatcher (model selection and routing per `MODEL_FAMILY_CONFIG` longest-prefix match), router (classification primitive at `aho.pipeline.router`), acceptance and audit archive writers. Stateful per active iteration.
-- **aho.serve** — `aho serve` entrypoint: ready-and-waiting mode with health endpoints on port 8080.
-- **aho.tier_detect** — VRAM probe at startup; classifies host as `base` / `partial` / `full` per ADR-0007 thresholds.
-- **aho.secrets_client** — host-broker round-trip via unix socket at `$XDG_RUNTIME_DIR/aho-secrets.sock` (canonical XDG path per ADR-0009 amendment in W6 of 0.3.1). No credential material in image layers.
-- **aho.council** — in-container fleet wiring: `audit` (llama3.2:3b auditor at base tier; qwen3.5:9b at partial tier), `triage` (nemotron-mini:4b, classification only), `embed` (nomic-embed-text via Ollama), `audit_ref_extract` + `audit_ref_lookup` (RAG enrichment), `audit_finding_filter` (deterministic post-hoc filter on findings; W0-0.2.18 anti-rubber-stamp extensions).
-- **aho.rag** — retrieval primitive against host-mounted ChromaDB volume at `/var/lib/aho/chroma` (fallback `~/.local/share/aho/chroma`); recency-weighted similarity ranking; chunked indexing via `index_artifact` (upsert; idempotent).
-- **aho.rag.bootstrap** _(new in 0.3.1 W1)_ — `aho rag bootstrap` ingests the canonical artifact set (carry-forwards files, plan-docs, close notes, iteration-close notes, ADRs, retrospectives) into the per-project iteration-context collection. Subcommands: `--dry-run` / `--rebuild` / `--json` / `--quiet`.
-- **aho.gap_carry_forward_writer** — append-to-carry-forwards primitive with auto re-index hook (W6-of-0.2.17 D2 closure of F-0.2.17-W4-001).
-- **aho.materiality** — four-bucket OTEL counter primitives per ADR-0010.
-- **aho.observability** _(new in 0.3.1 W1)_ — substrate-freshness telemetry API: `record_observable`, `last_verified_age_seconds`, `warning_age_seconds`, `fact_color` (green/yellow/red cascade), `snapshot_all_facts`. Append-only log at `~/.local/share/aho/observables.jsonl`. OTEL gauge `aho.observable.last_verified_age_seconds` with attrs `{fact_id, host, project}`.
-- **aho.substrate_probes** _(new in 0.3.1 W1)_ — 13-fact probe registry. Cross-host probes via Tailscale ssh; `host_unreachable` is a distinct outcome class.
+- **aho harness** - Adversarial Authorship state machine, dispatcher (model selection and routing per `MODEL_FAMILY_CONFIG` longest-prefix match), router (classification primitive at `aho.pipeline.router`), acceptance and audit archive writers. Stateful per active iteration.
+- **aho.serve** - `aho serve` entrypoint: ready-and-waiting mode with health endpoints on port 8080.
+- **aho.tier_detect** - VRAM probe at startup; classifies host as `base` / `partial` / `full` per ADR-0007 thresholds.
+- **aho.secrets_client** - host-broker round-trip via unix socket at `$XDG_RUNTIME_DIR/aho-secrets.sock` (canonical XDG path per ADR-0009 amendment in W6 of 0.3.1). No credential material in image layers.
+- **aho.council** - in-container fleet wiring: `audit` (llama3.2:3b auditor at base tier; qwen3.5:9b at partial tier), `triage` (nemotron-mini:4b, classification only), `embed` (nomic-embed-text via Ollama), `audit_ref_extract` + `audit_ref_lookup` (RAG enrichment), `audit_finding_filter` (deterministic post-hoc filter on findings; W0-0.2.18 anti-rubber-stamp extensions).
+- **aho.rag** - retrieval primitive against host-mounted ChromaDB volume at `/var/lib/aho/chroma` (fallback `~/.local/share/aho/chroma`); recency-weighted similarity ranking; chunked indexing via `index_artifact` (upsert; idempotent).
+- **aho.rag.bootstrap** _(new in 0.3.1 W1)_ - `aho rag bootstrap` ingests the canonical artifact set (carry-forwards files, plan-docs, close notes, iteration-close notes, ADRs, retrospectives) into the per-project iteration-context collection. Subcommands: `--dry-run` / `--rebuild` / `--json` / `--quiet`.
+- **aho.gap_carry_forward_writer** - append-to-carry-forwards primitive with auto re-index hook (W6-of-0.2.17 D2 closure of F-0.2.17-W4-001).
+- **aho.materiality** - four-bucket OTEL counter primitives per ADR-0010.
+- **aho.observability** _(new in 0.3.1 W1)_ - substrate-freshness telemetry API: `record_observable`, `last_verified_age_seconds`, `warning_age_seconds`, `fact_color` (green/yellow/red cascade), `snapshot_all_facts`. Append-only log at `~/.local/share/aho/observables.jsonl`. OTEL gauge `aho.observable.last_verified_age_seconds` with attrs `{fact_id, host, project}`.
+- **aho.substrate_probes** _(new in 0.3.1 W1)_ - 13-fact probe registry. Cross-host probes via Tailscale ssh; `host_unreachable` is a distinct outcome class.
 
 ### Host-side
 
-- **aho.host.secrets_broker** — long-running unix-socket broker on `$XDG_RUNTIME_DIR/aho-secrets.sock`. SO_PEERCRED authentication; per-UID project-label registration; never returns secret values to unauthorized callers.
-- **aho.host.run_container** — wrapper that registers a UID with the broker, runs `podman run` with the broker socket bind-mounted, and unregisters on exit. The canonical entrypoint for engineer-side container invocations.
-- **age + fernet secret store** — age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
-- **`install.fish`** _(rebuilt at 0.3.1 W1)_ — 19-step idempotent orchestrator. Every step's check-first / remediate-on-fail / re-check / report-final-status sequence. Structured JSON per step to `~/.local/share/aho/install-state.jsonl`. Flags: `--check` (read-only probe of every step, no mutations), `--step <step_id>` (surgical re-run of one step). Backward-compatible with legacy `~/.local/state/aho/install.state` key=value step file.
-- **`bin/aho-doctor`** _(new in 0.3.1 W1)_ — per-workstream pre-flight gateway. Invokes `install.fish --check`, parses per-step JSONL, evaluates required-steps list for the calling workstream, exits 0 if all pass / 1 if any fail / 2 if substrate gap upstream / 3 if unknown workstream. `--remediate` cascade.
-- **`bin/aho-probe-substrate`** _(new in 0.3.1 W1)_ — fish wrapper invoking the 13-fact probe set; `--fact` / `--host` / `--summary`. Cross-host via Tailscale ssh.
-- **`bin/aho-rag-bootstrap`** _(new in 0.3.1 W1)_ — fish wrapper for `aho.rag.bootstrap`.
-- **OTEL collector** — local-collector pattern with central aggregation over Tailscale.
+- **aho.host.secrets_broker** - long-running unix-socket broker on `$XDG_RUNTIME_DIR/aho-secrets.sock`. SO_PEERCRED authentication; per-UID project-label registration; never returns secret values to unauthorized callers.
+- **aho.host.run_container** - wrapper that registers a UID with the broker, runs `podman run` with the broker socket bind-mounted, and unregisters on exit. The canonical entrypoint for engineer-side container invocations.
+- **age + fernet secret store** - age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
+- **`install.fish`** _(rebuilt at 0.3.1 W1)_ - 19-step idempotent orchestrator. Every step's check-first / remediate-on-fail / re-check / report-final-status sequence. Structured JSON per step to `~/.local/share/aho/install-state.jsonl`. Flags: `--check` (read-only probe of every step, no mutations), `--step <step_id>` (surgical re-run of one step). Backward-compatible with legacy `~/.local/state/aho/install.state` key=value step file.
+- **`bin/aho-doctor`** _(new in 0.3.1 W1)_ - per-workstream pre-flight gateway. Invokes `install.fish --check`, parses per-step JSONL, evaluates required-steps list for the calling workstream, exits 0 if all pass / 1 if any fail / 2 if substrate gap upstream / 3 if unknown workstream. `--remediate` cascade.
+- **`bin/aho-probe-substrate`** _(new in 0.3.1 W1)_ - fish wrapper invoking the 13-fact probe set; `--fact` / `--host` / `--summary`. Cross-host via Tailscale ssh.
+- **`bin/aho-rag-bootstrap`** _(new in 0.3.1 W1)_ - fish wrapper for `aho.rag.bootstrap`.
+- **OTEL collector** - local-collector pattern with central aggregation over Tailscale.
 - **claw3d dashboard** at `localhost:7800`: components, daemon health, Pillar 8 cost/token telemetry, materiality dashboard, role-collapse tripwire, anti-rubber-stamp dashboard, **substrate-freshness brick grid** at `/substrate` (13-fact green/yellow/red cascade + stale-count summary tile; `/api/substrate` JSON endpoint).
-- **`aho-harness-watcher`, `aho-nemoclaw`, `aho-openclaw`, `aho-telegram`, `aho-jaeger`** — daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, notification fan-out (Pillar 11 alert channel separate since 0.2.16 W3), trace viewing.
-- **Ollama** — local model runtime serving the in-container fleet via `host.containers.internal:11434` (per ADR-0008 hybrid mode).
+- **`aho-harness-watcher`, `aho-nemoclaw`, `aho-openclaw`, `aho-telegram`, `aho-jaeger`** - daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, notification fan-out (Pillar 11 alert channel separate since 0.2.16 W3), trace viewing.
+- **Ollama** - local model runtime serving the in-container fleet via `host.containers.internal:11434` (per ADR-0008 hybrid mode).
 
 ### State on disk
 
-- **`.aho-checkpoint.json`** — Adversarial Authorship state machine, single source of truth for iteration progression. Lives at canonical project root; written by `install.fish` step `canonical_checkpoint_present` since 0.3.1 W1.
-- **`artifacts/iterations/{version}/`** — sealed acceptance archives, audit archives, plan/design docs, bundles, evidence, close notes.
-- **`artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`** — canonical cross-iteration ledger; mutated only via `aho.gap_carry_forward_writer.append_to_file`.
-- **`artifacts/adrs/`** — versioned architectural decision records, sequential from disk enumeration. At 0.3.1 W1: ADR-0001 through ADR-0012 (with ADR-0011 substrate freshness + ADR-0012 Chain of Trust L5 added at 0.3.1 W0).
-- **`docs/architecture/`, `docs/retrospectives/`** — repo-resident architecture docs and iteration retrospectives.
-- **`~/.local/share/aho/events/aho_event_log.jsonl`** — immutable append-only event ledger.
-- **`~/.local/share/aho/observables.jsonl`** _(new in 0.3.1 W1)_ — append-only substrate-freshness probe log.
-- **`~/.local/share/aho/install-state.jsonl`** _(new in 0.3.1 W1)_ — append-only per-step install.fish structured output.
-- **`/var/lib/aho/chroma`** (or `~/.local/share/aho/chroma` fallback) — ChromaDB persistent collection. Populated via `aho rag bootstrap`; queryable via `aho.rag.query` with recency-weighted ranking.
+- **`.aho-checkpoint.json`** - Adversarial Authorship state machine, single source of truth for iteration progression. Lives at canonical project root; written by `install.fish` step `canonical_checkpoint_present` since 0.3.1 W1.
+- **`artifacts/iterations/{version}/`** - sealed acceptance archives, audit archives, plan/design docs, bundles, evidence, close notes.
+- **`artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`** - canonical cross-iteration ledger; mutated only via `aho.gap_carry_forward_writer.append_to_file`.
+- **`artifacts/adrs/`** - versioned architectural decision records, sequential from disk enumeration. At 0.3.1 W1: ADR-0001 through ADR-0012 (with ADR-0011 substrate freshness + ADR-0012 Chain of Trust L5 added at 0.3.1 W0).
+- **`docs/architecture/`, `docs/retrospectives/`** - repo-resident architecture docs and iteration retrospectives.
+- **`~/.local/share/aho/events/aho_event_log.jsonl`** - immutable append-only event ledger.
+- **`~/.local/share/aho/observables.jsonl`** _(new in 0.3.1 W1)_ - append-only substrate-freshness probe log.
+- **`~/.local/share/aho/install-state.jsonl`** _(new in 0.3.1 W1)_ - append-only per-step install.fish structured output.
+- **`/var/lib/aho/chroma`** (or `~/.local/share/aho/chroma` fallback) - ChromaDB persistent collection. Populated via `aho rag bootstrap`; queryable via `aho.rag.query` with recency-weighted ranking.
 
-## Architecture — target shape
+## Architecture - target shape
 
 Three-tier deployment model. The harness lives at the edge with each engineer; heavy compute lives centrally; the truth layer is managed storage.
 
@@ -126,18 +126,18 @@ Three-tier deployment model. The harness lives at the edge with each engineer; h
 
 Runs locally on every engineer's host. Distributed as signed container images.
 
-- **aho-harness** — Adversarial Authorship state machine, dispatcher, router, archive writers. Stateful per active iteration. **Shipping.**
-- **Local OTel collector** — `otel/opentelemetry-collector-contrib` batching, buffering, forwarding to central aggregator over Tailscale. Hub-and-spoke topology (not single canonical aggregator; not full peer mesh) for resilience to central outages and engineer offline scenarios.
-- **aho-dashboard-local** — claw3d for this engineer's iterations, port 7800. Includes substrate-freshness brick grid.
-- **aho-harness-watcher** — daemon monitoring local harness state, emitting events.
-- **Engineer-local secret store** — age identity, fernet-encrypted local secret bundle. Container reads via broker per ADR-0009.
+- **aho-harness** - Adversarial Authorship state machine, dispatcher, router, archive writers. Stateful per active iteration. **Shipping.**
+- **Local OTel collector** - `otel/opentelemetry-collector-contrib` batching, buffering, forwarding to central aggregator over Tailscale. Hub-and-spoke topology (not single canonical aggregator; not full peer mesh) for resilience to central outages and engineer offline scenarios.
+- **aho-dashboard-local** - claw3d for this engineer's iterations, port 7800. Includes substrate-freshness brick grid.
+- **aho-harness-watcher** - daemon monitoring local harness state, emitting events.
+- **Engineer-local secret store** - age identity, fernet-encrypted local secret bundle. Container reads via broker per ADR-0009.
 
 ### Tier 2: central serving plane
 
-- **Central OTel aggregator** — self-hosted OpenTelemetry aggregation platform; FastAPI + TimescaleDB; receives from all engineer-local collectors. Standing up during 0.3.1 W2.
-- **Central Firestore** — gotcha registry entries, audit dispositions, materiality counter, substrate-freshness telemetry, pipeline outputs, attribution mappings. Multi-tenant data writer ships at 0.3.1 W2; same image runs in any tenant deployment, configuration is the boundary.
-- **inference-gateway** _(future, post-0.3.x)_ — per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, audit log emission for every model call.
-- **vllm pods, api-proxy, audit-dispatcher, embedding-service, batch-worker-pool** _(future, post-0.3.x)_ — Kubernetes-with-GPU workload for high-throughput council dispatches.
+- **Central OTel aggregator** - self-hosted OpenTelemetry aggregation platform; FastAPI + TimescaleDB; receives from all engineer-local collectors. Standing up during 0.3.1 W2.
+- **Central Firestore** - gotcha registry entries, audit dispositions, materiality counter, substrate-freshness telemetry, pipeline outputs, attribution mappings. Multi-tenant data writer ships at 0.3.1 W2; same image runs in any tenant deployment, configuration is the boundary.
+- **inference-gateway** _(future, post-0.3.x)_ - per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, audit log emission for every model call.
+- **vllm pods, api-proxy, audit-dispatcher, embedding-service, batch-worker-pool** _(future, post-0.3.x)_ - Kubernetes-with-GPU workload for high-throughput council dispatches.
 
 ### Tier 3: per-tenant isolation
 
@@ -153,10 +153,10 @@ Each engineer's home lab runs a local `otel/opentelemetry-collector-contrib` col
 
 Why hub-and-spoke:
 
-- **Resilience to central outages** — local collector retains telemetry until central is reachable; no data loss when aggregator is down
-- **Resilience to engineer offline** — buffered delivery when engineer reconnects
-- **Per-engineer debuggability** — engineer queries their own local collector without round-tripping to central
-- **Per-tenant isolation** — tenant aggregator deployment matches the project-codename pattern uniformly; cross-tenant data does not co-mingle
+- **Resilience to central outages** - local collector retains telemetry until central is reachable; no data loss when aggregator is down
+- **Resilience to engineer offline** - buffered delivery when engineer reconnects
+- **Per-engineer debuggability** - engineer queries their own local collector without round-tripping to central
+- **Per-tenant isolation** - tenant aggregator deployment matches the project-codename pattern uniformly; cross-tenant data does not co-mingle
 
 ### Identity attribution via OTel resource attributes
 
@@ -180,16 +180,16 @@ The harness is the contract between operator, drafter, executor, and auditor. It
 
 ### The four roles (Adversarial Authorship)
 
-- **Drafter** — external, persistent across chat sessions. Currently Claude (web project folder). Authors plan-docs, executor prompts, arbitrates auditor disposition pre-sign.
-- **Executor** — external, per-iteration. Claude Code or Gemini CLI. Reads the plan-doc, executes the workstream scope, writes the acceptance archive, runs the self-audit probe, halts.
-- **Auditor** — in-container, per tier: `llama3.2:3b` at base tier; `qwen3.5:9b` at partial tier (from 0.3.1 W3). RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions.
-- **Operator** — human. Signs close notes; rotates secrets; **runs all git operations** (Pillar 11); manages hardware-side actions.
+- **Drafter** - external, persistent across chat sessions. Currently Claude (web project folder). Authors plan-docs, executor prompts, arbitrates auditor disposition pre-sign.
+- **Executor** - external, per-iteration. Claude Code or Gemini CLI. Reads the plan-doc, executes the workstream scope, writes the acceptance archive, runs the self-audit probe, halts.
+- **Auditor** - in-container, per tier: `llama3.2:3b` at base tier; `qwen3.5:9b` at partial tier (from 0.3.1 W3). RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions.
+- **Operator** - human. Signs close notes; rotates secrets; **runs all git operations** (Pillar 11); manages hardware-side actions.
 
 ### The registries
 
-- **Gotcha registry** — indexed failure modes with mitigations. Each entry numbered (e.g., `G001`); entries persist across iterations and projects.
-- **Script registry** — sanctioned tool surface per Pillar 4.
-- **ADR index** — architectural decision records numbered sequentially from disk enumeration. At 0.3.1 W1: ADR-0001 through ADR-0012.
+- **Gotcha registry** - indexed failure modes with mitigations. Each entry numbered (e.g., `G001`); entries persist across iterations and projects.
+- **Script registry** - sanctioned tool surface per Pillar 4.
+- **ADR index** - architectural decision records numbered sequentially from disk enumeration. At 0.3.1 W1: ADR-0001 through ADR-0012.
 
 In current shape: version-controlled files in the repo. In target shape: Firestore-backed APIs with Pub/Sub fan-out for change notification.
 
@@ -201,7 +201,7 @@ The router (`src/aho/pipeline/router.py`) is the canonical classification primit
 
 ### Adversarial Authorship state machine
 
-Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Plus a transient `blocked` vertex on halt-and-surface conditions. Transitions are durable per Pillar 6 — checkpoint file written before any state transition emits its event. Executor cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes `workstream_complete`.
+Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Plus a transient `blocked` vertex on halt-and-surface conditions. Transitions are durable per Pillar 6 - checkpoint file written before any state transition emits its event. Executor cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes `workstream_complete`.
 
 ### OTEL telemetry and TRACEPARENT propagation
 
@@ -255,19 +255,19 @@ Four OTEL counters with falsifiable thresholds:
 - `aho.materiality.claim_vs_artifact_mismatches.escaped`
 - `aho.materiality.carry_forward_resolution_rate`
 
-ADR-0010 specifies N≥8 iterations, ≥30% reduction in escaped defects vs baseline, non-zero `caught_by_llama` AND non-zero `caught_by_drafter`, carry-forward resolution rate ≥60% within 2 iterations. **At 0.3.1 W1 close: N=5 — qualified validation, not full validation.**
+ADR-0010 specifies N≥8 iterations, ≥30% reduction in escaped defects vs baseline, non-zero `caught_by_llama` AND non-zero `caught_by_drafter`, carry-forward resolution rate ≥60% within 2 iterations. **At 0.3.1 W1 close: N=5 - qualified validation, not full validation.**
 
 ### The anti-rubber-stamp surfaces
 
 Anti-rubber-stamp hardening operates on multiple surfaces, extended in 0.2.18 W0:
 
-1. **`nemotron_raise_on_malformed`** — triage primitive raises rather than silently degrading on malformed model output (G083 discipline).
-2. **`llama_confidence_floor_lock`** — auditor `clean` disposition is structurally unreachable below confidence 0.85; locked to `surface_to_drafter` instead.
-3. **`role_collapse_tripwire`** — detection of generation/evaluation role collapse across drafter / auditor sessions.
-4. **`deterministic_post_hoc_filter`** — W4-of-0.2.17 D1 filter: drops findings only where BOTH a registered anchor appears in the description AND a fake-ID phrase matches. Structurally narrow.
-5. **`_GIT_OP_ENFORCEMENT_SENTINELS`** — context-window suppression of git-op false positives on enforcement narration (W0-0.2.18 closure).
-6. **`_RAG_STATUS_ECHO_PATTERN`** — RAG status echo suppression (W0-0.2.18 closure).
-7. **`unsupported_halt_downgrade`** — halt disposition downgraded to `surface_to_drafter` when all model findings filter-suppressed (W0-0.2.18 closure).
+1. **`nemotron_raise_on_malformed`** - triage primitive raises rather than silently degrading on malformed model output (G083 discipline).
+2. **`llama_confidence_floor_lock`** - auditor `clean` disposition is structurally unreachable below confidence 0.85; locked to `surface_to_drafter` instead.
+3. **`role_collapse_tripwire`** - detection of generation/evaluation role collapse across drafter / auditor sessions.
+4. **`deterministic_post_hoc_filter`** - W4-of-0.2.17 D1 filter: drops findings only where BOTH a registered anchor appears in the description AND a fake-ID phrase matches. Structurally narrow.
+5. **`_GIT_OP_ENFORCEMENT_SENTINELS`** - context-window suppression of git-op false positives on enforcement narration (W0-0.2.18 closure).
+6. **`_RAG_STATUS_ECHO_PATTERN`** - RAG status echo suppression (W0-0.2.18 closure).
+7. **`unsupported_halt_downgrade`** - halt disposition downgraded to `surface_to_drafter` when all model findings filter-suppressed (W0-0.2.18 closure).
 
 ### Secrets broker boundary (ADR-0009)
 
@@ -303,7 +303,7 @@ Naming the orthogonality prevents conflation. A deployment can move along any ax
 
 | Tier | Auditor seat | Embedding seat | Substantive work | Multimodal |
 |---|---|---|---|---|
-| **base** | `llama3.2:3b` | `nomic-embed-text` | — | — |
+| **base** | `llama3.2:3b` | `nomic-embed-text` | - | - |
 | **partial** | `qwen3.5:9b` | `nomic-embed-text` | `qwen3.5:9b` | `GLM-4.6V-Flash-9B` |
 | **full** | TBD | TBD | nemotron-42B candidate | TBD |
 
@@ -326,8 +326,8 @@ Seven workstreams. Focus: substrate freshness telemetry, ChromaDB bootstrap, ins
 
 Two terminal deliverables:
 
-1. **Central deployment** — populate Firestore with current aho substrate state, write OCI image pointers, stand up central OTel aggregator
-2. **Partial container image** — cut from partial-tier host with `qwen3.5:9b` + `nomic-embed-text` + `GLM-4.6V-Flash-9B` baked in; tagged at ghcr.io
+1. **Central deployment** - populate Firestore with current aho substrate state, write OCI image pointers, stand up central OTel aggregator
+2. **Partial container image** - cut from partial-tier host with `qwen3.5:9b` + `nomic-embed-text` + `GLM-4.6V-Flash-9B` baked in; tagged at ghcr.io
 
 ### 0.3.3+
 
@@ -447,7 +447,7 @@ aho host run-container --image ghcr.io/soc-foundry/aho:0.2.18 \
   -- secrets-test <project> <secret-name>
 ```
 
-The `gh auth token | podman login` pattern is the canonical credential refresh — podman's auth store at `~/.config/containers/auth.json` is independent of gh CLI's token store.
+The `gh auth token | podman login` pattern is the canonical credential refresh - podman's auth store at `~/.config/containers/auth.json` is independent of gh CLI's token store.
 
 ### Bootstrap the per-project ChromaDB collection
 
@@ -468,7 +468,7 @@ aho-rag-bootstrap --rebuild        # drop collection + re-ingest (escape hatch)
 - fish shell (primary; non-fish shells are not supported)
 - Ollama (installed via upstream script, not pacman)
 - Podman 4.0+ (rootless mode supported; pasta networking with `iif lo` nft rule for in-container→host Ollama traffic)
-- chromadb (install via `pip install --user --break-system-packages chromadb` — install.fish step `chromadb_importable` remediates)
+- chromadb (install via `pip install --user --break-system-packages chromadb` - install.fish step `chromadb_importable` remediates)
 - pytest (test runtime; `pip install --user --break-system-packages pytest`)
 - 8GB+ VRAM for the local council at base tier:
   - `llama3.2:3b` (auditor, ~2GB)
@@ -487,7 +487,7 @@ aho-rag-bootstrap --rebuild        # drop collection + re-ingest (escape hatch)
 - **Tier manifest** at `~/.config/aho/tier.json`: written by `install.fish` step `tier_json_present`; `{host_id, tier, deployment_mode, families, bundle, rationale, vram_gb}`. W2 of 0.3.1 expands to `aho install tier-manifest` subcommand
 - **MCP servers** wired via per-project `.mcp.json` generated from template at bootstrap. Smoke-tested via `bin/aho-mcp smoke`
 - **Secrets** initialized via `bin/aho-secrets-init`. age keygen per-machine, fernet-encrypted storage, OS keyring caches passphrase
-- **Tenant config** (forward-looking, W2 of 0.3.1): `AHO_TENANT_ID`, `AHO_TENANT_FIRESTORE_PROJECT`, `AHO_TENANT_BEACON_ENDPOINT` — same image runs in any tenant deployment; configuration is the boundary
+- **Tenant config** (forward-looking, W2 of 0.3.1): `AHO_TENANT_ID`, `AHO_TENANT_FIRESTORE_PROJECT`, `AHO_TENANT_BEACON_ENDPOINT` - same image runs in any tenant deployment; configuration is the boundary
 - **Container env** (set by managed `.claude/settings.json`): see §OTEL telemetry and TRACEPARENT propagation above
 - **Substrate-freshness probe** runs via `aho-probe-substrate --summary`; install.fish step `substrate_facts_probed_recently` invokes it when observables.jsonl mtime > 24h
 

@@ -1,6 +1,6 @@
-# Wiring Sign-off Package — aho 0.2.14
+# Wiring Sign-off Package - aho 0.2.14
 
-**For:** Kyle — Hard Gate 3 decision
+**For:** Kyle - Hard Gate 3 decision
 **Date:** 2026-04-13
 **Iteration theme:** Council wiring verification + cascade smoke test
 
@@ -35,15 +35,15 @@ W1 vetted all 16 declared council members. Results:
 
 Two runs executed against the same 247K-character NoSQL technical manual (201 pages).
 
-### Run-1 (W1 — dispatcher bugs present)
+### Run-1 (W1 - dispatcher bugs present)
 
 - **Dispatcher state:** `/api/generate` endpoint, `num_ctx` defaulting to 4096
 - **Total wall clock:** 1,885s (31.4 min), 5/5 stages complete, 0 exceptions
 - **Total output:** 6,901 chars
 - **Findings:** Producer generated 222-char Chinese customer-service persona (total failure). Auditor doubled JSON with template tokens between copies. Indexer_out truncated mid-hallucinated turn. Only assessor produced clean output.
-- **Root cause:** Two compounding dispatcher bugs — `num_ctx` truncated 247K document to ~4K tokens; `/api/generate` leaked chat template special tokens (`<|endoftext|>`, `<|im_start|>`) into visible output.
+- **Root cause:** Two compounding dispatcher bugs - `num_ctx` truncated 247K document to ~4K tokens; `/api/generate` leaked chat template special tokens (`<|endoftext|>`, `<|im_start|>`) into visible output.
 
-### Run-2 (W1.5 — dispatcher repaired)
+### Run-2 (W1.5 - dispatcher repaired)
 
 - **Dispatcher state:** `/api/chat` endpoint, `num_ctx: 32768`, stop tokens configured
 - **Total wall clock:** 1,867s (31.1 min), 5/5 stages complete, 0 exceptions
@@ -70,9 +70,9 @@ The run-1 to run-2 improvement was purely from dispatcher configuration fixes. N
 
 ## 3. Role Assignment
 
-**Assignment:** Qwen-solo — `qwen3.5:9b` across all 5 cascade roles (indexer_in, producer, auditor, indexer_out, assessor).
+**Assignment:** Qwen-solo - `qwen3.5:9b` across all 5 cascade roles (indexer_in, producer, auditor, indexer_out, assessor).
 
-**Pillar 7 violation acknowledged.** Generation and evaluation are not separated — the same model that produced artifacts also audited them. This was the only viable assignment given W1 vetting: Qwen is the sole operational LLM capable of structured analytical output. Nemotron and GLM are substrate-compromised.
+**Pillar 7 violation acknowledged.** Generation and evaluation are not separated - the same model that produced artifacts also audited them. This was the only viable assignment given W1 vetting: Qwen is the sole operational LLM capable of structured analytical output. Nemotron and GLM are substrate-compromised.
 
 Documented in `smoke-test/role-assignment.md` and W1.5 findings.
 
@@ -80,8 +80,8 @@ Documented in `smoke-test/role-assignment.md` and W1.5 findings.
 
 | Member | Context | Readiness |
 |--------|---------|-----------|
-| Qwen-3.5:9B | 32K confirmed working at Q4_K_M on 2080 SUPER (7.2/8.2 GB VRAM) | Ready — primary cascade member, proven in run-2 |
-| Llama 3.2 3B | Pulled to NZXTcos (~2GB on disk), not yet integrated | Ready for integration — triage officer candidate, lightweight |
+| Qwen-3.5:9B | 32K confirmed working at Q4_K_M on 2080 SUPER (7.2/8.2 GB VRAM) | Ready - primary cascade member, proven in run-2 |
+| Llama 3.2 3B | Pulled to NZXTcos (~2GB on disk), not yet integrated | Ready for integration - triage officer candidate, lightweight |
 
 ## 5. Members Not Ready
 
@@ -100,7 +100,7 @@ Documented in `smoke-test/role-assignment.md` and W1.5 findings.
 
 **Rationale:**
 
-1. **Cascade architecture validated end-to-end.** Five-stage pipeline executed on a 247K-character real-world technical document. Cross-stage coherence confirmed — auditor findings appear in indexer_out's proposed deltas appear in assessor's meta-assessment. This is actual handoff, not parallel hallucination.
+1. **Cascade architecture validated end-to-end.** Five-stage pipeline executed on a 247K-character real-world technical document. Cross-stage coherence confirmed - auditor findings appear in indexer_out's proposed deltas appear in assessor's meta-assessment. This is actual handoff, not parallel hallucination.
 
 2. **Dispatcher honest after W1.5 fix.** The two critical bugs (context truncation + template leakage) are resolved. The dispatcher now uses `/api/chat` with proper `num_ctx` and stop tokens. Run-2 proved the fix.
 

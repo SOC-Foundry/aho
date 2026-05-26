@@ -1,4 +1,4 @@
-# Build Log — aho 0.1.11
+# Build Log - aho 0.1.11
 
 **Start:** 2026-04-10T20:36:16Z
 **Agent:** Gemini CLI
@@ -10,7 +10,7 @@
 
 ---
 
-## W0 — Environment Hygiene
+## W0 - Environment Hygiene
 
 **Actions:**
 - Project root: /home/kthompson/dev/projects/iao
@@ -22,7 +22,7 @@
 
 ---
 
-## W1 — Run File Filename Rename
+## W1 - Run File Filename Rename
 
 **Actions:**
 - Updated run report generator output filename from aho-run-report-*.md to aho-run-*.md
@@ -38,7 +38,7 @@
 
 ---
 
-## W2 — Test Suite Hygiene
+## W2 - Test Suite Hygiene
 
 **Actions:**
 - Fixed `test_secrets_backends`: skipped `test_age_integration` if no TTY is available (fixes headless agent failures)
@@ -49,7 +49,7 @@
 
 ---
 
-## W3 — Qwen Degenerate Synthesis Investigation
+## W3 - Qwen Degenerate Synthesis Investigation
 
 **Actions:**
 - Analyzed repetition detector and observed "Wait, checking..." evasion risk

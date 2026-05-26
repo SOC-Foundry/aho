@@ -1,28 +1,28 @@
-# W6 Forensic Patch Report — 0.2.11
+# W6 Forensic Patch Report - 0.2.11
 
 **Date:** 2026-04-12
-**Trigger:** Kyle post-W6 review — design doc drift uncorrected, gate relaxation was wrong fix
+**Trigger:** Kyle post-W6 review - design doc drift uncorrected, gate relaxation was wrong fix
 **Scope:** 4 corrective items. No version bump. No postflight re-run.
 **Precedent:** 0.2.10 forensic-patch-report.md
 
 ---
 
-## Item 1: Design Doc §5 — Canonical 11 Pillars
+## Item 1: Design Doc §5 - Canonical 11 Pillars
 
 **Before:**
 ```
 ## §5 Ten IAO Pillars
 
-1. **Explicit state** — .aho.json + .aho-checkpoint.json + workstream_events drive all transitions
-2. **Verifiable acceptance** — W1-W2 replace prose claims with executable AcceptanceCheck primitives
-3. **Per-workstream review** — ON throughout per ADR-044/045; backstop until W2 framework matures
-4. **Hybrid iteration shape** — ADR-045 three-type taxonomy: infrastructure + validation + environment/audit
-5. **MCP-first** — every workstream declares mcp_used with justification
-6. **Install surface canonicity** — `~/.local/share/aho/` as single source of runtime state
-7. **Three-persona taxonomy** — W9-W14 validates persona 3; persona 2/1 deferred
-8. **Observability live** — OTEL→Jaeger pipeline consumes workstream events + persona 3 runs
-9. **Gotcha registry as middleware** — aho-G048 keyring resilience class formalized W15
-10. **Chat-first, artifact-second** — this design refined in chat before artifact production
+1. **Explicit state** - .aho.json + .aho-checkpoint.json + workstream_events drive all transitions
+2. **Verifiable acceptance** - W1-W2 replace prose claims with executable AcceptanceCheck primitives
+3. **Per-workstream review** - ON throughout per ADR-044/045; backstop until W2 framework matures
+4. **Hybrid iteration shape** - ADR-045 three-type taxonomy: infrastructure + validation + environment/audit
+5. **MCP-first** - every workstream declares mcp_used with justification
+6. **Install surface canonicity** - `~/.local/share/aho/` as single source of runtime state
+7. **Three-persona taxonomy** - W9-W14 validates persona 3; persona 2/1 deferred
+8. **Observability live** - OTEL→Jaeger pipeline consumes workstream events + persona 3 runs
+9. **Gotcha registry as middleware** - aho-G048 keyring resilience class formalized W15
+10. **Chat-first, artifact-second** - this design refined in chat before artifact production
 ```
 
 **After:**
@@ -42,7 +42,7 @@
 11. **The human holds the keys.** No agent writes to git or manages secrets.
 ```
 
-**Root cause:** Planner (Claude chat) produced §5 from memory with fabricated iteration-specific pillar names. Canonical source (README) never read. All 10 "pillars" were invented — none matched the actual 11.
+**Root cause:** Planner (Claude chat) produced §5 from memory with fabricated iteration-specific pillar names. Canonical source (README) never read. All 10 "pillars" were invented - none matched the actual 11.
 
 ---
 
@@ -51,13 +51,13 @@
 **Before:**
 ```
 ## Ten IAO Pillars
-(See design §5 — all 10 inherited verbatim.)
+(See design §5 - all 10 inherited verbatim.)
 ```
 
 **After:**
 ```
 ## The Eleven Pillars of AHO
-(See design §5 — all 11 inherited verbatim.)
+(See design §5 - all 11 inherited verbatim.)
 ```
 
 **Root cause:** Plan doc inherited the fabricated name and count from the design doc.
@@ -66,11 +66,11 @@
 
 ## Item 3: pillars_present Gate Tightened
 
-**Before:** `pillar_count >= 10` — relaxed in W6 to accommodate the fabricated 10-pillar design.
+**Before:** `pillar_count >= 10` - relaxed in W6 to accommodate the fabricated 10-pillar design.
 
-**After:** `pillar_count == 11` — exact match required, matching README canonical count.
+**After:** `pillar_count == 11` - exact match required, matching README canonical count.
 
-**Root cause:** W6 treated the symptom (gate rejects design with 10 pillars) by relaxing the gate, instead of fixing the source (design doc should have 11 pillars). The relaxation was the wrong fix — it would have allowed any future design with only 10 pillars to pass silently.
+**Root cause:** W6 treated the symptom (gate rejects design with 10 pillars) by relaxing the gate, instead of fixing the source (design doc should have 11 pillars). The relaxation was the wrong fix - it would have allowed any future design with only 10 pillars to pass silently.
 
 **Verification:**
 ```
@@ -84,12 +84,12 @@ ok: Trident + pillars present in design and README
 
 ## Item 4: Gotcha aho-G073 Registered
 
-**New entry:** `aho-G073 — agent-guidance-can-introduce-canonical-drift`
+**New entry:** `aho-G073 - agent-guidance-can-introduce-canonical-drift`
 
 - **Symptom:** Planner-produced artifacts reference fabricated canonical content
 - **Cause:** Planner produces content from memory without ground-truth read of canonical sources
 - **Fix:** Read canonical source before producing artifacts. Quote verbatim into decisions.md at W0. Count-based gates catch drift at postflight.
-- **Example:** 0.2.11 W6 — planner produced 10 fabricated pillars; canonical is 11
+- **Example:** 0.2.11 W6 - planner produced 10 fabricated pillars; canonical is 11
 
 Registered in both `~/.local/share/aho/registries/gotcha_archive.json` and `data/gotcha_archive.json` (27 gotchas total).
 
@@ -97,7 +97,7 @@ Registered in both `~/.local/share/aho/registries/gotcha_archive.json` and `data
 
 ## Acceptance Results
 
-6/6 checks pass — archived at `acceptance/W6-patch.json`.
+6/6 checks pass - archived at `acceptance/W6-patch.json`.
 
 | Check | Status |
 |---|---|

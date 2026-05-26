@@ -1,4 +1,4 @@
-# MCP Wiring — aho
+# MCP Wiring - aho
 
 **Version:** 0.2.8
 **Date:** 2026-04-11
@@ -18,20 +18,20 @@ Without `.mcp.json`, npm-global MCP packages are installed on the system but inv
 
 | Server Key | npm Package | Command | Args | Env |
 |---|---|---|---|---|
-| firebase-tools | firebase-tools | `firebase mcp` | — | — |
-| context7 | @upstash/context7-mcp | `context7-mcp` | — | — |
-| firecrawl | firecrawl-mcp | `firecrawl-mcp` | — | `FIRECRAWL_API_KEY` required |
-| playwright | @playwright/mcp | `playwright-mcp` | — | — |
-| dart | Dart SDK (bundled) | `dart mcp-server` | — | — |
-| filesystem | @modelcontextprotocol/server-filesystem | `mcp-server-filesystem` | `{{PROJECT_ROOT}}` (resolved by aho-bootstrap) | — |
-| memory | @modelcontextprotocol/server-memory | `mcp-server-memory` | — | — |
-| sequential-thinking | @modelcontextprotocol/server-sequential-thinking | `mcp-server-sequential-thinking` | — | — |
-| everything | @modelcontextprotocol/server-everything | `mcp-server-everything` | — | — |
+| firebase-tools | firebase-tools | `firebase mcp` | - | - |
+| context7 | @upstash/context7-mcp | `context7-mcp` | - | - |
+| firecrawl | firecrawl-mcp | `firecrawl-mcp` | - | `FIRECRAWL_API_KEY` required |
+| playwright | @playwright/mcp | `playwright-mcp` | - | - |
+| dart | Dart SDK (bundled) | `dart mcp-server` | - | - |
+| filesystem | @modelcontextprotocol/server-filesystem | `mcp-server-filesystem` | `{{PROJECT_ROOT}}` (resolved by aho-bootstrap) | - |
+| memory | @modelcontextprotocol/server-memory | `mcp-server-memory` | - | - |
+| sequential-thinking | @modelcontextprotocol/server-sequential-thinking | `mcp-server-sequential-thinking` | - | - |
+| everything | @modelcontextprotocol/server-everything | `mcp-server-everything` | - | - |
 
 **Notes:**
 
 - `firebase-tools` is invoked via `firebase mcp` subcommand (not `lib/bin/mcp.js`). Requires `firebase login` for full functionality. Fixed in W3.
-- `dart` is the official Dart team MCP server bundled with Dart SDK 3.9+. Replaces the broken `flutter-mcp` npm package (upstream PyPI package never published). Invoked via `dart mcp-server`. No additional install required — uses the dart binary from Flutter SDK.
+- `dart` is the official Dart team MCP server bundled with Dart SDK 3.9+. Replaces the broken `flutter-mcp` npm package (upstream PyPI package never published). Invoked via `dart mcp-server`. No additional install required - uses the dart binary from Flutter SDK.
 - `firecrawl` requires `FIRECRAWL_API_KEY` env var. Without it, the server starts but fails on any API call.
 - `filesystem` is restricted to the aho project directory. On P3, the path will need updating to match that machine's clone location.
 - `dart mcp-server` requires stdin to stay open while processing (does not respond if stdin closes immediately after sending the request).
@@ -42,9 +42,9 @@ After restarting Claude Code in the aho project directory:
 
 ```fish
 # Inside Claude Code, ask the agent to run:
-# ToolSearch for "filesystem" — should return mcp-server-filesystem tools
-# ToolSearch for "context7" — should return context7-mcp tools
-# ToolSearch for "playwright" — should return playwright-mcp tools
+# ToolSearch for "filesystem" - should return mcp-server-filesystem tools
+# ToolSearch for "context7" - should return context7-mcp tools
+# ToolSearch for "playwright" - should return playwright-mcp tools
 ```
 
 Or from the CLI, verify the config parses:
@@ -86,17 +86,17 @@ Prior to 0.2.8 W2.5, all 9 servers were **installed** but neither **wired** nor 
 
 Two servers failed to start after W2.5 wiring. Diagnosed and fixed in W3:
 
-### firebase-tools — wrong entry point
+### firebase-tools - wrong entry point
 
 **Symptom:** Server absent from Claude Code tool surface after session restart.
-**Root cause:** `.mcp.json` pointed at `node /usr/lib/node_modules/firebase-tools/lib/bin/mcp.js` — this file exists but does not produce MCP stdio output. The correct entry point is the `firebase mcp` subcommand.
+**Root cause:** `.mcp.json` pointed at `node /usr/lib/node_modules/firebase-tools/lib/bin/mcp.js` - this file exists but does not produce MCP stdio output. The correct entry point is the `firebase mcp` subcommand.
 **Fix:** Changed `.mcp.json` entry to `"command": "firebase", "args": ["mcp"]`. CLI smoke passes. Protocol smoke deferred to next session restart (hot-reload limitation).
 
-### flutter-mcp — upstream broken, replaced with dart mcp-server
+### flutter-mcp - upstream broken, replaced with dart mcp-server
 
 **Symptom:** npm wrapper runs `python3 -m pip install flutter-mcp` on every invocation. Arch Linux PEP 668 rejects system-wide pip installs.
 **Root cause:** The `flutter-mcp` npm package is a thin Node.js wrapper around a Python pip package that **does not exist on PyPI**. Both `pipx install flutter-mcp` and `pip install flutter-mcp` fail with "No matching distribution found." The package is broken upstream.
-**Fix:** Replaced with the official Dart team MCP server (`dart mcp-server`), bundled with Dart SDK 3.9+. Kyle's Dart SDK is 3.11.4 — well past the minimum. The dart server exposes code analysis, formatting, pub management, test execution, hot reload, and symbol resolution. It is the canonical Flutter/Dart MCP server per https://docs.flutter.dev/ai/mcp-server.
+**Fix:** Replaced with the official Dart team MCP server (`dart mcp-server`), bundled with Dart SDK 3.9+. Kyle's Dart SDK is 3.11.4 - well past the minimum. The dart server exposes code analysis, formatting, pub management, test execution, hot reload, and symbol resolution. It is the canonical Flutter/Dart MCP server per https://docs.flutter.dev/ai/mcp-server.
 **Status:** Resolved. Fleet remains at 9 servers.
 
 ## 7. W3 Protocol Smoke Verification Log (0.2.8)
@@ -112,9 +112,9 @@ Agent-native MCP invocations from Claude Code session, one per server:
 | sequential-thinking | `mcp__sequential-thinking__sequentialthinking` | Processed 1-step thought |
 | playwright | `mcp__playwright__browser_snapshot` | Snapshot of about:blank |
 | firecrawl | `mcp__firecrawl__firecrawl_scrape` | Scraped example.com, returned markdown |
-| firebase-tools | — | .mcp.json fix applied in W3; needs session restart to verify |
-| dart | — | .mcp.json entry added in W3; needs session restart to verify |
+| firebase-tools | - | .mcp.json fix applied in W3; needs session restart to verify |
+| dart | - | .mcp.json entry added in W3; needs session restart to verify |
 
 ---
 
-*mcp-wiring.md v0.2.8 — aho harness artifact.*
+*mcp-wiring.md v0.2.8 - aho harness artifact.*

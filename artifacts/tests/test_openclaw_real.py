@@ -1,4 +1,4 @@
-"""Tests for OpenClaw real implementation — session, chat, execute, daemon."""
+"""Tests for OpenClaw real implementation - session, chat, execute, daemon."""
 import json
 import os
 import shutil

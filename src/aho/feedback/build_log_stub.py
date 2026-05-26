@@ -75,7 +75,7 @@ def generate_stub(iteration: str, project_root: pathlib.Path = None) -> pathlib.
 
     # Markdown generation
     lines = []
-    lines.append(f"# aho {iteration} — Build Log (Stub)")
+    lines.append(f"# aho {iteration} - Build Log (Stub)")
     lines.append("")
     lines.append(f"**Run Type:** {run_type}")
     lines.append(f"**Generated:** {datetime.now(timezone.utc).isoformat()}")

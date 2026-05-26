@@ -11,7 +11,7 @@
 
 ### DESIGN (aho-design-0.2.3.md)
 ```markdown
-# aho 0.2.3 — Design
+# aho 0.2.3 - Design
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 3
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing + localhost arch + bundle expansion
@@ -19,7 +19,7 @@
 
 ## Context
 
-0.2.2 cleared the deferral debt — three named stubs are now real daemons emitting OTEL spans. 0.2.3 builds on that foundation with the next architectural leap: **demoting Claude/Gemini from executor to conductor** and putting the local LLM fleet in charge of the actual workstream execution. This is the run where Pillar 1 ("delegate everything delegable") becomes structurally enforced rather than aspirational.
+0.2.2 cleared the deferral debt - three named stubs are now real daemons emitting OTEL spans. 0.2.3 builds on that foundation with the next architectural leap: **demoting Claude/Gemini from executor to conductor** and putting the local LLM fleet in charge of the actual workstream execution. This is the run where Pillar 1 ("delegate everything delegable") becomes structurally enforced rather than aspirational.
 
 Simultaneously: ship the MCP server fleet as global components, lay the localhost-by-default plumbing for future dashboard/claw3d, expand bundle inclusions for context completeness, and clean up 0.2.2 hygiene carryovers.
 
@@ -34,7 +34,7 @@ Simultaneously: ship the MCP server fleet as global components, lay the localhos
 
 ## Non-goals
 
-- claw3d real implementation (0.2.6 — Alex demo deliverable)
+- claw3d real implementation (0.2.6 - Alex demo deliverable)
 - aho.run public binding, Caddy, TLS, DNS (Phase 1)
 - Cross-clone OTEL push (Phase 1)
 - P3 clone attempt (0.2.4)
@@ -42,7 +42,7 @@ Simultaneously: ship the MCP server fleet as global components, lay the localhos
 
 ## Workstreams
 
-### W0 — Hygiene + carryover cleanup
+### W0 - Hygiene + carryover cleanup
 
 - Bump 8 canonical artifacts to 0.2.3 (use broadened sed catching `**Version:**`, `Last updated`, freeform `aho 0.2.X` headings)
 - MANIFEST.json writer: bump version field on regeneration
@@ -51,7 +51,7 @@ Simultaneously: ship the MCP server fleet as global components, lay the localhos
 - components.yaml: bump openclaw/nemoclaw/telegram notes to reference 0.2.2 graduation cleanly
 - 108+ tests pass
 
-### W1 — MCP server fleet
+### W1 - MCP server fleet
 
 - 12 MCP servers as components in components.yaml (kind: mcp_server)
 - `bin/aho-install` adds global npm install step: `sudo npm install -g <package>` for each (capability gap if not root)
@@ -60,29 +60,29 @@ Simultaneously: ship the MCP server fleet as global components, lay the localhos
 - `artifacts/harness/mcp-fleet.md` as canonical artifact #10 (architectural spec, package list, version pins, role of each)
 - 12 components added to components.yaml
 
-### W2 — Three-agent role split
+### W2 - Three-agent role split
 
-- `src/aho/agents/roles/workstream_agent.py` — `WorkstreamAgent(OpenClawSession)`, role="workstream", LLM=qwen3.5:9b, exposes `execute_workstream(ws_id, plan_section) -> dict`
-- `src/aho/agents/roles/evaluator_agent.py` — `EvaluatorAgent(OpenClawSession)`, role="evaluator", LLM=GLM-4.6V-Flash-9B, exposes `review(workstream_output, design, plan) -> ReviewResult`
-- `src/aho/agents/roles/harness_agent.py` — `HarnessAgent(OpenClawSession)`, role="harness", LLM=nemotron-mini:4b, exposes `propose_gotcha(event)`, `propose_adr(observation)`, `propose_component(detected)`. Long-lived watcher mode `--watch` subscribes to event log tail.
-- `src/aho/agents/conductor.py` — new module, `Conductor` class wraps the orchestrator pattern: read plan → for each workstream, dispatch via NemoClaw to workstream agent → evaluator reviews → harness agent observes → next workstream
+- `src/aho/agents/roles/workstream_agent.py` - `WorkstreamAgent(OpenClawSession)`, role="workstream", LLM=qwen3.5:9b, exposes `execute_workstream(ws_id, plan_section) -> dict`
+- `src/aho/agents/roles/evaluator_agent.py` - `EvaluatorAgent(OpenClawSession)`, role="evaluator", LLM=GLM-4.6V-Flash-9B, exposes `review(workstream_output, design, plan) -> ReviewResult`
+- `src/aho/agents/roles/harness_agent.py` - `HarnessAgent(OpenClawSession)`, role="harness", LLM=nemotron-mini:4b, exposes `propose_gotcha(event)`, `propose_adr(observation)`, `propose_component(detected)`. Long-lived watcher mode `--watch` subscribes to event log tail.
+- `src/aho/agents/conductor.py` - new module, `Conductor` class wraps the orchestrator pattern: read plan → for each workstream, dispatch via NemoClaw to workstream agent → evaluator reviews → harness agent observes → next workstream
 - Update `src/aho/agents/nemoclaw.py` orchestrator to recognize new roles and route by `kind=workstream|evaluator|harness` field
 - `aho-harness-watcher.service` systemd user unit
 - 3 new entries in components.yaml: workstream-agent, evaluator-agent, harness-agent (all `kind: agent`, `status: active`)
 - Tests: `test_workstream_agent.py`, `test_evaluator_agent.py`, `test_harness_agent.py`, `test_conductor.py`
 
-### W3 — Localhost arch + dashboard plumbing
+### W3 - Localhost arch + dashboard plumbing
 
 - `.aho.json` schema additions: `dashboard_port: 7800` (NZXTcos), `aho_role: "localhost"`, `port_range: [7800, 7899]`
 - `src/aho/config.py` reads/validates port assignment, refuses bind if collision detected
 - `aho.logger.emit_heartbeat(component_name)` helper: emits `heartbeat` span every 30s when component is in `--serve` mode, exits cleanly on SIGTERM
 - All 4 daemons (openclaw, nemoclaw, telegram, harness-watcher) emit heartbeat in their serve loops
 - Heartbeat span schema: `{name: "heartbeat", attributes: {component, pid, uptime_seconds, role, dashboard_port}}`
-- `artifacts/harness/dashboard-contract.md` — 9th canonical artifact: heartbeat schema, component health states (green/yellow/red), polling contract, future cross-clone push contract (deferred to Phase 1)
-- `web/claw3d/` directory with placeholder `index.html` containing single `<h1>claw3d coming in 0.2.6</h1>` and a `<script>` reading components.yaml at load time and listing component names — proves the directory exists and the data binding works even before the Three.js scene
+- `artifacts/harness/dashboard-contract.md` - 9th canonical artifact: heartbeat schema, component health states (green/yellow/red), polling contract, future cross-clone push contract (deferred to Phase 1)
+- `web/claw3d/` directory with placeholder `index.html` containing single `<h1>claw3d coming in 0.2.6</h1>` and a `<script>` reading components.yaml at load time and listing component names - proves the directory exists and the data binding works even before the Three.js scene
 - `bin/aho-dashboard` skeleton wrapper (binds to `127.0.0.1:$dashboard_port`, serves placeholder JSON from traces.jsonl tail)
 
-### W4 — Per-clone age + bundle expansion + doctor
+### W4 - Per-clone age + bundle expansion + doctor
 
 - `bin/aho-install` adds: check `age-keygen --output ~/.config/aho/age.key` if file doesn't exist, halt with `[CAPABILITY GAP] age key generated, please backup ~/.config/aho/age.key before continuing` on first run
 - `src/aho/bundle/__init__.py` adds §24 Infrastructure (.aho.json, .aho-checkpoint.json, MANIFEST.json, CHANGELOG.md, README.md, CLAUDE.md, GEMINI.md, install.fish), §25 Harnesses (every .md in artifacts/harness/), §26 Configuration (components.yaml, canonical_artifacts.yaml, pyproject.toml, .gitignore, projects.json)
@@ -90,7 +90,7 @@ Simultaneously: ship the MCP server fleet as global components, lay the localhos
 - Doctor: `_check_age_key()`, `_check_mcp_fleet()`, `_check_dashboard_port()`, `_check_role_agents()` (verifies workstream/evaluator/harness modules importable)
 - `artifacts/harness/canonical_artifacts.yaml` adds entries for `mcp-fleet.md` and `dashboard-contract.md` (#9 and #10)
 
-### W5 — Dogfood + close
+### W5 - Dogfood + close
 
 **End-to-end role split smoke test:**
 ```fish
@@ -135,7 +135,7 @@ If trace shows 7 spans in correct order, the role split is functional. Otherwise
 
 ### PLAN (aho-plan-0.2.3.md)
 ```markdown
-# aho 0.2.3 — Plan
+# aho 0.2.3 - Plan
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 3 | **run_type:** mixed
 **Agent:** Claude Code single-agent throughout | **Wall clock target:** 3-4 hours
@@ -151,7 +151,7 @@ mkdir -p artifacts/iterations/0.2.3
 mkdir -p web/claw3d
 ```
 
-## W0 — Hygiene + carryover cleanup
+## W0 - Hygiene + carryover cleanup
 
 ```fish
 # Bump versions across canonical artifacts using broadened patterns
@@ -166,7 +166,7 @@ sed -i 's|^version = "0\.2\.2"|version = "0.2.3"|' pyproject.toml
 sed -i 's|updated during 0\.2\.2|updated during 0.2.3|' CLAUDE.md GEMINI.md
 ```
 
-**Fix MANIFEST writer** in `src/aho/components/manifest.py` (or wherever the writer lives — search via `rg -n '"version":' src/aho/`): ensure the `version` field is bumped from `.aho.json` `current_iteration` on every regeneration. Add a test.
+**Fix MANIFEST writer** in `src/aho/components/manifest.py` (or wherever the writer lives - search via `rg -n '"version":' src/aho/`): ensure the `version` field is bumped from `.aho.json` `current_iteration` on every regeneration. Add a test.
 
 **Dedupe build log filename:** find what writes `aho-build-{iteration}.md` (the variant without `-log-`). Search: `rg -n 'aho-build-' src/aho/postflight/ src/aho/feedback/`. Remove the duplicate write. `aho-build-log-{iteration}.md` is canonical.
 
@@ -177,7 +177,7 @@ sed -i 's|updated during 0\.2\.2|updated during 0.2.3|' CLAUDE.md GEMINI.md
 python -m pytest artifacts/tests/ -x
 ```
 
-## W1 — MCP server fleet
+## W1 - MCP server fleet
 
 **Add to components.yaml** (12 entries, all `kind: mcp_server`, `status: active`, `owner: soc-foundry`):
 - mcp-firebase-tools, mcp-context7, mcp-firecrawl, mcp-playwright, mcp-flutter
@@ -213,7 +213,7 @@ end
 
 **Doctor `_check_mcp_fleet()`** in `src/aho/doctor.py`: returns ok if all 12 packages found via `npm list -g --depth=0`, otherwise lists missing.
 
-## W2 — Three-agent role split
+## W2 - Three-agent role split
 
 **`src/aho/agents/roles/workstream_agent.py`:**
 ```python
@@ -319,9 +319,9 @@ WantedBy=default.target
 - evaluator-agent (kind: agent, status: active, notes: "GLM-bound, review role, activated 0.2.3 W2")
 - harness-agent (kind: agent, status: active, notes: "Nemotron-bound, watcher daemon, activated 0.2.3 W2")
 
-**Tests:** test_workstream_agent.py, test_evaluator_agent.py, test_harness_agent.py, test_conductor.py — at least 3 tests each, mock LLM clients.
+**Tests:** test_workstream_agent.py, test_evaluator_agent.py, test_harness_agent.py, test_conductor.py - at least 3 tests each, mock LLM clients.
 
-## W3 — Localhost arch + dashboard plumbing
+## W3 - Localhost arch + dashboard plumbing
 
 **Update `.aho.json`** to include `dashboard_port: 7800`, `aho_role: "localhost"`, `port_range: [7800, 7899]`. Add migration logic in `src/aho/config.py` for clones missing these fields (defaults: port from machine-specific table, role="localhost").
 
@@ -367,9 +367,9 @@ fetch('/components.yaml').then(r => r.text()).then(t => {
 </body></html>
 ```
 
-**`bin/aho-dashboard`** skeleton — Python http.server binding to `127.0.0.1:7800`, serves traces.jsonl tail as JSON. Just enough to prove the port binding works.
+**`bin/aho-dashboard`** skeleton - Python http.server binding to `127.0.0.1:7800`, serves traces.jsonl tail as JSON. Just enough to prove the port binding works.
 
-## W4 — Per-clone age + bundle expansion + doctor
+## W4 - Per-clone age + bundle expansion + doctor
 
 **`bin/aho-install`** age keygen block:
 ```fish
@@ -388,9 +388,9 @@ end
 **Doctor additions** in `src/aho/doctor.py`:
 - `_check_age_key()`: returns ok if `~/.config/aho/age.key` exists with mode 600
 - `_check_dashboard_port()`: returns ok if `.aho.json` has `dashboard_port` field and port is bindable
-- `_check_role_agents()`: imports workstream_agent, evaluator_agent, harness_agent — fails if ImportError
+- `_check_role_agents()`: imports workstream_agent, evaluator_agent, harness_agent - fails if ImportError
 
-## W5 — Dogfood + close
+## W5 - Dogfood + close
 
 **Conductor smoke test:**
 ```fish
@@ -441,7 +441,7 @@ Verify:
 
 ### BUILD LOG (MANUAL) (aho-build-log-0.2.3.md)
 ```markdown
-# Build Log — aho 0.2.3
+# Build Log - aho 0.2.3
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 3
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
@@ -449,17 +449,17 @@ Verify:
 
 ---
 
-### W0 — Hygiene + carryover cleanup — PASS
+### W0 - Hygiene + carryover cleanup - PASS
 
 - Bumped 8 canonical artifacts (base.md, agents-architecture.md, model-fleet.md, global-deployment.md, phase-0 charter, README.md, pyproject.toml, CLAUDE.md) to 0.2.3
 - Bumped GEMINI.md to 0.2.3
 - aho-install script_version bumped to 0.2.3
 - Added secrets session locked row to global-deployment.md capability gap inventory
-- Build log dedupe checked — only `aho-build-log-{iteration}.md` variant exists, already canonical
+- Build log dedupe checked - only `aho-build-log-{iteration}.md` variant exists, already canonical
 - 108 tests passing at W0 exit
 - Completed: 2026-04-11
 
-### W1 — MCP server fleet — PASS
+### W1 - MCP server fleet - PASS
 
 - 12 MCP servers added to components.yaml (kind: mcp_server)
 - `bin/aho-mcp` rewritten from skeleton to full implementation (list/status/doctor/install subcommands)
@@ -470,12 +470,12 @@ Verify:
 - 108 tests passing at W1 exit
 - Completed: 2026-04-11
 
-### W2 — Three-agent role split — PASS
+### W2 - Three-agent role split - PASS
 
-- `src/aho/agents/roles/workstream_agent.py` — WorkstreamAgent(OpenClawSession), Qwen-bound
-- `src/aho/agents/roles/evaluator_agent.py` — EvaluatorAgent(OpenClawSession), GLM-bound
-- `src/aho/agents/roles/harness_agent.py` — HarnessAgent, Nemotron-bound, --watch mode
-- `src/aho/agents/conductor.py` — Conductor orchestrator (dispatch → route → execute → review → notify)
+- `src/aho/agents/roles/workstream_agent.py` - WorkstreamAgent(OpenClawSession), Qwen-bound
+- `src/aho/agents/roles/evaluator_agent.py` - EvaluatorAgent(OpenClawSession), GLM-bound
+- `src/aho/agents/roles/harness_agent.py` - HarnessAgent, Nemotron-bound, --watch mode
+- `src/aho/agents/conductor.py` - Conductor orchestrator (dispatch → route → execute → review → notify)
 - `bin/aho-conductor` wrapper created
 - `aho-harness-watcher.service.template` created
 - 4 components added (workstream-agent, evaluator-agent, harness-agent, conductor)
@@ -485,11 +485,11 @@ Verify:
 - 123 tests passing at W2 exit
 - Completed: 2026-04-11
 
-### W3 — Localhost arch + dashboard plumbing — PASS
+### W3 - Localhost arch + dashboard plumbing - PASS
 
 - .aho.json extended: dashboard_port=7800, aho_role="localhost", port_range=[7800,7899]
 - `src/aho/config.py` extended: get_dashboard_port(), get_aho_role(), check_port_available()
-- `src/aho/logger.py` extended: emit_heartbeat() — daemon thread, 30s interval
+- `src/aho/logger.py` extended: emit_heartbeat() - daemon thread, 30s interval
 - Heartbeat wired into all 4 daemons (openclaw, nemoclaw, telegram, harness-watcher)
 - `artifacts/harness/dashboard-contract.md` created as canonical artifact #10
 - Added to canonical_artifacts.yaml
@@ -498,7 +498,7 @@ Verify:
 - 123 tests passing at W3 exit
 - Completed: 2026-04-11
 
-### W4 — Per-clone age + bundle expansion + doctor — PASS
+### W4 - Per-clone age + bundle expansion + doctor - PASS
 
 - `bin/aho-install` section 4: age keygen with [CAPABILITY GAP] halt on first run
 - Bundle §24 Infrastructure (8 files embedded)
@@ -511,7 +511,7 @@ Verify:
 - 137 tests passing at W4 exit
 - Completed: 2026-04-11
 
-### W5 — Dogfood + close — PASS
+### W5 - Dogfood + close - PASS
 
 - Full test suite: 137 passed, 1 skipped
 - Bundle: 401KB with §24-§26 populated, 26 sections, validates clean
@@ -527,7 +527,7 @@ Verify:
 
 ### REPORT (aho-report-0.2.3.md)
 ```markdown
-# Report — aho 0.2.3
+# Report - aho 0.2.3
 
 **Generated:** 2026-04-11T16:53:47Z
 **Iteration:** 0.2.3
@@ -674,7 +674,7 @@ install.fish: install.fish syntax OK
 Artifacts: Missing artifacts: report.md |
 | manifest_current | fail | stale hashes: .aho-checkpoint.json, .aho.json, .gitignore |
 | pillars_present | ok | Eleven pillars present in design and README |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-11T16:36:30.733527+00:00 < iteration start 2026-04-11T17:00:00Z |
 | run_complete | deferred | Sign-off incomplete: Manual conductor smoke test (7-span trace), Kyle git commit + push |
 | run_quality | ok | Run file passes quality gate |
@@ -742,7 +742,7 @@ Sign-off: [x] all five.
 
 ### RUN REPORT (aho-run-0.2.3.md)
 ```markdown
-# aho Run Report — 0.2.3
+# aho Run Report - 0.2.3
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 3
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
@@ -779,7 +779,7 @@ Sign-off: [x] all five.
 
 ## Kyle's Notes
 
-*(empty — Kyle fills after review)*
+*(empty - Kyle fills after review)*
 
 ## Sign-off
 
@@ -792,7 +792,7 @@ Sign-off: [x] all five.
 
 ---
 
-*aho 0.2.3 run report — generated by Claude Code during W5 close.*
+*aho 0.2.3 run report - generated by Claude Code during W5 close.*
 ```
 
 ## §6. Harness
@@ -802,7 +802,7 @@ Sign-off: [x] all five.
 # aho - Base Harness
 
 **Version:** 0.2.10
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -814,7 +814,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -826,9 +826,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -939,7 +939,7 @@ The AHO (Agentic Harness Orchestration) methodology produces reusable harness co
 Externalize the harness components into an `aho` Python package that is:
 
 1. Authored as its own subdirectory inside the originating project for Phase A.
-2. Authored in standalone-repo voice — its own README, CHANGELOG, VERSION, pyproject.toml, .gitignore, `artifacts/adrs` tree.
+2. Authored in standalone-repo voice - its own README, CHANGELOG, VERSION, pyproject.toml, .gitignore, `artifacts/adrs` tree.
 3. Extracted to a standalone repository in Phase B.
 4. Versioned independently of the originating project's iteration numbers (semver starting 0.1.0).
 
@@ -951,7 +951,7 @@ Externalize the harness components into an `aho` Python package that is:
 - Independent versioning frees middleware iteration cadence.
 
 **Negative:**
-- Two parallel ADR streams (project harness ADRs vs aho internal ADRs) — intentional scope separation.
+- Two parallel ADR streams (project harness ADRs vs aho internal ADRs) - intentional scope separation.
 - License decision deferred until v0.2.0.
 
 ## Status
@@ -961,7 +961,7 @@ Accepted. Updated in aho 0.1.13 W2 to reflect name transition from `aho` to `aho
 
 ### ADR: 0002-nemoclaw-decision.md (0002-nemoclaw-decision.md)
 ```markdown
-# ADR 0002 — Nemoclaw Retain / Remove / Replace Decision
+# ADR 0002 - Nemoclaw Retain / Remove / Replace Decision
 
 **Status:** Accepted
 **Date:** 2026-04-21
@@ -975,14 +975,14 @@ Accepted. Updated in aho 0.1.13 W2 to reflect name transition from `aho` to `aho
 
 `src/aho/agents/nemoclaw.py` (0.1.7 W8 rebuild, 0.2.2 W2 daemonized) provides:
 
-1. A **classification/routing layer** — `NemoClawOrchestrator.route()` calls `aho.artifacts.nemotron_client.classify()`, which posts to Ollama `/api/generate` with `nemotron-mini:4b` to pick one of a fixed set of roles (`assistant`, `code_runner`, `reviewer`).
-2. A **dispatch/session layer** — three `OpenClawSession` instances (Qwen 3.5:9b chats) held warm behind a Unix socket daemon (`aho-nemoclaw.service`), dispatched by role.
-3. **IPC plumbing** — `bin/aho-nemoclaw` fish wrapper speaks newline-delimited JSON over the Unix socket at `~/.local/share/aho/nemoclaw.sock`.
+1. A **classification/routing layer** - `NemoClawOrchestrator.route()` calls `aho.artifacts.nemotron_client.classify()`, which posts to Ollama `/api/generate` with `nemotron-mini:4b` to pick one of a fixed set of roles (`assistant`, `code_runner`, `reviewer`).
+2. A **dispatch/session layer** - three `OpenClawSession` instances (Qwen 3.5:9b chats) held warm behind a Unix socket daemon (`aho-nemoclaw.service`), dispatched by role.
+3. **IPC plumbing** - `bin/aho-nemoclaw` fish wrapper speaks newline-delimited JSON over the Unix socket at `~/.local/share/aho/nemoclaw.sock`.
 
 Nemoclaw was built before the pipeline dispatcher had any model-family awareness. At the time, `/api/generate` with raw prompts and a hand-rolled parser was the only available primitive. aho 0.2.15 W2 hardened `src/aho/pipeline/dispatcher.py` with:
 
 - Per-model-family stop tokens (Qwen, Llama 3.x, GLM, Nemotron)
-- Five typed error classes (`DispatchError`, `MalformedResponseError`, `TemplateLeakError`, `ModelUnavailableError`, `DispatchTimeoutError`) — G083 compliant
+- Five typed error classes (`DispatchError`, `MalformedResponseError`, `TemplateLeakError`, `ModelUnavailableError`, `DispatchTimeoutError`) - G083 compliant
 - Retry with exponential backoff on transient failures; no retry on systemic failures
 - Template leak detection
 - Model management helpers (`unload_model`, `list_loaded_models`, `ensure_model_ready`)
@@ -1014,9 +1014,9 @@ A second observation worth lifting: the 0.2.13 W2.5 "Nemotron 80% feature-bias" 
 
 Specifically:
 
-1. Introduce `src/aho/pipeline/router.py` — a stateless classification function `classify_task(task, categories, *, model=None, bias=None)` that uses the W2 hardened dispatcher on `/api/chat`. This supersedes `aho.artifacts.nemotron_client.classify()` as the canonical classification primitive.
+1. Introduce `src/aho/pipeline/router.py` - a stateless classification function `classify_task(task, categories, *, model=None, bias=None)` that uses the W2 hardened dispatcher on `/api/chat`. This supersedes `aho.artifacts.nemotron_client.classify()` as the canonical classification primitive.
 
-2. Migrate `NemoClawOrchestrator.route()` to call `aho.pipeline.router.classify_task()`. The daemon, the socket IPC, the three `OpenClawSession` instances, and the systemd unit **stay in place** — they provide session persistence and warm-process sharing, which the stateless dispatcher does not replicate.
+2. Migrate `NemoClawOrchestrator.route()` to call `aho.pipeline.router.classify_task()`. The daemon, the socket IPC, the three `OpenClawSession` instances, and the systemd unit **stay in place** - they provide session persistence and warm-process sharing, which the stateless dispatcher does not replicate.
 
 3. Mark `aho.artifacts.nemotron_client.classify()` as deprecated in its docstring. Leave it callable during 0.2.15–0.2.16 so existing call sites have a migration window; removal is a future-iteration concern.
 
@@ -1025,8 +1025,8 @@ Specifically:
 5. Fix the G083 violation at `nemoclaw.py:62` (`except Exception` swallowing dispatch errors into `"[error] ..."` string) as part of this migration, since we are editing that code path. The other two `except Exception` sites (`nemoclaw.py:119, 126`) are inside the `NemoClawHandler` socket handler; narrowing those is deferred to W4 or later and documented as a carry-forward.
 
 This is a **replace** decision, not retain or remove:
-- Retain (no-op) is inconsistent with the measured evidence — the `/api/generate` path classifies worse than `/api/chat` on role classify (1/5 vs 4/5) and the typed-exception gap is non-trivial.
-- Remove is too aggressive — the session layer (persistent OpenClaw roles, socket IPC, systemd integration) provides value orthogonal to the dispatcher. Removing it because the classifier layer is obsolete would be scope creep.
+- Retain (no-op) is inconsistent with the measured evidence - the `/api/generate` path classifies worse than `/api/chat` on role classify (1/5 vs 4/5) and the typed-exception gap is non-trivial.
+- Remove is too aggressive - the session layer (persistent OpenClaw roles, socket IPC, systemd integration) provides value orthogonal to the dispatcher. Removing it because the classifier layer is obsolete would be scope creep.
 
 ---
 
@@ -1036,8 +1036,8 @@ Pillar 4 (wrappers are the tool surface): *"Agents never call raw tools. Every t
 
 Two readings of Pillar 4 relative to this decision:
 
-1. **Strong reading — every Ollama call must go through a `/bin/aho-*` wrapper.** Under this reading, the hardened dispatcher (called in-process from Python) violates Pillar 4 because `dispatcher.dispatch()` is a library call, not a wrapper invocation. The Nemoclaw daemon's socket wrapper (`bin/aho-nemoclaw`) is more Pillar-4-conformant.
-2. **Weak reading — the tool surface is wrapped when agents invoke it from outside the process; intra-process library calls are not "raw tool" calls.** Under this reading, the dispatcher IS the versioned tool surface and is invoked from wrappers (e.g., `bin/aho-conductor`, `bin/aho-nemoclaw`) that internally call it. Raw `curl http://127.0.0.1:11434/api/chat` from an agent's hand would violate Pillar 4; `from aho.pipeline import dispatcher; dispatcher.dispatch(...)` in a wrapper-invoked Python process does not.
+1. **Strong reading - every Ollama call must go through a `/bin/aho-*` wrapper.** Under this reading, the hardened dispatcher (called in-process from Python) violates Pillar 4 because `dispatcher.dispatch()` is a library call, not a wrapper invocation. The Nemoclaw daemon's socket wrapper (`bin/aho-nemoclaw`) is more Pillar-4-conformant.
+2. **Weak reading - the tool surface is wrapped when agents invoke it from outside the process; intra-process library calls are not "raw tool" calls.** Under this reading, the dispatcher IS the versioned tool surface and is invoked from wrappers (e.g., `bin/aho-conductor`, `bin/aho-nemoclaw`) that internally call it. Raw `curl http://127.0.0.1:11434/api/chat` from an agent's hand would violate Pillar 4; `from aho.pipeline import dispatcher; dispatcher.dispatch(...)` in a wrapper-invoked Python process does not.
 
 The pipeline dispatcher as written is consistent with the weak reading: it is a versioned library (lives under `src/aho/pipeline/`, event-logged via OTel spans in callers, replayable from recorded prompts). W3 does not re-decide Pillar 4 semantics; it notes this as a tension that 0.2.16+ may want to address if the weak reading is insufficient for an external-observer audit.
 
@@ -1050,7 +1050,7 @@ The proposed replacement (`src/aho/pipeline/router.py`) does not worsen Pillar 4
 **Immediate (W3):**
 
 - New file: `src/aho/pipeline/router.py` with `classify_task()` and one error type (`ClassificationError` subclass of `DispatchError`).
-- New tests: `artifacts/tests/test_pipeline_router.py` — unit coverage for correct classification, parse failure, unknown-model error, empty-category-list guard.
+- New tests: `artifacts/tests/test_pipeline_router.py` - unit coverage for correct classification, parse failure, unknown-model error, empty-category-list guard.
 - `src/aho/agents/nemoclaw.py`:
   - `route()` now calls `pipeline.router.classify_task()`; no longer imports `nemotron_client.classify`.
   - `except Exception` at line 62 replaced with typed handler raising/surfacing the specific error.
@@ -1060,21 +1060,21 @@ The proposed replacement (`src/aho/pipeline/router.py`) does not worsen Pillar 4
 - `aho doctor` behaviour unchanged (the daemon systemd unit still exists and is still checked).
 - Baseline regression test run and compared against W2 (10 failed, 351 passed).
 
-**Downstream (W4 or later — not this workstream):**
+**Downstream (W4 or later - not this workstream):**
 
 - Full removal of `nemotron_client.classify()` after callers migrate.
 - Narrowing the two remaining `except Exception` blocks in `NemoClawHandler` to typed handlers. Tracked as a carry-forward, not gated by W3.
-- `aho doctor` could be extended to surface which classification path is in use (library router vs legacy nemotron_client) — future hygiene, not W3 scope.
+- `aho doctor` could be extended to surface which classification path is in use (library router vs legacy nemotron_client) - future hygiene, not W3 scope.
 
 **Risk:**
 
-- Nemoclaw's classification is used by `src/aho/agents/conductor.py` via `self.nemoclaw.route()`. Because the route method is being updated to call the new router internally, the conductor behaviour is unchanged — same input, same output categories, different underlying endpoint. Integration sanity probe is part of W3 acceptance.
+- Nemoclaw's classification is used by `src/aho/agents/conductor.py` via `self.nemoclaw.route()`. Because the route method is being updated to call the new router internally, the conductor behaviour is unchanged - same input, same output categories, different underlying endpoint. Integration sanity probe is part of W3 acceptance.
 
 - Not a risk on this iteration, but worth recording: the session layer (OpenClawSession) still uses the older qwen_client pre-W2-harden path. Migrating OpenClaw to the hardened dispatcher is a distinct decision (carry-forward candidate).
 
 **Observed during migration (behaviour note):**
 
-Nemotron-mini:4b on `/api/chat` reliably emits empty `message.content` when the system-role prompt contains a long multi-sentence bias instruction. The same bias flattened into `/api/generate` (prior Nemoclaw path) worked. The fix was to compress the Nemoclaw `route()` bias from three sentences to one. The full explanation and probe evidence are in `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` under "Migration finding — long-bias-via-system quirk". This is a Nemotron quirk; future models may not require the compression. Worth re-checking if Nemotron is ever replaced or if a higher quantization is deployed.
+Nemotron-mini:4b on `/api/chat` reliably emits empty `message.content` when the system-role prompt contains a long multi-sentence bias instruction. The same bias flattened into `/api/generate` (prior Nemoclaw path) worked. The fix was to compress the Nemoclaw `route()` bias from three sentences to one. The full explanation and probe evidence are in `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` under "Migration finding - long-bias-via-system quirk". This is a Nemotron quirk; future models may not require the compression. Worth re-checking if Nemotron is ever replaced or if a higher quantization is deployed.
 
 ---
 
@@ -1084,7 +1084,7 @@ Nemotron-mini:4b on `/api/chat` reliably emits empty `message.content` when the 
 
 - **Remove Nemoclaw daemon entirely.** Rejected: conflates two concerns. The classification layer is obsolete; the session layer is not. Removing the daemon would require reimplementing persistent OpenClaw sessions elsewhere, out of W3 scope.
 
-- **Replace daemon with thin routing function and delete the daemon (combined remove + replace).** Rejected for the same reason as "remove entirely" — the session-persistence property is not addressed.
+- **Replace daemon with thin routing function and delete the daemon (combined remove + replace).** Rejected for the same reason as "remove entirely" - the session-persistence property is not addressed.
 
 - **Defer to W4.** Rejected: W4 is integration + close, not architecture. W3 exists to land this decision so W4 can rely on the migrated router in its cross-model cascade.
 
@@ -1092,15 +1092,15 @@ Nemotron-mini:4b on `/api/chat` reliably emits empty `message.content` when the 
 
 ## References
 
-- `src/aho/pipeline/dispatcher.py` — W2 hardened dispatcher (0.2.15 W2)
-- `artifacts/iterations/0.2.15/acceptance/W2.json` — W2 acceptance archive
-- `artifacts/iterations/0.2.15/audit/W2.json` — W2 audit pass (Gemini)
-- `artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.md` — Nemotron W0 re-vetting (classify probe passed)
-- `artifacts/iterations/0.2.15/ollama-tier1-fitness-0.2.15.md` — Ollama control-plane fitness (R11: chat template application)
-- `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` — W3 empirical comparison
-- `artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json` — raw probe output
-- `artifacts/adrs/0001-phase-a-externalization.md` — prior aho-internal ADR (for series convention)
-- `artifacts/harness/base.md` — Pillar 4 text, G083 text
+- `src/aho/pipeline/dispatcher.py` - W2 hardened dispatcher (0.2.15 W2)
+- `artifacts/iterations/0.2.15/acceptance/W2.json` - W2 acceptance archive
+- `artifacts/iterations/0.2.15/audit/W2.json` - W2 audit pass (Gemini)
+- `artifacts/iterations/0.2.15/tier1-roster-validation-0.2.15.md` - Nemotron W0 re-vetting (classify probe passed)
+- `artifacts/iterations/0.2.15/ollama-tier1-fitness-0.2.15.md` - Ollama control-plane fitness (R11: chat template application)
+- `artifacts/iterations/0.2.15/nemoclaw-comparison/nemoclaw-vs-dispatch.md` - W3 empirical comparison
+- `artifacts/iterations/0.2.15/nemoclaw-comparison/raw/probe-results.json` - raw probe output
+- `artifacts/adrs/0001-phase-a-externalization.md` - prior aho-internal ADR (for series convention)
+- `artifacts/harness/base.md` - Pillar 4 text, G083 text
 
 ---
 
@@ -1109,13 +1109,13 @@ Nemotron-mini:4b on `/api/chat` reliably emits empty `message.content` when the 
 
 ### ADR: 0003-otel-scaffolding-posture.md (0003-otel-scaffolding-posture.md)
 ```markdown
-# ADR 0003 — OTEL Scaffolding Posture
+# ADR 0003 - OTEL Scaffolding Posture
 
 **Status:** Accepted
 **Date:** 2026-04-21
 **Iteration of record:** aho 0.2.16 W0
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — Claude Code OTEL integration;
+**Context surface:** aho project-internal - Claude Code OTEL integration;
 downstream reference pack inherits these choices with a documented privacy-
 profile swap.
 
@@ -1126,24 +1126,24 @@ profile swap.
 Claude Code (the CLI) ships first-class OpenTelemetry instrumentation. As of
 2026-04-21 it emits three kinds of signals:
 
-- **Metrics** — `claude_code.session.count`, `claude_code.cost.usage`,
+- **Metrics** - `claude_code.session.count`, `claude_code.cost.usage`,
   `claude_code.token.usage` (split by type: input / output / cacheRead /
   cacheCreation), `claude_code.active_time.total`,
   `claude_code.lines_of_code.count`, `claude_code.commit.count`,
   `claude_code.pull_request.count`.
-- **Events (logs)** — `claude_code.user_prompt`, `claude_code.api_request`,
+- **Events (logs)** - `claude_code.user_prompt`, `claude_code.api_request`,
   `claude_code.api_error`, `claude_code.api_retries_exhausted`,
   `claude_code.tool_result`, `claude_code.tool_decision`,
   `claude_code.mcp_server_connection`.
-- **Traces (beta)** — `claude_code.interaction` as semantic turn root span
+- **Traces (beta)** - `claude_code.interaction` as semantic turn root span
   with API and tool spans as children (requires
   `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`).
 
 The aho observability stack already runs two systemd user services:
 
-- `aho-otel-collector.service` — otelcol-contrib listening OTLP gRPC on
+- `aho-otel-collector.service` - otelcol-contrib listening OTLP gRPC on
   `127.0.0.1:4317` and OTLP HTTP on `127.0.0.1:4318`.
-- `aho-jaeger.service` — Jaeger all-in-one (trace store and query UI) at
+- `aho-jaeger.service` - Jaeger all-in-one (trace store and query UI) at
   `127.0.0.1:14317` (OTLP gRPC) and `127.0.0.1:16686` (UI).
 
 W0 scope is metrics + events only. Traces are W2 (flip
@@ -1156,7 +1156,7 @@ the W2 trace-integration work lands; also add `TRACEPARENT` propagation in
 Enable Claude Code telemetry via managed settings in
 `.claude/settings.json`. Route everything through the existing collector. Use
 the collector's **file exporter** as the verification surface for W0 signals
-because Jaeger is a trace store and cannot ingest metrics or logs —
+because Jaeger is a trace store and cannot ingest metrics or logs -
 Bucket 3 shipped `file/metrics` and `file/logs` pipeline exporters
 explicitly for this purpose.
 
@@ -1178,7 +1178,7 @@ OTEL_RESOURCE_ATTRIBUTES=service.name=claude-code,aho.iteration=0.2.16,aho.works
 
 `OTEL_TRACES_EXPORTER` is **intentionally unset** in W0. Setting it would
 emit traces that Jaeger would accept but that the W2 parent-child spans from
-aho dispatcher/router have not been wired for — capturing partial traces
+aho dispatcher/router have not been wired for - capturing partial traces
 now would produce a record that doesn't match what the trace-integration
 workstream is planning. Deferred to W2.
 
@@ -1186,10 +1186,10 @@ workstream is planning. Deferred to W2.
 
 Three aho-scoped attributes are set on every emitted signal:
 
-- `aho.iteration` — phase.iteration label (`0.2.16`), frozen per iteration.
-- `aho.workstream` — `W{N}`, reset at workstream boundary.
-- `aho.role` — `drafter` for Claude Code; `auditor` for Gemini CLI when
-  Gemini grows OTEL support (currently none — see ADR 0004 asymmetry when
+- `aho.iteration` - phase.iteration label (`0.2.16`), frozen per iteration.
+- `aho.workstream` - `W{N}`, reset at workstream boundary.
+- `aho.role` - `drafter` for Claude Code; `auditor` for Gemini CLI when
+  Gemini grows OTEL support (currently none - see ADR 0004 asymmetry when
   that ADR lands in W2).
 
 Values are set **literally** in the env block. `${AHO_ITERATION}` / `${AHO_WORKSTREAM}`
@@ -1205,8 +1205,8 @@ automation in a later iteration.
 |---|---|---|
 | Per-session metrics | `session.count`, `cost.usage`, `token.usage` (4-way split), `active_time.total`, `lines_of_code.count`, `commit.count` (Pillar 11), `pull_request.count` (Pillar 11) | Collector file exporter → `~/.local/share/aho/metrics/metrics.jsonl` |
 | Per-turn events | `user_prompt` (with `prompt.id` correlation UUID v4), `api_request` per API call, `tool_result`, `tool_decision`, `api_error`, `api_retries_exhausted`, `mcp_server_connection` | Collector file exporter → `~/.local/share/aho/logs/logs.jsonl` |
-| Full request + response bodies | N/A — bodies dumped to disk by Claude Code itself | `~/.local/share/aho/api-bodies/` (via `OTEL_LOG_RAW_API_BODIES=file:...`); events link via `body_ref` pointer |
-| Traces | Deferred to W2 | (none — `OTEL_TRACES_EXPORTER` unset) |
+| Full request + response bodies | N/A - bodies dumped to disk by Claude Code itself | `~/.local/share/aho/api-bodies/` (via `OTEL_LOG_RAW_API_BODIES=file:...`); events link via `body_ref` pointer |
+| Traces | Deferred to W2 | (none - `OTEL_TRACES_EXPORTER` unset) |
 
 ### Turn reconstruction
 
@@ -1228,13 +1228,13 @@ a single-operator research harness. The Mercor-exportable reference pack
 ships three profiles so external consumers can pick based on data
 sensitivity:
 
-- **minimal** — `OTEL_LOG_USER_PROMPTS=0`, `OTEL_LOG_TOOL_CONTENT=0`,
+- **minimal** - `OTEL_LOG_USER_PROMPTS=0`, `OTEL_LOG_TOOL_CONTENT=0`,
   `OTEL_LOG_TOOL_DETAILS=0`, no `OTEL_LOG_RAW_API_BODIES`. Captures
   metadata-only metrics and event envelopes.
-- **standard** — `OTEL_LOG_USER_PROMPTS=1`, `OTEL_LOG_TOOL_DETAILS=1`,
+- **standard** - `OTEL_LOG_USER_PROMPTS=1`, `OTEL_LOG_TOOL_DETAILS=1`,
   `OTEL_LOG_TOOL_CONTENT=0`. Enough to reconstruct turns and diagnose
   failures without tool-body payloads.
-- **full** — aho's posture. All flags on, raw bodies to disk. Maximum
+- **full** - aho's posture. All flags on, raw bodies to disk. Maximum
   diagnostic surface; assumes operator controls the capture path.
 
 The profile selection belongs to the deploying operator, not the harness.
@@ -1242,7 +1242,7 @@ The profile selection belongs to the deploying operator, not the harness.
 ### Cardinality posture
 
 `OTEL_METRICS_INCLUDE_SESSION_ID=false` bounds time-series cardinality on
-metrics — per-session IDs would explode the metric label space. Session ID
+metrics - per-session IDs would explode the metric label space. Session ID
 remains available on **events**, where cardinality bounds do not apply
 (events are individual records, not aggregated time series).
 
@@ -1252,7 +1252,7 @@ remains available on **events**, where cardinality bounds do not apply
    layer before OTEL export**, regardless of any flag. Per documentation,
    the native redaction is unconditional. If aho-internal thinking capture
    becomes a requirement, the correct path is an upstream feature request
-   to Anthropic — not a downstream engineering workaround.
+   to Anthropic - not a downstream engineering workaround.
 
 2. **Semantic turn structure as a first-class `claude_code.interaction`
    root span exists only in traces (W2).** In W0, turn reconstruction is
@@ -1278,7 +1278,7 @@ remains available on **events**, where cardinality bounds do not apply
   settings.json expansion behavior is empirically verified.
 
 - **Collector OTLP alias deprecation warning.** `"otlp" alias is deprecated;
-  use "otlp_grpc" instead` — otelcol-contrib v0.149.0 notice on the
+  use "otlp_grpc" instead` - otelcol-contrib v0.149.0 notice on the
   `otlp/jaeger` exporter. Cosmetic until removal; rename to `otlp_grpc/jaeger`
   at next collector config touch.
 
@@ -1293,7 +1293,7 @@ remains available on **events**, where cardinality bounds do not apply
 - Full per-turn reconstruction is possible from logs alone (W0) and
   improves with traces (W2+).
 
-- Cost attribution per workstream becomes Pillar 8 ground truth —
+- Cost attribution per workstream becomes Pillar 8 ground truth -
   estimates from parsed event logs are retired.
 
 - Pillar 11 becomes monitored: `claude_code.commit.count` and
@@ -1302,7 +1302,7 @@ remains available on **events**, where cardinality bounds do not apply
 
 ### Negative
 
-- File growth under `~/.local/share/aho/api-bodies/` — addressed by the
+- File growth under `~/.local/share/aho/api-bodies/` - addressed by the
   rotation carry-forward.
 
 - Sensitive prompt / tool-content payloads live on local disk. Access
@@ -1345,26 +1345,26 @@ remains available on **events**, where cardinality bounds do not apply
 
 ## References
 
-- `.claude/settings.json` — managed env block in effect.
-- `~/.config/aho/otel-collector.yaml` — collector pipelines (traces +
+- `.claude/settings.json` - managed env block in effect.
+- `~/.config/aho/otel-collector.yaml` - collector pipelines (traces +
   metrics + logs).
-- `artifacts/iterations/0.2.16/otel-scaffold-notes.md` — W0 implementation
+- `artifacts/iterations/0.2.16/otel-scaffold-notes.md` - W0 implementation
   notes, substrate state, pipeline verification evidence, deviations from
   plan phrasing, carry-to-retro items.
-- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` — iteration scope.
-- 0.2.15 W3 ADR 0002 (Nemoclaw decision) — prior aho-internal ADR that
+- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` - iteration scope.
+- 0.2.15 W3 ADR 0002 (Nemoclaw decision) - prior aho-internal ADR that
   established the numbering convention.
 ```
 
 ### ADR: 0004-iteration-close-confirm-redesign.md (0004-iteration-close-confirm-redesign.md)
 ```markdown
-# ADR 0004 — `aho iteration close --confirm` Redesign
+# ADR 0004 - `aho iteration close --confirm` Redesign
 
 **Status:** Proposed (design only; implementation deferred to 0.2.16 W4)
 **Date:** 2026-04-21
-**Iteration of record:** aho 0.2.16 W0 (bonus — scope-appropriate design, implementation out of W0 budget)
+**Iteration of record:** aho 0.2.16 W0 (bonus - scope-appropriate design, implementation out of W0 budget)
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — iteration-close state machine.
+**Context surface:** aho project-internal - iteration-close state machine.
 
 ---
 
@@ -1372,7 +1372,7 @@ remains available on **events**, where cardinality bounds do not apply
 
 Two problems surfaced during the 0.2.15 close-out work and are carried into this ADR:
 
-### Problem 1 — `aho iteration close --confirm` is a stub
+### Problem 1 - `aho iteration close --confirm` is a stub
 
 `src/aho/cli.py:212-237` implements `aho iteration close`. The `--confirm` branch:
 
@@ -1398,15 +1398,15 @@ What it does **not** do:
 - Emit any event (no `iteration_close`, no `iteration_complete`).
 - Advance anything.
 
-Consequence: Kyle observed `--confirm` printing `"Iteration 0.2.14 confirmed and closed"` even when the checkpoint was at 0.2.16. The `.aho.json` `current_iteration` field was stale (value `"0.2.14"`, `last_completed_iteration` `"0.2.13"`) — two iterations behind reality. The command printed that stale value and exited zero.
+Consequence: Kyle observed `--confirm` printing `"Iteration 0.2.14 confirmed and closed"` even when the checkpoint was at 0.2.16. The `.aho.json` `current_iteration` field was stale (value `"0.2.14"`, `last_completed_iteration` `"0.2.13"`) - two iterations behind reality. The command printed that stale value and exited zero.
 
-The non-`--confirm` branch (`cli.py:238-326`) is the real close committer — tests, bundle, report, postflight, `.aho.json` update via `update_last_completed`, checkpoint `status=closed`, `last_event=close_complete`. This is inverted semantics: the presence of `--confirm` should commit; its absence should dry-run.
+The non-`--confirm` branch (`cli.py:238-326`) is the real close committer - tests, bundle, report, postflight, `.aho.json` update via `update_last_completed`, checkpoint `status=closed`, `last_event=close_complete`. This is inverted semantics: the presence of `--confirm` should commit; its absence should dry-run.
 
-### Problem 2 — Sign-off sheet has Kyle ticking checkboxes manually
+### Problem 2 - Sign-off sheet has Kyle ticking checkboxes manually
 
 The 0.2.15 sign-off sheet (`artifacts/iterations/0.2.15/sign-off-0.2.15.md`) lists per-workstream acceptance gates with `[ ]` / `[x]` checkboxes. Kyle manually edits the file to tick each box after verifying evidence. The close-confirm stub above checks those box states (via `validate_signoff`) before printing.
 
-Pillar 1 (delegate everything delegable): the orchestrator's minutes are spent on judgment, scope, and novelty. Mechanical verification — "do all workstreams have a `pass`/`pass_with_findings` audit archive" — is not judgment work. It is mechanical work that should run locally without human checkbox-ticking.
+Pillar 1 (delegate everything delegable): the orchestrator's minutes are spent on judgment, scope, and novelty. Mechanical verification - "do all workstreams have a `pass`/`pass_with_findings` audit archive" - is not judgment work. It is mechanical work that should run locally without human checkbox-ticking.
 
 ### The count-drift recurrence
 
@@ -1417,8 +1417,8 @@ As a downstream consequence of the manual sign-off pattern, count drift creeps i
 Redesign `aho iteration close --confirm` so that:
 
 1. `--confirm` is the **committing** verb and the only path that mutates state. Without `--confirm`, the command dry-runs.
-2. The commit path reads acceptance and audit archives **directly** — no sign-off checkbox evaluation.
-3. Pass/fail is asserted on the archives — every workstream must have an `acceptance/W{N}.json` with `audit_status` that points to an `audit/W{N}.json` (or `audit/W{N}-v{k}.json` if re-audited) with `audit_result ∈ {pass, pass_with_findings}`.
+2. The commit path reads acceptance and audit archives **directly** - no sign-off checkbox evaluation.
+3. Pass/fail is asserted on the archives - every workstream must have an `acceptance/W{N}.json` with `audit_status` that points to an `audit/W{N}.json` (or `audit/W{N}-v{k}.json` if re-audited) with `audit_result ∈ {pass, pass_with_findings}`.
 4. `.aho.json.current_iteration` and `last_completed_iteration` are advanced atomically with the checkpoint transition. The `last_completed_iteration` bump currently done by `update_last_completed(iteration)` is retained; `current_iteration` is advanced to the next iteration value as part of the same write (or explicitly deferred to a separate `aho iteration advance` command if preferred).
 5. An `iteration_complete` event is emitted to the event log, carrying a manifest of the workstreams, their acceptance/audit references, and the count of carry-forwards (sourced from `carry-forwards-{iteration}.md` parse). The event payload is the canonical count; sign-off / bundle / carry-forwards file footers all **read** from this event instead of maintaining parallel copies.
 6. Pillar 11 is preserved: Kyle triggers the close command. No agent runs it autonomously. The close command's authority is delegated *validation*, not *commission*.
@@ -1452,16 +1452,16 @@ The sign-off sheet becomes a **record**, not a gate. It continues to exist (bund
 
 ### Count-of-carry-forwards single source of truth
 
-Parse `carry-forwards-{iteration}.md` at close-commit time, count the bullet items, write the number into the `iteration_complete` event payload. Bundle generator, sign-off renderer, and any downstream consumer **read** this number from the event — never recount independently. AF001 goes away because only one count exists.
+Parse `carry-forwards-{iteration}.md` at close-commit time, count the bullet items, write the number into the `iteration_complete` event payload. Bundle generator, sign-off renderer, and any downstream consumer **read** this number from the event - never recount independently. AF001 goes away because only one count exists.
 
 ## Consequences
 
 ### Positive
 
-- No more "prints 0.2.14 regardless of state" — the `--confirm` path actually commits state.
-- No more manual checkbox-ticking — Pillar 1 violation removed.
+- No more "prints 0.2.14 regardless of state" - the `--confirm` path actually commits state.
+- No more manual checkbox-ticking - Pillar 1 violation removed.
 - Count drift (AF001) goes away structurally.
-- `.aho.json` / checkpoint drift detected on close — if `current_iteration` disagrees with the checkpoint at close time, the command halts and surfaces the discrepancy rather than silently advancing.
+- `.aho.json` / checkpoint drift detected on close - if `current_iteration` disagrees with the checkpoint at close time, the command halts and surfaces the discrepancy rather than silently advancing.
 
 ### Negative
 
@@ -1496,26 +1496,26 @@ Parse `carry-forwards-{iteration}.md` at close-commit time, count the bullet ite
 
 ## Filing
 
-This ADR stands on its own. The corresponding finding in the W0 acceptance archive is **F-W0-002** — `aho iteration close --confirm` is a stub. The finding records the symptom and points here for the redesign; the redesign lands in W4 per this plan.
+This ADR stands on its own. The corresponding finding in the W0 acceptance archive is **F-W0-002** - `aho iteration close --confirm` is a stub. The finding records the symptom and points here for the redesign; the redesign lands in W4 per this plan.
 
 ## References
 
-- `src/aho/cli.py:212-326` — current close implementation.
-- `.aho.json` — `current_iteration` field (observed stale at 0.2.14 during W0).
-- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` — current manual-checkbox format.
-- `artifacts/iterations/0.2.15/audit/W4.json` — AF001 count-drift finding that motivated §Count-of-carry-forwards single source of truth.
-- GEMINI.md §Specific audit focus → count-coherence check — the compensating control that the single-source-of-truth design removes the need for.
+- `src/aho/cli.py:212-326` - current close implementation.
+- `.aho.json` - `current_iteration` field (observed stale at 0.2.14 during W0).
+- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` - current manual-checkbox format.
+- `artifacts/iterations/0.2.15/audit/W4.json` - AF001 count-drift finding that motivated §Count-of-carry-forwards single source of truth.
+- GEMINI.md §Specific audit focus → count-coherence check - the compensating control that the single-source-of-truth design removes the need for.
 ```
 
 ### ADR: 0005-gemini-otel-asymmetry.md (0005-gemini-otel-asymmetry.md)
 ```markdown
-# ADR 0005 — Gemini CLI OTEL Asymmetry
+# ADR 0005 - Gemini CLI OTEL Asymmetry
 
 **Status:** Accepted
 **Date:** 2026-04-23
 **Iteration of record:** aho 0.2.16 W2
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — distributed tracing posture;
+**Context surface:** aho project-internal - distributed tracing posture;
 downstream reference pack consumers inherit the same asymmetry and should
 plan around it.
 
@@ -1549,7 +1549,7 @@ Specifically:
 
 Harness-watcher wraps Gemini invocations today and records wall-clock
 start/end into `aho_event_log.jsonl` with `source_agent=gemini-cli`. That
-captures *when* the audit ran and *how long* — nothing about model-level
+captures *when* the audit ran and *how long* - nothing about model-level
 cost, token count, or trace context.
 
 ## Decision
@@ -1565,7 +1565,7 @@ Specifically:
 
 2. **Harness-watcher event wrappers capture wall-clock only.** Existing
    `gemini_invocation_start` / `gemini_invocation_end` events in
-   `aho_event_log.jsonl` stay as they are — a durable record of audit
+   `aho_event_log.jsonl` stay as they are - a durable record of audit
    latency, nothing more. No synthetic span emission to OTLP on Gemini's
    behalf.
 
@@ -1617,7 +1617,7 @@ flags the gap.
   reasoning about whether a measurement is real or synthetic.
 
 - The moment Google ships OTEL support in Gemini CLI (or an equivalent
-  cost/event surface), this ADR is superseded by a new decision — not by
+  cost/event surface), this ADR is superseded by a new decision - not by
   retrofit of the harness output to match real data.
 
 - The reference pack documents the boundary: `drafter=claude-code`
@@ -1637,7 +1637,7 @@ flags the gap.
 - **No audit latency visible in Jaeger.** An operator debugging "why did
   this workstream take 2 hours" will see Claude drafting for 45 minutes
   and a gap. They'll need to consult `aho_event_log.jsonl` to see the
-  audit block. Annoying but explicit — no phantom span to mislead.
+  audit block. Annoying but explicit - no phantom span to mislead.
 
 - **No `TRACEPARENT` continuity across the audit boundary.** If a future
   workstream involves an audit-triggered re-draft (drafter → audit →
@@ -1687,7 +1687,7 @@ Capture Gemini's end-of-session cost summary (which it does print) and
 parse it into an OTEL event.
 
 **Rejected for now.** Parsing a CLI's human-readable summary is a fragile
-contract — Google can change the format at any time without breaking
+contract - Google can change the format at any time without breaking
 their users and we'd silently lose the metric. If this becomes necessary,
 the correct design is a pinned wrapper script with explicit format
 version pinning and a failure mode when the format changes. Out of scope
@@ -1696,7 +1696,7 @@ becomes load-bearing.
 
 ### File a vendor feature request
 
-Not an alternative to *this* ADR — it's complementary. An upstream
+Not an alternative to *this* ADR - it's complementary. An upstream
 feature request to Google for OTEL support in Gemini CLI is the right
 escalation path. That action is operator-driven and not captured in code;
 this ADR does not block on it.
@@ -1721,29 +1721,29 @@ This ADR is superseded when any of the following become true:
 
 ## References
 
-- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` §W2.7 — ADR task.
-- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` §W2 — design-level
+- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` §W2.7 - ADR task.
+- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` §W2 - design-level
   context for the asymmetry.
-- `artifacts/iterations/0.2.16/trace-integration-notes.md` — W2
+- `artifacts/iterations/0.2.16/trace-integration-notes.md` - W2
   implementation notes referencing this ADR from the Gemini asymmetry
   section.
 - `artifacts/adrs/0003-otel-scaffolding-posture.md` §Known limitations
-  (3) — W0 anticipated this ADR and pointed forward to W2.
-- `.claude/settings.json` — drafter managed-settings env block (no
+  (3) - W0 anticipated this ADR and pointed forward to W2.
+- `.claude/settings.json` - drafter managed-settings env block (no
   parallel exists for auditor).
-- `~/.local/share/aho/events/aho_event_log.jsonl` — durable audit wall-
+- `~/.local/share/aho/events/aho_event_log.jsonl` - durable audit wall-
   clock record; current ground truth for Gemini invocation timing.
 ```
 
 ### ADR: 0006-iteration-deliverable-discipline.md (0006-iteration-deliverable-discipline.md)
 ```markdown
-# ADR 0006 — Iteration Deliverable + Graduation Criterion Discipline
+# ADR 0006 - Iteration Deliverable + Graduation Criterion Discipline
 
 **Status:** Accepted
 **Date:** 2026-05-01
 **Iteration of record:** aho 0.2.16 W4
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — iteration-plan-doc structure;
+**Context surface:** aho project-internal - iteration-plan-doc structure;
 binds every iteration plan from 0.2.17 onward.
 
 ---
@@ -1755,8 +1755,8 @@ aho's workstreams have crisp deliverables. Every workstream plan section in
 every workstream closes against an `acceptance/W{N}.json` archive whose shape
 is harness-enforced.
 
-aho's iterations have not. What an iteration delivers — what *exists* at
-iteration close that did not exist at iteration start — has been emergent
+aho's iterations have not. What an iteration delivers - what *exists* at
+iteration close that did not exist at iteration start - has been emergent
 across 0.2.x. The iteration's *theme* is captured in design and plan docs,
 but the binary "did this iteration ship" question has no canonical artifact;
 sign-off ticks five workstreams and the close command rolls forward.
@@ -1766,7 +1766,7 @@ Two consequences of that gap surfaced in 0.2.x:
 1. **Iteration scope drifted mid-flight without a structural alarm.** 0.2.16
    originally scoped W4 to a Mercor export pack assembly. Mid-iteration the
    scope was deprioritized to ADRs and plan-outline work. That is a
-   reasonable scope decision — but at the workstream level a comparable
+   reasonable scope decision - but at the workstream level a comparable
    mid-flight scope change (a new file added to an in-progress workstream's
    deliverable list, say) would land as a hard meta-rule violation. At the
    iteration level there is no equivalent guardrail because there is no
@@ -1779,7 +1779,7 @@ Two consequences of that gap surfaced in 0.2.x:
    a single-paragraph contract.
 
 This conflicts with aho's own governance thesis. The harness-as-IQ pillar
-(2) states that the harness *is* the contract — and aho has applied that
+(2) states that the harness *is* the contract - and aho has applied that
 discipline to workstream contracts but not to iteration contracts. Pillar 6
 (transitions are durable) and pillar 8 (efficacy is measured in cost delta)
 both presuppose that "did this iteration succeed" is a question with a
@@ -1802,12 +1802,12 @@ workstream summary table:
 A single plain-language paragraph stating what exists at iteration close
 that did not exist at iteration start. The paragraph is written at
 plan-doc creation time (before W0), names concrete artifacts (files,
-commands, dashboards, alert rules — whatever the iteration produces), and
+commands, dashboards, alert rules - whatever the iteration produces), and
 is the canonical answer to "did this iteration ship."
 
 The paragraph is a contract, not an aspiration. Workstream amendments do
 not amend it. The paragraph can only be amended by the same hard meta-rule
-exception that governs workstream-scope amendments — kyle-explicit, halt
+exception that governs workstream-scope amendments - kyle-explicit, halt
 the iteration, surface the change as a first-class scope decision.
 
 ### (2) Graduation criterion
@@ -1826,13 +1826,13 @@ Forms in order of preference:
 
 3. **Manual verification checklist with acceptance evidence.** A numbered
    list of human-verifiable conditions, each with a named evidence artifact
-   that records the verification. Form of last resort — used only when (1)
+   that records the verification. Form of last resort - used only when (1)
    and (2) genuinely do not apply.
 
 The graduation criterion lives at the top of the plan doc immediately
 after the deliverable paragraph. At iteration close, the drafter verifies
 the criterion and records the verification in the retrospective. If the
-criterion fails, the iteration does not close — it stays open until the
+criterion fails, the iteration does not close - it stays open until the
 criterion passes or until the criterion itself is amended (same hard
 meta-rule treatment as above).
 
@@ -1849,14 +1849,14 @@ equivalent), the drafter:
    retrospective under a §Graduation criterion section.
 4. If FAIL: halts close, surfaces to Kyle, does not advance.
 
-Sign-off from Kyle remains Pillar 11 work — the drafter validates, Kyle
+Sign-off from Kyle remains Pillar 11 work - the drafter validates, Kyle
 commits.
 
 ## Rationale
 
 > Workstream scope amendments are a hard meta-rule violation. Iteration
-> scope amendments — i.e., changing the iteration deliverable mid-iteration
-> — are now the same class of violation.
+> scope amendments - i.e., changing the iteration deliverable mid-iteration
+> - are now the same class of violation.
 
 aho's governance signal is consistent across scope levels or it is not
 consistent at all. Workstream scope is fixed at workstream-start; that
@@ -1872,7 +1872,7 @@ answer to "did 0.2.16 ship" is "five workstreams have audit_result ∈
 {pass, pass_with_findings}". That is a workstream-level success aggregation,
 not an iteration-level success assertion. With this ADR, "did 0.2.16
 ship" is "the graduation criterion in `aho-plan-0.2.16.md` evaluates true"
-— a single question with a single answer.
+- a single question with a single answer.
 
 The runnable-test preference for the criterion mirrors the workstream
 acceptance archive's preference for measured evidence over rhetorical
@@ -1895,8 +1895,8 @@ the test.
   trip. Drift becomes detectable at the iteration level.
 - The Adversarial Authorship protocol (renamed in 0.2.17 W0 from
   "Pattern C") now has a corresponding pattern at the iteration
-  level — drafter writes contract → drafter executes → drafter verifies →
-  Kyle signs — paralleling the workstream protocol. Governance signal is
+  level - drafter writes contract → drafter executes → drafter verifies →
+  Kyle signs - paralleling the workstream protocol. Governance signal is
   consistent.
 - 0.3.x and onward inherit a uniform iteration-plan-doc opening shape,
   which makes the iteration-bundle archive shape across phases more
@@ -1915,7 +1915,7 @@ the test.
   signal than for an execution-focused iteration. Acceptable; flagged.
 - Retroactive application is impossible for closed iterations. 0.2.x prior
   iterations stay narratively-described in their own retrospectives. The
-  0.2.16 retrospective applies the discipline retroactively to *itself* —
+  0.2.16 retrospective applies the discipline retroactively to *itself* -
   the deliverable paragraph and graduation criterion are written at
   retrospective time and the criterion is evaluated against repo state.
 
@@ -1932,7 +1932,7 @@ the test.
 
 ## Examples
 
-### Example 1 — 0.2.16 (retroactive)
+### Example 1 - 0.2.16 (retroactive)
 
 **Iteration deliverable (retroactive):**
 
@@ -1946,7 +1946,7 @@ the test.
 > containerization, 0008 dispatcher missing-model) are recorded; the
 > 0.2.17 plan and 0.3 phase plan are seeded.
 
-**Graduation criterion (retroactive — form 2, observable artifact
+**Graduation criterion (retroactive - form 2, observable artifact
 existence + content check):**
 
 ```
@@ -1974,18 +1974,18 @@ existence + content check):**
 The 0.2.16 retrospective evaluates each numbered condition against current
 repo state and records PASS/FAIL.
 
-### Example 2 — 0.2.17 (proposed, drafted in 0.2.16 W4)
+### Example 2 - 0.2.17 (proposed, drafted in 0.2.16 W4)
 
 **Iteration deliverable (proposed):**
 
 > At 0.2.17 close, aho ships as a base-tier signed container image in a
 > registry, pullable and runnable on NZXTcos as a base-tier host.
 > install.fish detects GPU capacity and pulls the appropriate model bundle
-> at install time. The harness runs end-to-end inside the container — `aho`
+> at install time. The harness runs end-to-end inside the container - `aho`
 > CLI works, telemetry pipelines emit, dashboard renders, dispatcher routes
 > correctly per ADR 0008's hybrid-mode dispatch behavior.
 
-**Graduation criterion (proposed — form 1, runnable test):**
+**Graduation criterion (proposed - form 1, runnable test):**
 
 ```
 podman pull <registry>/aho:0.2.17-base \
@@ -1998,7 +1998,7 @@ podman pull <registry>/aho:0.2.17-base \
 
 Exit 0 on a clean working directory on NZXTcos = iteration shipped.
 
-### Example 3 — 0.3.1 (proposed, drafted in 0.2.16 W4)
+### Example 3 - 0.3.1 (proposed, drafted in 0.2.16 W4)
 
 **Iteration deliverable (proposed):**
 
@@ -2008,7 +2008,7 @@ Exit 0 on a clean working directory on NZXTcos = iteration shipped.
 > (base + qwen3.5:9b + GLM-4.6V-Flash-9B), and a paired-Auditor cascade
 > runs end-to-end inside the container with full Jaeger trace.
 
-**Graduation criterion (proposed — form 1, runnable test):**
+**Graduation criterion (proposed - form 1, runnable test):**
 
 ```
 On tsP3:
@@ -2047,8 +2047,8 @@ cascade command; existence-check is folded into the runner's exit code.
 
 - **Phase-level deliverable paragraphs and graduation criteria.** This
   ADR governs iteration plan docs. Phase plans (e.g., the 0.3 phase plan
-  drafted in W4) inherit a similar discipline informally — the 0.3
-  phase plan opens with a phase-deliverable paragraph by analogy — but
+  drafted in W4) inherit a similar discipline informally - the 0.3
+  phase plan opens with a phase-deliverable paragraph by analogy - but
   this ADR does not formally bind phase plans. Candidate for a separate
   ADR if Phase 0 close (whenever 0.x → 1.0 transitions) reveals the
   same emergent-vs-designed gap at the phase level.
@@ -2094,7 +2094,7 @@ content-check assertions is honestly stronger for those iterations.
 
 ### Put the deliverable + criterion in the design doc, not the plan doc
 
-`aho-design-{iter}.md` already opens with §Charter — argued the
+`aho-design-{iter}.md` already opens with §Charter - argued the
 deliverable and criterion belong there.
 
 **Rejected.** §Charter is narrative-scoping; the deliverable paragraph
@@ -2119,39 +2119,39 @@ This ADR is superseded or amended when any of the following become true:
 
 3. **An iteration is forced open (graduation criterion fails) for more
    than two close-attempts.** Signal that the criterion shape is wrong
-   for that iteration class — either it is encoding aspirations the
+   for that iteration class - either it is encoding aspirations the
    iteration cannot deliver, or the iteration is genuinely failing.
    Either way, the experience generates a refinement.
 
 ## References
 
-- `artifacts/harness/base.md` §The Eleven Pillars — pillar 2 (harness is
+- `artifacts/harness/base.md` §The Eleven Pillars - pillar 2 (harness is
   the contract), pillar 6 (transitions are durable), pillar 8 (efficacy
   in cost delta).
-- `artifacts/harness/adversarial-authorship-protocol.md` — workstream-level
+- `artifacts/harness/adversarial-authorship-protocol.md` - workstream-level
   analog of the discipline this ADR lifts to iteration. (Renamed from
   `pattern-c-protocol.md` in 0.2.17 W0.)
-- `artifacts/adrs/0004-iteration-close-confirm-redesign.md` — the close
+- `artifacts/adrs/0004-iteration-close-confirm-redesign.md` - the close
   command redesign that a future ADR may couple with this one.
-- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` — example of an
+- `artifacts/iterations/0.2.16/aho-plan-0.2.16.md` - example of an
   iteration plan doc *without* the discipline (pre-this-ADR shape).
-- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` — first iteration
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` - first iteration
   plan doc *with* the discipline (post-this-ADR shape; drafted in
   0.2.16 W4 alongside this ADR).
 - `artifacts/iterations/0.2.16/retrospective-0.2.16.md` §Graduation
-  criterion — first retroactive application; drafted in 0.2.16 W4
+  criterion - first retroactive application; drafted in 0.2.16 W4
   alongside this ADR.
 ```
 
 ### ADR: 0007-containerization-architecture.md (0007-containerization-architecture.md)
 ```markdown
-# ADR 0007 — Containerization Architecture
+# ADR 0007 - Containerization Architecture
 
 **Status:** Accepted
 **Date:** 2026-05-01
 **Iteration of record:** aho 0.2.16 W4
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — packaging and deployment shape
+**Context surface:** aho project-internal - packaging and deployment shape
 for 0.2.17 onward. Inherits in 0.3.x for partial- and full-tier deployment;
 informs Phase B/C architectural decisions.
 
@@ -2164,12 +2164,12 @@ per-machine drift management. The harness, the pipeline, the dispatcher,
 the dashboard, and the model bundle live as a colocated single-machine
 deployment. Migrating to a second machine (tsP3, A8cos, Luke's box)
 requires re-running install.fish and absorbing whatever drift the target
-machine introduces — Arch family detection, VRAM tier, GPU vendor
+machine introduces - Arch family detection, VRAM tier, GPU vendor
 peculiarities, ollama service hygiene, Python virtualenv shape.
 
 The future-state architecture (per Kyle's strategic direction) places
-aho's harness at the edge — engineer workstations, both local and remote
-— with the heavy model compute at the center, on a Tier 2 cloud serving
+aho's harness at the edge - engineer workstations, both local and remote
+- with the heavy model compute at the center, on a Tier 2 cloud serving
 plane. Bridging today's single-machine local loop to tomorrow's
 distributed deployment requires a portable artifact that:
 
@@ -2178,7 +2178,7 @@ distributed deployment requires a portable artifact that:
    install.fish drift.
 2. Adapts its model bundle to the host's GPU capacity at install time,
    rather than baking a single fat-or-skinny bundle into the image.
-3. Preserves Pillar 11's secrets posture — secrets stay on the host,
+3. Preserves Pillar 11's secrets posture - secrets stay on the host,
    never in the image, never in the registry.
 4. Targets a runtime that fits the CachyOS-posture local hosts and a
    Linux-on-cloud-VM serving target without runtime-hopping.
@@ -2201,7 +2201,7 @@ set into a host-volume that the container mounts:
 
 | Tier | VRAM threshold | Model bundle | Target hosts |
 |---|---|---|---|
-| **base** | < 12 GB or no nvidia-smi | nemotron-mini:4b (~2.7 GB), nomic-embed-text (~274 MB), llama3.2:3b (~2.0 GB) — total ~5 GB | iGPU hosts, NZXTcos (8 GB), integrated-only laptops |
+| **base** | < 12 GB or no nvidia-smi | nemotron-mini:4b (~2.7 GB), nomic-embed-text (~274 MB), llama3.2:3b (~2.0 GB) - total ~5 GB | iGPU hosts, NZXTcos (8 GB), integrated-only laptops |
 | **partial** | 12 GB to < 32 GB | base bundle + qwen3.5:9b (~6.6 GB), haervwe/GLM-4.6V-Flash-9B (~8.0 GB) and any future ≤16-GB-fit models | tsP3 (16 GB), mid-tier discrete-GPU workstations |
 | **full** | ≥ 32 GB | partial bundle + Nemotron Super (~42 GB) and future large-model additions | A100/H100-class cloud GPU pools (GCP intranet target) |
 
@@ -2215,8 +2215,8 @@ container-side. The image's disk footprint stays bounded.
 NZXTcos (8 GB VRAM) is **base tier**. The threshold ≤ 12 GB places it
 unambiguously in base; no caveat applies.
 
-The historical NZXTcos behavior — running partial-tier models on the
-bare host with `num_gpu` partial-CPU-offload workarounds — is
+The historical NZXTcos behavior - running partial-tier models on the
+bare host with `num_gpu` partial-CPU-offload workarounds - is
 **out of scope for containerized deployment**. Those workarounds remain
 available to the operator on the bare host (the legacy install.fish
 path through 0.2.x close), but they are not what the container ships
@@ -2277,7 +2277,7 @@ host-mounted path via bind-mount:
 
 The container's user inside the image has read permission on the
 mounted secret paths and no write permission. The age identity stays
-per-machine — moving aho to a new host requires the operator to mint a
+per-machine - moving aho to a new host requires the operator to mint a
 new age identity on that host and re-encrypt the bulk bundle for it.
 
 The image itself ships with **zero** secrets baked in. The image is
@@ -2321,19 +2321,19 @@ Starting preference: **Podman**. Rationale:
 - OCI-compliant. Images built by podman pull and run under docker; no
   vendor lock.
 
-Docker is the **fallback** runtime — supported when Podman is not
+Docker is the **fallback** runtime - supported when Podman is not
 available on a host (e.g., a future macOS or Windows engineer
 workstation where Docker Desktop is the path of least resistance), but
 not the recommended runtime for the Linux fleet that the 0.2.17 / 0.3
 deployment targets.
 
-The decision is **soft-deferred** — 0.2.17 W0 confirms Podman runs
+The decision is **soft-deferred** - 0.2.17 W0 confirms Podman runs
 cleanly on NZXTcos before locking the choice. If Podman surfaces a
 blocker in W0 (e.g., GPU passthrough fragility under rootless mode),
 the fallback to Docker is a one-decision pivot with no architectural
 cascade.
 
-### Runtime choice — 0.2.17 W0 confirmation (Podman engaged)
+### Runtime choice - 0.2.17 W0 confirmation (Podman engaged)
 
 **Outcome: Podman, as originally preferred.** 0.2.17 W0 Bucket 2
 confirmed Podman runs cleanly on NZXTcos. `podman 5.8.2` installed
@@ -2351,7 +2351,7 @@ architectural cascade if a future host fails Podman.
 Podman via pacman failed at the network layer with corrupted CachyOS
 package databases. Investigation surfaced the root cause as Tailscale
 split-DNS hijacking specific CachyOS mirror domains and returning
-incorrect IPs — not aho-introduced, not CachyOS-mirror-broken.
+incorrect IPs - not aho-introduced, not CachyOS-mirror-broken.
 Resolved by Kyle's host-side split-DNS fix excluding the mirror
 domains from Tailscale's resolver. The detour included a tentative
 flip to Docker (already installed on NZXTcos at 29.4.1) under the
@@ -2371,7 +2371,7 @@ dispatcher (W3), and telemetry wiring (W4) proceed under Podman as
 originally scoped. `host.containers.internal` (Podman default) is
 the hybrid-mode network address per ADR 0008.
 
-### GPU passthrough deferral — 0.2.17 W0
+### GPU passthrough deferral - 0.2.17 W0
 
 **B2.3 (rootless Podman + NVIDIA Container Runtime end-to-end probe)
 is deferred across the post-W0 reboot boundary.** The deferral is
@@ -2394,7 +2394,7 @@ explicit and bounded; it is not a verification skip.
 
 **Why deferral is acceptable for 0.2.17 W0/W3:**
 ADR 0008's hybrid-mode dispatcher routes partial-tier dispatches
-to `host.containers.internal:11434` — the host's *native* Ollama,
+to `host.containers.internal:11434` - the host's *native* Ollama,
 which uses the host GPU directly with no container in the path.
 0.2.17 development on NZXTcos exercises that hybrid path; the
 container does not need GPU passthrough for any 0.2.17 deliverable.
@@ -2403,7 +2403,7 @@ Container GPU passthrough becomes load-bearing for production-tier
 all dispatches and must reach the host GPU through NVIDIA Container
 Runtime.
 
-**Post-reboot validation — one-command exercise:**
+**Post-reboot validation - one-command exercise:**
 
 ```fish
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml \
@@ -2418,7 +2418,7 @@ passes. If either fails post-reboot, the failure is real (not
 transient pre-reboot mismatch) and gets a follow-up surface.
 
 **This validation is a 0.3.x deliverable gate, not a 0.2.17 gate.**
-It can land at any point between this W0 close and 0.3.x W0 — the
+It can land at any point between this W0 close and 0.3.x W0 - the
 W0 acceptance archive notes the deferral with this command as the
 post-reboot verification step. Until validated, the
 production-tier-on-base-host scenario is unsupported (ADR 0007's
@@ -2426,7 +2426,7 @@ production-tier-on-base-host scenario is unsupported (ADR 0007's
 container is base-tier-only; production tier is cloud or partial
 host).
 
-A reasonable layer order — non-normative, included so 0.2.17 W1's
+A reasonable layer order - non-normative, included so 0.2.17 W1's
 Dockerfile work has a starting point:
 
 1. base layer: minimal Debian/Ubuntu/CachyOS base + Python runtime +
@@ -2444,22 +2444,22 @@ Models are **not** a layer. Models are host-volume content.
 
 ### Council roles
 
-**Added in 0.2.17 W5** — consolidating four iterations (W0/W1/W2/W3/W4)
+**Added in 0.2.17 W5** - consolidating four iterations (W0/W1/W2/W3/W4)
 of in-container council deployment work into the ADR that owns the
 container's runtime shape. The chat-side architecture artifact
 `aho-base-container-architecture.md` §Seat assignments / §Auditor
 contract / §Anti-rubber-stamp hardening sections are the source; this
 subsection makes those decisions repo-resident and authoritative.
 
-Five seats compose the council. Two are external (drafter, executor —
+Five seats compose the council. Two are external (drafter, executor -
 both run on operator's chat / CLI surfaces, not in the container).
 Three are in-container (auditor, triage, retrieval). Each seat has a
 named locus, a fixed model at base tier, and a contract surface.
 
 | Seat | Locus | Base-tier model | Contract surface |
 |---|---|---|---|
-| **Drafter** | external (Claude web) | n/a — chat-resident | Plans, plan-doc authoring, drafter arbitration of audit findings, gap-net for what auditor cannot catch by design. Persistent across chat sessions. |
-| **Executor** | external (Claude Code or Gemini CLI) | n/a — workstation-resident | Per-iteration; codified per iteration in plan doc. Implements deliverables; emits acceptance archive; emits OTEL telemetry; never invokes git. |
+| **Drafter** | external (Claude web) | n/a - chat-resident | Plans, plan-doc authoring, drafter arbitration of audit findings, gap-net for what auditor cannot catch by design. Persistent across chat sessions. |
+| **Executor** | external (Claude Code or Gemini CLI) | n/a - workstation-resident | Per-iteration; codified per iteration in plan doc. Implements deliverables; emits acceptance archive; emits OTEL telemetry; never invokes git. |
 | **Auditor** | in-container | `llama3.2:3b` | Structural spot-check: claim-vs-artifact verification, contract-shape validation, invariant resolution. Confidence floor 0.85 structurally enforced. Disposition shape `clean | halt | surface_to_drafter` with `clean` unreachable below threshold. Deterministic post-hoc filter on RAG-aware findings (`aho.council.audit_finding_filter`, W4 D1) suppresses fake-ID-on-registered-anchor failure mode. Partial-tier and full-tier auditor models deferred to 0.3.x roadmap. |
 | **Triage** | in-container | `nemotron-mini:4b` | Classification only. Raise-on-malformed (no `categories[-1]` fallback per G083). |
 | **Retrieval** | in-container | `nomic-embed-text` + ChromaDB host-mounted volume | Recency-weighted query; sole embedding source; feeds context to triage and audit. |
@@ -2468,7 +2468,7 @@ named locus, a fixed model at base tier, and a contract surface.
 
 `executor_model_family ≠ auditor_model_family` enforced as an OTEL
 invariant at base tier. The trip-wire fires if executor and auditor
-share a model family — Llama (Meta) vs. Claude/Gemini (Anthropic /
+share a model family - Llama (Meta) vs. Claude/Gemini (Anthropic /
 Google) is the cross-family separation that holds at 0.2.17 base tier.
 The trip-wire surface lives at `src/aho/dashboard/lego/role_collapse_brick.py`
 and reads OTEL resource attributes `aho.role` plus model-family
@@ -2510,7 +2510,7 @@ work; together they form the base-tier anti-rubber-stamp posture:
    inspects each finding for a registered anchor in description AND a
    fake-ID phrase from the canonical set, suppressing only when both
    match. Filter is deterministic and does not bet the architecture on
-   small-model prompt-following — the model can ignore the
+   small-model prompt-following - the model can ignore the
    registered-references rule and the failure mode is still contained.
 
 Confidence-floor lock: the `clean` disposition is structurally
@@ -2536,7 +2536,7 @@ inside `aho.council.audit` disposition resolution.
   `surface_to_drafter`; drafter-arbitrated to `pass_with_findings`):
   sha256 `9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`.
 
-These archives are **sealed** — modifications post-emit forbidden.
+These archives are **sealed** - modifications post-emit forbidden.
 Re-audits create `audit/W{N}-v2.json`, `v3`, etc. per Adversarial
 Authorship convention.
 
@@ -2554,7 +2554,7 @@ Five properties bind the image build:
 2. Secrets read from filesystem paths inside the container; k8s Secrets
    are volume-mounted as files.
 3. Logs to stdout/stderr; OTEL telemetry sinks (host-mounted today) are
-   not in scope here — that is signal export, not log output.
+   not in scope here - that is signal export, not log output.
 4. Graceful SIGTERM handling within 30s default
    terminationGracePeriodSeconds.
 5. HTTP health-check endpoints at `GET /healthz` (liveness, no deps) and
@@ -2611,7 +2611,7 @@ materialized.
   fleet. Onboarding a new host (Luke's box, a new tsP3 partition, a
   cloud VM) reduces to install.fish run + image pull + container run.
 - Per-machine drift compresses to "what tier is the host" plus host
-  secret materials. install.fish becomes lighter — no Python
+  secret materials. install.fish becomes lighter - no Python
   virtualenv setup, no pip install, no CachyOS-vs-Ubuntu branching at
   the harness level.
 - Image versioning becomes a registry concern; local installs pin a
@@ -2622,7 +2622,7 @@ materialized.
   same image with a different tier classification. The architectural
   shape stays one-image-many-tiers; the cloud serving plane is a
   full-tier installation, not a separate artifact.
-- ADR 0008's dispatch hybrid mode has a clean surface to bind to —
+- ADR 0008's dispatch hybrid mode has a clean surface to bind to -
   the env var is read at container start and the dispatcher's
   routing decision flows from it.
 
@@ -2677,21 +2677,21 @@ materialized.
   multiple engineer workstations pulling from a shared registry is
   Phase B work. 0.2.17 / 0.3.1 ship single-operator.
 - **Signed-image policy and SBOM emission.** Cosign signing,
-  SLSA-style provenance attestations, SBOM generation — these become
+  SLSA-style provenance attestations, SBOM generation - these become
   load-bearing when external consumers (Mercor, future customers,
   enterprise audit) require them. Phase B candidate.
 - **Cloud-side registry choice.** GCP Artifact Registry vs. self-hosted
-  Harbor on a GCP VM vs. another option — Phase C work, decided when
+  Harbor on a GCP VM vs. another option - Phase C work, decided when
   serving-plane infrastructure decisions are firmer.
 - **Kubernetes manifests for full-tier cloud deployment.** Single-pod
   vs. multi-pod-with-sidecar-Ollama, ConfigMap shape for tier
   designation, Secret shape for the age identity rotation, Service
-  exposure for the harness-watcher dashboard — all 0.3.x work, not
+  exposure for the harness-watcher dashboard - all 0.3.x work, not
   this ADR's scope.
 - **AMD ROCm and Apple Metal tier detection.** install.fish's tier
   detection in 0.2.17 covers NVIDIA only. Non-NVIDIA hosts default to
   base. ROCm and Metal support, when added, are tier-detection
-  amendments, not architectural changes — folded into a later iteration.
+  amendments, not architectural changes - folded into a later iteration.
 - **Container-internal ollama hot-reload of newly-pulled models.**
   When install.fish pulls a new model post-container-start, the
   running container needs to either restart or trigger an Ollama
@@ -2754,7 +2754,7 @@ Stay with bare-host install.fish, layer a configuration-management
 tool on top for multi-host orchestration.
 
 **Rejected.** Configuration management does not solve the per-host
-drift problem at the harness level — Python virtualenv state,
+drift problem at the harness level - Python virtualenv state,
 Ollama service hygiene, dispatcher cache state all stay per-host
 under any CM tool. Containers absorb that surface into one artifact.
 
@@ -2784,7 +2784,7 @@ following become true:
 
 1. **A second engineer is onboarded to the aho fleet.** Multi-engineer
    image build coordination, registry access semantics, and image
-   version pinning policy all need decisions — those amendments
+   version pinning policy all need decisions - those amendments
    live in a follow-on ADR or a Phase B amendment to this ADR.
 
 2. **External consumers (Mercor, customers) require signed images
@@ -2806,31 +2806,31 @@ following become true:
 
 ## References
 
-- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` — first iteration
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` - first iteration
   to consume this ADR; W0/W1/W2/W3/W4 outline aligns to it.
-- `artifacts/adrs/0008-dispatcher-missing-model.md` — the dispatch-
+- `artifacts/adrs/0008-dispatcher-missing-model.md` - the dispatch-
   side counterpart to this ADR's tier classification; together they
   define what a tier means at runtime.
-- `install.fish` — tier-detection block lives here once 0.2.17 W2
+- `install.fish` - tier-detection block lives here once 0.2.17 W2
   lands.
-- `artifacts/iterations/0.3-phase-plan.md` — phase-level
+- `artifacts/iterations/0.3-phase-plan.md` - phase-level
   consumption; partial- and full-tier deployments inherit this ADR.
-- `artifacts/harness/base.md` §The Eleven Pillars — pillar 11
+- `artifacts/harness/base.md` §The Eleven Pillars - pillar 11
   (human holds the keys / secrets-on-host) is the binding constraint
   on the secrets model.
-- 0.2.15 W0 install.fish work — the bare-host predecessor of the
+- 0.2.15 W0 install.fish work - the bare-host predecessor of the
   containerized install path.
 ```
 
 ### ADR: 0008-dispatcher-missing-model.md (0008-dispatcher-missing-model.md)
 ```markdown
-# ADR 0008 — Dispatcher Behavior on Missing Model Family
+# ADR 0008 - Dispatcher Behavior on Missing Model Family
 
 **Status:** Accepted
 **Date:** 2026-05-01
 **Iteration of record:** aho 0.2.16 W4
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — dispatcher routing semantics
+**Context surface:** aho project-internal - dispatcher routing semantics
 under tiered containerized deployment. Binds 0.2.17 W3 dispatcher work.
 
 ---
@@ -2853,22 +2853,22 @@ moment 0.2.17 ships a base-tier container to NZXTcos: a request for
 The dispatcher needs a defined behavior for this case. Four options
 are on the table:
 
-**Option A — Hard error.**
+**Option A - Hard error.**
 Dispatcher refuses the request and raises `ModelNotAvailableError`
 (new typed exception, G083-compliant). The caller decides how to
 recover.
 
-**Option B — Local fallback.**
+**Option B - Local fallback.**
 Dispatcher routes the request to the nearest-available local model
 (by some defined nearness metric), logs a degradation warning, and
 returns the fallback's output to the caller.
 
-**Option C — Cloud route.**
+**Option C - Cloud route.**
 Dispatcher routes the request to a configured remote endpoint that
 hosts the missing model (a cloud-tier serving plane). The caller is
 unaware that the dispatch went off-host.
 
-**Option D — Hybrid (development affordance).**
+**Option D - Hybrid (development affordance).**
 On the host running aho's container, base-tier dispatches go to the
 container's bundled Ollama. Partial- or full-tier dispatches escape
 the container via the host network and reach the host's *native*
@@ -2882,7 +2882,7 @@ characteristics; they are not freely substitutable.
 A second forcing constraint: 0.2.17 development happens on NZXTcos,
 which is a base-tier *container host* but has historically run
 partial-tier models on the bare host. That bare-host capability does
-not vanish when the container is introduced — the operator still
+not vanish when the container is introduced - the operator still
 wants to do partial-tier development work on NZXTcos. If the
 container can only ever dispatch to base-tier models, partial-tier
 development requires leaving the container, which defeats the
@@ -2892,8 +2892,8 @@ container's value during the iteration that introduces it.
 
 ### Production deployment: Option A (hard error)
 
-In production deployment — i.e., the container is running on a host
-where `AHO_DISPATCH_HYBRID_MODE` is **unset** — the dispatcher
+In production deployment - i.e., the container is running on a host
+where `AHO_DISPATCH_HYBRID_MODE` is **unset** - the dispatcher
 hard-errors on a request for a model family the host's tier bundle
 does not include.
 
@@ -2934,7 +2934,7 @@ docker-host alias for Docker). Specifically:
    off-container hop.
 3. If hybrid mode is set but the host's Ollama also lacks the
    family, the dispatcher hard-errors with `ModelNotAvailableError`
-   the same as production behavior — hybrid mode is not a magic
+   the same as production behavior - hybrid mode is not a magic
    wand, it is a development affordance for operator-configured
    host state.
 
@@ -2943,15 +2943,15 @@ docker-host alias for Docker). Specifically:
 Both behaviors above can be overridden at the dispatch call site
 via an explicit parameter:
 
-- `dispatch(..., on_missing="error")` — production semantics
+- `dispatch(..., on_missing="error")` - production semantics
   regardless of env var.
-- `dispatch(..., on_missing="fallback")` — opt into Option B
-  (local fallback, future work — not implemented in 0.2.17, see
+- `dispatch(..., on_missing="fallback")` - opt into Option B
+  (local fallback, future work - not implemented in 0.2.17, see
   carry-forward below).
-- `dispatch(..., on_missing="cloud")` — opt into Option C (cloud
-  route, future work — not implemented in 0.2.17, see
+- `dispatch(..., on_missing="cloud")` - opt into Option C (cloud
+  route, future work - not implemented in 0.2.17, see
   carry-forward below).
-- `dispatch(..., on_missing="hybrid")` — opt into Option D
+- `dispatch(..., on_missing="hybrid")` - opt into Option D
   regardless of env var (used in tests to assert hybrid-mode
   routing).
 - Default (no parameter): respect `AHO_DISPATCH_HYBRID_MODE` env
@@ -3008,11 +3008,11 @@ carries a new resource attribute `aho.deployment.mode` with values
 in `{development, production}`. The value flows from the tier
 manifest's `deployment_mode` field, which install.fish populates:
 
-- **development** — install.fish was invoked on a developer
+- **development** - install.fish was invoked on a developer
   workstation (interactive shell, hybrid mode permitted, base- or
   partial-tier host). NZXTcos and tsP3 fall in this category for
   0.2.17 / 0.3.x.
-- **production** — install.fish was invoked in a CI/registry-build
+- **production** - install.fish was invoked in a CI/registry-build
   context (non-interactive, `AHO_INSTALL_PRODUCTION=1` set, or run
   from a deployment automation harness). Cloud-tier hosts and any
   host that ships customer-facing workflows fall in this category.
@@ -3026,7 +3026,7 @@ the conjunction
 `aho.dispatch.hybrid=true AND aho.deployment.mode=production`.
 
 install.fish self-detection logic for development vs. production is
-out of this ADR's scope — likely a combination of
+out of this ADR's scope - likely a combination of
 `AHO_INSTALL_PRODUCTION=1` env, TTY check, and an explicit
 `--production` flag. The contract this ADR fixes is the
 **resource-attribute taxonomy** and the **manifest field name**;
@@ -3039,7 +3039,7 @@ Three layers of defense against `AHO_DISPATCH_HYBRID_MODE` leaking
 into a production deployment:
 
 1. **Startup logging.** The container entrypoint logs the value of
-   `AHO_DISPATCH_HYBRID_MODE` at startup — visible in the
+   `AHO_DISPATCH_HYBRID_MODE` at startup - visible in the
    container's stdout and in OTEL events.
 
 2. **Production deployment runbook assertion.** Production deployment
@@ -3058,7 +3058,7 @@ into a production deployment:
 
 A hybrid-mode-enabled container running in production is therefore
 detectable by inspection (layer 1), gated by procedure (layer 2),
-and ready to be alertable (layer 3) — no silent failure path.
+and ready to be alertable (layer 3) - no silent failure path.
 
 ## Rationale
 
@@ -3067,7 +3067,7 @@ and ready to be alertable (layer 3) — no silent failure path.
 
 The hard-error production posture is a Pillar 8 / Pillar 9 alignment.
 A base-tier production host getting a partial-tier dispatch request
-is, in production, a real incident — a workflow has been deployed
+is, in production, a real incident - a workflow has been deployed
 to the wrong host or a workflow is requesting capability the host
 class is not provisioned for. Silently falling back to the
 nearest-available local model substitutes a quietly-wrong answer
@@ -3079,12 +3079,12 @@ risk of substituting a smaller model for a larger one without the
 caller knowing is the same class of risk that the harness
 explicitly rejects in its acceptance discipline. A 4B model
 classifying as a 9B model would breach Pillar 7's
-generation-vs-evaluation separation in subtle ways — for example,
+generation-vs-evaluation separation in subtle ways - for example,
 an Auditor request silently routed to a Producer-class model
 because the Auditor model is missing.
 
 Option C (cloud route) is the right answer in production *eventually*
-— Phase C / 0.3.x — but it requires a cloud serving plane that does
+- Phase C / 0.3.x - but it requires a cloud serving plane that does
 not exist today. Pre-implementing the cloud-route option in 0.2.17
 would require either mocking the cloud endpoint (which adds
 complexity for zero deployment value) or pretending the option
@@ -3113,7 +3113,7 @@ reserved.
 
 ### Positive
 
-- Dispatcher behavior on missing models is *defined* — currently
+- Dispatcher behavior on missing models is *defined* - currently
   the question has no documented answer.
 - Production base-tier deployments fail loudly when asked for
   capability they don't have. Loud failures land in the gotcha
@@ -3122,14 +3122,14 @@ reserved.
   via the hybrid mode, without the iteration's central deliverable
   (the container) being a barrier to routine development.
 - Pillar 7 (generation vs. evaluation separation) is preserved
-  without runtime ambiguity — a missing Auditor model is a hard
+  without runtime ambiguity - a missing Auditor model is a hard
   error, not a quiet swap to a Producer model.
 - Future fallback (Option B) and cloud-route (Option C)
   implementations have a parameter slot pre-reserved; adding them
   is an extension, not a redesign.
 - Tier manifest at `/opt/aho/tier.json` becomes a first-class
   artifact that other parts of the harness (dashboard, alerting,
-  installer self-test) can also consume — single source of truth
+  installer self-test) can also consume - single source of truth
   for "what tier am I."
 
 ### Negative
@@ -3164,7 +3164,7 @@ reserved.
 ### Neutral
 
 - Override parameter (`on_missing=...`) is implemented as a
-  no-op for `fallback` and `cloud` values in 0.2.17 — they raise
+  no-op for `fallback` and `cloud` values in 0.2.17 - they raise
   `NotImplementedError` and are reserved for future ADRs that
   define their behavior. Test coverage asserts the
   `NotImplementedError` to lock the contract.
@@ -3172,7 +3172,7 @@ reserved.
   amend it; the manifest version field is reserved (not added in
   0.2.17, but the dispatcher's manifest-load is forward-compatible
   with an optional `version` key).
-- Hybrid mode does not change Pillar 11 — the dispatcher still
+- Hybrid mode does not change Pillar 11 - the dispatcher still
   does not write secrets, still does not commit, still does not
   push. Hybrid is a routing decision, not a privilege escalation.
 
@@ -3192,7 +3192,7 @@ reserved.
   uniform hard-error.
 - **Dispatcher-side tier upgrade detection.** If install.fish
   pulls a new model post-container-start, the dispatcher
-  re-reads the manifest on SIGHUP — but there is no automatic
+  re-reads the manifest on SIGHUP - but there is no automatic
   notification from install.fish to the container. That
   interaction is a 0.2.17 W3 implementation detail, not an
   architectural decision; this ADR does not pre-decide it.
@@ -3211,7 +3211,7 @@ reserved.
 
 ## Alternatives Considered
 
-### Pure Option A — hard error in all modes
+### Pure Option A - hard error in all modes
 
 Drop the hybrid affordance entirely; dispatcher always
 hard-errors on missing models. Operators developing partial-tier
@@ -3223,7 +3223,7 @@ routine partial-tier work undermines the iteration. Explicit
 hybrid mode with leak mitigation is strictly better than a
 silent context-switch convention.
 
-### Pure Option B — silent local fallback
+### Pure Option B - silent local fallback
 
 Dispatcher routes to nearest-available family with a logged
 warning; never hard-errors.
@@ -3234,7 +3234,7 @@ cascade on a base-tier host and gets a Producer-class model
 back without the warning being visible at the harness level
 ships a broken Pillar 7 result without knowing it.
 
-### Pure Option C — always cloud-route
+### Pure Option C - always cloud-route
 
 Dispatcher always routes to a remote endpoint; local Ollama is
 a build-only optimization.
@@ -3302,36 +3302,36 @@ following become true:
 
 ## References
 
-- `artifacts/adrs/0007-containerization-architecture.md` — tier
+- `artifacts/adrs/0007-containerization-architecture.md` - tier
   classification this ADR's behavior depends on.
-- `artifacts/adrs/0006-iteration-deliverable-discipline.md` — the
+- `artifacts/adrs/0006-iteration-deliverable-discipline.md` - the
   0.2.17 graduation criterion explicitly invokes
   `AHO_DISPATCH_HYBRID_MODE=1` to validate this ADR's hybrid
   branch.
-- `src/aho/pipeline/dispatcher.py` — implementation site for
+- `src/aho/pipeline/dispatcher.py` - implementation site for
   `ModelNotAvailableError`, manifest read, hybrid-mode branch.
   0.2.17 W3 work.
-- `install.fish` — produces `/opt/aho/tier.json` or its host-path
+- `install.fish` - produces `/opt/aho/tier.json` or its host-path
   equivalent. 0.2.17 W2 work.
-- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` §W3 — calls
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` §W3 - calls
   this ADR's behavior as the W3 acceptance.
-- 0.2.15 dispatcher work — `MODEL_FAMILY_CONFIG`, longest-prefix
+- 0.2.15 dispatcher work - `MODEL_FAMILY_CONFIG`, longest-prefix
   family resolution; the manifest's `families` list maps to
   `MODEL_FAMILY_CONFIG` keys.
-- `artifacts/harness/base.md` §The Eleven Pillars — pillar 7
+- `artifacts/harness/base.md` §The Eleven Pillars - pillar 7
   (generation vs. evaluation separation) is the primary
   constraint that motivates the hard-error production posture.
 ```
 
 ### ADR: 0009-secrets-broker-boundary.md (0009-secrets-broker-boundary.md)
 ```markdown
-# ADR 0009 — Secrets Broker Boundary
+# ADR 0009 - Secrets Broker Boundary
 
 **Status:** Accepted
 **Date:** 2026-05-03
 **Iteration of record:** aho 0.2.17 W5 (consolidating 0.2.17 W1 D3 implementation)
 **Decision owner:** Kyle Thompson (signs), Claude web (drafted), Claude Code (executed at W1 D3), llama3.2 + RAG + filter (audits at W5)
-**Context surface:** aho project-internal — credential boundary between
+**Context surface:** aho project-internal - credential boundary between
 container and host under tiered containerized deployment. Binds 0.2.17
 W1 D3, W2 broker test redesign, F-0.2.17-W1-001 subcommand removal,
 F-0.2.17-W1-003 token rotation. Inherits in 0.3.x for partial- and
@@ -3343,9 +3343,9 @@ full-tier deployment.
 
 ADR 0007 establishes that aho ships as a single tier-aware container
 image with secrets stored host-side and bind-mounted into the
-container. ADR 0007 §Secrets model fixes the *what* — secrets do not
+container. ADR 0007 §Secrets model fixes the *what* - secrets do not
 live in the image, in the registry, or in the container's writable
-layer — but does not fix the *how*: the mechanism by which the
+layer - but does not fix the *how*: the mechanism by which the
 container reads those secrets at runtime, the authentication
 boundary between container and host, and the per-engineer onboarding
 shape.
@@ -3368,7 +3368,7 @@ Three forces shape the boundary mechanism:
 3. **Authentication binds to the operating-system boundary, not to a
    credential the container holds.** Any credential the container
    holds for the broker is a credential that lives in image layers
-   or in container runtime config — both Pillar 11 violations.
+   or in container runtime config - both Pillar 11 violations.
    Authentication must instead derive from the host kernel's process
    identity (UID, project label) at the socket layer.
 
@@ -3444,7 +3444,7 @@ broker before invoking `podman run`, mounts the broker socket
 read-only at `/run/host-services/aho-secrets.sock`, and unregisters on
 exit. The wrapper is the canonical surface; raw `podman run`
 invocations bypass the registration step and the SO_PEERCRED check
-fails closed (correct behavior — the container cannot reach secrets
+fails closed (correct behavior - the container cannot reach secrets
 if launched outside the wrapper).
 
 ### Per-engineer onboarding
@@ -3463,8 +3463,8 @@ each engineer's container mounts that engineer's
 that engineer's registered UIDs. There is no shared keystore between
 engineers; there is no broker-to-broker secret exchange.
 
-Cross-engineer secret sharing — when two engineers need access to the
-same upstream credential — is solved out-of-band by the upstream
+Cross-engineer secret sharing - when two engineers need access to the
+same upstream credential - is solved out-of-band by the upstream
 provider (each engineer holds their own copy of the credential under
 their own age identity). aho does not synchronize secrets across
 engineers and does not need to, because the same upstream credential
@@ -3486,26 +3486,26 @@ Modules and shas at W1 D3 close (recorded in W1 acceptance archive
 
 W1 D3 acceptance gates:
 
-- **Gate 1 (round-trip, correct project):** pass — broker returns
+- **Gate 1 (round-trip, correct project):** pass - broker returns
   decrypted value to authorized container, exit 0.
-- **Gate 2 (project mismatch):** pass — broker rejects with
+- **Gate 2 (project mismatch):** pass - broker rejects with
   `AUTH_FAIL: project_mismatch`, exit 4.
-- **Gate 3 (missing key):** pass — broker returns `MISSING`, exit 5.
-- **Gate 4 (unregistered UID, SO_PEERCRED):** pass — broker rejects
+- **Gate 3 (missing key):** pass - broker returns `MISSING`, exit 5.
+- **Gate 4 (unregistered UID, SO_PEERCRED):** pass - broker rejects
   with `AUTH_FAIL: uid_not_registered`, exit 4. Verified via
   `podman run --userns=keep-id` mapping the in-container UID to a
   host-visible subuid (~100999) the broker has not registered.
-- **Gate 5 (broker log inspection):** operator-pending at W1 close —
+- **Gate 5 (broker log inspection):** operator-pending at W1 close -
   broker writes only request shape by design, never the value, but
   only the operator can confirm on the foreground broker terminal.
 
-### F-0.2.17-W1-003 — worked example
+### F-0.2.17-W1-003 - worked example
 
 The W1 plan-doc specified a Gate-1 implementation that printed the
 decrypted value to stdout to verify broker round-trip equivalence
 with direct host-side `get_secret()`. Executing this gate caused the
 agent (Claude Code) to read the bytes of `ahomw:telegram_bot_token`
-via Bash tool stdout — a direct contradiction of CLAUDE.md hard rule
+via Bash tool stdout - a direct contradiction of CLAUDE.md hard rule
 "No reading secrets."
 
 This is the **worked example of why the hash-fingerprint contract
@@ -3515,8 +3515,8 @@ is a Pillar 11 violation by construction, regardless of how
 short-lived the surface is or how careful the agent is about not
 reproducing the value downstream.
 
-The remediation pattern — generalizing from the W2 broker test
-redesign work — is that broker round-trip equivalence is verified
+The remediation pattern - generalizing from the W2 broker test
+redesign work - is that broker round-trip equivalence is verified
 **without** the value crossing the agent boundary. Two designs are
 acceptable:
 
@@ -3564,7 +3564,7 @@ config. Three forces drive the choice:
    bit-identical across engineers; the host-side broker is per-host;
    the registered-UID set is per-broker. Adding an engineer is `aho
    host install` on their workstation. Removing an engineer is
-   stopping their broker — their fernet store and age identity stay
+   stopping their broker - their fernet store and age identity stay
    on their workstation, never replicated.
 
 3. **No SSH agent forward closes the git write surface entirely.**
@@ -3575,8 +3575,8 @@ config. Three forces drive the choice:
    primitive is unreachable, not because the container chooses not
    to use it.
 
-The alternative — a long-lived bearer token in the container,
-authenticated against the broker — would require either baking the
+The alternative - a long-lived bearer token in the container,
+authenticated against the broker - would require either baking the
 token into image layers (Pillar 11 violation) or generating it at
 container start and passing it via env (env-based credential, harder
 to audit, leaks through process inspection on shared hosts). The
@@ -3598,7 +3598,7 @@ unix-socket + SO_PEERCRED design has neither of those surfaces.
   invariant ("no agent writes to git") is mechanically true, not
   policy-true.
 - The broker socket lives in `${XDG_RUNTIME_DIR}` (host-volatile,
-  per-user, mode 0600) — no concerns about world-readable socket
+  per-user, mode 0600) - no concerns about world-readable socket
   paths or socket persistence across reboots.
 - The hash-fingerprint contract (W2 redesign) keeps the
   round-trip-equivalence acceptance gate exercisable by an agent
@@ -3620,7 +3620,7 @@ unix-socket + SO_PEERCRED design has neither of those surfaces.
   used by multiple engineers' aho instances), the upstream provider
   must mint per-engineer credentials or the engineers coordinate
   out-of-band. aho does not solve this and does not need to.
-- The W1 incident (F-0.2.17-W1-003) burned one Telegram bot token —
+- The W1 incident (F-0.2.17-W1-003) burned one Telegram bot token -
   operator-side rotation is the hard gate for closure. Drafter-side
   process gotcha (any acceptance gate surfacing decrypted secrets to
   agent stdout violates Pillar 11) is documented here as
@@ -3745,43 +3745,43 @@ following become true:
 ## References
 
 - `artifacts/adrs/0007-containerization-architecture.md` §Secrets
-  model — the *what* (host-side, never in image); this ADR fixes
+  model - the *what* (host-side, never in image); this ADR fixes
   the *how*.
 - `artifacts/adrs/0007-containerization-architecture.md` §Council
-  roles — describes the in-container model fleet that consumes the
+  roles - describes the in-container model fleet that consumes the
   broker for project secrets when needed.
-- `artifacts/iterations/0.2.17/W1-plan-doc.md` line 63 — the
+- `artifacts/iterations/0.2.17/W1-plan-doc.md` line 63 - the
   plan-doc design defect that surfaced as F-0.2.17-W1-003 (the
   drafter-side gotcha on agent-stdout-surfacing-secret-values).
 - `artifacts/iterations/0.2.17/acceptance/W1.json` (sha256
   `e4d076eec6c1e703635e9befb98bc46c7bf171c7fec3a4c3f64161ec60725a6e`)
-  D3 evidence block — gates 1–4 pass, gate 5 operator-pending at W1
+  D3 evidence block - gates 1–4 pass, gate 5 operator-pending at W1
   close.
 - `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
-  F-0.2.17-W1-003 entry — operator-side token rotation as
+  F-0.2.17-W1-003 entry - operator-side token rotation as
   pre-0.3.x hard gate.
 - `artifacts/harness/base.md` §Pillar 11 ("the human holds the keys")
-  — binding constraint on the boundary.
-- `src/aho/host/secrets_broker.py` — host-side broker implementation
+  - binding constraint on the boundary.
+- `src/aho/host/secrets_broker.py` - host-side broker implementation
   (W1 D3 close sha
   `4cff78274f587e4781663f0755407a4eb8b4a96d839c8a481bdc5273d6171019`).
-- `src/aho/secrets_client.py` — container-side client (W1 D3 close
+- `src/aho/secrets_client.py` - container-side client (W1 D3 close
   sha
   `e9b305f7db831a267fd8a013185ae2549a1b6cc88cdd6b4fe0f5327043f5a04e`).
-- `src/aho/host/run_container.py` — wrapper that registers the
+- `src/aho/host/run_container.py` - wrapper that registers the
   calling UID before invoking `podman run` (W1 D3 close sha
   `036a267f43772f2da2c5995b0d5c233d8af319fca90505ae254b9963b6856bfd`).
 ```
 
 ### ADR: 0010-materiality-measurement.md (0010-materiality-measurement.md)
 ```markdown
-# ADR 0010 — Materiality Measurement Protocol
+# ADR 0010 - Materiality Measurement Protocol
 
 **Status:** Accepted (qualified validation; full validation deferred)
 **Date:** 2026-05-03
 **Iteration of record:** aho 0.2.17 W5 (consolidating 0.2.17 W2/W3/W4 evidence build)
 **Decision owner:** Kyle Thompson (signs), Claude web (drafted), Claude Code (executed at W2/W3/W4), llama3.2 + RAG + filter (audits at W5)
-**Context surface:** aho project-internal — falsifiability protocol for
+**Context surface:** aho project-internal - falsifiability protocol for
 the architecture's "harness-as-IQ" claim. Binds 0.2.17 W2 D12 (counter
 landing), W3 (RAG enrichment partial closure), W4 D1 (deterministic
 post-hoc filter structural closure), 0.3.x materiality validation
@@ -3791,8 +3791,8 @@ runway.
 
 ## Context
 
-The architecture's load-bearing claim — "the harness produces better
-project outcomes than a single-agent executor on the same work" — is
+The architecture's load-bearing claim - "the harness produces better
+project outcomes than a single-agent executor on the same work" - is
 a claim about output quality across iterations. Token-spend reduction
 (an early framing hypothesis) is a *downstream artifact* of better
 outcomes, not the design driver. A harness that costs more tokens but
@@ -3841,7 +3841,7 @@ MeterProvider, with resource attributes `aho.iteration`,
 |---|---|---|---|
 | **caught-by-llama** | `aho.materiality.claim_vs_artifact_mismatches.caught_by_llama` | In-container llama auditor surfaces a claim/artifact mismatch during audit pass. | W2 D12 (real flow inside `aho.council.audit`). |
 | **caught-by-drafter** | `aho.materiality.claim_vs_artifact_mismatches.caught_by_drafter` | Drafter (gap-net) flags a defect that auditor dispositioned `clean` on the prior planning turn. | W2 D12 wires placeholder (`gap_carry_forward_writer`); W3 wires real-flow integration. |
-| **escaped** | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Defect surfaces retrospectively — neither auditor nor drafter caught it during sealing. | W2 D12 placeholder; W3 wires retrospective-fold-in increment path. |
+| **escaped** | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Defect surfaces retrospectively - neither auditor nor drafter caught it during sealing. | W2 D12 placeholder; W3 wires retrospective-fold-in increment path. |
 | **carry-forward resolution rate** | `aho.materiality.carry_forward_resolution_rate` | Carry-forward explicitly closed by reference in a workstream output. | W2 D12 placeholder; W3 wires `carry_forwards_closed` inside acceptance archive emit. |
 
 Counter primitives are created at module-import time in
@@ -3852,7 +3852,7 @@ Each counter exposes a record function (`record_caught_by_llama`,
 `record_carry_forward_resolution`) that the consuming primitives call
 with severity and an extras dict. The OTEL Counter instruments are
 non-functional under `_otel_available=False` (e.g., import failure
-or no MeterProvider) — the record functions fail closed (no-op) so
+or no MeterProvider) - the record functions fail closed (no-op) so
 materiality wiring does not block iteration execution under degraded
 telemetry.
 
@@ -3887,7 +3887,7 @@ data but the threshold is not yet validated. At N ≥ 8:
    flagging.** Carry-forwards opened in workstream W{N} must reach a
    `closed` state in the carry-forwards file within iteration W{N+2}
    at a ≥60% rate. Items that persist beyond 2 iterations without
-   closure are evidence of unbounded flagging — the carry-forward
+   closure are evidence of unbounded flagging - the carry-forward
    register becomes append-only-with-no-resolution and the protocol
    degrades to a logging surface rather than a feedback surface.
 
@@ -3901,7 +3901,7 @@ ADR is amended (or replaced) with the empirical finding.
 contribution to the materiality protocol. Recorded honestly, the
 build is:
 
-#### W2 (baseline) — auditor without enhancement
+#### W2 (baseline) - auditor without enhancement
 
 W2 deployed the in-container llama3.2:3b auditor for the first time
 (D11 self-audit), with counter wiring landing in D12 verification
@@ -3909,7 +3909,7 @@ probe. Self-audit produced a **false positive**: F-0.2.17-W1-003
 flagged as "looks placeholder" despite being sealed-real and
 registered in the carry-forwards file. The counter
 `claim_vs_artifact_mismatches.caught_by_llama` incremented for this
-finding — counted in the bucket, but the increment recorded a defect
+finding - counted in the bucket, but the increment recorded a defect
 the model fabricated, not a defect the artifact contained.
 
 W2 acceptance archive sha256:
@@ -3917,10 +3917,10 @@ W2 acceptance archive sha256:
 
 The materiality protocol was active and recording; the
 auditor-as-deployed at W2 had a known capability gap
-(F-0.2.17-W2-006 — reference-resolution gap; small-model
+(F-0.2.17-W2-006 - reference-resolution gap; small-model
 pattern-matching on ID syntax without registry access).
 
-#### W3 (partial fix) — RAG enrichment
+#### W3 (partial fix) - RAG enrichment
 
 W3 wired `aho.council.audit_ref_lookup` (W3 D2) and
 `aho.council.audit_ref_extract` (W3 D2) into the audit prompt
@@ -3937,7 +3937,7 @@ positives:
   ID).
 - W2 self-audit replay: F-0.2.17-W1-003 false positive
   **persisted** under same prompt rule, same context shape, same
-  model. Small-model prompt-following inconsistency at base tier —
+  model. Small-model prompt-following inconsistency at base tier -
   llama3.2:3b honors the registered-references rule on some prompts
   but not others. Mechanism: the rule is paragraph-form text at
   the end of a large system prompt, and the model selectively
@@ -3950,13 +3950,13 @@ W3 surfaced F-0.2.17-W3-001 (residual prompt-following
 inconsistency); F-0.2.17-W2-006 stays open until W4 closes both via
 structural fix.
 
-#### W4 (structural closure) — deterministic post-hoc filter
+#### W4 (structural closure) - deterministic post-hoc filter
 
-W4 D1 landed `aho.council.audit_finding_filter` — a deterministic
+W4 D1 landed `aho.council.audit_finding_filter` - a deterministic
 post-pass that drops findings whose anchor IDs are listed
 `registered` in the prompt context AND whose description matches the
 fake-ID phrase set ('not real', 'looks placeholder', 'matches naming
-conventions', etc.). Filter is structural — it does not bet the
+conventions', etc.). Filter is structural - it does not bet the
 architecture on small-model prompt-following.
 
 Filter verified against:
@@ -3986,7 +3986,7 @@ mode is still contained because the filter reads the same RAG context
 the prompt section was built from and applies the suppression
 deterministically.
 
-### N=4 caveat — qualified validation, not full validation
+### N=4 caveat - qualified validation, not full validation
 
 The 0.2.17 evidence build spans **four iterations** (W0 / W1 / W2 /
 W3) with the auditor primitive deploying first at W2 and stabilizing
@@ -4002,7 +4002,7 @@ evidence build is **qualified validation, not full validation**:
   RAG replays close structurally at W4.
 
 But the falsifiability threshold (≥30% reduction in escaped, non-zero
-catch buckets, ≥60% resolution rate) is **not yet exercised** — the
+catch buckets, ≥60% resolution rate) is **not yet exercised** - the
 N≥8 window has not closed. 0.3.x continues the evidence build under
 partial-tier auditor deployment. Full validation lands when the
 falsifiability threshold has been exercised against an N≥8 evidence
@@ -4094,7 +4094,7 @@ protocol is designed to surface and reward.
 
 - 0.2.17 evidence is recorded in W2/W3/W4 sealed archives plus this
   ADR; future iterations append. The protocol itself is stable
-  across iterations — counter names, schema, and threshold
+  across iterations - counter names, schema, and threshold
   definition are versioned with this ADR.
 - Migration to a partial-tier auditor (qwen3.5:9b at 0.3.x) does
   not change the counter shape; only the model behind the
@@ -4198,9 +4198,9 @@ following become true:
 ## References
 
 - `artifacts/adrs/0007-containerization-architecture.md` §Council
-  roles — auditor/drafter/triage/retrieval seats; the protocol
+  roles - auditor/drafter/triage/retrieval seats; the protocol
   measures their joint output.
-- `artifacts/adrs/0009-secrets-broker-boundary.md` — boundary
+- `artifacts/adrs/0009-secrets-broker-boundary.md` - boundary
   between container and host; orthogonal to materiality but cited
   for repo-resident architectural completeness.
 - `artifacts/iterations/0.2.17/acceptance/W2.json` (sha256
@@ -4217,18 +4217,18 @@ following become true:
   `9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`)
   llama self-audit verbatim disposition.
 - `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
-  F-0.2.17-W2-006, F-0.2.17-W3-001, F-0.2.17-W3-002 — the auditor
+  F-0.2.17-W2-006, F-0.2.17-W3-001, F-0.2.17-W3-002 - the auditor
   capability-gap evidence chain.
-- `src/aho/materiality.py` — counter primitives (W4-close sha
+- `src/aho/materiality.py` - counter primitives (W4-close sha
   `0ef021e3ee85d5c4390a7d40b19523d874ea84d6bdaeeb56b3f0a31fcac912b8`).
-- `src/aho/materiality_baseline_extract.py` — baseline extraction
+- `src/aho/materiality_baseline_extract.py` - baseline extraction
   (W4-close sha
   `0fecabc9c73de9148478517e03cc402d8145acd33951a33c7bd654bd76722030`).
 - `artifacts/harness/base.md` §Pillar 7 ("generation and evaluation
-  are separate roles") — binding constraint on the catch-locus
+  are separate roles") - binding constraint on the catch-locus
   distinction.
 - `artifacts/harness/base.md` §Pillar 8 ("efficacy is measured in
-  cost delta") — adjacent pillar; cost telemetry is separate from
+  cost delta") - adjacent pillar; cost telemetry is separate from
   materiality but feeds the same dashboard surface.
 ```
 
@@ -4240,13 +4240,13 @@ following become true:
 **Date:** 2026-04-11
 **Iteration of record:** 0.2.5 (W0 capture)
 **Author:** Kyle Thompson
-**Context surface:** aho methodology — the loop the human runs around the harness
+**Context surface:** aho methodology - the loop the human runs around the harness
 
 ---
 
 ## Context
 
-aho documents how agents execute work inside an iteration: pillars, harness contract, gotcha registry, artifact loop, evaluator role split. What aho has not documented is the loop the *human* runs around the harness — the cadence by which Kyle drives iterations from a finished run to the next iteration's W0 contract.
+aho documents how agents execute work inside an iteration: pillars, harness contract, gotcha registry, artifact loop, evaluator role split. What aho has not documented is the loop the *human* runs around the harness - the cadence by which Kyle drives iterations from a finished run to the next iteration's W0 contract.
 
 This cadence emerged organically through iterations 0.1.13 → 0.2.4 and crystallized during the 0.2.3 W1 forensic close-out (where post-run verification surfaced two defects the test suite missed). It is currently undocumented, lives only in Kyle's working memory and chat context, and is at risk of being smoothed away by anyone who finds it clunky without understanding why the clunkiness is load-bearing.
 
@@ -4270,7 +4270,7 @@ Kyle reads the bundle artifacts cold and checks claims against ground truth. Gro
 
 This phase is adversarial by design. The reader's job is to find the gap between what the run report *says* shipped and what *actually* shipped on disk. Past examples (0.2.3 W1, W3) demonstrate this gap is real and recurring even with green test suites.
 
-The forensic pass cannot be performed by the same agent that executed the run. It requires a different vantage point — either a different agent, a different invocation context, or the human directly. This is the split-agent principle (Pillar 7) extended from generation/evaluation to execution/verification.
+The forensic pass cannot be performed by the same agent that executed the run. It requires a different vantage point - either a different agent, a different invocation context, or the human directly. This is the split-agent principle (Pillar 7) extended from generation/evaluation to execution/verification.
 
 ### Phase 3: Scaffolded design and plan with explicit open questions
 
@@ -4297,17 +4297,17 @@ Each phase prevents a specific failure mode the others cannot prevent:
 
 | Phase | Prevents |
 |---|---|
-| 1 — Questions, not answers | Silent assumption-burial inside execution |
-| 2 — Forensic consumption | False-positive run reports (claimed-vs-installed gap) |
-| 3 — 85% scaffolded design | Decision fatigue, drift, rubber-stamping |
-| 4 — W0 contract | Mid-run scope reinterpretation, lost context across sessions |
+| 1 - Questions, not answers | Silent assumption-burial inside execution |
+| 2 - Forensic consumption | False-positive run reports (claimed-vs-installed gap) |
+| 3 - 85% scaffolded design | Decision fatigue, drift, rubber-stamping |
+| 4 - W0 contract | Mid-run scope reinterpretation, lost context across sessions |
 
 Collapsing any two phases into one loses one of these protections:
 
 - Collapsing 1+2: agent grades its own work, no adversarial check
 - Collapsing 2+3: design proceeds from claims rather than verified state
 - Collapsing 3+4: decisions are made without the design context they affect, or decisions drift mid-execution
-- Skipping 2 entirely: the failure mode that produced 0.2.3 W1 — pass on paper, broken on disk
+- Skipping 2 entirely: the failure mode that produced 0.2.3 W1 - pass on paper, broken on disk
 
 The cadence is *deliberately* clunky. Every temptation to smooth it ("let me make a small change mid-run," "let me ask one quick question," "let me skip the bundle review this once") would collapse one of the four phases and reintroduce the failure mode it prevents.
 
@@ -4317,10 +4317,10 @@ The cadence is *deliberately* clunky. Every temptation to smooth it ("let me mak
 
 This ADR does not introduce a new pillar. It documents the human-side companion to several existing pillars:
 
-- **Pillar 6 (transitions are durable)** — extended from agent state transitions to human-agent contract handoffs (Phase 4)
-- **Pillar 7 (generation and evaluation are separate roles)** — extended from agent role splits to execution/verification splits (Phase 2)
-- **Pillar 9 (gotcha registry is the harness's memory)** — fed by Phase 2 forensic findings; aho-G065 (claimed-vs-installed) was born from a Phase 2 pass
-- **Pillar 10 (interrupt-disciplined runs)** — Phase 1's mandatory question section is the structured interrupt point
+- **Pillar 6 (transitions are durable)** - extended from agent state transitions to human-agent contract handoffs (Phase 4)
+- **Pillar 7 (generation and evaluation are separate roles)** - extended from agent role splits to execution/verification splits (Phase 2)
+- **Pillar 9 (gotcha registry is the harness's memory)** - fed by Phase 2 forensic findings; aho-G065 (claimed-vs-installed) was born from a Phase 2 pass
+- **Pillar 10 (interrupt-disciplined runs)** - Phase 1's mandatory question section is the structured interrupt point
 
 ---
 
@@ -4329,15 +4329,15 @@ This ADR does not introduce a new pillar. It documents the human-side companion 
 **Positive:**
 
 - Decision quality is high because each phase does its specific work without contamination from the others
-- The cadence is teachable — a junior engineer can be told "you are in Phase 2, your job is to find the gap between report and disk" and execute it
-- The cadence is transferable across projects — the same loop drives kjtcom iterations and aho iterations identically
+- The cadence is teachable - a junior engineer can be told "you are in Phase 2, your job is to find the gap between report and disk" and execute it
+- The cadence is transferable across projects - the same loop drives kjtcom iterations and aho iterations identically
 - Defects that bypass automated tests (like 0.2.3 W1 and W3) are caught at Phase 2 before they propagate into the next iteration's foundation
 
 **Negative:**
 
 - Iteration latency is higher than a smooth single-pass loop. A four-phase cycle takes more wall clock than "agent finishes and starts the next thing immediately"
 - The cadence depends on a human (Kyle) being present at the boundaries between phases. It does not run unattended
-- Phase 2 forensic skill is non-trivial to teach — it requires adversarial reading discipline that a fresh operator may lack
+- Phase 2 forensic skill is non-trivial to teach - it requires adversarial reading discipline that a fresh operator may lack
 
 **Mitigations:**
 
@@ -4363,23 +4363,23 @@ The dashboard does not replace human Phase 2 review. It accelerates it by making
 
 ## What this ADR does NOT decide
 
-- Whether the cadence applies to Phase 1+ iterations (multi-machine, multi-project) — likely yes but TBD when Phase 1 starts
-- Whether Phase 2 should eventually be performed by a dedicated reviewer agent rather than by Kyle — open question for 0.3.x or later
-- Whether the 85% number should be tightened or relaxed based on iteration size — open for empirical calibration after more iterations
+- Whether the cadence applies to Phase 1+ iterations (multi-machine, multi-project) - likely yes but TBD when Phase 1 starts
+- Whether Phase 2 should eventually be performed by a dedicated reviewer agent rather than by Kyle - open question for 0.3.x or later
+- Whether the 85% number should be tightened or relaxed based on iteration size - open for empirical calibration after more iterations
 
 ---
 
 ## References
 
-- Pillars 6, 7, 9, 10 — `artifacts/harness/base.md`
-- aho-G065 (claimed-vs-installed verification) — `data/gotcha_archive.json`, captured 0.2.5 W10
-- 0.2.3 W1 forensic example — `artifacts/iterations/0.2.3/aho-run-0_2_3-amended.md`
-- ADR-045 (Discovery Iteration Formalization) — refines Phase 4 scope contract semantics by iteration type
-- README "IAO as harness engineering" section — pending rewrite to incorporate this cadence as the human-side loop companion to the harness components
+- Pillars 6, 7, 9, 10 - `artifacts/harness/base.md`
+- aho-G065 (claimed-vs-installed verification) - `data/gotcha_archive.json`, captured 0.2.5 W10
+- 0.2.3 W1 forensic example - `artifacts/iterations/0.2.3/aho-run-0_2_3-amended.md`
+- ADR-045 (Discovery Iteration Formalization) - refines Phase 4 scope contract semantics by iteration type
+- README "IAO as harness engineering" section - pending rewrite to incorporate this cadence as the human-side loop companion to the harness components
 
 ---
 
-*ADR-044 — captured during 0.2.5 W0 from the cadence that emerged across 0.1.13–0.2.4. The cadence existed before this ADR; the ADR makes it transmissible.*
+*ADR-044 - captured during 0.2.5 W0 from the cadence that emerged across 0.1.13–0.2.4. The cadence existed before this ADR; the ADR makes it transmissible.*
 ```
 
 ### ADR: ahomw-ADR-045.md (ahomw-ADR-045.md)
@@ -4390,17 +4390,17 @@ The dashboard does not replace human Phase 2 review. It accelerates it by making
 **Date:** 2026-04-11
 **Iteration of record:** 0.2.9 (W7 capture, 0.2.8 as empirical reference)
 **Author:** Kyle Thompson (decisions), Claude Code (draft)
-**Context surface:** aho methodology — iteration type taxonomy
+**Context surface:** aho methodology - iteration type taxonomy
 
 ---
 
 ## Context
 
-aho iterations vary in shape. Some are remediation (0.2.4: fix the MCP fleet list, add verification harness). Some are feature (0.2.7: dashboard, coverage audit, orchestrator config). Some are discovery — the iteration's primary output is *finding out what's broken* rather than shipping a predetermined scope.
+aho iterations vary in shape. Some are remediation (0.2.4: fix the MCP fleet list, add verification harness). Some are feature (0.2.7: dashboard, coverage audit, orchestrator config). Some are discovery - the iteration's primary output is *finding out what's broken* rather than shipping a predetermined scope.
 
-0.2.8 was the first iteration that ran explicitly as a discovery iteration: 14 workstreams (largest to date), theme "Discovery + exercise," and a scope that could not have been fully specified at W0 because the findings of each workstream informed the next. The design doc listed 7 open questions — more than any prior iteration — and the workstream count grew from 10 planned to 14 shipped because W1 (MCP utilization gap diagnosis) surfaced structural issues that spawned W2.5, W7, and W10 as reactive workstreams.
+0.2.8 was the first iteration that ran explicitly as a discovery iteration: 14 workstreams (largest to date), theme "Discovery + exercise," and a scope that could not have been fully specified at W0 because the findings of each workstream informed the next. The design doc listed 7 open questions - more than any prior iteration - and the workstream count grew from 10 planned to 14 shipped because W1 (MCP utilization gap diagnosis) surfaced structural issues that spawned W2.5, W7, and W10 as reactive workstreams.
 
-This pattern — "the iteration discovers the work as it goes" — is now common enough to formalize. Without formalization, discovery iterations look like scope drift or poor planning. With formalization, they are a recognized iteration type with their own constraints and success criteria.
+This pattern - "the iteration discovers the work as it goes" - is now common enough to formalize. Without formalization, discovery iterations look like scope drift or poor planning. With formalization, they are a recognized iteration type with their own constraints and success criteria.
 
 ---
 
@@ -4413,21 +4413,21 @@ aho recognizes three iteration types. The type is declared in the design doc and
 - **Shape:** narrow, predetermined scope. Every workstream is known at W0.
 - **Success criteria:** all targeted defects fixed, regression tests added.
 - **Scope contract:** immutable. Workstreams do not spawn mid-iteration.
-- **Example:** 0.2.4 — MCP fleet corrected from 12 to 9, registry verification gate added.
+- **Example:** 0.2.4 - MCP fleet corrected from 12 to 9, registry verification gate added.
 
 ### 2. Feature iteration
 
 - **Shape:** broad but predetermined. Workstreams are known at W0; each delivers a planned capability.
 - **Success criteria:** all planned capabilities shipped with tests and documentation.
 - **Scope contract:** immutable. Mid-iteration findings become carry-forwards, not new workstreams.
-- **Example:** 0.2.7 — dashboard, coverage audit, orchestrator config. All planned at W0, all shipped as designed.
+- **Example:** 0.2.7 - dashboard, coverage audit, orchestrator config. All planned at W0, all shipped as designed.
 
 ### 3. Discovery iteration
 
 - **Shape:** broad and adaptive. W0 establishes a direction and initial workstreams. Subsequent workstreams may spawn from findings.
 - **Success criteria:** discoveries documented with reproduction paths, fixes shipped where feasible, carry-forwards captured for what requires a follow-up iteration.
 - **Scope contract:** mutable within the iteration's theme. New workstreams are permitted if they arise from findings within the theme. The theme itself is immutable.
-- **Example:** 0.2.8 — theme "MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis." W1 found the MCP gap; W2.5 wired the servers; W7 built a postflight gate. None of W2.5, W7, or W10 existed in the original plan. All arose from the theme.
+- **Example:** 0.2.8 - theme "MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis." W1 found the MCP gap; W2.5 wired the servers; W7 built a postflight gate. None of W2.5, W7, or W10 existed in the original plan. All arose from the theme.
 
 ### When to use each type
 
@@ -4450,9 +4450,9 @@ Discovery iterations SHOULD use per-workstream review cadence (ADR-044 Phase 2 a
 3. Kyle may amend scope for subsequent workstreams based on findings.
 4. The theme remains fixed; the workstream plan adapts.
 
-Per-workstream review is optional for remediation and feature iterations (where the scope is known and stable) but SHOULD be default for discovery iterations. The cost is higher wall-clock time per iteration. The benefit is that discoveries compound — W1 findings inform W2 scope, which informs W3 scope — and this compounding is lost if all workstreams run unreviewed.
+Per-workstream review is optional for remediation and feature iterations (where the scope is known and stable) but SHOULD be default for discovery iterations. The cost is higher wall-clock time per iteration. The benefit is that discoveries compound - W1 findings inform W2 scope, which informs W3 scope - and this compounding is lost if all workstreams run unreviewed.
 
-0.2.8 ran per-workstream review and inserted one reactive workstream (W2.5, MCP wiring) that did not exist in the original plan. Several planned workstreams (W7, W10, W11) also produced first-run catches, but these were planned workstreams with unexpected findings — not scope insertions. 0.2.9 continued per-workstream review for all 9 workstreams as a hybrid iteration (W0–W7 feature-shaped, W8–W9 discovery-shaped due to P3 clone's unknown failure modes). Kyle chose this deliberately: per-workstream review is the more conservative default, and the hybrid shape made it load-bearing.
+0.2.8 ran per-workstream review and inserted one reactive workstream (W2.5, MCP wiring) that did not exist in the original plan. Several planned workstreams (W7, W10, W11) also produced first-run catches, but these were planned workstreams with unexpected findings - not scope insertions. 0.2.9 continued per-workstream review for all 9 workstreams as a hybrid iteration (W0–W7 feature-shaped, W8–W9 discovery-shaped due to P3 clone's unknown failure modes). Kyle chose this deliberately: per-workstream review is the more conservative default, and the hybrid shape made it load-bearing.
 
 ---
 
@@ -4473,13 +4473,13 @@ ADR-045 does not modify ADR-044. It refines the scope contract semantics within 
 
 - Discovery iterations no longer look like planning failures. They are a recognized pattern with explicit rules.
 - The mutable-scope rule is bounded by the immutable-theme constraint, preventing true scope drift.
-- Per-workstream review makes discovery iterations legible in real time — Kyle sees findings as they emerge, not only at close.
+- Per-workstream review makes discovery iterations legible in real time - Kyle sees findings as they emerge, not only at close.
 - The taxonomy is teachable: a new collaborator can be told "this is a discovery iteration, workstreams may spawn from findings, the theme is fixed" and operate correctly.
 
 **Negative:**
 
 - Discovery iterations are slower than feature iterations at the same workstream count because of per-workstream review overhead.
-- The three-type taxonomy may be insufficient. Hybrid iterations (partly remediation, partly feature) are not explicitly addressed — they should use whichever type's scope contract is more conservative.
+- The three-type taxonomy may be insufficient. Hybrid iterations (partly remediation, partly feature) are not explicitly addressed - they should use whichever type's scope contract is more conservative.
 - Declaring the wrong type at W0 (e.g., calling a discovery a feature) produces either artificial carry-forwards (findings that should have been workstreams) or scope drift (reactive workstreams in a supposedly immutable plan).
 
 **Mitigations:**
@@ -4491,16 +4491,16 @@ ADR-045 does not modify ADR-044. It refines the scope contract semantics within 
 
 ## References
 
-- ADR-044: Four-Phase Question-Driven Iteration Cadence — `artifacts/adrs/ahomw-ADR-044.md`
-- 0.2.4 (remediation example) — `artifacts/iterations/0.2.4/`
-- 0.2.7 (feature example) — `artifacts/iterations/0.2.7/`
-- 0.2.8 (discovery example, 14 workstreams) — `artifacts/iterations/0.2.8/`
-- 0.2.9 (hybrid example: feature W0–W7 + discovery W8–W9) — `artifacts/iterations/0.2.9/`
-- Pillars 6, 10 — `artifacts/harness/base.md`
+- ADR-044: Four-Phase Question-Driven Iteration Cadence - `artifacts/adrs/ahomw-ADR-044.md`
+- 0.2.4 (remediation example) - `artifacts/iterations/0.2.4/`
+- 0.2.7 (feature example) - `artifacts/iterations/0.2.7/`
+- 0.2.8 (discovery example, 14 workstreams) - `artifacts/iterations/0.2.8/`
+- 0.2.9 (hybrid example: feature W0–W7 + discovery W8–W9) - `artifacts/iterations/0.2.9/`
+- Pillars 6, 10 - `artifacts/harness/base.md`
 
 ---
 
-*ADR-045 — drafted during 0.2.9 W7 from the empirical record of 0.2.8 (first explicit discovery iteration). The three-type taxonomy existed in Kyle's working memory; this ADR makes it transmissible.*
+*ADR-045 - drafted during 0.2.9 W7 from the empirical record of 0.2.8 (first explicit discovery iteration). The three-type taxonomy existed in Kyle's working memory; this ADR makes it transmissible.*
 ```
 
 ## §7. README
@@ -4511,9 +4511,9 @@ ADR-045 does not modify ADR-044. It refines the scope contract semantics within 
 
 ## Origin
 
-TachTech builds data and SIEM migration pipelines for customers — moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
+TachTech builds data and SIEM migration pipelines for customers - moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
 
-Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects — using the same multi-modal models — produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline — the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture — was doing the work. The pipeline was useful, but the harness was load-bearing.
+Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects - using the same multi-modal models - produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline - the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture - was doing the work. The pipeline was useful, but the harness was load-bearing.
 
 aho is the extraction of that harness from pipeline-specific contexts into general-purpose governed agentic engineering infrastructure. The thesis: richer harnesses produce smarter behavior from the same models. Same Claude, same Gemini, materially different output, because the scaffolding around them is structured rather than vibes-based.
 
@@ -4526,15 +4526,15 @@ aho is governance infrastructure for LLM-driven engineering. The four properties
 - **Monitored invariants enforced as policy.** Pillar 11 (no agent git operations) is the prototype. Future invariants extend the same pattern. Policy as gate, not dashboard.
 - **Sealed acceptance and audit archives, immutable event log.** The artifacts are the record. They cannot be retroactively edited. Disputes resolve by reading the archive, not by re-asking the agent.
 
-The combination — and the compliance-shaped framing — is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
+The combination - and the compliance-shaped framing - is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
-## Why aho — cost and token utilization
+## Why aho - cost and token utilization
 
 Token cost matters. Claude and Gemini API spend at scale is the dominant operating cost of LLM-driven engineering, and single-agent execution wastes it in characteristic ways:
 
-- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model — fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints — turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
+- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model - fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints - turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
 - **No model-cost gradient.** Single-agent execution sends every decision to the same expensive model. Routing decisions, classification, triage, substantive reasoning, and architectural decisions all priced identically. aho's council pattern routes triage and classification to small local models (Nemotron-class), substantive work to mid-tier (Qwen, GLM), premium dispatches to Claude or Gemini. The cost gradient is visible per-workstream.
-- **Re-execution waste from undetected drift.** Single-agent failure modes — hallucinated state, stale assumptions, lost context, mid-task looping — are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
+- **Re-execution waste from undetected drift.** Single-agent failure modes - hallucinated state, stale assumptions, lost context, mid-task looping - are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
 - **Scope creep priced as features.** Single-agent execution under "do this large complex thing" expands scope as it works. aho's no-mid-flight-scope-amendment rule keeps tokens on the requested scope, not on the agent's interpretation of what it should also fix.
 
 These are mechanism claims, not benchmark claims. The mechanisms compound across iterations.
@@ -4557,29 +4557,29 @@ aho's operating principles. Numbered, named, and binding.
 
 Each pillar is enforced by tooling, registry entries, or both. Pillar violations are findings; repeated violations are gotcha registry entries with mitigations.
 
-## Architecture — current shape
+## Architecture - current shape
 
 aho today runs as a single-machine local loop. One human, one workstation, one project at a time.
 
 Components on the workstation:
 
-- **aho harness** — Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
-- **ollama** — local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
-- **OTEL collector** — custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
-- **aho-dashboard** — claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
-- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** — daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
-- **age + fernet secret store** — age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
+- **aho harness** - Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
+- **ollama** - local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
+- **OTEL collector** - custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
+- **aho-dashboard** - claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
+- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** - daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
+- **age + fernet secret store** - age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
 
 State on disk:
 
-- **`.aho-checkpoint.json`** — Pattern C state machine, single source of truth for iteration progression.
-- **`artifacts/iterations/{version}/`** — sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
-- **`artifacts/adrs/`** — versioned architectural decision records, enumerated from disk.
-- **`~/.local/share/aho/events/aho_event_log.jsonl`** — immutable append-only event ledger.
+- **`.aho-checkpoint.json`** - Pattern C state machine, single source of truth for iteration progression.
+- **`artifacts/iterations/{version}/`** - sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
+- **`artifacts/adrs/`** - versioned architectural decision records, enumerated from disk.
+- **`~/.local/share/aho/events/aho_event_log.jsonl`** - immutable append-only event ledger.
 
 Distribution today is fish-shell-driven install scripts. This is a known limitation; see Target shape.
 
-## Architecture — target shape
+## Architecture - target shape
 
 aho deployment scales across three tiers. The harness lives at the edge with each engineer; the heavy compute lives centrally; the truth layer is managed storage.
 
@@ -4587,12 +4587,12 @@ aho deployment scales across three tiers. The harness lives at the edge with eac
 
 Runs locally on every aho user's machine. Distributed as signed container images.
 
-- **aho-harness** — Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
-- **ollama-edge** — minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
-- **otel-collector-edge** — local OTEL collector, ships to central observability tier.
-- **aho-dashboard-local** — claw3d for this engineer's iterations. Optional; org dashboard exists separately.
-- **aho-harness-watcher** — daemon monitoring local harness state, emitting events.
-- **engineer-local secret store** — age identity for this engineer, fernet-encrypted local secret bundle.
+- **aho-harness** - Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
+- **ollama-edge** - minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
+- **otel-collector-edge** - local OTEL collector, ships to central observability tier.
+- **aho-dashboard-local** - claw3d for this engineer's iterations. Optional; org dashboard exists separately.
+- **aho-harness-watcher** - daemon monitoring local harness state, emitting events.
+- **engineer-local secret store** - age identity for this engineer, fernet-encrypted local secret bundle.
 
 The engineer container is a workstation tool, not a Kubernetes pod. Stateful per iteration, identity-bound to the engineer, not fungible.
 
@@ -4600,29 +4600,29 @@ The engineer container is a workstation tool, not a Kubernetes pod. Stateful per
 
 Runs centrally; engineer workstations consume via HTTPS. Pod-based, horizontally scaled with HPA, GPU-aware where applicable.
 
-- **inference-gateway** — the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
-- **vllm-{qwen, glm, nemotron, ...}** — high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
-- **api-proxy-{anthropic, google, openai}** — egress with per-tenant key vaulting, rate limiting, retry handling.
-- **audit-dispatcher** — stateless service handing drafter outputs to the auditor agent.
-- **embedding-service** — nomic-embed-text or equivalent containerized for retrieval at scale.
-- **batch-worker-pool** — Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
-- **registry-api** — Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
-- **archive-api** — GCS-fronted API for sealed acceptance and audit archive reads and writes.
-- **aho-dashboard-org** — team-level org-wide view, separate deployment from engineer-local dashboards.
-- **otel-collector-central** — DaemonSet ingestion tier.
+- **inference-gateway** - the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
+- **vllm-{qwen, glm, nemotron, ...}** - high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
+- **api-proxy-{anthropic, google, openai}** - egress with per-tenant key vaulting, rate limiting, retry handling.
+- **audit-dispatcher** - stateless service handing drafter outputs to the auditor agent.
+- **embedding-service** - nomic-embed-text or equivalent containerized for retrieval at scale.
+- **batch-worker-pool** - Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
+- **registry-api** - Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
+- **archive-api** - GCS-fronted API for sealed acceptance and audit archive reads and writes.
+- **aho-dashboard-org** - team-level org-wide view, separate deployment from engineer-local dashboards.
+- **otel-collector-central** - DaemonSet ingestion tier.
 
 ### Tier 3: managed storage and state services
 
 Not pods. The truth layer.
 
-- **Firestore** — checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
-- **GCS** — sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
-- **Cloud Trace (or Tempo)** — OTEL trace storage.
-- **Cloud Monitoring (or Mimir)** — OTEL metric storage.
-- **Cloud Logging (or Loki)** — OTEL log storage.
-- **Secret Manager (or Vault)** — per-engineer and per-tenant identity vaulting.
-- **Pub/Sub** — event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
-- **Workload Identity** — engineer-container to GCP authentication.
+- **Firestore** - checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
+- **GCS** - sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
+- **Cloud Trace (or Tempo)** - OTEL trace storage.
+- **Cloud Monitoring (or Mimir)** - OTEL metric storage.
+- **Cloud Logging (or Loki)** - OTEL log storage.
+- **Secret Manager (or Vault)** - per-engineer and per-tenant identity vaulting.
+- **Pub/Sub** - event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
+- **Workload Identity** - engineer-container to GCP authentication.
 
 ### Why this shape
 
@@ -4632,7 +4632,7 @@ Three independent scaling axes:
 - **Engineer count and deployment count** scales by deployment multiplication: more engineers means more workstation containers, each producing load on Tier 2 services. Engineer-side does not pod-scale.
 - **Storage and archive volume** scales via Tier 3 service capacity, independent of pod count.
 
-Putting the harness or registries in pods would couple these axes and break the independence. The boundary — harness and registries at the edge or behind APIs, model compute in pods, truth in managed services — preserves it.
+Putting the harness or registries in pods would couple these axes and break the independence. The boundary - harness and registries at the edge or behind APIs, model compute in pods, truth in managed services - preserves it.
 
 ## Components in detail
 
@@ -4644,21 +4644,21 @@ The harness is the contract between human, drafter agent, and auditor agent. It 
 
 Three registries form the harness's memory:
 
-- **Gotcha registry** — indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
-- **Script registry** — sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
-- **ADR index** — architectural decision records numbered sequentially from disk enumeration, never fabricated.
+- **Gotcha registry** - indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
+- **Script registry** - sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
+- **ADR index** - architectural decision records numbered sequentially from disk enumeration, never fabricated.
 
 In current shape, registries are version-controlled files in the repo. In target shape, registries are Firestore-backed APIs with Pub/Sub fan-out for change notification.
 
 ### The dispatcher and router
 
-The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing — typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
+The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing - typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
 
 In current shape, dispatcher routes to local Ollama. In target shape, dispatcher routes through the inference-gateway, which bridges to local Ollama for edge work, vLLM pods for substantive council dispatches, or API proxies for premium dispatches.
 
 ### Pattern C state machine
 
-Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 — the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
+Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 - the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
 
 ### OTEL telemetry and TRACEPARENT propagation
 
@@ -4677,7 +4677,7 @@ Drafter is typically Claude Code; auditor is typically Gemini CLI. They run in s
 aho deployment scales in phases:
 
 - **Phase A (current):** single-machine local loop. Working, refined through 0.2.x iterations.
-- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only — no central cloud yet. The data-gathering phase.
+- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only - no central cloud yet. The data-gathering phase.
 - **Phase C:** cloud coordination layer informed by Phase B telemetry. Endpoints for registry sync, harness contribution, shared event log, and central observability backend. Specific shape determined by what Phase B telemetry reveals.
 - **Phase D:** customer-facing deployment. Multi-tenant. Compliance-shaped.
 
@@ -4787,29 +4787,29 @@ License to be determined before v0.6.0 release.
 ```markdown
 # aho changelog
 
-## [0.2.14] — 2026-04-13
+## [0.2.14] - 2026-04-13
 
 **Theme:** Council wiring verification + cascade smoke test (Pattern C modified, claude-code drafter, gemini-cli auditor)
 
 - In progress. 3 workstreams planned (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
 
-## [0.2.13] — 2026-04-12
+## [0.2.13] - 2026-04-12
 
-**Theme:** Dispatch-layer repair — parser honesty, model-quality gate, Pattern C trial (claude-code drafter, gemini-cli auditor)
+**Theme:** Dispatch-layer repair - parser honesty, model-quality gate, Pattern C trial (claude-code drafter, gemini-cli auditor)
 
 - First iteration under Pattern C: Claude Code as primary drafter, Gemini CLI as auditor, Kyle as signer. Two-agent coordination with per-workstream audit gates.
 - W1 GLM parser fix: `GLMParseError(Exception)` replaces hardcoded `{score: 8, recommendation: ship}` fallback. `_strip_markdown_fences()` handles ```json, bare ```, partial-wrap, whitespace. 3 new tests.
 - W2 Nemotron classifier fix: `NemotronParseError(Exception)` and `NemotronConnectionError(Exception)` replace blanket `except Exception` and `categories[-1]` fallback returns. Specific `requests.ConnectionError`, `requests.HTTPError`, `requests.Timeout` handlers. 3 new tests.
-- W2.5 model-quality gate (hard gate, rescope trigger): GLM-4.6V-Flash-9B at Q4_K_M — 4/5 inputs timed out at 180s, 1/5 returned wrong JSON schema at 105s. Nemotron-mini:4b — 8/10 inputs returned "feature" regardless of content. Parsers are honest; models cannot produce usable signal through honest parsers.
+- W2.5 model-quality gate (hard gate, rescope trigger): GLM-4.6V-Flash-9B at Q4_K_M - 4/5 inputs timed out at 180s, 1/5 returned wrong JSON schema at 105s. Nemotron-mini:4b - 8/10 inputs returned "feature" regardless of content. Parsers are honest; models cannot produce usable signal through honest parsers.
 - Rescope at W2.5 (Path A): W3-W9 skipped. Fixing exception handlers around non-functional models produces correct error handling of useless responses. Carry-forwards to 0.2.14 for model viability assessment.
 - Pattern C protocol documented: state machine (`in_progress → pending_audit → audit_complete → workstream_complete`), emitter table, halt conditions.
 - 5 new gotchas from 0.2.12 close (G078-G083): schema v3 drift, baseline backstop, age-encrypt interaction, celebratory framing ban, exception-handler-returns-positive-value.
 - Baseline stable at 13 known failures, 0 new across all 4 delivered workstreams.
 - 4 workstreams delivered (W0, W1, W2, W2.5), 7 skipped per rescope, 1 close (W10).
 
-## [0.2.12] — 2026-04-12
+## [0.2.12] - 2026-04-12
 
-**Theme:** Council activation — discovery, visibility, design, measurement (gemini-cli primary executor)
+**Theme:** Council activation - discovery, visibility, design, measurement (gemini-cli primary executor)
 
 - Primary executor shift: gemini-cli takes the lead for all 20 workstreams (Pillar 1/8 focus)
 - Council inventory: structured audit of Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, and MCP fleet (W1-W5)
@@ -4822,13 +4822,13 @@ License to be determined before v0.6.0 release.
 - Tech-legacy-audit: audit of shims, unused modules, and stale harness
 - 20 workstreams, per-workstream review ON
 
-## [0.2.11] — 2026-04-12
+## [0.2.11] - 2026-04-12
 
-**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams — executor-bias recognized mid-iteration, G077)
+**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams - executor-bias recognized mid-iteration, G077)
 
 - AcceptanceCheck primitive: executable assertions replace prose acceptance claims (W1-W2)
 - Workstream events schema v2 (acceptance_results) + v3 (agents_involved, token_count, harness_contributions, ad_hoc_forensics_minutes)
-- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present — all resolved
+- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present - all resolved
 - Gate verbosity: run_quality and structural_gates emit per-check CheckResult detail
 - 0.2.9 residual debt closed: readme_current timezone, bundle_quality §22, manifest_current self-ref exclusion
 - Event log relocated to ~/.local/share/aho/events/ with 100MB rotation (keep 3); 14 downstream path updates
@@ -4839,7 +4839,7 @@ License to be determined before v0.6.0 release.
 - Rescoped at W9: persona 3 → 0.2.13, AUR + tech debt → 0.2.14, council activation → 0.2.12
 - 9 workstreams executed (W0-W8 + W9 close), 64 new tests, per-workstream review ON throughout
 
-## [0.2.10] — 2026-04-12
+## [0.2.10] - 2026-04-12
 
 **Theme:** Install surface implementation + CLI unification + observability deployment
 
@@ -4861,7 +4861,7 @@ License to be determined before v0.6.0 release.
 - AUR install path deferred to 0.2.11 (CachyOS mirror PGP issue + Jaeger-bin AUR rename)
 - 227 tests (maintained from 0.2.9), 17 workstreams, W3/W5/W9/W10 re-executed after drift verification
 
-## [0.2.9] — 2026-04-11
+## [0.2.9] - 2026-04-11
 
 **Theme:** Remote operability plumbing + persona 3 discovery + install surface architecture
 
@@ -4869,25 +4869,25 @@ License to be determined before v0.6.0 release.
 - `.mcp.json` gitignored (machine-specific generated artifact)
 - Bootstrap npm list corrected from stale 11-package to current 8-package (9th is dart SDK-bundled)
 - Portability audit: 3 hardcoded paths fixed (smoke script, mcp-wiring.md, global-deployment.md), zero hardcodes remain in executable code
-- `src/aho/workstream_events.py` — `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
+- `src/aho/workstream_events.py` - `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
 - CLI: `aho iteration workstream {start,complete}` subcommands
 - Telegram `/ws` command family: `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`
 - Auto-push subscriber: tails event log, sends Telegram notification on `workstream_complete`
-- `src/aho/workstream_gate.py` — `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
-- `artifacts/harness/secrets-architecture.md` — three-layer model (age + keyring + fernet), junior-dev-readable
-- ADR-045: Discovery iteration formalization — three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
-- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed — structural gap documented
-- `artifacts/iterations/0.2.9/install-surface-architecture.md` — three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
+- `src/aho/workstream_gate.py` - `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
+- `artifacts/harness/secrets-architecture.md` - three-layer model (age + keyring + fernet), junior-dev-readable
+- ADR-045: Discovery iteration formalization - three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
+- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed - structural gap documented
+- `artifacts/iterations/0.2.9/install-surface-architecture.md` - three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
 - Updated roadmap: 0.2.10 install surface → 0.2.11 persona 3 validation → 0.2.12 persona 2 → 0.2.13 P3 clone graduation
 - 227 tests (up from 182), 10 workstreams (W8.5 inserted per ADR-045 discovery pattern)
 
-## [0.2.8] — 2026-04-11
+## [0.2.8] - 2026-04-11
 
-**Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
+**Theme:** Discovery + exercise - MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
 
 - MCP-first mandate: CLAUDE.md + GEMINI.md gain MUST-strength MCP Toolchain section, [INSTALLED-NOT-WIRED] tag convention
 - Project `.mcp.json` wires 9 MCP servers as Claude Code tool connections (8 npm + 1 SDK-bundled dart)
-- `bin/aho-mcp smoke` — 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
+- `bin/aho-mcp smoke` - 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
 - Dashboard MCP verifier: aggregator reads smoke results, 85 ok / 0 missing / 0 unknown (zero unknowns for first time)
 - components.yaml reconciled: 4 dead entries removed, flutter-mcp replaced with dart mcp-server, server-everything added. 88 → 85 components
 - `mcp_sources_aligned` postflight gate: diffs components.yaml against bin/aho-mcp, caught server-everything gap on first run
@@ -4899,59 +4899,59 @@ License to be determined before v0.6.0 release.
 - Telegram inbound bridge: getUpdates polling, /status /iteration /last + free-text→openclaw, verified live on phone
 - 182 tests (up from 158), 14 workstreams (largest iteration), MCP fleet smoke 9/9 pass
 
-## [0.2.7] — 2026-04-11
+## [0.2.7] - 2026-04-11
 
-**Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config
+**Theme:** Visibility + carry-forward closeout - dashboard, coverage audit, orchestrator config
 
-- `src/aho/dashboard/` — new Python module: aggregator + HTTP server for localhost dashboard
+- `src/aho/dashboard/` - new Python module: aggregator + HTTP server for localhost dashboard
 - `bin/aho-dashboard` rewritten to serve `/api/state` (aggregated JSON) and `/` (Flutter app)
 - `/api/state` endpoint aggregates system, component, daemon, trace, MCP, and model state with 2s cache
-- Flutter Web dashboard at `web/claw3d/` — 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
+- Flutter Web dashboard at `web/claw3d/` - 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
 - Trident palette (#0D9488 shaft, #161B22 background, #4ADE80 accent), monospace typography, 5s polling
-- `components-coverage.md` — 88 components audited, all mapped to install.fish steps, zero gaps
-- `~/.config/aho/orchestrator.json` — engine (reserved), search provider, openclaw/nemoclaw model config
-- `bin/aho-secrets-init --add-brave-token` — interactive prompt, fernet-encrypted storage
+- `components-coverage.md` - 88 components audited, all mapped to install.fish steps, zero gaps
+- `~/.config/aho/orchestrator.json` - engine (reserved), search provider, openclaw/nemoclaw model config
+- `bin/aho-secrets-init --add-brave-token` - interactive prompt, fernet-encrypted storage
 - openclaw and nemoclaw read model defaults from orchestrator.json, fallback to hardcoded
-- `set_attrs_from_dict()` helper in logger.py — recursive OTEL span attribute flattening (aho-G064 final fix)
+- `set_attrs_from_dict()` helper in logger.py - recursive OTEL span attribute flattening (aho-G064 final fix)
 - 158 tests passing (up from 143)
 
-## [0.2.6] — 2026-04-11
+## [0.2.6] - 2026-04-11
 
-**Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor
+**Theme:** install.fish live-fire hardening - pacman, secrets, telegram doctor
 
-- Removed ollama from `pacman-packages.txt` — installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
+- Removed ollama from `pacman-packages.txt` - installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
 - `bin/aho-pacman`: added `_pkg_present` fallback that checks `command -q` for upstream-installed packages
 - `bin/aho-secrets-init`: rewritten to check fernet secrets store + telegram daemon instead of bogus `.age` file scaffold
 - `aho doctor preflight`: telegram check now shows `@aho_run_bot` via cached `getMe` API response
 - Telegram daemon writes bot identity to `~/.local/state/aho/telegram_bot.json` on startup
 - install.fish completes all 9 steps clean on NZXTcos, second run fully idempotent
 
-## [0.2.5] — 2026-04-11
+## [0.2.5] - 2026-04-11
 
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
 
 - `install.fish` rewritten as thin 9-step orchestrator with resume support via `install.state`
 - 6 new bin wrappers: `aho-pacman`, `aho-aur`, `aho-models`, `aho-secrets-init`, `aho-systemd`, `aho-python`
 - 3 declarative lists: `pacman-packages.txt` (15 packages), `aur-packages.txt` (empty), `model-fleet.txt` (4 models)
-- `bin/aho-install` renamed to `bin/aho-bootstrap` — install.fish is now the top-level entry point
+- `bin/aho-install` renamed to `bin/aho-bootstrap` - install.fish is now the top-level entry point
 - `bin/aho-secrets-init`: age keygen + keyring bootstrap + telegram scaffold with capability gap halt
 - `bin/aho-systemd install` deploys all 4 user daemons including `aho-harness-watcher.service` (0.2.3 W3 fix)
-- OTEL `aho.tokens` dict→scalar flatten — no more `Invalid type dict` errors (aho-G064)
+- OTEL `aho.tokens` dict→scalar flatten - no more `Invalid type dict` errors (aho-G064)
 - Evaluator score parser: scale detection (0-1 → 0-10), preserves `raw_score` and `raw_recommendation`
 - `bin/aho-conductor smoke`: verifiable smoke test with file marker + event log span assertion (aho-G065)
 - 2 new gotchas: aho-G064, aho-G065. Registry at 19 entries
 - 143 tests pass (was 137)
 
-## [0.2.4] — 2026-04-11
+## [0.2.4] - 2026-04-11
 
-**Theme:** W1 remediation — canonical MCP list correction + verification harness
+**Theme:** W1 remediation - canonical MCP list correction + verification harness
 
 - MCP fleet corrected from 12 to 9 registry-verified packages
 - Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
 - Added: server-everything (reference/test server)
 - `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
 - `bin/aho-mcp doctor` gains registry verification pass via `npm view`
-- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New postflight gate: `mcp_canonical_registry_verify` - fails on 404 or deprecation
 - New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
 - 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
 - Gotcha registry at 17 entries
@@ -4959,17 +4959,17 @@ License to be determined before v0.6.0 release.
 - 10 canonical artifacts at 0.2.4
 - 137 tests passing
 
-## [0.2.3] — 2026-04-11
+## [0.2.3] - 2026-04-11
 
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
 
 - Three-agent role split: WorkstreamAgent (Qwen), EvaluatorAgent (GLM), HarnessAgent (Nemotron) at `src/aho/agents/roles/`
 - Conductor orchestrator: dispatch → nemoclaw.route → workstream → evaluator → telegram
 - 12 MCP servers as global npm components with `bin/aho-mcp` manager (list/status/doctor/install)
-- `aho-harness-watcher.service` — 4th systemd user daemon, long-lived event log watcher
+- `aho-harness-watcher.service` - 4th systemd user daemon, long-lived event log watcher
 - Localhost dashboard plumbing: dashboard_port=7800, aho_role field, heartbeat emission (30s intervals)
-- `artifacts/harness/dashboard-contract.md` — canonical artifact #9 (heartbeat schema, health states)
-- `artifacts/harness/mcp-fleet.md` — canonical artifact #10 (12-server fleet spec)
+- `artifacts/harness/dashboard-contract.md` - canonical artifact #9 (heartbeat schema, health states)
+- `artifacts/harness/mcp-fleet.md` - canonical artifact #10 (12-server fleet spec)
 - `web/claw3d/index.html` placeholder (real implementation in 0.2.6)
 - `bin/aho-dashboard` skeleton (127.0.0.1:7800, traces.jsonl tail as JSON)
 - Bundle expanded with §24 Infrastructure, §25 Harnesses, §26 Configuration
@@ -4980,9 +4980,9 @@ License to be determined before v0.6.0 release.
 - 10 canonical artifacts at 0.2.3
 - 137 tests passing (29 new)
 
-## [0.2.2] — 2026-04-11
+## [0.2.2] - 2026-04-11
 
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 
 - OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
 - NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
@@ -4996,29 +4996,29 @@ License to be determined before v0.6.0 release.
 - `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
 - 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
 
-## [0.2.1] — 2026-04-11
+## [0.2.1] - 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
 
-- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
-- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
-- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Global deployment architecture (`global-deployment.md`) - hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` - idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` - clean removal with safety contract (never touches data/artifacts/git)
 - Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
-- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL always-on by default - opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
 - OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
-- `bin/aho-models-status` — Ollama fleet status wrapper
-- `bin/aho-otel-status` — collector service + trace status
+- `bin/aho-models-status` - Ollama fleet status wrapper
+- `bin/aho-otel-status` - collector service + trace status
 - Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
 - `build_log_complete.py` design path fix using `get_artifacts_root()`
 - 8 canonical artifacts (added global-deployment.md)
 - 87 tests passing (7 new OTEL instrumentation tests)
 
-## [0.1.16] — 2026-04-11
+## [0.1.16] - 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation
 
 - Close sequence refactored: tests → bundle → report → run file → postflight → .aho.json → checkpoint
-- Canonical artifacts gate (`canonical_artifacts_current.py`) — 7 versioned artifacts checked at close
+- Canonical artifacts gate (`canonical_artifacts_current.py`) - 7 versioned artifacts checked at close
 - Run file wired through report_builder for agent attribution and component activity section
 - `aho_json.py` helper for `last_completed_iteration` auto-update
 - Iteration 1 graduation ceremony: close artifact, iteration 2 charter, phase 0 charter update
@@ -5028,11 +5028,11 @@ License to be determined before v0.6.0 release.
 - pyproject.toml: version 0.1.16, project URLs added
 - `_iao_data()` bug fixed in components attribution CLI
 
-## [0.1.15] — 2026-04-11
+## [0.1.15] - 2026-04-11
 
 **Theme:** Foundation for Phase 0 exit
 
-- Mechanical report builder (`report_builder.py`) — ground-truth-driven, Qwen as commentary only
+- Mechanical report builder (`report_builder.py`) - ground-truth-driven, Qwen as commentary only
 - Component manifest system (`components.yaml`, `aho components` CLI, §23 bundle section)
 - OpenTelemetry dual emitter in `logger.py` (JSONL authoritative, OTEL additive)
 - Flutter `/app` scaffold with 5 placeholder pages
@@ -5041,7 +5041,7 @@ License to be determined before v0.6.0 release.
 - MANIFEST.json refresh with blake2b hashes
 - CHANGELOG.md restored with full iteration history
 
-## [0.1.14] — 2026-04-11
+## [0.1.14] - 2026-04-11
 
 **Theme:** Evaluator hardening + Qwen loop reliability
 
@@ -5051,7 +5051,7 @@ License to be determined before v0.6.0 release.
 - Seed extraction CLI (`aho iteration seed`)
 - Two-pass artifact generation for design and plan docs
 
-## [0.1.13] — 2026-04-10
+## [0.1.13] - 2026-04-10
 
 **Theme:** Folder consolidation + build log split
 
@@ -5061,7 +5061,7 @@ License to be determined before v0.6.0 release.
 - Graduation analysis via `aho iteration graduate`
 - Event log JSONL structured logging
 
-## [0.1.12] — 2026-04-10
+## [0.1.12] - 2026-04-10
 
 **Theme:** RAG archive + ChromaDB integration
 
@@ -5070,7 +5070,7 @@ License to be determined before v0.6.0 release.
 - GLM client integration alongside Qwen and Nemotron
 - Evaluator baseline reload fix (aho-G060)
 
-## [0.1.11] — 2026-04-10
+## [0.1.11] - 2026-04-10
 
 **Theme:** Agent roles + secret rotation
 
@@ -5079,7 +5079,7 @@ License to be determined before v0.6.0 release.
 - Age + OS keyring secret backends
 - Pipeline validation improvements
 
-## [0.1.10] — 2026-04-09
+## [0.1.10] - 2026-04-09
 
 **Theme:** Pipeline scaffolding + doctor levels
 
@@ -5088,7 +5088,7 @@ License to be determined before v0.6.0 release.
 - Postflight plugin system with dynamic module loading
 - Disk space and dependency checks
 
-## [0.1.9] — 2026-04-09
+## [0.1.9] - 2026-04-09
 
 **Theme:** IAO → AHO rename
 
@@ -5099,18 +5099,18 @@ License to be determined before v0.6.0 release.
 - Renamed gotcha code prefix ahomw-G* → aho-G*
 - Build log filename split: manual authoritative, Qwen synthesis to -synthesis suffix (ADR-042)
 
-## [0.1.0-alpha] — 2026-04-08
+## [0.1.0-alpha] - 2026-04-08
 
 First versioned release. Extracted from kjtcom POC project as iaomw (later renamed iao, then aho).
 
-- iaomw.paths — path-agnostic project root resolution
-- iaomw.registry — script and gotcha registry queries
-- iaomw.bundle — bundle generator with 10-item minimum spec
-- iaomw.compatibility — data-driven compatibility checker
-- iaomw.doctor — shared pre/post-flight health check module
-- iaomw.cli — CLI with project, init, status, check, push subcommands
-- iaomw.harness — two-harness alignment tool
-- pyproject.toml — pip-installable package
+- iaomw.paths - path-agnostic project root resolution
+- iaomw.registry - script and gotcha registry queries
+- iaomw.bundle - bundle generator with 10-item minimum spec
+- iaomw.compatibility - data-driven compatibility checker
+- iaomw.doctor - shared pre/post-flight health check module
+- iaomw.cli - CLI with project, init, status, check, push subcommands
+- iaomw.harness - two-harness alignment tool
+- pyproject.toml - pip-installable package
 - Linux + fish + Python 3.11+ targeted
 ```
 
@@ -5118,7 +5118,7 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — aho 0.2.16
+# CLAUDE.md - aho 0.2.16
 
 You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship (modified). Gemini CLI audits. Kyle signs.
 
@@ -5128,7 +5128,7 @@ You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -5140,11 +5140,11 @@ You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
-11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** — a `claude_code.commit.count > 0` or `claude_code.pull_request.count > 0` event fires a real-time alert to the dedicated Pillar 11 channel. The convention is now detection.
+11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** - a `claude_code.commit.count > 0` or `claude_code.pull_request.count > 0` event fires a real-time alert to the dedicated Pillar 11 channel. The convention is now detection.
 
 ## Operating Stance
 
@@ -5152,15 +5152,15 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1, reinforced by 0.2.15 W3 Nemotron daemon discovery). Acceptance checks must include raw-response inspection, not just parsed-structure validity.
 
-**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions — 0.2.15 proved this twice (GLM "non-functional" claim was contaminated baseline; "23s Nemoclaw overhead" never existed).
+**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions - 0.2.15 proved this twice (GLM "non-functional" claim was contaminated baseline; "23s Nemoclaw overhead" never existed).
 
 **Cost attribution is Pillar 8 ground truth starting 0.2.16.** Do not estimate per-workstream cost from parsed logs once W1 dashboard lands. Read it from `claude_code.cost.usage` metrics tagged with `aho.workstream`.
 
-## Adversarial Authorship Role — Primary Drafter (Modified for 0.2.16)
+## Adversarial Authorship Role - Primary Drafter (Modified for 0.2.16)
 
 For each workstream N:
-1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 — it flows into OTEL resource attrs for per-workstream cost and trace attribution.
-2. Before real work, verify one emitted OTEL event lands in Jaeger with correct `aho.iteration=0.2.16` and `aho.workstream=W{N}` resource attrs. If missing, halt and surface — real work cannot proceed with broken telemetry.
+1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 - it flows into OTEL resource attrs for per-workstream cost and trace attribution.
+2. Before real work, verify one emitted OTEL event lands in Jaeger with correct `aho.iteration=0.2.16` and `aho.workstream=W{N}` resource attrs. If missing, halt and surface - real work cannot proceed with broken telemetry.
 3. Execute scope per `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`.
 4. Write `artifacts/iterations/0.2.16/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 5. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
@@ -5175,11 +5175,11 @@ For each workstream N:
 **Claude emits:** `workstream_start`, `pending_audit`, `workstream_complete`.
 **Gemini emits:** `audit_complete` only.
 **No agent emits `workstream_complete` before `audit_complete` exists.**
-**Audit archive overwrites forbidden — re-audits create `audit/W{N}-v2.json`, `v3`, etc.**
+**Audit archive overwrites forbidden - re-audits create `audit/W{N}-v2.json`, `v3`, etc.**
 
 ## OTEL Environment (new in 0.2.16)
 
-Required env vars — set by managed `.claude/settings.json` (W0 deliverable):
+Required env vars - set by managed `.claude/settings.json` (W0 deliverable):
 
 ```
 CLAUDE_CODE_ENABLE_TELEMETRY=1
@@ -5194,15 +5194,15 @@ OTEL_RESOURCE_ATTRIBUTES=service.name=claude-code,aho.iteration=${AHO_ITERATION}
 
 From W2: `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER=otlp` also enabled.
 
-**`TRACEPARENT` propagation:** Claude Code sets `TRACEPARENT` on subprocess env. `src/aho/pipeline/dispatcher.py` and `src/aho/pipeline/router.py` read it and create child spans (W2 change). This means aho dispatcher spans link automatically to Claude Code trace context — no code change needed in the caller. Do not override or unset `TRACEPARENT` in bash subprocess invocations.
+**`TRACEPARENT` propagation:** Claude Code sets `TRACEPARENT` on subprocess env. `src/aho/pipeline/dispatcher.py` and `src/aho/pipeline/router.py` read it and create child spans (W2 change). This means aho dispatcher spans link automatically to Claude Code trace context - no code change needed in the caller. Do not override or unset `TRACEPARENT` in bash subprocess invocations.
 
 **Privacy posture:** Both `OTEL_LOG_USER_PROMPTS=1` and `OTEL_LOG_TOOL_CONTENT=1` enabled for aho-internal use. The exported reference pack documents this as a posture decision and notes that customer deployments should evaluate based on data sensitivity.
 
-**Cost awareness:** Sessions are metered and attributed to workstreams. Context-window waste is directly observable in `claude_code.cost.usage` tagged by `aho.workstream`. Be mindful — large artifacts loaded in context and not referenced cost real money.
+**Cost awareness:** Sessions are metered and attributed to workstreams. Context-window waste is directly observable in `claude_code.cost.usage` tagged by `aho.workstream`. Be mindful - large artifacts loaded in context and not referenced cost real money.
 
 ## Hard Rules
 
-- No git commits, pushes, merges, adds (Pillar 11 — now monitored)
+- No git commits, pushes, merges, adds (Pillar 11 - now monitored)
 - No reading secrets, no `cat ~/.config/fish/config.fish`
 - Clear `__pycache__` after any `src/aho/` touch (G070); restart daemons if imported (G071)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22), no bash process substitution (use `psub`)
@@ -5210,20 +5210,20 @@ From W2: `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER=otlp`
 - Canonical paths only, resolvers not hardcodes (G075, G082)
 - `baseline_regression_check()` is the backstop, not regex counts (G079)
 - No `except Exception` blocks in new code
-- **`template_leak_detected` emits `false`/`true` not `null`/`true`** (AF002 normalization in 0.2.16 W0 — use explicit booleans)
-- **No `OTEL_TRACES_EXPORTER` unset override in user code** — respect managed settings
+- **`template_leak_detected` emits `false`/`true` not `null`/`true`** (AF002 normalization in 0.2.16 W0 - use explicit booleans)
+- **No `OTEL_TRACES_EXPORTER` unset override in user code** - respect managed settings
 - **Kyle creates secrets.** `ahomw:telegram_alerts_bot_token` and `ahomw:telegram_alerts_chat_id` (new in 0.2.16 W3) are Kyle-created, agent-read-only
 
 ## Cross-Project Contamination Vigilance
 
-aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14 (kjtcom bundle version label `v10.66`, "10 IAO Pillars" instead of 11 aho Pillars). 0.2.15 held zero contamination instances across 5 workstreams under the same vigilance — the discipline works.
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14 (kjtcom bundle version label `v10.66`, "10 IAO Pillars" instead of 11 aho Pillars). 0.2.15 held zero contamination instances across 5 workstreams under the same vigilance - the discipline works.
 
 When working with version labels, ADR numbers, pillar lists, bundle sections, or harness conventions:
 - Verify against aho canonical references (`artifacts/harness/base.md`, `README.md`, ADR index, this file) before use
-- Do not fabricate version numbers or ADR numbers to fill prompts — look them up by enumerating `artifacts/adrs/`
+- Do not fabricate version numbers or ADR numbers to fill prompts - look them up by enumerating `artifacts/adrs/`
 - If memory suggests a structural convention, confirm it's aho-native before embedding it in artifacts
 - aho has 11 pillars (verbatim above). "10 IAO Pillars" is a kjtcom construct.
-- ADR numbers are sequential in `artifacts/adrs/` — the next available is determined at execution time, never pre-fabricated in design or plan docs
+- ADR numbers are sequential in `artifacts/adrs/` - the next available is determined at execution time, never pre-fabricated in design or plan docs
 
 ## Current Iteration: 0.2.16
 
@@ -5234,25 +5234,25 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 
 **Hard gate blocker for iteration close:** Cross-model cascade paired Auditor comparison completes with real Producer output. Both Auditors produce substantive critique. Pillar 7 verdict rendered with evidence. Export pack populated.
 
-**W0 pre-flight — 0.2.15 must close before 0.2.16 scaffolding advances.** Kyle ticks sign-off, runs `aho iteration close --confirm` with `AHO_ITERATION=0.2.15`, then advances env to 0.2.16. No 0.2.16 `workstream_start` events fire before this completes.
+**W0 pre-flight - 0.2.15 must close before 0.2.16 scaffolding advances.** Kyle ticks sign-off, runs `aho iteration close --confirm` with `AHO_ITERATION=0.2.15`, then advances env to 0.2.16. No 0.2.16 `workstream_start` events fire before this completes.
 
 ## Reference Reading (consult at diligence)
 
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
-- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/base.md` - canonical pillars, ADRs, patterns
 - `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment
-- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` — 27 items, 2 critical; what 0.2.16 inherits
-- `artifacts/iterations/0.2.15/aho-bundle-0.2.15.md` — 9-section bundle structure reference
-- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` — drift to repair in W0 Bucket 1
-- `artifacts/adrs/` — enumerate before creating any new ADR; 0.2.15 left ADR-0002 as highest aho-internal number
+- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` - substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment
+- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` - 27 items, 2 critical; what 0.2.16 inherits
+- `artifacts/iterations/0.2.15/aho-bundle-0.2.15.md` - 9-section bundle structure reference
+- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` - drift to repair in W0 Bucket 1
+- `artifacts/adrs/` - enumerate before creating any new ADR; 0.2.15 left ADR-0002 as highest aho-internal number
 
 ## Findings Carried Forward from 0.2.15
 
-- **Substrate is fixable; contaminated baselines lie.** 0.2.15 dissolved two substrate fictions by measuring under controlled conditions — GLM "non-functional" and the "23s Nemoclaw overhead." Apply the same discipline to any OTEL integration claim: measure before characterizing.
+- **Substrate is fixable; contaminated baselines lie.** 0.2.15 dissolved two substrate fictions by measuring under controlled conditions - GLM "non-functional" and the "23s Nemoclaw overhead." Apply the same discipline to any OTEL integration claim: measure before characterizing.
 - **Dispatcher is multi-model-aware.** `MODEL_FAMILY_CONFIG` with family resolution via longest-prefix match. Qwen, Llama 3.x, GLM, Nemotron each have their own stop tokens, `num_predict`, `num_gpu`, template handling. 52 dispatcher tests (was 6).
 - **Router is live.** `src/aho/pipeline/router.py` is the canonical classification primitive. `NemoClawOrchestrator.route()` uses it. Use router, not legacy `nemotron_client.classify` (deprecated with 0.2.16 migration window).
 - **Pillar 7 has one clean data point.** 0.2.15 W4 cross-model cascade produced a non-rubber-stamp Auditor critique from GLM, but the test was compromised by Qwen Producer emitting 0 chars (thinking-mode exhausted `num_predict=2000`). 0.2.16 W0 fixes the Producer; 0.2.16 W4 re-runs for a defensible verdict.
@@ -5260,12 +5260,12 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 - **Nemotron cannot assume substantive roles.** Classifier/triage only. W4 observed Nemotron-as-Assessor emit 65 chars of chat-model helpfulness. 0.2.16 W4 adds a role-compatibility gate in the cascade orchestrator (F004 closure).
 - **Ollama state hygiene is infrastructure.** `unload_model()`, `list_loaded_models()`, `ensure_model_ready()` in dispatcher. Nemotron auto-load quirks. GLM OOM kills all co-resident models. Cross-model cascades serialize; they do not parallelize on 8GB VRAM.
 - **Checkpoint corruption from `test_workstream_events.py` recurred a third time** in 0.2.15 W4. 0.2.16 W0 fixes the fixture. Do not defer again.
-- **Cross-project contamination vigilance worked.** Zero instances across 0.2.15. Same discipline applies in 0.2.16 — OTEL is a different domain but the rules are identical: verify canonicals, do not fabricate.
+- **Cross-project contamination vigilance worked.** Zero instances across 0.2.15. Same discipline applies in 0.2.16 - OTEL is a different domain but the rules are identical: verify canonicals, do not fabricate.
 - **Dedicated alert channel.** 0.2.16 W3 creates new Telegram bot + chat separate from routine `ahomw:telegram_bot_token` / `ahomw:telegram_chat_id`. Kyle creates both secrets for the new channel; agents read only.
 
 ## Mercor Engagement Context
 
-The 0.2.16 OTEL integration produces a reusable export pack under `artifacts/iterations/0.2.16/export/claude-otel-reference-pack/`. The Mercor engagement is the first external consumer. The three Mercor customer-facing artifacts (breach timeline, controls doc, implementation plan) are **independent work product** and do not fold into 0.2.16 workstreams — they inform roadmap but are not in scope.
+The 0.2.16 OTEL integration produces a reusable export pack under `artifacts/iterations/0.2.16/export/claude-otel-reference-pack/`. The Mercor engagement is the first external consumer. The three Mercor customer-facing artifacts (breach timeline, controls doc, implementation plan) are **independent work product** and do not fold into 0.2.16 workstreams - they inform roadmap but are not in scope.
 
 When assembling the export pack (W4): keep it aho-brand-neutral, keep configuration parameterized, keep privacy posture explicit. If the Mercor engagement surfaces a specific new need mid-iteration, it absorbs into W4 export pack assembly, not a workstream amendment.
 ```
@@ -5274,7 +5274,7 @@ When assembling the export pack (W4): keep it aho-brand-neutral, keep configurat
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — aho 0.2.16
+# GEMINI.md - aho 0.2.16
 
 You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude Code drafts. You audit. Kyle signs.
 
@@ -5284,7 +5284,7 @@ You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude 
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -5296,35 +5296,35 @@ You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude 
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
-11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** — you should see alerts on the dedicated channel if Claude Code ever emits a `commit.count` or `pull_request.count` increment.
+11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** - you should see alerts on the dedicated channel if Claude Code ever emits a `commit.count` or `pull_request.count` increment.
 
 ## Operating Stance
 
-Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.15 audit trajectory (W0 ~20 min, W1 ~30 min with contamination-correction review, W2 ~25 min, W3 ~25 min, W4 ~30 min) is your baseline — bring the same skepticism and budget discipline to 0.2.16.
+Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.15 audit trajectory (W0 ~20 min, W1 ~30 min with contamination-correction review, W2 ~25 min, W3 ~25 min, W4 ~30 min) is your baseline - bring the same skepticism and budget discipline to 0.2.16.
 
-**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1; reinforced in 0.2.15 W3 where Nemotron daemon failures — prose output, "AI" stubs — were only visible in raw HTTP body, not parsed dispatcher fields). Before trusting any executor claim about output quality or substrate behavior, read the raw response field of relevant artifacts yourself.
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1; reinforced in 0.2.15 W3 where Nemotron daemon failures - prose output, "AI" stubs - were only visible in raw HTTP body, not parsed dispatcher fields). Before trusting any executor claim about output quality or substrate behavior, read the raw response field of relevant artifacts yourself.
 
-**OTEL telemetry is first-class evidence in 0.2.16.** If an acceptance archive claims a metric fired, a trace landed, or an alert delivered — spot-check by querying Jaeger or the collector directly, not by trusting a quoted log line. If the claim is about a dashboard panel, verify the panel renders with real data, not synthetic.
+**OTEL telemetry is first-class evidence in 0.2.16.** If an acceptance archive claims a metric fired, a trace landed, or an alert delivered - spot-check by querying Jaeger or the collector directly, not by trusting a quoted log line. If the claim is about a dashboard panel, verify the panel renders with real data, not synthetic.
 
-## Adversarial Authorship Role — Auditor
+## Adversarial Authorship Role - Auditor
 
 For each workstream N:
 1. Claude writes `artifacts/iterations/0.2.16/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 2. Read it. Read `artifacts/harness/adversarial-authorship-protocol.md` if unclear.
-3. Lightweight audit — **not re-execution:**
+3. Lightweight audit - **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
    - Spot-check 1–2 high-risk claims independently.
-   - **Raw artifact inspection** — if executor claims output quality, verify by reading raw response fields, not just parsed JSON.
-   - **OTEL inspection** — if executor claims telemetry landed, spot-check Jaeger or the collector; don't trust the archive's claim alone.
+   - **Raw artifact inspection** - if executor claims output quality, verify by reading raw response fields, not just parsed JSON.
+   - **OTEL inspection** - if executor claims telemetry landed, spot-check Jaeger or the collector; don't trust the archive's claim alone.
    - Gotcha scan: G083, G078, G079, G081, G082 reintroduction?
    - Baseline check: if it grew, is each addition genuinely environmental, or a hidden failure?
    - Drift check: acceptance-criteria drift between plan and archive?
-   - Count-coherence check: carry-forward counts in sign-off match carry-forwards.md footer match actual item count? (0.2.15 AF001 was a cosmetic miss — catch it here in 0.2.16)
+   - Count-coherence check: carry-forward counts in sign-off match carry-forwards.md footer match actual item count? (0.2.15 AF001 was a cosmetic miss - catch it here in 0.2.16)
 4. Write `artifacts/iterations/0.2.16/audit/W{N}.json` with `audit_result` and detailed findings.
 5. **Stop. You do not advance the checkpoint. You do not emit `workstream_complete`.** Claude returns, reads your audit, and emits the terminal event.
 
@@ -5337,7 +5337,7 @@ For each workstream N:
 
 ## Budget
 
-15–35 min per audit. Compound-scope workstreams (W0 with 0.2.15 close-out + substrate closure + OTEL scaffolding; W4 with paired cascade + export pack + close package) may reach 45–50 min. >50 min means you're re-executing — stop, write what you have, flag to Kyle.
+15–35 min per audit. Compound-scope workstreams (W0 with 0.2.15 close-out + substrate closure + OTEL scaffolding; W4 with paired cascade + export pack + close package) may reach 45–50 min. >50 min means you're re-executing - stop, write what you have, flag to Kyle.
 
 ## Audit Archive Schema
 
@@ -5381,11 +5381,11 @@ Findings severity scale (matches 0.2.15 AF convention): `info`, `important`, `cr
 ## Hard Rules
 
 - No git commits or pushes (Pillar 11)
-- Never `cat ~/.config/fish/config.fish` — secrets leak (established rule)
+- Never `cat ~/.config/fish/config.fish` - secrets leak (established rule)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22)
 - No reading secrets under any circumstance
 - Canonical resolvers only (G075, G082)
-- Do not attempt to generate OTEL traces yourself — Gemini CLI has no OTEL equivalent. See **Gemini Observability Asymmetry** below.
+- Do not attempt to generate OTEL traces yourself - Gemini CLI has no OTEL equivalent. See **Gemini Observability Asymmetry** below.
 
 ## Gemini Observability Asymmetry (new in 0.2.16)
 
@@ -5394,7 +5394,7 @@ Gemini CLI has no first-class OTEL support as of this iteration. Your audits wil
 Consequences:
 - Adversarial Authorship traces in Jaeger show the Claude Code drafter side in full, and the Gemini CLI auditor side as harness-watcher wall-clock wrappers only
 - Audit cost attribution in the Pillar 8 dashboard shows drafter cost fully and auditor cost not at all
-- Downstream consumers of the Mercor export pack should expect this asymmetry — the pack documents it prominently
+- Downstream consumers of the Mercor export pack should expect this asymmetry - the pack documents it prominently
 
 This is not a bug to work around. Half-measures (timing wrappers without cost or tokens) produce partial observability that looks like coverage it isn't. Do not try to approximate.
 
@@ -5402,11 +5402,11 @@ This is not a bug to work around. Half-measures (timing wrappers without cost or
 
 aho memory recall can pull from kjtcom context without flagging project-origin. 0.2.14 saw kjtcom constructs bleed in (`v10.66` version label, "10 IAO Pillars"); 0.2.15 achieved zero instances across 5 workstreams under this vigilance; same discipline holds in 0.2.16.
 
-When auditing artifacts, treat any structural or numerical claim (ADR number, pillar count, bundle section count, version label, iteration count) as verifiable against aho canonicals — do not accept "looks right" without verification.
+When auditing artifacts, treat any structural or numerical claim (ADR number, pillar count, bundle section count, version label, iteration count) as verifiable against aho canonicals - do not accept "looks right" without verification.
 
 Specific pitfalls for 0.2.16:
 - aho has **11 pillars** (verbatim above). kjtcom's "10 IAO Pillars" is a separate construct.
-- ADR numbers for 0.2.16 deliverables are determined at workstream execution time by enumerating `artifacts/adrs/`. 0.2.15 left `0002` as the highest aho-internal ADR. 0.2.16 will land `0003` and likely `0004` — verify each against the directory, not the design/plan doc prediction.
+- ADR numbers for 0.2.16 deliverables are determined at workstream execution time by enumerating `artifacts/adrs/`. 0.2.15 left `0002` as the highest aho-internal ADR. 0.2.16 will land `0003` and likely `0004` - verify each against the directory, not the design/plan doc prediction.
 - Bundle has **9 sections** (§1 Design+Plan, §2 Build Artifacts, §3 CLAUDE+GEMINI, §4 Harness State, §5 Gotchas+ADRs, §6 Delta State, §7 Test Results, §8 Event Log, §9 Close Package) per 0.2.15 convention.
 - `template_leak_detected` field emits `false`/`true`, **not `null`/`true`** after 0.2.16 W0 normalization (AF002 closure). Flag any stage JSON that emits `null` post-W0.
 
@@ -5415,36 +5415,36 @@ Specific pitfalls for 0.2.16:
 **Theme:** Claude Code OTEL Integration & 0.2.15 Close-Out.
 **Workstreams:** 5 (W0 0.2.15 close-out + substrate + OTEL scaffolding, W1 Pillar 8 dashboard, W2 `TRACEPARENT` distributed tracing, W3 Pillar 11 enforcement + anomaly detection, W4 cross-model cascade re-run + close).
 
-**Hard gate blocker for iteration close:** Cross-model cascade paired Auditor comparison completes with real Producer output, both Auditors produce substantive critique, Pillar 7 verdict rendered with evidence, export pack populated, bundle internally consistent (counts coherent — do not repeat 0.2.15 AF001).
+**Hard gate blocker for iteration close:** Cross-model cascade paired Auditor comparison completes with real Producer output, both Auditors produce substantive critique, Pillar 7 verdict rendered with evidence, export pack populated, bundle internally consistent (counts coherent - do not repeat 0.2.15 AF001).
 
 **Specific audit focus for 0.2.16 workstreams:**
 
 - **W0 (compound):** Three buckets to audit independently.
   - Bucket 1 (0.2.15 close-out): `aho iteration close --confirm` ran successfully; sign-off drift repaired; AHO_ITERATION advanced in event log.
-  - Bucket 2 (substrate closure): `install.fish` Tier 1 section dry-run produces clean output on NZXTcos; Qwen Producer probe shows ≥500 chars content with `done_reason != "length"`; `test_workstream_events.py` fixture fix works (run the suite, watch for checkpoint mutation — if it recurs, it's a `fail`); empty-content halt semantics covered by new unit tests.
-  - Bucket 3 (OTEL scaffolding): `.claude/settings.json` env block present and correct; one emitted event visible in Jaeger with correct `aho.*` resource attrs; no `OTEL_TRACES_EXPORTER` set (W0 boundary — traces are W2 scope).
+  - Bucket 2 (substrate closure): `install.fish` Tier 1 section dry-run produces clean output on NZXTcos; Qwen Producer probe shows ≥500 chars content with `done_reason != "length"`; `test_workstream_events.py` fixture fix works (run the suite, watch for checkpoint mutation - if it recurs, it's a `fail`); empty-content halt semantics covered by new unit tests.
+  - Bucket 3 (OTEL scaffolding): `.claude/settings.json` env block present and correct; one emitted event visible in Jaeger with correct `aho.*` resource attrs; no `OTEL_TRACES_EXPORTER` set (W0 boundary - traces are W2 scope).
 
-- **W1 (dashboard):** Verify dashboard JSON renders — spot-check by opening it yourself, not by trusting an executor screenshot. Confirm cost data is real (non-zero, non-synthetic) for at least one workstream. Cache breakdown must be visibly distinct from input/output (4 series). Export copy must be stripped of aho-specific identifiers.
+- **W1 (dashboard):** Verify dashboard JSON renders - spot-check by opening it yourself, not by trusting an executor screenshot. Confirm cost data is real (non-zero, non-synthetic) for at least one workstream. Cache breakdown must be visibly distinct from input/output (4 series). Export copy must be stripped of aho-specific identifiers.
 
-- **W2 (tracing):** End-to-end trace claim — verify the captured trace JSON has the correct parent-child hierarchy (aho spans under Claude Code spans under the same `trace_id`). `dispatch.duration_ms` span attribute must agree with dispatcher's internal timing measurement (pull from another source if possible — test evidence or event log). Backward compat: run existing dispatcher tests without `TRACEPARENT` set — they must pass. Gemini asymmetry ADR present with correct index-derived number.
+- **W2 (tracing):** End-to-end trace claim - verify the captured trace JSON has the correct parent-child hierarchy (aho spans under Claude Code spans under the same `trace_id`). `dispatch.duration_ms` span attribute must agree with dispatcher's internal timing measurement (pull from another source if possible - test evidence or event log). Backward compat: run existing dispatcher tests without `TRACEPARENT` set - they must pass. Gemini asymmetry ADR present with correct index-derived number.
 
-- **W3 (alerts):** All 5 rules registered in alert engine (verify by querying engine, not by file presence). Synthetic test evidence: timestamps in `alert-delivery-test.md` must show alert fired within 60s of synthetic event. Telegram channel is the **dedicated** channel (new bot/chat), not the existing routine notifications channel — confirm by checking secret names (`ahomw:telegram_alerts_*` not `ahomw:telegram_*`). Kyle created the secrets (agent did not).
+- **W3 (alerts):** All 5 rules registered in alert engine (verify by querying engine, not by file presence). Synthetic test evidence: timestamps in `alert-delivery-test.md` must show alert fired within 60s of synthetic event. Telegram channel is the **dedicated** channel (new bot/chat), not the existing routine notifications channel - confirm by checking secret names (`ahomw:telegram_alerts_*` not `ahomw:telegram_*`). Kyle created the secrets (agent did not).
 
-- **W4 (cascade re-run + close):** Paired Auditor runs — confirm Producer ran exactly once and both Auditors evaluated the same Producer output (not two independent Producer runs). Pillar 7 verdict cites evidence from both Auditor outputs side-by-side. Export pack is complete (all items from design spec present), runbook exists, aho-brand-neutrality preserved. Retrospective honest per G081 — the W4 re-run either produced a Pillar 7 data point or didn't; do not let rhetoric fill a real gap. Sign-off count coherence: carry-forward count in sign-off matches `carry-forwards-0.2.16.md` footer matches actual item count.
+- **W4 (cascade re-run + close):** Paired Auditor runs - confirm Producer ran exactly once and both Auditors evaluated the same Producer output (not two independent Producer runs). Pillar 7 verdict cites evidence from both Auditor outputs side-by-side. Export pack is complete (all items from design spec present), runbook exists, aho-brand-neutrality preserved. Retrospective honest per G081 - the W4 re-run either produced a Pillar 7 data point or didn't; do not let rhetoric fill a real gap. Sign-off count coherence: carry-forward count in sign-off matches `carry-forwards-0.2.16.md` footer matches actual item count.
 
 ## Reference Reading (consult at diligence)
 
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
-- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/base.md` - canonical pillars, ADRs, patterns
 - `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, Producer failure root cause
-- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` — 27 items, 2 critical; baseline for 0.2.16 drawdown
-- `artifacts/iterations/0.2.15/audit/W4.json` — AF001 and AF002 findings that 0.2.16 W0 closes
-- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` — drift artifacts for W0 Bucket 1 audit
-- Gotcha registry (locate canonical file; carry-forward from 0.2.14 and 0.2.15 — may land during 0.2.16 work)
+- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` - substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, Producer failure root cause
+- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` - 27 items, 2 critical; baseline for 0.2.16 drawdown
+- `artifacts/iterations/0.2.15/audit/W4.json` - AF001 and AF002 findings that 0.2.16 W0 closes
+- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` - drift artifacts for W0 Bucket 1 audit
+- Gotcha registry (locate canonical file; carry-forward from 0.2.14 and 0.2.15 - may land during 0.2.16 work)
 
 ## Failure Modes to Avoid
 
@@ -5452,11 +5452,11 @@ Specific pitfalls for 0.2.16:
 - Rubber-stamping without spot-check (G083 in human form)
 - Accepting output quality claims without raw response inspection (0.2.14 W1 lesson)
 - Accepting OTEL signal claims without independent collector / Jaeger spot-check (new for 0.2.16)
-- Scope creep — asking Claude to fix things outside the workstream
+- Scope creep - asking Claude to fix things outside the workstream
 - Missing drift because the archive is well-formatted (substance over form)
 - Advancing the checkpoint yourself (0.2.13 W0 mistake)
 - Accepting fabricated ADR numbers, version labels, or pillar counts without canonical verification (cross-project contamination)
-- Missing count-coherence drift (0.2.15 AF001 — 21 vs 25 vs 27 across sign-off and carry-forwards — cosmetic but real)
+- Missing count-coherence drift (0.2.15 AF001 - 21 vs 25 vs 27 across sign-off and carry-forwards - cosmetic but real)
 - Trusting dashboard screenshots instead of opening the dashboard yourself
 - Trusting alert-delivery logs without verifying the message arrived in the **dedicated** Telegram channel (not the existing routine channel)
 ```
@@ -6912,8 +6912,8 @@ Specific pitfalls for 0.2.16:
 ### install.fish (install.fish)
 ```fish
 #!/usr/bin/env fish
-# install.fish — Clone-to-deploy orchestrator for aho.
-# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# install.fish - Clone-to-deploy orchestrator for aho.
+# 0.2.5 - Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
 # Pillar 4: wrappers are the tool surface.
 #
 # Usage: ./install.fish
@@ -6999,7 +6999,7 @@ function _run_step
 end
 
 # ─────────────────────────────────────────────────────────────────────────
-# Platform check (not a resumable step — always runs)
+# Platform check (not a resumable step - always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
 if not test -f /etc/arch-release
@@ -8050,7 +8050,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 | nemoclaw | agent | active | soc-foundry | Nemotron orchestrator, systemd user service, Unix socket; activated 0.2.2 W2; classification layer migrated to pipeline.router in 0.2.15 W3 (ADR 0002), session layer retained |
 | telegram | external_service | active | soc-foundry | send-only bridge, systemd user service, age-encrypted secrets; activated 0.2.2 W3 |
 | qwen-client | llm | active | soc-foundry |  |
-| nemotron-client | llm | active | soc-foundry | deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window |
+| nemotron-client | llm | active | soc-foundry | deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router - kept callable during migration window |
 | glm-client | llm | active | soc-foundry |  |
 | chromadb | external_service | active | soc-foundry |  |
 | ollama | external_service | active | soc-foundry |  |
@@ -8874,29 +8874,29 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 ```markdown
 # aho changelog
 
-## [0.2.14] — 2026-04-13
+## [0.2.14] - 2026-04-13
 
 **Theme:** Council wiring verification + cascade smoke test (Pattern C modified, claude-code drafter, gemini-cli auditor)
 
 - In progress. 3 workstreams planned (W0 setup, W1 vet+wire+smoke, W2 close+sign-off).
 
-## [0.2.13] — 2026-04-12
+## [0.2.13] - 2026-04-12
 
-**Theme:** Dispatch-layer repair — parser honesty, model-quality gate, Pattern C trial (claude-code drafter, gemini-cli auditor)
+**Theme:** Dispatch-layer repair - parser honesty, model-quality gate, Pattern C trial (claude-code drafter, gemini-cli auditor)
 
 - First iteration under Pattern C: Claude Code as primary drafter, Gemini CLI as auditor, Kyle as signer. Two-agent coordination with per-workstream audit gates.
 - W1 GLM parser fix: `GLMParseError(Exception)` replaces hardcoded `{score: 8, recommendation: ship}` fallback. `_strip_markdown_fences()` handles ```json, bare ```, partial-wrap, whitespace. 3 new tests.
 - W2 Nemotron classifier fix: `NemotronParseError(Exception)` and `NemotronConnectionError(Exception)` replace blanket `except Exception` and `categories[-1]` fallback returns. Specific `requests.ConnectionError`, `requests.HTTPError`, `requests.Timeout` handlers. 3 new tests.
-- W2.5 model-quality gate (hard gate, rescope trigger): GLM-4.6V-Flash-9B at Q4_K_M — 4/5 inputs timed out at 180s, 1/5 returned wrong JSON schema at 105s. Nemotron-mini:4b — 8/10 inputs returned "feature" regardless of content. Parsers are honest; models cannot produce usable signal through honest parsers.
+- W2.5 model-quality gate (hard gate, rescope trigger): GLM-4.6V-Flash-9B at Q4_K_M - 4/5 inputs timed out at 180s, 1/5 returned wrong JSON schema at 105s. Nemotron-mini:4b - 8/10 inputs returned "feature" regardless of content. Parsers are honest; models cannot produce usable signal through honest parsers.
 - Rescope at W2.5 (Path A): W3-W9 skipped. Fixing exception handlers around non-functional models produces correct error handling of useless responses. Carry-forwards to 0.2.14 for model viability assessment.
 - Pattern C protocol documented: state machine (`in_progress → pending_audit → audit_complete → workstream_complete`), emitter table, halt conditions.
 - 5 new gotchas from 0.2.12 close (G078-G083): schema v3 drift, baseline backstop, age-encrypt interaction, celebratory framing ban, exception-handler-returns-positive-value.
 - Baseline stable at 13 known failures, 0 new across all 4 delivered workstreams.
 - 4 workstreams delivered (W0, W1, W2, W2.5), 7 skipped per rescope, 1 close (W10).
 
-## [0.2.12] — 2026-04-12
+## [0.2.12] - 2026-04-12
 
-**Theme:** Council activation — discovery, visibility, design, measurement (gemini-cli primary executor)
+**Theme:** Council activation - discovery, visibility, design, measurement (gemini-cli primary executor)
 
 - Primary executor shift: gemini-cli takes the lead for all 20 workstreams (Pillar 1/8 focus)
 - Council inventory: structured audit of Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, and MCP fleet (W1-W5)
@@ -8909,13 +8909,13 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Tech-legacy-audit: audit of shims, unused modules, and stale harness
 - 20 workstreams, per-workstream review ON
 
-## [0.2.11] — 2026-04-12
+## [0.2.11] - 2026-04-12
 
-**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams — executor-bias recognized mid-iteration, G077)
+**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams - executor-bias recognized mid-iteration, G077)
 
 - AcceptanceCheck primitive: executable assertions replace prose acceptance claims (W1-W2)
 - Workstream events schema v2 (acceptance_results) + v3 (agents_involved, token_count, harness_contributions, ad_hoc_forensics_minutes)
-- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present — all resolved
+- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present - all resolved
 - Gate verbosity: run_quality and structural_gates emit per-check CheckResult detail
 - 0.2.9 residual debt closed: readme_current timezone, bundle_quality §22, manifest_current self-ref exclusion
 - Event log relocated to ~/.local/share/aho/events/ with 100MB rotation (keep 3); 14 downstream path updates
@@ -8926,7 +8926,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Rescoped at W9: persona 3 → 0.2.13, AUR + tech debt → 0.2.14, council activation → 0.2.12
 - 9 workstreams executed (W0-W8 + W9 close), 64 new tests, per-workstream review ON throughout
 
-## [0.2.10] — 2026-04-12
+## [0.2.10] - 2026-04-12
 
 **Theme:** Install surface implementation + CLI unification + observability deployment
 
@@ -8948,7 +8948,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - AUR install path deferred to 0.2.11 (CachyOS mirror PGP issue + Jaeger-bin AUR rename)
 - 227 tests (maintained from 0.2.9), 17 workstreams, W3/W5/W9/W10 re-executed after drift verification
 
-## [0.2.9] — 2026-04-11
+## [0.2.9] - 2026-04-11
 
 **Theme:** Remote operability plumbing + persona 3 discovery + install surface architecture
 
@@ -8956,25 +8956,25 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - `.mcp.json` gitignored (machine-specific generated artifact)
 - Bootstrap npm list corrected from stale 11-package to current 8-package (9th is dart SDK-bundled)
 - Portability audit: 3 hardcoded paths fixed (smoke script, mcp-wiring.md, global-deployment.md), zero hardcodes remain in executable code
-- `src/aho/workstream_events.py` — `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
+- `src/aho/workstream_events.py` - `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
 - CLI: `aho iteration workstream {start,complete}` subcommands
 - Telegram `/ws` command family: `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`
 - Auto-push subscriber: tails event log, sends Telegram notification on `workstream_complete`
-- `src/aho/workstream_gate.py` — `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
-- `artifacts/harness/secrets-architecture.md` — three-layer model (age + keyring + fernet), junior-dev-readable
-- ADR-045: Discovery iteration formalization — three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
-- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed — structural gap documented
-- `artifacts/iterations/0.2.9/install-surface-architecture.md` — three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
+- `src/aho/workstream_gate.py` - `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
+- `artifacts/harness/secrets-architecture.md` - three-layer model (age + keyring + fernet), junior-dev-readable
+- ADR-045: Discovery iteration formalization - three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
+- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed - structural gap documented
+- `artifacts/iterations/0.2.9/install-surface-architecture.md` - three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
 - Updated roadmap: 0.2.10 install surface → 0.2.11 persona 3 validation → 0.2.12 persona 2 → 0.2.13 P3 clone graduation
 - 227 tests (up from 182), 10 workstreams (W8.5 inserted per ADR-045 discovery pattern)
 
-## [0.2.8] — 2026-04-11
+## [0.2.8] - 2026-04-11
 
-**Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
+**Theme:** Discovery + exercise - MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
 
 - MCP-first mandate: CLAUDE.md + GEMINI.md gain MUST-strength MCP Toolchain section, [INSTALLED-NOT-WIRED] tag convention
 - Project `.mcp.json` wires 9 MCP servers as Claude Code tool connections (8 npm + 1 SDK-bundled dart)
-- `bin/aho-mcp smoke` — 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
+- `bin/aho-mcp smoke` - 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
 - Dashboard MCP verifier: aggregator reads smoke results, 85 ok / 0 missing / 0 unknown (zero unknowns for first time)
 - components.yaml reconciled: 4 dead entries removed, flutter-mcp replaced with dart mcp-server, server-everything added. 88 → 85 components
 - `mcp_sources_aligned` postflight gate: diffs components.yaml against bin/aho-mcp, caught server-everything gap on first run
@@ -8986,59 +8986,59 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Telegram inbound bridge: getUpdates polling, /status /iteration /last + free-text→openclaw, verified live on phone
 - 182 tests (up from 158), 14 workstreams (largest iteration), MCP fleet smoke 9/9 pass
 
-## [0.2.7] — 2026-04-11
+## [0.2.7] - 2026-04-11
 
-**Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config
+**Theme:** Visibility + carry-forward closeout - dashboard, coverage audit, orchestrator config
 
-- `src/aho/dashboard/` — new Python module: aggregator + HTTP server for localhost dashboard
+- `src/aho/dashboard/` - new Python module: aggregator + HTTP server for localhost dashboard
 - `bin/aho-dashboard` rewritten to serve `/api/state` (aggregated JSON) and `/` (Flutter app)
 - `/api/state` endpoint aggregates system, component, daemon, trace, MCP, and model state with 2s cache
-- Flutter Web dashboard at `web/claw3d/` — 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
+- Flutter Web dashboard at `web/claw3d/` - 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
 - Trident palette (#0D9488 shaft, #161B22 background, #4ADE80 accent), monospace typography, 5s polling
-- `components-coverage.md` — 88 components audited, all mapped to install.fish steps, zero gaps
-- `~/.config/aho/orchestrator.json` — engine (reserved), search provider, openclaw/nemoclaw model config
-- `bin/aho-secrets-init --add-brave-token` — interactive prompt, fernet-encrypted storage
+- `components-coverage.md` - 88 components audited, all mapped to install.fish steps, zero gaps
+- `~/.config/aho/orchestrator.json` - engine (reserved), search provider, openclaw/nemoclaw model config
+- `bin/aho-secrets-init --add-brave-token` - interactive prompt, fernet-encrypted storage
 - openclaw and nemoclaw read model defaults from orchestrator.json, fallback to hardcoded
-- `set_attrs_from_dict()` helper in logger.py — recursive OTEL span attribute flattening (aho-G064 final fix)
+- `set_attrs_from_dict()` helper in logger.py - recursive OTEL span attribute flattening (aho-G064 final fix)
 - 158 tests passing (up from 143)
 
-## [0.2.6] — 2026-04-11
+## [0.2.6] - 2026-04-11
 
-**Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor
+**Theme:** install.fish live-fire hardening - pacman, secrets, telegram doctor
 
-- Removed ollama from `pacman-packages.txt` — installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
+- Removed ollama from `pacman-packages.txt` - installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
 - `bin/aho-pacman`: added `_pkg_present` fallback that checks `command -q` for upstream-installed packages
 - `bin/aho-secrets-init`: rewritten to check fernet secrets store + telegram daemon instead of bogus `.age` file scaffold
 - `aho doctor preflight`: telegram check now shows `@aho_run_bot` via cached `getMe` API response
 - Telegram daemon writes bot identity to `~/.local/state/aho/telegram_bot.json` on startup
 - install.fish completes all 9 steps clean on NZXTcos, second run fully idempotent
 
-## [0.2.5] — 2026-04-11
+## [0.2.5] - 2026-04-11
 
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
 
 - `install.fish` rewritten as thin 9-step orchestrator with resume support via `install.state`
 - 6 new bin wrappers: `aho-pacman`, `aho-aur`, `aho-models`, `aho-secrets-init`, `aho-systemd`, `aho-python`
 - 3 declarative lists: `pacman-packages.txt` (15 packages), `aur-packages.txt` (empty), `model-fleet.txt` (4 models)
-- `bin/aho-install` renamed to `bin/aho-bootstrap` — install.fish is now the top-level entry point
+- `bin/aho-install` renamed to `bin/aho-bootstrap` - install.fish is now the top-level entry point
 - `bin/aho-secrets-init`: age keygen + keyring bootstrap + telegram scaffold with capability gap halt
 - `bin/aho-systemd install` deploys all 4 user daemons including `aho-harness-watcher.service` (0.2.3 W3 fix)
-- OTEL `aho.tokens` dict→scalar flatten — no more `Invalid type dict` errors (aho-G064)
+- OTEL `aho.tokens` dict→scalar flatten - no more `Invalid type dict` errors (aho-G064)
 - Evaluator score parser: scale detection (0-1 → 0-10), preserves `raw_score` and `raw_recommendation`
 - `bin/aho-conductor smoke`: verifiable smoke test with file marker + event log span assertion (aho-G065)
 - 2 new gotchas: aho-G064, aho-G065. Registry at 19 entries
 - 143 tests pass (was 137)
 
-## [0.2.4] — 2026-04-11
+## [0.2.4] - 2026-04-11
 
-**Theme:** W1 remediation — canonical MCP list correction + verification harness
+**Theme:** W1 remediation - canonical MCP list correction + verification harness
 
 - MCP fleet corrected from 12 to 9 registry-verified packages
 - Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
 - Added: server-everything (reference/test server)
 - `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
 - `bin/aho-mcp doctor` gains registry verification pass via `npm view`
-- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New postflight gate: `mcp_canonical_registry_verify` - fails on 404 or deprecation
 - New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
 - 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
 - Gotcha registry at 17 entries
@@ -9046,17 +9046,17 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - 10 canonical artifacts at 0.2.4
 - 137 tests passing
 
-## [0.2.3] — 2026-04-11
+## [0.2.3] - 2026-04-11
 
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
 
 - Three-agent role split: WorkstreamAgent (Qwen), EvaluatorAgent (GLM), HarnessAgent (Nemotron) at `src/aho/agents/roles/`
 - Conductor orchestrator: dispatch → nemoclaw.route → workstream → evaluator → telegram
 - 12 MCP servers as global npm components with `bin/aho-mcp` manager (list/status/doctor/install)
-- `aho-harness-watcher.service` — 4th systemd user daemon, long-lived event log watcher
+- `aho-harness-watcher.service` - 4th systemd user daemon, long-lived event log watcher
 - Localhost dashboard plumbing: dashboard_port=7800, aho_role field, heartbeat emission (30s intervals)
-- `artifacts/harness/dashboard-contract.md` — canonical artifact #9 (heartbeat schema, health states)
-- `artifacts/harness/mcp-fleet.md` — canonical artifact #10 (12-server fleet spec)
+- `artifacts/harness/dashboard-contract.md` - canonical artifact #9 (heartbeat schema, health states)
+- `artifacts/harness/mcp-fleet.md` - canonical artifact #10 (12-server fleet spec)
 - `web/claw3d/index.html` placeholder (real implementation in 0.2.6)
 - `bin/aho-dashboard` skeleton (127.0.0.1:7800, traces.jsonl tail as JSON)
 - Bundle expanded with §24 Infrastructure, §25 Harnesses, §26 Configuration
@@ -9067,9 +9067,9 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - 10 canonical artifacts at 0.2.3
 - 137 tests passing (29 new)
 
-## [0.2.2] — 2026-04-11
+## [0.2.2] - 2026-04-11
 
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 
 - OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
 - NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
@@ -9083,29 +9083,29 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
 - 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
 
-## [0.2.1] — 2026-04-11
+## [0.2.1] - 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
 
-- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
-- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
-- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Global deployment architecture (`global-deployment.md`) - hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` - idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` - clean removal with safety contract (never touches data/artifacts/git)
 - Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
-- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL always-on by default - opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
 - OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
-- `bin/aho-models-status` — Ollama fleet status wrapper
-- `bin/aho-otel-status` — collector service + trace status
+- `bin/aho-models-status` - Ollama fleet status wrapper
+- `bin/aho-otel-status` - collector service + trace status
 - Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
 - `build_log_complete.py` design path fix using `get_artifacts_root()`
 - 8 canonical artifacts (added global-deployment.md)
 - 87 tests passing (7 new OTEL instrumentation tests)
 
-## [0.1.16] — 2026-04-11
+## [0.1.16] - 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation
 
 - Close sequence refactored: tests → bundle → report → run file → postflight → .aho.json → checkpoint
-- Canonical artifacts gate (`canonical_artifacts_current.py`) — 7 versioned artifacts checked at close
+- Canonical artifacts gate (`canonical_artifacts_current.py`) - 7 versioned artifacts checked at close
 - Run file wired through report_builder for agent attribution and component activity section
 - `aho_json.py` helper for `last_completed_iteration` auto-update
 - Iteration 1 graduation ceremony: close artifact, iteration 2 charter, phase 0 charter update
@@ -9115,11 +9115,11 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - pyproject.toml: version 0.1.16, project URLs added
 - `_iao_data()` bug fixed in components attribution CLI
 
-## [0.1.15] — 2026-04-11
+## [0.1.15] - 2026-04-11
 
 **Theme:** Foundation for Phase 0 exit
 
-- Mechanical report builder (`report_builder.py`) — ground-truth-driven, Qwen as commentary only
+- Mechanical report builder (`report_builder.py`) - ground-truth-driven, Qwen as commentary only
 - Component manifest system (`components.yaml`, `aho components` CLI, §23 bundle section)
 - OpenTelemetry dual emitter in `logger.py` (JSONL authoritative, OTEL additive)
 - Flutter `/app` scaffold with 5 placeholder pages
@@ -9128,7 +9128,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - MANIFEST.json refresh with blake2b hashes
 - CHANGELOG.md restored with full iteration history
 
-## [0.1.14] — 2026-04-11
+## [0.1.14] - 2026-04-11
 
 **Theme:** Evaluator hardening + Qwen loop reliability
 
@@ -9138,7 +9138,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Seed extraction CLI (`aho iteration seed`)
 - Two-pass artifact generation for design and plan docs
 
-## [0.1.13] — 2026-04-10
+## [0.1.13] - 2026-04-10
 
 **Theme:** Folder consolidation + build log split
 
@@ -9148,7 +9148,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Graduation analysis via `aho iteration graduate`
 - Event log JSONL structured logging
 
-## [0.1.12] — 2026-04-10
+## [0.1.12] - 2026-04-10
 
 **Theme:** RAG archive + ChromaDB integration
 
@@ -9157,7 +9157,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - GLM client integration alongside Qwen and Nemotron
 - Evaluator baseline reload fix (aho-G060)
 
-## [0.1.11] — 2026-04-10
+## [0.1.11] - 2026-04-10
 
 **Theme:** Agent roles + secret rotation
 
@@ -9166,7 +9166,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Age + OS keyring secret backends
 - Pipeline validation improvements
 
-## [0.1.10] — 2026-04-09
+## [0.1.10] - 2026-04-09
 
 **Theme:** Pipeline scaffolding + doctor levels
 
@@ -9175,7 +9175,7 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Postflight plugin system with dynamic module loading
 - Disk space and dependency checks
 
-## [0.1.9] — 2026-04-09
+## [0.1.9] - 2026-04-09
 
 **Theme:** IAO → AHO rename
 
@@ -9186,18 +9186,18 @@ cbb40127c1002424  artifacts/iterations/0.2.12/aho-bundle-0.2.12.md
 - Renamed gotcha code prefix ahomw-G* → aho-G*
 - Build log filename split: manual authoritative, Qwen synthesis to -synthesis suffix (ADR-042)
 
-## [0.1.0-alpha] — 2026-04-08
+## [0.1.0-alpha] - 2026-04-08
 
 First versioned release. Extracted from kjtcom POC project as iaomw (later renamed iao, then aho).
 
-- iaomw.paths — path-agnostic project root resolution
-- iaomw.registry — script and gotcha registry queries
-- iaomw.bundle — bundle generator with 10-item minimum spec
-- iaomw.compatibility — data-driven compatibility checker
-- iaomw.doctor — shared pre/post-flight health check module
-- iaomw.cli — CLI with project, init, status, check, push subcommands
-- iaomw.harness — two-harness alignment tool
-- pyproject.toml — pip-installable package
+- iaomw.paths - path-agnostic project root resolution
+- iaomw.registry - script and gotcha registry queries
+- iaomw.bundle - bundle generator with 10-item minimum spec
+- iaomw.compatibility - data-driven compatibility checker
+- iaomw.doctor - shared pre/post-flight health check module
+- iaomw.cli - CLI with project, init, status, check, push subcommands
+- iaomw.harness - two-harness alignment tool
+- pyproject.toml - pip-installable package
 - Linux + fish + Python 3.11+ targeted
 ```
 
@@ -9207,9 +9207,9 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 ## Origin
 
-TachTech builds data and SIEM migration pipelines for customers — moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
+TachTech builds data and SIEM migration pipelines for customers - moving customer data out of legacy systems into modern databases and SIEMs. We initially built these pipelines using multi-modal LLMs to handle the messy realities of migration: undocumented schemas to interpret, log formats to normalize, business logic to extract, edge cases to reason through.
 
-Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects — using the same multi-modal models — produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline — the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture — was doing the work. The pipeline was useful, but the harness was load-bearing.
+Then we observed something. Single-agent Claude or Gemini execution against the same large complex projects - using the same multi-modal models - produced materially worse results than what our pipeline tooling produced. We initially attributed this to the pipelines themselves: the scripts, the structured phases, the project-specific logic. Closer inspection showed the difference was elsewhere. The harness around the pipeline - the gotcha registry, the ADR discipline, the drafter-auditor separation, the sealed acceptance archives, the scope hard-stops, the trace-every-decision posture - was doing the work. The pipeline was useful, but the harness was load-bearing.
 
 aho is the extraction of that harness from pipeline-specific contexts into general-purpose governed agentic engineering infrastructure. The thesis: richer harnesses produce smarter behavior from the same models. Same Claude, same Gemini, materially different output, because the scaffolding around them is structured rather than vibes-based.
 
@@ -9222,15 +9222,15 @@ aho is governance infrastructure for LLM-driven engineering. The four properties
 - **Monitored invariants enforced as policy.** Pillar 11 (no agent git operations) is the prototype. Future invariants extend the same pattern. Policy as gate, not dashboard.
 - **Sealed acceptance and audit archives, immutable event log.** The artifacts are the record. They cannot be retroactively edited. Disputes resolve by reading the archive, not by re-asking the agent.
 
-The combination — and the compliance-shaped framing — is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
+The combination - and the compliance-shaped framing - is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
-## Why aho — cost and token utilization
+## Why aho - cost and token utilization
 
 Token cost matters. Claude and Gemini API spend at scale is the dominant operating cost of LLM-driven engineering, and single-agent execution wastes it in characteristic ways:
 
-- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model — fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints — turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
+- **Cache underutilization.** Single-agent sessions rebuild context each invocation. aho's iteration model - fixed CLAUDE.md system prompt, persistent registries, sealed checkpoints - turns context into a cache asset. The Pillar 8 dashboard tracks this directly: cache:new ratios sustained across workstreams that single-agent execution structurally cannot match.
 - **No model-cost gradient.** Single-agent execution sends every decision to the same expensive model. Routing decisions, classification, triage, substantive reasoning, and architectural decisions all priced identically. aho's council pattern routes triage and classification to small local models (Nemotron-class), substantive work to mid-tier (Qwen, GLM), premium dispatches to Claude or Gemini. The cost gradient is visible per-workstream.
-- **Re-execution waste from undetected drift.** Single-agent failure modes — hallucinated state, stale assumptions, lost context, mid-task looping — are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
+- **Re-execution waste from undetected drift.** Single-agent failure modes - hallucinated state, stale assumptions, lost context, mid-task looping - are wasted tokens compounded by downstream tokens built on bad foundations. aho's halt-on-fail discipline plus Pattern C audit catches drift at bucket boundaries, before downstream waste accumulates. The audit pass costs tokens; the un-audited downstream costs more.
 - **Scope creep priced as features.** Single-agent execution under "do this large complex thing" expands scope as it works. aho's no-mid-flight-scope-amendment rule keeps tokens on the requested scope, not on the agent's interpretation of what it should also fix.
 
 These are mechanism claims, not benchmark claims. The mechanisms compound across iterations.
@@ -9253,29 +9253,29 @@ aho's operating principles. Numbered, named, and binding.
 
 Each pillar is enforced by tooling, registry entries, or both. Pillar violations are findings; repeated violations are gotcha registry entries with mitigations.
 
-## Architecture — current shape
+## Architecture - current shape
 
 aho today runs as a single-machine local loop. One human, one workstation, one project at a time.
 
 Components on the workstation:
 
-- **aho harness** — Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
-- **ollama** — local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
-- **OTEL collector** — custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
-- **aho-dashboard** — claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
-- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** — daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
-- **age + fernet secret store** — age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
+- **aho harness** - Pattern C state machine, dispatcher (model selection and routing), router (classification), acceptance and audit archive writers. Stateful per active iteration.
+- **ollama** - local model runtime. Today: Qwen 3.5:9b for substantive reasoning, GLM-4.6V-Flash-9B for evaluation, Nemotron-mini:4b for triage and classification, nomic-embed-text for retrieval.
+- **OTEL collector** - custom aho-otel-collector binary, gRPC ingest on `localhost:4317`, file exporters writing traces, metrics, and logs to `~/.local/share/aho/{traces,metrics,logs}/`.
+- **aho-dashboard** - claw3d-fronted Flutter dashboard at `localhost:7800`, served by stdlib `http.server`. Shows component coverage, daemon health, and Pillar 8 cost/token telemetry per workstream.
+- **aho-harness-watcher, aho-nemoclaw, aho-openclaw, aho-telegram** - daemon services for harness monitoring, classifier orchestration, dispatcher orchestration, and notification fan-out.
+- **age + fernet secret store** - age handles per-machine identity (X25519); fernet handles bulk encrypted secret storage (AES-128). OS keyring caches the passphrase between sessions.
 
 State on disk:
 
-- **`.aho-checkpoint.json`** — Pattern C state machine, single source of truth for iteration progression.
-- **`artifacts/iterations/{version}/`** — sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
-- **`artifacts/adrs/`** — versioned architectural decision records, enumerated from disk.
-- **`~/.local/share/aho/events/aho_event_log.jsonl`** — immutable append-only event ledger.
+- **`.aho-checkpoint.json`** - Pattern C state machine, single source of truth for iteration progression.
+- **`artifacts/iterations/{version}/`** - sealed acceptance archives, audit archives, plan/design docs, bundles, evidence.
+- **`artifacts/adrs/`** - versioned architectural decision records, enumerated from disk.
+- **`~/.local/share/aho/events/aho_event_log.jsonl`** - immutable append-only event ledger.
 
 Distribution today is fish-shell-driven install scripts. This is a known limitation; see Target shape.
 
-## Architecture — target shape
+## Architecture - target shape
 
 aho deployment scales across three tiers. The harness lives at the edge with each engineer; the heavy compute lives centrally; the truth layer is managed storage.
 
@@ -9283,12 +9283,12 @@ aho deployment scales across three tiers. The harness lives at the edge with eac
 
 Runs locally on every aho user's machine. Distributed as signed container images.
 
-- **aho-harness** — Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
-- **ollama-edge** — minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
-- **otel-collector-edge** — local OTEL collector, ships to central observability tier.
-- **aho-dashboard-local** — claw3d for this engineer's iterations. Optional; org dashboard exists separately.
-- **aho-harness-watcher** — daemon monitoring local harness state, emitting events.
-- **engineer-local secret store** — age identity for this engineer, fernet-encrypted local secret bundle.
+- **aho-harness** - Pattern C state machine, dispatcher logic, router logic, archive writers. Stateful per active iteration.
+- **ollama-edge** - minimal local model runtime for triage, classification, offline work, and fast-iteration scenarios where network round-trip would slow the loop.
+- **otel-collector-edge** - local OTEL collector, ships to central observability tier.
+- **aho-dashboard-local** - claw3d for this engineer's iterations. Optional; org dashboard exists separately.
+- **aho-harness-watcher** - daemon monitoring local harness state, emitting events.
+- **engineer-local secret store** - age identity for this engineer, fernet-encrypted local secret bundle.
 
 The engineer container is a workstation tool, not a Kubernetes pod. Stateful per iteration, identity-bound to the engineer, not fungible.
 
@@ -9296,29 +9296,29 @@ The engineer container is a workstation tool, not a Kubernetes pod. Stateful per
 
 Runs centrally; engineer workstations consume via HTTPS. Pod-based, horizontally scaled with HPA, GPU-aware where applicable.
 
-- **inference-gateway** — the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
-- **vllm-{qwen, glm, nemotron, ...}** — high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
-- **api-proxy-{anthropic, google, openai}** — egress with per-tenant key vaulting, rate limiting, retry handling.
-- **audit-dispatcher** — stateless service handing drafter outputs to the auditor agent.
-- **embedding-service** — nomic-embed-text or equivalent containerized for retrieval at scale.
-- **batch-worker-pool** — Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
-- **registry-api** — Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
-- **archive-api** — GCS-fronted API for sealed acceptance and audit archive reads and writes.
-- **aho-dashboard-org** — team-level org-wide view, separate deployment from engineer-local dashboards.
-- **otel-collector-central** — DaemonSet ingestion tier.
+- **inference-gateway** - the governance load-bearer. Per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, per-engineer cost attribution stamping, audit log emission for every model call. Tight latency and reliability requirements; multi-zone, PodDisruptionBudget-protected.
+- **vllm-{qwen, glm, nemotron, ...}** - high-throughput model serving with continuous batching and PagedAttention. GPU node pools, MIG-partitioned A100s or H100s, HPA on QPS.
+- **api-proxy-{anthropic, google, openai}** - egress with per-tenant key vaulting, rate limiting, retry handling.
+- **audit-dispatcher** - stateless service handing drafter outputs to the auditor agent.
+- **embedding-service** - nomic-embed-text or equivalent containerized for retrieval at scale.
+- **batch-worker-pool** - Kubernetes Job objects for council re-vetting and parallel matrix sweeps.
+- **registry-api** - Firestore-fronted API for gotcha registry, script registry, ADR index reads and writes.
+- **archive-api** - GCS-fronted API for sealed acceptance and audit archive reads and writes.
+- **aho-dashboard-org** - team-level org-wide view, separate deployment from engineer-local dashboards.
+- **otel-collector-central** - DaemonSet ingestion tier.
 
 ### Tier 3: managed storage and state services
 
 Not pods. The truth layer.
 
-- **Firestore** — checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
-- **GCS** — sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
-- **Cloud Trace (or Tempo)** — OTEL trace storage.
-- **Cloud Monitoring (or Mimir)** — OTEL metric storage.
-- **Cloud Logging (or Loki)** — OTEL log storage.
-- **Secret Manager (or Vault)** — per-engineer and per-tenant identity vaulting.
-- **Pub/Sub** — event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
-- **Workload Identity** — engineer-container to GCP authentication.
+- **Firestore** - checkpoint state, registry contents, gotcha index, ADR index, event log index. Single-collection multi-tenant schema with `t_log_type` discriminator (pattern proven in TachTech's pipeline tooling).
+- **GCS** - sealed acceptance archives, sealed audit archives, bundle storage, model weights cache for vLLM.
+- **Cloud Trace (or Tempo)** - OTEL trace storage.
+- **Cloud Monitoring (or Mimir)** - OTEL metric storage.
+- **Cloud Logging (or Loki)** - OTEL log storage.
+- **Secret Manager (or Vault)** - per-engineer and per-tenant identity vaulting.
+- **Pub/Sub** - event log fan-out for change notification: registry updates published to subscribed harness instances on engineer workstations.
+- **Workload Identity** - engineer-container to GCP authentication.
 
 ### Why this shape
 
@@ -9328,7 +9328,7 @@ Three independent scaling axes:
 - **Engineer count and deployment count** scales by deployment multiplication: more engineers means more workstation containers, each producing load on Tier 2 services. Engineer-side does not pod-scale.
 - **Storage and archive volume** scales via Tier 3 service capacity, independent of pod count.
 
-Putting the harness or registries in pods would couple these axes and break the independence. The boundary — harness and registries at the edge or behind APIs, model compute in pods, truth in managed services — preserves it.
+Putting the harness or registries in pods would couple these axes and break the independence. The boundary - harness and registries at the edge or behind APIs, model compute in pods, truth in managed services - preserves it.
 
 ## Components in detail
 
@@ -9340,21 +9340,21 @@ The harness is the contract between human, drafter agent, and auditor agent. It 
 
 Three registries form the harness's memory:
 
-- **Gotcha registry** — indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
-- **Script registry** — sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
-- **ADR index** — architectural decision records numbered sequentially from disk enumeration, never fabricated.
+- **Gotcha registry** - indexed failure modes with mitigations. Each entry is `aho-G###` numbered; entries persist across iterations and projects.
+- **Script registry** - sanctioned tool surface per Pillar 4. Every executable invoked from the harness is registered with its arguments, return contract, and side effects.
+- **ADR index** - architectural decision records numbered sequentially from disk enumeration, never fabricated.
 
 In current shape, registries are version-controlled files in the repo. In target shape, registries are Firestore-backed APIs with Pub/Sub fan-out for change notification.
 
 ### The dispatcher and router
 
-The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing — typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
+The dispatcher selects a model family (qwen, glm, nemotron, claude, gemini) and routes the dispatch to the appropriate backend. The router classifies inputs to determine routing - typically running a small local model (Nemotron) to triage before deciding whether the work merits a substantive dispatch.
 
 In current shape, dispatcher routes to local Ollama. In target shape, dispatcher routes through the inference-gateway, which bridges to local Ollama for edge work, vLLM pods for substantive council dispatches, or API proxies for premium dispatches.
 
 ### Pattern C state machine
 
-Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 — the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
+Five states per workstream: `not_started`, `in_progress`, `pending_audit`, `audit_complete`, `workstream_complete`. Transitions are durable per Pillar 6 - the checkpoint file is written before any state transition emits its event. The drafter cannot transition past `pending_audit`; only the auditor's archive (read by a fresh drafter session) authorizes the `workstream_complete` transition.
 
 ### OTEL telemetry and TRACEPARENT propagation
 
@@ -9373,7 +9373,7 @@ Drafter is typically Claude Code; auditor is typically Gemini CLI. They run in s
 aho deployment scales in phases:
 
 - **Phase A (current):** single-machine local loop. Working, refined through 0.2.x iterations.
-- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only — no central cloud yet. The data-gathering phase.
+- **Phase B:** containerized harness on multiple engineer machines. Multi-machine telemetry capture begins. Distribution shifts from install scripts to signed container images. Local-only - no central cloud yet. The data-gathering phase.
 - **Phase C:** cloud coordination layer informed by Phase B telemetry. Endpoints for registry sync, harness contribution, shared event log, and central observability backend. Specific shape determined by what Phase B telemetry reveals.
 - **Phase D:** customer-facing deployment. Multi-tenant. Compliance-shaped.
 
@@ -9479,7 +9479,7 @@ License to be determined before v0.6.0 release.
 
 ### CLAUDE.md
 ```markdown
-# CLAUDE.md — aho 0.2.16
+# CLAUDE.md - aho 0.2.16
 
 You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship (modified). Gemini CLI audits. Kyle signs.
 
@@ -9489,7 +9489,7 @@ You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -9501,11 +9501,11 @@ You are Claude Code, primary drafter for aho 0.2.16 under Adversarial Authorship
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
-11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** — a `claude_code.commit.count > 0` or `claude_code.pull_request.count > 0` event fires a real-time alert to the dedicated Pillar 11 channel. The convention is now detection.
+11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** - a `claude_code.commit.count > 0` or `claude_code.pull_request.count > 0` event fires a real-time alert to the dedicated Pillar 11 channel. The convention is now detection.
 
 ## Operating Stance
 
@@ -9513,15 +9513,15 @@ Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surf
 
 **Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1, reinforced by 0.2.15 W3 Nemotron daemon discovery). Acceptance checks must include raw-response inspection, not just parsed-structure validity.
 
-**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions — 0.2.15 proved this twice (GLM "non-functional" claim was contaminated baseline; "23s Nemoclaw overhead" never existed).
+**No speed or capability claims without tuned-baseline measurement.** Configuration first, then speed/capability judgment, then role assignment. Premature characterization distorts downstream decisions - 0.2.15 proved this twice (GLM "non-functional" claim was contaminated baseline; "23s Nemoclaw overhead" never existed).
 
 **Cost attribution is Pillar 8 ground truth starting 0.2.16.** Do not estimate per-workstream cost from parsed logs once W1 dashboard lands. Read it from `claude_code.cost.usage` metrics tagged with `aho.workstream`.
 
-## Adversarial Authorship Role — Primary Drafter (Modified for 0.2.16)
+## Adversarial Authorship Role - Primary Drafter (Modified for 0.2.16)
 
 For each workstream N:
-1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 — it flows into OTEL resource attrs for per-workstream cost and trace attribution.
-2. Before real work, verify one emitted OTEL event lands in Jaeger with correct `aho.iteration=0.2.16` and `aho.workstream=W{N}` resource attrs. If missing, halt and surface — real work cannot proceed with broken telemetry.
+1. Emit `workstream_start` at workstream begin **AFTER confirming AHO_ITERATION env is set to 0.2.16 AND AHO_WORKSTREAM is set to W{N}**. `AHO_WORKSTREAM` is new in 0.2.16 - it flows into OTEL resource attrs for per-workstream cost and trace attribution.
+2. Before real work, verify one emitted OTEL event lands in Jaeger with correct `aho.iteration=0.2.16` and `aho.workstream=W{N}` resource attrs. If missing, halt and surface - real work cannot proceed with broken telemetry.
 3. Execute scope per `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`.
 4. Write `artifacts/iterations/0.2.16/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 5. Set checkpoint `last_event: "pending_audit"`. **You do not emit `workstream_complete` yet.**
@@ -9536,11 +9536,11 @@ For each workstream N:
 **Claude emits:** `workstream_start`, `pending_audit`, `workstream_complete`.
 **Gemini emits:** `audit_complete` only.
 **No agent emits `workstream_complete` before `audit_complete` exists.**
-**Audit archive overwrites forbidden — re-audits create `audit/W{N}-v2.json`, `v3`, etc.**
+**Audit archive overwrites forbidden - re-audits create `audit/W{N}-v2.json`, `v3`, etc.**
 
 ## OTEL Environment (new in 0.2.16)
 
-Required env vars — set by managed `.claude/settings.json` (W0 deliverable):
+Required env vars - set by managed `.claude/settings.json` (W0 deliverable):
 
 ```
 CLAUDE_CODE_ENABLE_TELEMETRY=1
@@ -9555,15 +9555,15 @@ OTEL_RESOURCE_ATTRIBUTES=service.name=claude-code,aho.iteration=${AHO_ITERATION}
 
 From W2: `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER=otlp` also enabled.
 
-**`TRACEPARENT` propagation:** Claude Code sets `TRACEPARENT` on subprocess env. `src/aho/pipeline/dispatcher.py` and `src/aho/pipeline/router.py` read it and create child spans (W2 change). This means aho dispatcher spans link automatically to Claude Code trace context — no code change needed in the caller. Do not override or unset `TRACEPARENT` in bash subprocess invocations.
+**`TRACEPARENT` propagation:** Claude Code sets `TRACEPARENT` on subprocess env. `src/aho/pipeline/dispatcher.py` and `src/aho/pipeline/router.py` read it and create child spans (W2 change). This means aho dispatcher spans link automatically to Claude Code trace context - no code change needed in the caller. Do not override or unset `TRACEPARENT` in bash subprocess invocations.
 
 **Privacy posture:** Both `OTEL_LOG_USER_PROMPTS=1` and `OTEL_LOG_TOOL_CONTENT=1` enabled for aho-internal use. The exported reference pack documents this as a posture decision and notes that customer deployments should evaluate based on data sensitivity.
 
-**Cost awareness:** Sessions are metered and attributed to workstreams. Context-window waste is directly observable in `claude_code.cost.usage` tagged by `aho.workstream`. Be mindful — large artifacts loaded in context and not referenced cost real money.
+**Cost awareness:** Sessions are metered and attributed to workstreams. Context-window waste is directly observable in `claude_code.cost.usage` tagged by `aho.workstream`. Be mindful - large artifacts loaded in context and not referenced cost real money.
 
 ## Hard Rules
 
-- No git commits, pushes, merges, adds (Pillar 11 — now monitored)
+- No git commits, pushes, merges, adds (Pillar 11 - now monitored)
 - No reading secrets, no `cat ~/.config/fish/config.fish`
 - Clear `__pycache__` after any `src/aho/` touch (G070); restart daemons if imported (G071)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22), no bash process substitution (use `psub`)
@@ -9571,20 +9571,20 @@ From W2: `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1` and `OTEL_TRACES_EXPORTER=otlp`
 - Canonical paths only, resolvers not hardcodes (G075, G082)
 - `baseline_regression_check()` is the backstop, not regex counts (G079)
 - No `except Exception` blocks in new code
-- **`template_leak_detected` emits `false`/`true` not `null`/`true`** (AF002 normalization in 0.2.16 W0 — use explicit booleans)
-- **No `OTEL_TRACES_EXPORTER` unset override in user code** — respect managed settings
+- **`template_leak_detected` emits `false`/`true` not `null`/`true`** (AF002 normalization in 0.2.16 W0 - use explicit booleans)
+- **No `OTEL_TRACES_EXPORTER` unset override in user code** - respect managed settings
 - **Kyle creates secrets.** `ahomw:telegram_alerts_bot_token` and `ahomw:telegram_alerts_chat_id` (new in 0.2.16 W3) are Kyle-created, agent-read-only
 
 ## Cross-Project Contamination Vigilance
 
-aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14 (kjtcom bundle version label `v10.66`, "10 IAO Pillars" instead of 11 aho Pillars). 0.2.15 held zero contamination instances across 5 workstreams under the same vigilance — the discipline works.
+aho memory recall can pull from kjtcom context without flagging project-origin. Observed in 0.2.14 (kjtcom bundle version label `v10.66`, "10 IAO Pillars" instead of 11 aho Pillars). 0.2.15 held zero contamination instances across 5 workstreams under the same vigilance - the discipline works.
 
 When working with version labels, ADR numbers, pillar lists, bundle sections, or harness conventions:
 - Verify against aho canonical references (`artifacts/harness/base.md`, `README.md`, ADR index, this file) before use
-- Do not fabricate version numbers or ADR numbers to fill prompts — look them up by enumerating `artifacts/adrs/`
+- Do not fabricate version numbers or ADR numbers to fill prompts - look them up by enumerating `artifacts/adrs/`
 - If memory suggests a structural convention, confirm it's aho-native before embedding it in artifacts
 - aho has 11 pillars (verbatim above). "10 IAO Pillars" is a kjtcom construct.
-- ADR numbers are sequential in `artifacts/adrs/` — the next available is determined at execution time, never pre-fabricated in design or plan docs
+- ADR numbers are sequential in `artifacts/adrs/` - the next available is determined at execution time, never pre-fabricated in design or plan docs
 
 ## Current Iteration: 0.2.16
 
@@ -9595,25 +9595,25 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 
 **Hard gate blocker for iteration close:** Cross-model cascade paired Auditor comparison completes with real Producer output. Both Auditors produce substantive critique. Pillar 7 verdict rendered with evidence. Export pack populated.
 
-**W0 pre-flight — 0.2.15 must close before 0.2.16 scaffolding advances.** Kyle ticks sign-off, runs `aho iteration close --confirm` with `AHO_ITERATION=0.2.15`, then advances env to 0.2.16. No 0.2.16 `workstream_start` events fire before this completes.
+**W0 pre-flight - 0.2.15 must close before 0.2.16 scaffolding advances.** Kyle ticks sign-off, runs `aho iteration close --confirm` with `AHO_ITERATION=0.2.15`, then advances env to 0.2.16. No 0.2.16 `workstream_start` events fire before this completes.
 
 ## Reference Reading (consult at diligence)
 
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
-- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/base.md` - canonical pillars, ADRs, patterns
 - `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment
-- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` — 27 items, 2 critical; what 0.2.16 inherits
-- `artifacts/iterations/0.2.15/aho-bundle-0.2.15.md` — 9-section bundle structure reference
-- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` — drift to repair in W0 Bucket 1
-- `artifacts/adrs/` — enumerate before creating any new ADR; 0.2.15 left ADR-0002 as highest aho-internal number
+- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` - substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, honest assessment
+- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` - 27 items, 2 critical; what 0.2.16 inherits
+- `artifacts/iterations/0.2.15/aho-bundle-0.2.15.md` - 9-section bundle structure reference
+- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` - drift to repair in W0 Bucket 1
+- `artifacts/adrs/` - enumerate before creating any new ADR; 0.2.15 left ADR-0002 as highest aho-internal number
 
 ## Findings Carried Forward from 0.2.15
 
-- **Substrate is fixable; contaminated baselines lie.** 0.2.15 dissolved two substrate fictions by measuring under controlled conditions — GLM "non-functional" and the "23s Nemoclaw overhead." Apply the same discipline to any OTEL integration claim: measure before characterizing.
+- **Substrate is fixable; contaminated baselines lie.** 0.2.15 dissolved two substrate fictions by measuring under controlled conditions - GLM "non-functional" and the "23s Nemoclaw overhead." Apply the same discipline to any OTEL integration claim: measure before characterizing.
 - **Dispatcher is multi-model-aware.** `MODEL_FAMILY_CONFIG` with family resolution via longest-prefix match. Qwen, Llama 3.x, GLM, Nemotron each have their own stop tokens, `num_predict`, `num_gpu`, template handling. 52 dispatcher tests (was 6).
 - **Router is live.** `src/aho/pipeline/router.py` is the canonical classification primitive. `NemoClawOrchestrator.route()` uses it. Use router, not legacy `nemotron_client.classify` (deprecated with 0.2.16 migration window).
 - **Pillar 7 has one clean data point.** 0.2.15 W4 cross-model cascade produced a non-rubber-stamp Auditor critique from GLM, but the test was compromised by Qwen Producer emitting 0 chars (thinking-mode exhausted `num_predict=2000`). 0.2.16 W0 fixes the Producer; 0.2.16 W4 re-runs for a defensible verdict.
@@ -9621,19 +9621,19 @@ When working with version labels, ADR numbers, pillar lists, bundle sections, or
 - **Nemotron cannot assume substantive roles.** Classifier/triage only. W4 observed Nemotron-as-Assessor emit 65 chars of chat-model helpfulness. 0.2.16 W4 adds a role-compatibility gate in the cascade orchestrator (F004 closure).
 - **Ollama state hygiene is infrastructure.** `unload_model()`, `list_loaded_models()`, `ensure_model_ready()` in dispatcher. Nemotron auto-load quirks. GLM OOM kills all co-resident models. Cross-model cascades serialize; they do not parallelize on 8GB VRAM.
 - **Checkpoint corruption from `test_workstream_events.py` recurred a third time** in 0.2.15 W4. 0.2.16 W0 fixes the fixture. Do not defer again.
-- **Cross-project contamination vigilance worked.** Zero instances across 0.2.15. Same discipline applies in 0.2.16 — OTEL is a different domain but the rules are identical: verify canonicals, do not fabricate.
+- **Cross-project contamination vigilance worked.** Zero instances across 0.2.15. Same discipline applies in 0.2.16 - OTEL is a different domain but the rules are identical: verify canonicals, do not fabricate.
 - **Dedicated alert channel.** 0.2.16 W3 creates new Telegram bot + chat separate from routine `ahomw:telegram_bot_token` / `ahomw:telegram_chat_id`. Kyle creates both secrets for the new channel; agents read only.
 
 ## Mercor Engagement Context
 
-The 0.2.16 OTEL integration produces a reusable export pack under `artifacts/iterations/0.2.16/export/claude-otel-reference-pack/`. The Mercor engagement is the first external consumer. The three Mercor customer-facing artifacts (breach timeline, controls doc, implementation plan) are **independent work product** and do not fold into 0.2.16 workstreams — they inform roadmap but are not in scope.
+The 0.2.16 OTEL integration produces a reusable export pack under `artifacts/iterations/0.2.16/export/claude-otel-reference-pack/`. The Mercor engagement is the first external consumer. The three Mercor customer-facing artifacts (breach timeline, controls doc, implementation plan) are **independent work product** and do not fold into 0.2.16 workstreams - they inform roadmap but are not in scope.
 
 When assembling the export pack (W4): keep it aho-brand-neutral, keep configuration parameterized, keep privacy posture explicit. If the Mercor engagement surfaces a specific new need mid-iteration, it absorbs into W4 export pack assembly, not a workstream amendment.
 ```
 
 ### GEMINI.md
 ```markdown
-# GEMINI.md — aho 0.2.16
+# GEMINI.md - aho 0.2.16
 
 You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude Code drafts. You audit. Kyle signs.
 
@@ -9643,7 +9643,7 @@ You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude 
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -9655,35 +9655,35 @@ You are Gemini CLI, auditor for aho 0.2.16 under Adversarial Authorship. Claude 
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
-11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** — you should see alerts on the dedicated channel if Claude Code ever emits a `commit.count` or `pull_request.count` increment.
+11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role. **In 0.2.16 Pillar 11 becomes a monitored invariant** - you should see alerts on the dedicated channel if Claude Code ever emits a `commit.count` or `pull_request.count` increment.
 
 ## Operating Stance
 
-Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.15 audit trajectory (W0 ~20 min, W1 ~30 min with contamination-correction review, W2 ~25 min, W3 ~25 min, W4 ~30 min) is your baseline — bring the same skepticism and budget discipline to 0.2.16.
+Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.15 audit trajectory (W0 ~20 min, W1 ~30 min with contamination-correction review, W2 ~25 min, W3 ~25 min, W4 ~30 min) is your baseline - bring the same skepticism and budget discipline to 0.2.16.
 
-**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1; reinforced in 0.2.15 W3 where Nemotron daemon failures — prose output, "AI" stubs — were only visible in raw HTTP body, not parsed dispatcher fields). Before trusting any executor claim about output quality or substrate behavior, read the raw response field of relevant artifacts yourself.
+**Raw response field is ground truth, not parsed JSON** (lesson from 0.2.14 W1; reinforced in 0.2.15 W3 where Nemotron daemon failures - prose output, "AI" stubs - were only visible in raw HTTP body, not parsed dispatcher fields). Before trusting any executor claim about output quality or substrate behavior, read the raw response field of relevant artifacts yourself.
 
-**OTEL telemetry is first-class evidence in 0.2.16.** If an acceptance archive claims a metric fired, a trace landed, or an alert delivered — spot-check by querying Jaeger or the collector directly, not by trusting a quoted log line. If the claim is about a dashboard panel, verify the panel renders with real data, not synthetic.
+**OTEL telemetry is first-class evidence in 0.2.16.** If an acceptance archive claims a metric fired, a trace landed, or an alert delivered - spot-check by querying Jaeger or the collector directly, not by trusting a quoted log line. If the claim is about a dashboard panel, verify the panel renders with real data, not synthetic.
 
-## Adversarial Authorship Role — Auditor
+## Adversarial Authorship Role - Auditor
 
 For each workstream N:
 1. Claude writes `artifacts/iterations/0.2.16/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 2. Read it. Read `artifacts/harness/adversarial-authorship-protocol.md` if unclear.
-3. Lightweight audit — **not re-execution:**
+3. Lightweight audit - **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
    - Spot-check 1–2 high-risk claims independently.
-   - **Raw artifact inspection** — if executor claims output quality, verify by reading raw response fields, not just parsed JSON.
-   - **OTEL inspection** — if executor claims telemetry landed, spot-check Jaeger or the collector; don't trust the archive's claim alone.
+   - **Raw artifact inspection** - if executor claims output quality, verify by reading raw response fields, not just parsed JSON.
+   - **OTEL inspection** - if executor claims telemetry landed, spot-check Jaeger or the collector; don't trust the archive's claim alone.
    - Gotcha scan: G083, G078, G079, G081, G082 reintroduction?
    - Baseline check: if it grew, is each addition genuinely environmental, or a hidden failure?
    - Drift check: acceptance-criteria drift between plan and archive?
-   - Count-coherence check: carry-forward counts in sign-off match carry-forwards.md footer match actual item count? (0.2.15 AF001 was a cosmetic miss — catch it here in 0.2.16)
+   - Count-coherence check: carry-forward counts in sign-off match carry-forwards.md footer match actual item count? (0.2.15 AF001 was a cosmetic miss - catch it here in 0.2.16)
 4. Write `artifacts/iterations/0.2.16/audit/W{N}.json` with `audit_result` and detailed findings.
 5. **Stop. You do not advance the checkpoint. You do not emit `workstream_complete`.** Claude returns, reads your audit, and emits the terminal event.
 
@@ -9696,7 +9696,7 @@ For each workstream N:
 
 ## Budget
 
-15–35 min per audit. Compound-scope workstreams (W0 with 0.2.15 close-out + substrate closure + OTEL scaffolding; W4 with paired cascade + export pack + close package) may reach 45–50 min. >50 min means you're re-executing — stop, write what you have, flag to Kyle.
+15–35 min per audit. Compound-scope workstreams (W0 with 0.2.15 close-out + substrate closure + OTEL scaffolding; W4 with paired cascade + export pack + close package) may reach 45–50 min. >50 min means you're re-executing - stop, write what you have, flag to Kyle.
 
 ## Audit Archive Schema
 
@@ -9740,11 +9740,11 @@ Findings severity scale (matches 0.2.15 AF convention): `info`, `important`, `cr
 ## Hard Rules
 
 - No git commits or pushes (Pillar 11)
-- Never `cat ~/.config/fish/config.fish` — secrets leak (established rule)
+- Never `cat ~/.config/fish/config.fish` - secrets leak (established rule)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22)
 - No reading secrets under any circumstance
 - Canonical resolvers only (G075, G082)
-- Do not attempt to generate OTEL traces yourself — Gemini CLI has no OTEL equivalent. See **Gemini Observability Asymmetry** below.
+- Do not attempt to generate OTEL traces yourself - Gemini CLI has no OTEL equivalent. See **Gemini Observability Asymmetry** below.
 
 ## Gemini Observability Asymmetry (new in 0.2.16)
 
@@ -9753,7 +9753,7 @@ Gemini CLI has no first-class OTEL support as of this iteration. Your audits wil
 Consequences:
 - Adversarial Authorship traces in Jaeger show the Claude Code drafter side in full, and the Gemini CLI auditor side as harness-watcher wall-clock wrappers only
 - Audit cost attribution in the Pillar 8 dashboard shows drafter cost fully and auditor cost not at all
-- Downstream consumers of the Mercor export pack should expect this asymmetry — the pack documents it prominently
+- Downstream consumers of the Mercor export pack should expect this asymmetry - the pack documents it prominently
 
 This is not a bug to work around. Half-measures (timing wrappers without cost or tokens) produce partial observability that looks like coverage it isn't. Do not try to approximate.
 
@@ -9761,11 +9761,11 @@ This is not a bug to work around. Half-measures (timing wrappers without cost or
 
 aho memory recall can pull from kjtcom context without flagging project-origin. 0.2.14 saw kjtcom constructs bleed in (`v10.66` version label, "10 IAO Pillars"); 0.2.15 achieved zero instances across 5 workstreams under this vigilance; same discipline holds in 0.2.16.
 
-When auditing artifacts, treat any structural or numerical claim (ADR number, pillar count, bundle section count, version label, iteration count) as verifiable against aho canonicals — do not accept "looks right" without verification.
+When auditing artifacts, treat any structural or numerical claim (ADR number, pillar count, bundle section count, version label, iteration count) as verifiable against aho canonicals - do not accept "looks right" without verification.
 
 Specific pitfalls for 0.2.16:
 - aho has **11 pillars** (verbatim above). kjtcom's "10 IAO Pillars" is a separate construct.
-- ADR numbers for 0.2.16 deliverables are determined at workstream execution time by enumerating `artifacts/adrs/`. 0.2.15 left `0002` as the highest aho-internal ADR. 0.2.16 will land `0003` and likely `0004` — verify each against the directory, not the design/plan doc prediction.
+- ADR numbers for 0.2.16 deliverables are determined at workstream execution time by enumerating `artifacts/adrs/`. 0.2.15 left `0002` as the highest aho-internal ADR. 0.2.16 will land `0003` and likely `0004` - verify each against the directory, not the design/plan doc prediction.
 - Bundle has **9 sections** (§1 Design+Plan, §2 Build Artifacts, §3 CLAUDE+GEMINI, §4 Harness State, §5 Gotchas+ADRs, §6 Delta State, §7 Test Results, §8 Event Log, §9 Close Package) per 0.2.15 convention.
 - `template_leak_detected` field emits `false`/`true`, **not `null`/`true`** after 0.2.16 W0 normalization (AF002 closure). Flag any stage JSON that emits `null` post-W0.
 
@@ -9774,36 +9774,36 @@ Specific pitfalls for 0.2.16:
 **Theme:** Claude Code OTEL Integration & 0.2.15 Close-Out.
 **Workstreams:** 5 (W0 0.2.15 close-out + substrate + OTEL scaffolding, W1 Pillar 8 dashboard, W2 `TRACEPARENT` distributed tracing, W3 Pillar 11 enforcement + anomaly detection, W4 cross-model cascade re-run + close).
 
-**Hard gate blocker for iteration close:** Cross-model cascade paired Auditor comparison completes with real Producer output, both Auditors produce substantive critique, Pillar 7 verdict rendered with evidence, export pack populated, bundle internally consistent (counts coherent — do not repeat 0.2.15 AF001).
+**Hard gate blocker for iteration close:** Cross-model cascade paired Auditor comparison completes with real Producer output, both Auditors produce substantive critique, Pillar 7 verdict rendered with evidence, export pack populated, bundle internally consistent (counts coherent - do not repeat 0.2.15 AF001).
 
 **Specific audit focus for 0.2.16 workstreams:**
 
 - **W0 (compound):** Three buckets to audit independently.
   - Bucket 1 (0.2.15 close-out): `aho iteration close --confirm` ran successfully; sign-off drift repaired; AHO_ITERATION advanced in event log.
-  - Bucket 2 (substrate closure): `install.fish` Tier 1 section dry-run produces clean output on NZXTcos; Qwen Producer probe shows ≥500 chars content with `done_reason != "length"`; `test_workstream_events.py` fixture fix works (run the suite, watch for checkpoint mutation — if it recurs, it's a `fail`); empty-content halt semantics covered by new unit tests.
-  - Bucket 3 (OTEL scaffolding): `.claude/settings.json` env block present and correct; one emitted event visible in Jaeger with correct `aho.*` resource attrs; no `OTEL_TRACES_EXPORTER` set (W0 boundary — traces are W2 scope).
+  - Bucket 2 (substrate closure): `install.fish` Tier 1 section dry-run produces clean output on NZXTcos; Qwen Producer probe shows ≥500 chars content with `done_reason != "length"`; `test_workstream_events.py` fixture fix works (run the suite, watch for checkpoint mutation - if it recurs, it's a `fail`); empty-content halt semantics covered by new unit tests.
+  - Bucket 3 (OTEL scaffolding): `.claude/settings.json` env block present and correct; one emitted event visible in Jaeger with correct `aho.*` resource attrs; no `OTEL_TRACES_EXPORTER` set (W0 boundary - traces are W2 scope).
 
-- **W1 (dashboard):** Verify dashboard JSON renders — spot-check by opening it yourself, not by trusting an executor screenshot. Confirm cost data is real (non-zero, non-synthetic) for at least one workstream. Cache breakdown must be visibly distinct from input/output (4 series). Export copy must be stripped of aho-specific identifiers.
+- **W1 (dashboard):** Verify dashboard JSON renders - spot-check by opening it yourself, not by trusting an executor screenshot. Confirm cost data is real (non-zero, non-synthetic) for at least one workstream. Cache breakdown must be visibly distinct from input/output (4 series). Export copy must be stripped of aho-specific identifiers.
 
-- **W2 (tracing):** End-to-end trace claim — verify the captured trace JSON has the correct parent-child hierarchy (aho spans under Claude Code spans under the same `trace_id`). `dispatch.duration_ms` span attribute must agree with dispatcher's internal timing measurement (pull from another source if possible — test evidence or event log). Backward compat: run existing dispatcher tests without `TRACEPARENT` set — they must pass. Gemini asymmetry ADR present with correct index-derived number.
+- **W2 (tracing):** End-to-end trace claim - verify the captured trace JSON has the correct parent-child hierarchy (aho spans under Claude Code spans under the same `trace_id`). `dispatch.duration_ms` span attribute must agree with dispatcher's internal timing measurement (pull from another source if possible - test evidence or event log). Backward compat: run existing dispatcher tests without `TRACEPARENT` set - they must pass. Gemini asymmetry ADR present with correct index-derived number.
 
-- **W3 (alerts):** All 5 rules registered in alert engine (verify by querying engine, not by file presence). Synthetic test evidence: timestamps in `alert-delivery-test.md` must show alert fired within 60s of synthetic event. Telegram channel is the **dedicated** channel (new bot/chat), not the existing routine notifications channel — confirm by checking secret names (`ahomw:telegram_alerts_*` not `ahomw:telegram_*`). Kyle created the secrets (agent did not).
+- **W3 (alerts):** All 5 rules registered in alert engine (verify by querying engine, not by file presence). Synthetic test evidence: timestamps in `alert-delivery-test.md` must show alert fired within 60s of synthetic event. Telegram channel is the **dedicated** channel (new bot/chat), not the existing routine notifications channel - confirm by checking secret names (`ahomw:telegram_alerts_*` not `ahomw:telegram_*`). Kyle created the secrets (agent did not).
 
-- **W4 (cascade re-run + close):** Paired Auditor runs — confirm Producer ran exactly once and both Auditors evaluated the same Producer output (not two independent Producer runs). Pillar 7 verdict cites evidence from both Auditor outputs side-by-side. Export pack is complete (all items from design spec present), runbook exists, aho-brand-neutrality preserved. Retrospective honest per G081 — the W4 re-run either produced a Pillar 7 data point or didn't; do not let rhetoric fill a real gap. Sign-off count coherence: carry-forward count in sign-off matches `carry-forwards-0.2.16.md` footer matches actual item count.
+- **W4 (cascade re-run + close):** Paired Auditor runs - confirm Producer ran exactly once and both Auditors evaluated the same Producer output (not two independent Producer runs). Pillar 7 verdict cites evidence from both Auditor outputs side-by-side. Export pack is complete (all items from design spec present), runbook exists, aho-brand-neutrality preserved. Retrospective honest per G081 - the W4 re-run either produced a Pillar 7 data point or didn't; do not let rhetoric fill a real gap. Sign-off count coherence: carry-forward count in sign-off matches `carry-forwards-0.2.16.md` footer matches actual item count.
 
 ## Reference Reading (consult at diligence)
 
 - `artifacts/iterations/0.2.16/aho-design-0.2.16.md`
 - `artifacts/iterations/0.2.16/aho-plan-0.2.16.md`
-- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/base.md` - canonical pillars, ADRs, patterns
 - `artifacts/harness/adversarial-authorship-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
-- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` — substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, Producer failure root cause
-- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` — 27 items, 2 critical; baseline for 0.2.16 drawdown
-- `artifacts/iterations/0.2.15/audit/W4.json` — AF001 and AF002 findings that 0.2.16 W0 closes
-- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` — drift artifacts for W0 Bucket 1 audit
-- Gotcha registry (locate canonical file; carry-forward from 0.2.14 and 0.2.15 — may land during 0.2.16 work)
+- `artifacts/iterations/0.2.15/retrospective-0.2.15.md` - substrate findings, 23s-overhead refutation, Pillar 7 tentative data point, Producer failure root cause
+- `artifacts/iterations/0.2.15/carry-forwards-0.2.15.md` - 27 items, 2 critical; baseline for 0.2.16 drawdown
+- `artifacts/iterations/0.2.15/audit/W4.json` - AF001 and AF002 findings that 0.2.16 W0 closes
+- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` - drift artifacts for W0 Bucket 1 audit
+- Gotcha registry (locate canonical file; carry-forward from 0.2.14 and 0.2.15 - may land during 0.2.16 work)
 
 ## Failure Modes to Avoid
 
@@ -9811,11 +9811,11 @@ Specific pitfalls for 0.2.16:
 - Rubber-stamping without spot-check (G083 in human form)
 - Accepting output quality claims without raw response inspection (0.2.14 W1 lesson)
 - Accepting OTEL signal claims without independent collector / Jaeger spot-check (new for 0.2.16)
-- Scope creep — asking Claude to fix things outside the workstream
+- Scope creep - asking Claude to fix things outside the workstream
 - Missing drift because the archive is well-formatted (substance over form)
 - Advancing the checkpoint yourself (0.2.13 W0 mistake)
 - Accepting fabricated ADR numbers, version labels, or pillar counts without canonical verification (cross-project contamination)
-- Missing count-coherence drift (0.2.15 AF001 — 21 vs 25 vs 27 across sign-off and carry-forwards — cosmetic but real)
+- Missing count-coherence drift (0.2.15 AF001 - 21 vs 25 vs 27 across sign-off and carry-forwards - cosmetic but real)
 - Trusting dashboard screenshots instead of opening the dashboard yourself
 - Trusting alert-delivery logs without verifying the message arrived in the **dedicated** Telegram channel (not the existing routine channel)
 ```
@@ -9823,8 +9823,8 @@ Specific pitfalls for 0.2.16:
 ### install.fish
 ```fish
 #!/usr/bin/env fish
-# install.fish — Clone-to-deploy orchestrator for aho.
-# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# install.fish - Clone-to-deploy orchestrator for aho.
+# 0.2.5 - Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
 # Pillar 4: wrappers are the tool surface.
 #
 # Usage: ./install.fish
@@ -9910,7 +9910,7 @@ function _run_step
 end
 
 # ─────────────────────────────────────────────────────────────────────────
-# Platform check (not a resumable step — always runs)
+# Platform check (not a resumable step - always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
 if not test -f /etc/arch-release
@@ -9972,15 +9972,15 @@ _info "────────────────────────�
 
 ### adversarial-authorship-protocol.md
 ```markdown
-# Adversarial Authorship Protocol — aho 0.2.14
+# Adversarial Authorship Protocol - aho 0.2.14
 
 **Produced:** W0 0.2.13, patched W0 0.2.14 | **Renamed:** 0.2.17 W0 (from "Pattern C Protocol") | **Status:** Active for 0.2.14+
 
 > This protocol was authored as "Pattern C Protocol" through
 > 0.2.13–0.2.16. Renamed to "Adversarial Authorship Protocol" in
-> 0.2.17 W0 to describe the protocol's actual structural property —
+> 0.2.17 W0 to describe the protocol's actual structural property -
 > drafter and auditor are constitutionally adversarial, with human
-> as sole signing authority — rather than an arbitrary letter label.
+> as sole signing authority - rather than an arbitrary letter label.
 > Protocol body (state machine, emitter table, halt conditions) is
 > unchanged. Sealed 0.2.16 acceptance and audit archives retain the
 > original "Pattern C" terminology verbatim per sealed-archive
@@ -10017,7 +10017,7 @@ Sequence per workstream:
 
 ### workstream_start requirement (0.2.14 patch)
 
-0.2.13 fired zero `workstream_start` events across all workstreams. This created a gap in lifecycle traceability — event log had complete events but no starts. Starting 0.2.14, `workstream_start` is REQUIRED at workstream begin. Missing starts are a protocol violation to be flagged in audit.
+0.2.13 fired zero `workstream_start` events across all workstreams. This created a gap in lifecycle traceability - event log had complete events but no starts. Starting 0.2.14, `workstream_start` is REQUIRED at workstream begin. Missing starts are a protocol violation to be flagged in audit.
 
 ## 3. What Audit Produces
 
@@ -10081,7 +10081,7 @@ A halt at any workstream triggers review with Kyle before proceeding.
 
 ## 6. Cautionary Examples (0.2.13)
 
-**W0 role-crossing:** Gemini attempted to emit `workstream_complete` in its audit — this is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity. The emitter table (section 1) is now authoritative.
+**W0 role-crossing:** Gemini attempted to emit `workstream_complete` in its audit - this is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity. The emitter table (section 1) is now authoritative.
 
 **Triple-audit timestamp coherence:** Gemini auditing W1, W2, W2.5 in one session gave all three archives timestamps from the batch session, not per-workstream. The overwrite ban (section 3) prevents this going forward.
 
@@ -10090,7 +10090,7 @@ A halt at any workstream triggers review with Kyle before proceeding.
 
 ### agents-architecture.md
 ```markdown
-# Agents Architecture — aho 0.2.1
+# Agents Architecture - aho 0.2.1
 
 **Version:** 0.2.10
 **Status:** Canonical
@@ -10098,7 +10098,7 @@ A halt at any workstream triggers review with Kyle before proceeding.
 
 ## Overview
 
-Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet — including LLMs, MCPs, and tool wrappers — can be deployed as a unified package with zero manual configuration.
+Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet - including LLMs, MCPs, and tool wrappers - can be deployed as a unified package with zero manual configuration.
 
 The current architecture (ADR-040) prioritizes **Ollama-native primitives**. By leveraging the streaming `QwenClient` and the proven classification capabilities of `nemotron-mini:4b`, aho provides a functional agentic layer with zero external library dependencies beyond `requests` and the standard library.
 
@@ -10156,7 +10156,7 @@ This data feeds the **BUNDLE_SPEC §22 Component Checklist**, providing Kyle wit
 # aho - Base Harness
 
 **Version:** 0.2.10
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -10168,7 +10168,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -10180,9 +10180,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -10347,12 +10347,12 @@ Deferred. In Phase 1, clones will push heartbeat summaries to aho.run for centra
 
 ---
 
-*Dashboard contract for aho Phase 0 — authored during 0.2.3 W3.*
+*Dashboard contract for aho Phase 0 - authored during 0.2.3 W3.*
 ```
 
 ### design-template.md
 ```markdown
-# aho Design — X.Y.Z
+# aho Design - X.Y.Z
 
 **Phase:** N | **Iteration:** Y | **Run:** Z
 **Theme:** <one-line theme>
@@ -10377,8 +10377,8 @@ Deferred. In Phase 1, clones will push heartbeat summaries to aho.run for centra
 The Trident diagram is REQUIRED in every design doc. It uses Mermaid
 `graph BT` (bottom-to-top) with exactly two classDefs:
 
-- **shaft**: fill #0D9488 (teal), white text — represents the iteration
-- **prong**: fill #161B22 (dark), stroke #4ADE80 (green) — represents workstream groups
+- **shaft**: fill #0D9488 (teal), white text - represents the iteration
+- **prong**: fill #161B22 (dark), stroke #4ADE80 (green) - represents workstream groups
 
 Minimum 2 prongs, maximum 4. Each prong connects to the shaft via `-->`.
 
@@ -10404,7 +10404,7 @@ graph BT
 
 ## §5 Pillars
 
-<numbered pillar list — 10 or 11 depending on iteration scope>
+<numbered pillar list - 10 or 11 depending on iteration scope>
 
 ## §6 Workstream Summary
 
@@ -10448,7 +10448,7 @@ aho uses a **hybrid** systemd deployment:
 - **System services** (require sudo): Ollama (`ollama.service`). Installed via upstream installer, managed by systemd system scope.
 - **User services** (no sudo): All aho daemons (`aho-otel-collector.service`, future `aho-telegram.service`, etc.). Managed by `systemctl --user`, enabled via `loginctl enable-linger`.
 
-This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
+This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement - both one-time setup steps documented as capability gaps.
 
 ## 2. Install Paths
 
@@ -10508,12 +10508,12 @@ Uninstall is non-destructive to user data. Re-running `bin/aho-bootstrap` after 
 
 Every install operation is safe to re-run:
 
-- `mkdir -p` — no-op if exists
-- `pip install -e .` — upgrades in place
-- Unit file generation — overwrites with identical content
-- `systemctl --user daemon-reload` — safe always
-- `systemctl --user enable --now` — no-op if already running
-- Model pulls — skipped if `ollama list` shows model present
+- `mkdir -p` - no-op if exists
+- `pip install -e .` - upgrades in place
+- Unit file generation - overwrites with identical content
+- `systemctl --user daemon-reload` - safe always
+- `systemctl --user enable --now` - no-op if already running
+- Model pulls - skipped if `ollama list` shows model present
 
 Second run of `bin/aho-bootstrap` produces identical state to first run. No side effects, no error output.
 
@@ -10544,7 +10544,7 @@ aho doctor
 
 ### mcp-fleet.md
 ```markdown
-# aho MCP Fleet — Architectural Specification
+# aho MCP Fleet - Architectural Specification
 
 **Version:** 0.2.10
 **Date:** 2026-04-11
@@ -10585,14 +10585,14 @@ All packages install globally via `sudo npm install -g`. This is a one-time capa
 ## 4. Per-Server Role
 
 - **firebase-tools**: Firestore CRUD for TripleDB and project state persistence.
-- **context7**: Documentation RAG — fetches library docs on demand for agent context.
+- **context7**: Documentation RAG - fetches library docs on demand for agent context.
 - **firecrawl**: Structured web extraction for research tasks.
 - **playwright**: End-to-end browser testing for app/ builds.
 - **flutter**: Flutter widget scaffolding and build tooling.
 - **server-filesystem**: Safe, sandboxed file I/O for agent workdirs.
 - **server-memory**: Cross-session persistent key-value store.
 - **server-sequential-thinking**: Structured reasoning for complex multi-step tasks.
-- **server-everything**: Reference/test MCP server — useful as conductor smoke target and integration test fixture.
+- **server-everything**: Reference/test MCP server - useful as conductor smoke target and integration test fixture.
 
 ## 5. Doctor Checks
 
@@ -10610,21 +10610,21 @@ All packages install globally via `sudo npm install -g`. This is a one-time capa
 ---
 
 **Removed in 0.2.4 (registry-verified as 404/deprecated/non-npm):**
-- `@modelcontextprotocol/server-github` — moved to `github/github-mcp-server` (Go binary, not npm)
-- `@modelcontextprotocol/server-google-drive` — archived, no first-party replacement
-- `@modelcontextprotocol/server-slack` — deprecated, no current replacement
-- `@modelcontextprotocol/server-fetch` — Python-only (`uvx mcp-server-fetch`), not an npm package
+- `@modelcontextprotocol/server-github` - moved to `github/github-mcp-server` (Go binary, not npm)
+- `@modelcontextprotocol/server-google-drive` - archived, no first-party replacement
+- `@modelcontextprotocol/server-slack` - deprecated, no current replacement
+- `@modelcontextprotocol/server-fetch` - Python-only (`uvx mcp-server-fetch`), not an npm package
 
 Replacement servers for github/slack/google-drive/fetch are tracked under a separate ADR (not Phase 0 scope).
 
 ---
 
-*MCP fleet specification for aho Phase 0 — updated during 0.2.4 W0.*
+*MCP fleet specification for aho Phase 0 - updated during 0.2.4 W0.*
 ```
 
 ### mcp-readiness.md
 ```markdown
-# MCP Fleet Readiness — aho
+# MCP Fleet Readiness - aho
 
 **Generated:** 2026-04-12
 **Source:** data/mcp_readiness.json (bin/aho-mcp smoke output)
@@ -10636,29 +10636,29 @@ Replacement servers for github/slack/google-drive/fetch are tracked under a sepa
 | context7 | pass | pending | 2026-04-12T02:29:29Z |
 | dart | pass | pending | 2026-04-12T02:29:32Z |
 | firebase-tools | pass | pending | 2026-04-12T02:29:37Z |
-| firecrawl | pass | pending | — |
-| filesystem | pass | pending | — |
-| memory | pass | pending | — |
-| sequential-thinking | pass | pending | — |
-| everything | pass | pending | — |
-| playwright | pass | pending | — |
+| firecrawl | pass | pending | - |
+| filesystem | pass | pending | - |
+| memory | pass | pending | - |
+| sequential-thinking | pass | pending | - |
+| everything | pass | pending | - |
+| playwright | pass | pending | - |
 
 ## Column Definitions
 
-- **cli_smoke**: `bin/aho-mcp smoke` — verifies server binary exists and responds to basic CLI invocation
+- **cli_smoke**: `bin/aho-mcp smoke` - verifies server binary exists and responds to basic CLI invocation
 - **protocol_smoke**: MCP protocol-level round-trip (tool list request via stdio). Timestamp from `~/.local/share/aho/registries/mcp_smoke_log.jsonl`
 - **Last Successful**: ISO 8601 timestamp of most recent successful smoke
 
 ## Notes
 
 - 9/9 servers pass CLI smoke as of 0.2.8
-- Protocol smoke column added 0.2.11 W8 — timestamps populate as smoke tests execute
+- Protocol smoke column added 0.2.11 W8 - timestamps populate as smoke tests execute
 - `aho mcp smoke` dispatches to `bin/aho-mcp smoke` which runs per-server CLI scripts
 ```
 
 ### mcp-wiring.md
 ```markdown
-# MCP Wiring — aho
+# MCP Wiring - aho
 
 **Version:** 0.2.8
 **Date:** 2026-04-11
@@ -10678,20 +10678,20 @@ Without `.mcp.json`, npm-global MCP packages are installed on the system but inv
 
 | Server Key | npm Package | Command | Args | Env |
 |---|---|---|---|---|
-| firebase-tools | firebase-tools | `firebase mcp` | — | — |
-| context7 | @upstash/context7-mcp | `context7-mcp` | — | — |
-| firecrawl | firecrawl-mcp | `firecrawl-mcp` | — | `FIRECRAWL_API_KEY` required |
-| playwright | @playwright/mcp | `playwright-mcp` | — | — |
-| dart | Dart SDK (bundled) | `dart mcp-server` | — | — |
-| filesystem | @modelcontextprotocol/server-filesystem | `mcp-server-filesystem` | `{{PROJECT_ROOT}}` (resolved by aho-bootstrap) | — |
-| memory | @modelcontextprotocol/server-memory | `mcp-server-memory` | — | — |
-| sequential-thinking | @modelcontextprotocol/server-sequential-thinking | `mcp-server-sequential-thinking` | — | — |
-| everything | @modelcontextprotocol/server-everything | `mcp-server-everything` | — | — |
+| firebase-tools | firebase-tools | `firebase mcp` | - | - |
+| context7 | @upstash/context7-mcp | `context7-mcp` | - | - |
+| firecrawl | firecrawl-mcp | `firecrawl-mcp` | - | `FIRECRAWL_API_KEY` required |
+| playwright | @playwright/mcp | `playwright-mcp` | - | - |
+| dart | Dart SDK (bundled) | `dart mcp-server` | - | - |
+| filesystem | @modelcontextprotocol/server-filesystem | `mcp-server-filesystem` | `{{PROJECT_ROOT}}` (resolved by aho-bootstrap) | - |
+| memory | @modelcontextprotocol/server-memory | `mcp-server-memory` | - | - |
+| sequential-thinking | @modelcontextprotocol/server-sequential-thinking | `mcp-server-sequential-thinking` | - | - |
+| everything | @modelcontextprotocol/server-everything | `mcp-server-everything` | - | - |
 
 **Notes:**
 
 - `firebase-tools` is invoked via `firebase mcp` subcommand (not `lib/bin/mcp.js`). Requires `firebase login` for full functionality. Fixed in W3.
-- `dart` is the official Dart team MCP server bundled with Dart SDK 3.9+. Replaces the broken `flutter-mcp` npm package (upstream PyPI package never published). Invoked via `dart mcp-server`. No additional install required — uses the dart binary from Flutter SDK.
+- `dart` is the official Dart team MCP server bundled with Dart SDK 3.9+. Replaces the broken `flutter-mcp` npm package (upstream PyPI package never published). Invoked via `dart mcp-server`. No additional install required - uses the dart binary from Flutter SDK.
 - `firecrawl` requires `FIRECRAWL_API_KEY` env var. Without it, the server starts but fails on any API call.
 - `filesystem` is restricted to the aho project directory. On P3, the path will need updating to match that machine's clone location.
 - `dart mcp-server` requires stdin to stay open while processing (does not respond if stdin closes immediately after sending the request).
@@ -10702,9 +10702,9 @@ After restarting Claude Code in the aho project directory:
 
 ```fish
 # Inside Claude Code, ask the agent to run:
-# ToolSearch for "filesystem" — should return mcp-server-filesystem tools
-# ToolSearch for "context7" — should return context7-mcp tools
-# ToolSearch for "playwright" — should return playwright-mcp tools
+# ToolSearch for "filesystem" - should return mcp-server-filesystem tools
+# ToolSearch for "context7" - should return context7-mcp tools
+# ToolSearch for "playwright" - should return playwright-mcp tools
 ```
 
 Or from the CLI, verify the config parses:
@@ -10746,17 +10746,17 @@ Prior to 0.2.8 W2.5, all 9 servers were **installed** but neither **wired** nor 
 
 Two servers failed to start after W2.5 wiring. Diagnosed and fixed in W3:
 
-### firebase-tools — wrong entry point
+### firebase-tools - wrong entry point
 
 **Symptom:** Server absent from Claude Code tool surface after session restart.
-**Root cause:** `.mcp.json` pointed at `node /usr/lib/node_modules/firebase-tools/lib/bin/mcp.js` — this file exists but does not produce MCP stdio output. The correct entry point is the `firebase mcp` subcommand.
+**Root cause:** `.mcp.json` pointed at `node /usr/lib/node_modules/firebase-tools/lib/bin/mcp.js` - this file exists but does not produce MCP stdio output. The correct entry point is the `firebase mcp` subcommand.
 **Fix:** Changed `.mcp.json` entry to `"command": "firebase", "args": ["mcp"]`. CLI smoke passes. Protocol smoke deferred to next session restart (hot-reload limitation).
 
-### flutter-mcp — upstream broken, replaced with dart mcp-server
+### flutter-mcp - upstream broken, replaced with dart mcp-server
 
 **Symptom:** npm wrapper runs `python3 -m pip install flutter-mcp` on every invocation. Arch Linux PEP 668 rejects system-wide pip installs.
 **Root cause:** The `flutter-mcp` npm package is a thin Node.js wrapper around a Python pip package that **does not exist on PyPI**. Both `pipx install flutter-mcp` and `pip install flutter-mcp` fail with "No matching distribution found." The package is broken upstream.
-**Fix:** Replaced with the official Dart team MCP server (`dart mcp-server`), bundled with Dart SDK 3.9+. Kyle's Dart SDK is 3.11.4 — well past the minimum. The dart server exposes code analysis, formatting, pub management, test execution, hot reload, and symbol resolution. It is the canonical Flutter/Dart MCP server per https://docs.flutter.dev/ai/mcp-server.
+**Fix:** Replaced with the official Dart team MCP server (`dart mcp-server`), bundled with Dart SDK 3.9+. Kyle's Dart SDK is 3.11.4 - well past the minimum. The dart server exposes code analysis, formatting, pub management, test execution, hot reload, and symbol resolution. It is the canonical Flutter/Dart MCP server per https://docs.flutter.dev/ai/mcp-server.
 **Status:** Resolved. Fleet remains at 9 servers.
 
 ## 7. W3 Protocol Smoke Verification Log (0.2.8)
@@ -10772,17 +10772,17 @@ Agent-native MCP invocations from Claude Code session, one per server:
 | sequential-thinking | `mcp__sequential-thinking__sequentialthinking` | Processed 1-step thought |
 | playwright | `mcp__playwright__browser_snapshot` | Snapshot of about:blank |
 | firecrawl | `mcp__firecrawl__firecrawl_scrape` | Scraped example.com, returned markdown |
-| firebase-tools | — | .mcp.json fix applied in W3; needs session restart to verify |
-| dart | — | .mcp.json entry added in W3; needs session restart to verify |
+| firebase-tools | - | .mcp.json fix applied in W3; needs session restart to verify |
+| dart | - | .mcp.json entry added in W3; needs session restart to verify |
 
 ---
 
-*mcp-wiring.md v0.2.8 — aho harness artifact.*
+*mcp-wiring.md v0.2.8 - aho harness artifact.*
 ```
 
 ### model-fleet.md
 ```markdown
-# aho Model Fleet — Architectural Specification
+# aho Model Fleet - Architectural Specification
 
 **Version:** 0.2.10
 **Date:** 2026-04-11
@@ -10918,7 +10918,7 @@ The token is never stored in plaintext on disk. The `token_secret_key` field in 
 
 ---
 
-*orchestrator-config.md v0.2.8 — aho harness artifact.*
+*orchestrator-config.md v0.2.8 - aho harness artifact.*
 ```
 
 ### prompt-conventions.md
@@ -11067,13 +11067,13 @@ cd aho
 
 # 4. Choose a passphrase and unlock
 aho secret unlock
-# (prompts for passphrase — remember this, you'll need it after reboots)
+# (prompts for passphrase - remember this, you'll need it after reboots)
 
 # 5. Set the required secrets
 aho secret set ahomw telegram_bot_token "YOUR_TOKEN"
 aho secret set ahomw telegram_chat_id "YOUR_CHAT_ID"
 
-# 6. Re-run install.fish — it resumes from step 5
+# 6. Re-run install.fish - it resumes from step 5
 ./install.fish
 
 # 7. After reboot, unlock again before using aho services
@@ -11095,7 +11095,7 @@ src/aho/secrets/
     └── keyring_linux.py  # LinuxKeyringStore: keyctl padd/request/pipe/unlink for session keyring
 ```
 
-The `FernetBackend` is the active encryption backend. The `AgeBackend` exists but is not currently wired as the primary — it's available for future age-based workflows (e.g., encrypting artifacts for remote transfer). The `LinuxKeyringStore` is the only passphrase store; macOS/Windows stores are stubbed in `session.py`.
+The `FernetBackend` is the active encryption backend. The `AgeBackend` exists but is not currently wired as the primary - it's available for future age-based workflows (e.g., encrypting artifacts for remote transfer). The `LinuxKeyringStore` is the only passphrase store; macOS/Windows stores are stubbed in `session.py`.
 
 ## Security Properties
 
@@ -11103,7 +11103,7 @@ The `FernetBackend` is the active encryption backend. The `AgeBackend` exists bu
 - **In session:** Passphrase cached in kernel keyring (not on disk, not in environment).
 - **In transit:** Secrets are read into Python process memory only when needed. No temp files.
 - **On reboot:** Session keyring cleared by kernel. User must `aho secret unlock` again.
-- **On clone:** New machine has no secrets. `install.fish` halts with CAPABILITY GAP. Secrets must be set manually — there is no secret sync mechanism (by design for Phase 0).
+- **On clone:** New machine has no secrets. `install.fish` halts with CAPABILITY GAP. Secrets must be set manually - there is no secret sync mechanism (by design for Phase 0).
 
 ## Future (0.4.x+)
 
@@ -11196,7 +11196,7 @@ components:
     path: src/aho/artifacts/nemotron_client.py
     status: active
     owner: soc-foundry
-    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window"
+    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router - kept callable during migration window"
 
   - name: glm-client
     kind: llm
@@ -11769,7 +11769,7 @@ components:
     path: src/aho/artifacts/nemotron_client.py
     status: active
     owner: soc-foundry
-    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window"
+    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router - kept callable during migration window"
 
   - name: glm-client
     kind: llm

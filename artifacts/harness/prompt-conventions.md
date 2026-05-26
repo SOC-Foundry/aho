@@ -24,8 +24,8 @@ This document serves as the living playbook for prompt writers instructing aho a
 - **Whiteboard the Plays:** Any operational convention that emerges through repeated successful usage (e.g., test path routing, standard command flags) must be documented here. Future executors entering the harness must not rely on the tacit knowledge acquired by prior executors (see aho-G080).
 
 ## 7. Canonical Repo Paths
-- **ADRs live in `artifacts/adrs/`**, not `docs/adr/`. Plan-doc and design-doc references must use the canonical path; do not invent `docs/adr/` paths during drafting (this drift recurred across 0.2.17 — see F-0.2.17-W5-002, closed at the convention layer in 0.2.18 W0).
+- **ADRs live in `artifacts/adrs/`**, not `docs/adr/`. Plan-doc and design-doc references must use the canonical path; do not invent `docs/adr/` paths during drafting (this drift recurred across 0.2.17 - see F-0.2.17-W5-002, closed at the convention layer in 0.2.18 W0).
 - **Iteration artifacts live in `artifacts/iterations/<version>/`**, not `docs/iterations/`. Plan, design, build-log, retrospective, acceptance, audit, probes, and bundle artifacts all live under that root.
-- **Retrospectives live at `docs/retrospectives/<version>.md`** — the one legitimate `docs/` path in the iteration loop. Do not extend the `docs/` convention to other artifact classes.
+- **Retrospectives live at `docs/retrospectives/<version>.md`** - the one legitimate `docs/` path in the iteration loop. Do not extend the `docs/` convention to other artifact classes.
 - **Harness contracts live in `artifacts/harness/`**: `base.md`, `adversarial-authorship-protocol.md`, `prompt-conventions.md` (this file), `test-baseline.json`. CLAUDE.md and GEMINI.md live at the repo root and reference these.
 - Verify against this section before quoting any structural path in a plan-doc or design-doc. Fabricated paths fail at executor-side acceptance; the cost is paid in a re-draft cycle.

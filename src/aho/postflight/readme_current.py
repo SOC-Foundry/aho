@@ -15,14 +15,14 @@ def check():
 
         ckpt_path = root / ".aho-checkpoint.json"
         if not ckpt_path.exists():
-            return ("warn", "No checkpoint — cannot verify README currency")
+            return ("warn", "No checkpoint - cannot verify README currency")
 
         ckpt = json.loads(ckpt_path.read_text())
         started_at = ckpt.get("started_at", "")
         if not started_at:
             return ("warn", "Checkpoint has no started_at timestamp")
 
-        # Parse iteration start time — always use UTC
+        # Parse iteration start time - always use UTC
         start_time = datetime.fromisoformat(started_at.replace("Z", "+00:00"))
         readme_mtime = datetime.fromtimestamp(readme.stat().st_mtime, tz=timezone.utc)
 

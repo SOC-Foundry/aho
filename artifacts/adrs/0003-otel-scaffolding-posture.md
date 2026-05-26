@@ -1,10 +1,10 @@
-# ADR 0003 — OTEL Scaffolding Posture
+# ADR 0003 - OTEL Scaffolding Posture
 
 **Status:** Accepted
 **Date:** 2026-04-21
 **Iteration of record:** aho 0.2.16 W0
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — Claude Code OTEL integration;
+**Context surface:** aho project-internal - Claude Code OTEL integration;
 downstream reference pack inherits these choices with a documented privacy-
 profile swap.
 
@@ -15,24 +15,24 @@ profile swap.
 Claude Code (the CLI) ships first-class OpenTelemetry instrumentation. As of
 2026-04-21 it emits three kinds of signals:
 
-- **Metrics** — `claude_code.session.count`, `claude_code.cost.usage`,
+- **Metrics** - `claude_code.session.count`, `claude_code.cost.usage`,
   `claude_code.token.usage` (split by type: input / output / cacheRead /
   cacheCreation), `claude_code.active_time.total`,
   `claude_code.lines_of_code.count`, `claude_code.commit.count`,
   `claude_code.pull_request.count`.
-- **Events (logs)** — `claude_code.user_prompt`, `claude_code.api_request`,
+- **Events (logs)** - `claude_code.user_prompt`, `claude_code.api_request`,
   `claude_code.api_error`, `claude_code.api_retries_exhausted`,
   `claude_code.tool_result`, `claude_code.tool_decision`,
   `claude_code.mcp_server_connection`.
-- **Traces (beta)** — `claude_code.interaction` as semantic turn root span
+- **Traces (beta)** - `claude_code.interaction` as semantic turn root span
   with API and tool spans as children (requires
   `CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`).
 
 The aho observability stack already runs two systemd user services:
 
-- `aho-otel-collector.service` — otelcol-contrib listening OTLP gRPC on
+- `aho-otel-collector.service` - otelcol-contrib listening OTLP gRPC on
   `127.0.0.1:4317` and OTLP HTTP on `127.0.0.1:4318`.
-- `aho-jaeger.service` — Jaeger all-in-one (trace store and query UI) at
+- `aho-jaeger.service` - Jaeger all-in-one (trace store and query UI) at
   `127.0.0.1:14317` (OTLP gRPC) and `127.0.0.1:16686` (UI).
 
 W0 scope is metrics + events only. Traces are W2 (flip
@@ -45,7 +45,7 @@ the W2 trace-integration work lands; also add `TRACEPARENT` propagation in
 Enable Claude Code telemetry via managed settings in
 `.claude/settings.json`. Route everything through the existing collector. Use
 the collector's **file exporter** as the verification surface for W0 signals
-because Jaeger is a trace store and cannot ingest metrics or logs —
+because Jaeger is a trace store and cannot ingest metrics or logs -
 Bucket 3 shipped `file/metrics` and `file/logs` pipeline exporters
 explicitly for this purpose.
 
@@ -67,7 +67,7 @@ OTEL_RESOURCE_ATTRIBUTES=service.name=claude-code,aho.iteration=0.2.16,aho.works
 
 `OTEL_TRACES_EXPORTER` is **intentionally unset** in W0. Setting it would
 emit traces that Jaeger would accept but that the W2 parent-child spans from
-aho dispatcher/router have not been wired for — capturing partial traces
+aho dispatcher/router have not been wired for - capturing partial traces
 now would produce a record that doesn't match what the trace-integration
 workstream is planning. Deferred to W2.
 
@@ -75,10 +75,10 @@ workstream is planning. Deferred to W2.
 
 Three aho-scoped attributes are set on every emitted signal:
 
-- `aho.iteration` — phase.iteration label (`0.2.16`), frozen per iteration.
-- `aho.workstream` — `W{N}`, reset at workstream boundary.
-- `aho.role` — `drafter` for Claude Code; `auditor` for Gemini CLI when
-  Gemini grows OTEL support (currently none — see ADR 0004 asymmetry when
+- `aho.iteration` - phase.iteration label (`0.2.16`), frozen per iteration.
+- `aho.workstream` - `W{N}`, reset at workstream boundary.
+- `aho.role` - `drafter` for Claude Code; `auditor` for Gemini CLI when
+  Gemini grows OTEL support (currently none - see ADR 0004 asymmetry when
   that ADR lands in W2).
 
 Values are set **literally** in the env block. `${AHO_ITERATION}` / `${AHO_WORKSTREAM}`
@@ -94,8 +94,8 @@ automation in a later iteration.
 |---|---|---|
 | Per-session metrics | `session.count`, `cost.usage`, `token.usage` (4-way split), `active_time.total`, `lines_of_code.count`, `commit.count` (Pillar 11), `pull_request.count` (Pillar 11) | Collector file exporter → `~/.local/share/aho/metrics/metrics.jsonl` |
 | Per-turn events | `user_prompt` (with `prompt.id` correlation UUID v4), `api_request` per API call, `tool_result`, `tool_decision`, `api_error`, `api_retries_exhausted`, `mcp_server_connection` | Collector file exporter → `~/.local/share/aho/logs/logs.jsonl` |
-| Full request + response bodies | N/A — bodies dumped to disk by Claude Code itself | `~/.local/share/aho/api-bodies/` (via `OTEL_LOG_RAW_API_BODIES=file:...`); events link via `body_ref` pointer |
-| Traces | Deferred to W2 | (none — `OTEL_TRACES_EXPORTER` unset) |
+| Full request + response bodies | N/A - bodies dumped to disk by Claude Code itself | `~/.local/share/aho/api-bodies/` (via `OTEL_LOG_RAW_API_BODIES=file:...`); events link via `body_ref` pointer |
+| Traces | Deferred to W2 | (none - `OTEL_TRACES_EXPORTER` unset) |
 
 ### Turn reconstruction
 
@@ -117,13 +117,13 @@ a single-operator research harness. The Mercor-exportable reference pack
 ships three profiles so external consumers can pick based on data
 sensitivity:
 
-- **minimal** — `OTEL_LOG_USER_PROMPTS=0`, `OTEL_LOG_TOOL_CONTENT=0`,
+- **minimal** - `OTEL_LOG_USER_PROMPTS=0`, `OTEL_LOG_TOOL_CONTENT=0`,
   `OTEL_LOG_TOOL_DETAILS=0`, no `OTEL_LOG_RAW_API_BODIES`. Captures
   metadata-only metrics and event envelopes.
-- **standard** — `OTEL_LOG_USER_PROMPTS=1`, `OTEL_LOG_TOOL_DETAILS=1`,
+- **standard** - `OTEL_LOG_USER_PROMPTS=1`, `OTEL_LOG_TOOL_DETAILS=1`,
   `OTEL_LOG_TOOL_CONTENT=0`. Enough to reconstruct turns and diagnose
   failures without tool-body payloads.
-- **full** — aho's posture. All flags on, raw bodies to disk. Maximum
+- **full** - aho's posture. All flags on, raw bodies to disk. Maximum
   diagnostic surface; assumes operator controls the capture path.
 
 The profile selection belongs to the deploying operator, not the harness.
@@ -131,7 +131,7 @@ The profile selection belongs to the deploying operator, not the harness.
 ### Cardinality posture
 
 `OTEL_METRICS_INCLUDE_SESSION_ID=false` bounds time-series cardinality on
-metrics — per-session IDs would explode the metric label space. Session ID
+metrics - per-session IDs would explode the metric label space. Session ID
 remains available on **events**, where cardinality bounds do not apply
 (events are individual records, not aggregated time series).
 
@@ -141,7 +141,7 @@ remains available on **events**, where cardinality bounds do not apply
    layer before OTEL export**, regardless of any flag. Per documentation,
    the native redaction is unconditional. If aho-internal thinking capture
    becomes a requirement, the correct path is an upstream feature request
-   to Anthropic — not a downstream engineering workaround.
+   to Anthropic - not a downstream engineering workaround.
 
 2. **Semantic turn structure as a first-class `claude_code.interaction`
    root span exists only in traces (W2).** In W0, turn reconstruction is
@@ -167,7 +167,7 @@ remains available on **events**, where cardinality bounds do not apply
   settings.json expansion behavior is empirically verified.
 
 - **Collector OTLP alias deprecation warning.** `"otlp" alias is deprecated;
-  use "otlp_grpc" instead` — otelcol-contrib v0.149.0 notice on the
+  use "otlp_grpc" instead` - otelcol-contrib v0.149.0 notice on the
   `otlp/jaeger` exporter. Cosmetic until removal; rename to `otlp_grpc/jaeger`
   at next collector config touch.
 
@@ -182,7 +182,7 @@ remains available on **events**, where cardinality bounds do not apply
 - Full per-turn reconstruction is possible from logs alone (W0) and
   improves with traces (W2+).
 
-- Cost attribution per workstream becomes Pillar 8 ground truth —
+- Cost attribution per workstream becomes Pillar 8 ground truth -
   estimates from parsed event logs are retired.
 
 - Pillar 11 becomes monitored: `claude_code.commit.count` and
@@ -191,7 +191,7 @@ remains available on **events**, where cardinality bounds do not apply
 
 ### Negative
 
-- File growth under `~/.local/share/aho/api-bodies/` — addressed by the
+- File growth under `~/.local/share/aho/api-bodies/` - addressed by the
   rotation carry-forward.
 
 - Sensitive prompt / tool-content payloads live on local disk. Access
@@ -234,12 +234,12 @@ remains available on **events**, where cardinality bounds do not apply
 
 ## References
 
-- `.claude/settings.json` — managed env block in effect.
-- `~/.config/aho/otel-collector.yaml` — collector pipelines (traces +
+- `.claude/settings.json` - managed env block in effect.
+- `~/.config/aho/otel-collector.yaml` - collector pipelines (traces +
   metrics + logs).
-- `artifacts/iterations/0.2.16/otel-scaffold-notes.md` — W0 implementation
+- `artifacts/iterations/0.2.16/otel-scaffold-notes.md` - W0 implementation
   notes, substrate state, pipeline verification evidence, deviations from
   plan phrasing, carry-to-retro items.
-- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` — iteration scope.
-- 0.2.15 W3 ADR 0002 (Nemoclaw decision) — prior aho-internal ADR that
+- `artifacts/iterations/0.2.16/aho-design-0.2.16.md` - iteration scope.
+- 0.2.15 W3 ADR 0002 (Nemoclaw decision) - prior aho-internal ADR that
   established the numbering convention.

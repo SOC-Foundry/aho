@@ -1,4 +1,4 @@
-"""workstream_init.py — write literal env values into .claude/settings.json.
+"""workstream_init.py - write literal env values into .claude/settings.json.
 
 F-W1-001 closure (0.2.17 W0 Bucket 1). Claude Code does not shell-expand
 ${AHO_ITERATION} / ${AHO_WORKSTREAM} in .claude/settings.json env values:

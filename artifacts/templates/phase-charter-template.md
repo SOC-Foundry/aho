@@ -1,6 +1,6 @@
-# [Project] — Phase [N] Charter
+# [Project] - Phase [N] Charter
 
-**Phase:** [N] — [Title]
+**Phase:** [N] - [Title]
 **Status:** [active|graduated]
 **Charter author:** [Author]
 **Charter version:** [Version]

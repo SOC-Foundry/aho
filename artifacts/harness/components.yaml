@@ -34,7 +34,7 @@ components:
     path: src/aho/artifacts/nemotron_client.py
     status: active
     owner: soc-foundry
-    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router — kept callable during migration window"
+    notes: "deprecated 0.2.15 W3 (ADR 0002); superseded by aho.pipeline.router - kept callable during migration window"
 
   - name: glm-client
     kind: llm

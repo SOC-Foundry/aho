@@ -1,4 +1,4 @@
-# Report — iao 0.1.3.1
+# Report - iao 0.1.3.1
 
 **Status:** COMPLETE
 **Date:** 2026-04-09
@@ -12,7 +12,7 @@
 
 iao 0.1.3.1 delivered all 10 structural debts identified in the design document. The iteration consolidated the folder layout from 3 docs locations to 1, migrated the Python package to src-layout, established the §1–§20 universal bundle specification with quality gates, scaffolded a 10-phase pipeline pattern, created the human feedback loop, synced the README to kjtcom conventions, and hardened the Qwen artifact loop with word count enforcement and retry logic. All 30 existing tests pass. 42 Python components are verified across 4 functional groups.
 
-The single-agent execution (Claude Code for all 8 workstreams) replaced the planned split-agent model (Gemini W0–W5, Claude W6–W7) after the Gemini handoff was found incomplete. This deviation did not affect deliverable quality — all acceptance criteria from the design document are met.
+The single-agent execution (Claude Code for all 8 workstreams) replaced the planned split-agent model (Gemini W0–W5, Claude W6–W7) after the Gemini handoff was found incomplete. This deviation did not affect deliverable quality - all acceptance criteria from the design document are met.
 
 ---
 
@@ -41,7 +41,7 @@ The single-agent execution (Claude Code for all 8 workstreams) replaced the plan
 
 3. **Test suite resilience.** All 30 existing tests continued to pass through every workstream. Only 3 intentional failures in W3 (higher word count thresholds) needed test updates.
 
-4. **Bundle mechanical aggregation.** The bundle reads real files and assembles them — no LLM synthesis. This is fundamentally more reliable than Qwen-synthesized bundles.
+4. **Bundle mechanical aggregation.** The bundle reads real files and assembles them - no LLM synthesis. This is fundamentally more reliable than Qwen-synthesized bundles.
 
 5. **Pipeline scaffold smoke test.** `iao pipeline init demo` + `iao pipeline validate demo` both work end-to-end in a clean temp directory.
 
@@ -65,11 +65,11 @@ The single-agent execution (Claude Code for all 8 workstreams) replaced the plan
 
 2. **`iao doctor` CLI subcommand.** Wire `doctor.py` into argparse so documented commands work.
 
-3. **Telegram framework + MCP global install** — the 0.1.4 primary theme.
+3. **Telegram framework + MCP global install** - the 0.1.4 primary theme.
 
-4. **Cross-platform installer** — fish/bash/zsh/PowerShell support.
+4. **Cross-platform installer** - fish/bash/zsh/PowerShell support.
 
-5. **`age` installation** — ensure secrets backend dependency present.
+5. **`age` installation** - ensure secrets backend dependency present.
 
 ---
 
@@ -77,7 +77,7 @@ The single-agent execution (Claude Code for all 8 workstreams) replaced the plan
 
 | Prong | Target | Result |
 |---|---|---|
-| Cost | Zero external API cost | Achieved — Claude Code subscription + local Ollama Qwen |
+| Cost | Zero external API cost | Achieved - Claude Code subscription + local Ollama Qwen |
 | Delivery | 8/8 workstreams | 8/8 complete |
 | Performance | Bundle ≥ 50 KB, quality gates pass | Bundle generated with all §1–§20 sections |
 

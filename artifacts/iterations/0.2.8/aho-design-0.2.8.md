@@ -1,7 +1,7 @@
-# aho Design — 0.2.8
+# aho Design - 0.2.8
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 8
-**Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
+**Theme:** Discovery + exercise - MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
 **Predecessor:** 0.2.7 (visibility iteration, closed clean)
 
 ## Why this iteration exists
@@ -35,7 +35,7 @@ This is a discovery iteration. Some workstreams produce diagnoses rather than co
 - Useful MCP-driven workflows beyond smoke tests
 - Replacement servers for the four dead MCP packages
 - P3 clone-to-deploy
-- Backfilling historical bundles for Discovery 4 — enforce going forward only
+- Backfilling historical bundles for Discovery 4 - enforce going forward only
 
 ## Discovery details (compressed)
 

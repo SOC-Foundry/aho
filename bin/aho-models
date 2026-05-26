@@ -51,24 +51,79 @@ function _check_ollama
     return 0
 end
 
-function _check_vram
-    # Tier 1 requires a GPU with >=8GB VRAM. GLM-4.6V-Flash-9B needs num_gpu=30
-    # partial offload at 8GB (0.2.15 W1 R2); full 41-layer offload OOMs.
-    if not command -q nvidia-smi
-        _gap "nvidia-smi not found. Tier 1 requires an NVIDIA GPU with 8GB+ VRAM."
-        return 1
+function _tier_json
+    # Path to the per-host tier manifest.
+    echo "$HOME/.config/aho/tier.json"
+end
+
+function _tier_name
+    # Read tier from tier.json; default "base" if absent/unreadable.
+    set -l tj (_tier_json)
+    if not test -f $tj
+        echo base
+        return
     end
-    set -l total_mib (nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 | string trim)
-    if test -z "$total_mib"
-        _gap "Could not read nvidia-smi memory.total. Driver installed?"
-        return 1
+    python3 -c 'import json,sys
+try:
+    print(json.load(open(sys.argv[1])).get("tier","base"))
+except Exception:
+    print("base")' $tj 2>/dev/null; or echo base
+end
+
+function _tier_models
+    # Models to pull for this host, sourced from tier.json `bundle` when present,
+    # falling back to the declared fleet file otherwise.
+    set -l tj (_tier_json)
+    if test -f $tj
+        set -l bundle (python3 -c 'import json,sys
+try:
+    b=json.load(open(sys.argv[1])).get("bundle") or []
+    print("\n".join(b))
+except Exception:
+    pass' $tj 2>/dev/null)
+        if test (count $bundle) -gt 0
+            for m in $bundle
+                echo $m
+            end
+            return
+        end
     end
-    if test "$total_mib" -lt 8000
-        _gap "GPU VRAM $total_mib MiB below Tier 1 minimum (8000 MiB). Halt."
-        return 1
+    _parse_fleet
+end
+
+function _check_tier_capacity
+    # Tier-aware capacity gate (F-0.2.18-W2-002). base tier has no discrete-GPU
+    # requirement - it runs small models on CPU/iGPU. partial/full tiers require
+    # an NVIDIA GPU at or above their VRAM threshold.
+    set -l tier (_tier_name)
+    switch $tier
+        case base
+            _info "Tier base: no discrete-GPU requirement. Proceeding."
+            return 0
+        case partial full
+            set -l min_mib 12000
+            if test "$tier" = full
+                set min_mib 32000
+            end
+            if not command -q nvidia-smi
+                _gap "Tier $tier requires an NVIDIA GPU; nvidia-smi not found."
+                return 1
+            end
+            set -l total_mib (nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits 2>/dev/null | head -1 | string trim)
+            if test -z "$total_mib"
+                _gap "Could not read nvidia-smi memory.total. Driver installed?"
+                return 1
+            end
+            if test "$total_mib" -lt "$min_mib"
+                _gap "GPU VRAM $total_mib MiB below tier $tier minimum ($min_mib MiB)."
+                return 1
+            end
+            _info "GPU VRAM $total_mib MiB meets tier $tier minimum ($min_mib MiB)."
+            return 0
+        case '*'
+            _warn "Unknown tier '$tier'; treating as base (no GPU requirement)."
+            return 0
     end
-    _info "GPU VRAM $total_mib MiB meets Tier 1 minimum."
-    return 0
 end
 
 function _installed_models
@@ -108,14 +163,15 @@ function _cmd_status
 end
 
 function _cmd_install
-    _check_vram; or return 1
+    _check_tier_capacity; or return 1
     _check_ollama; or return 1
-    set -l models (_parse_fleet)
+    set -l tier (_tier_name)
+    set -l models (_tier_models)
     if test (count $models) -eq 0
-        _info "No models declared."
+        _info "No models in tier '$tier' bundle."
         return 0
     end
-    _info "Pulling "(count $models)" Tier 1 models..."
+    _info "Pulling "(count $models)" models for tier '$tier'..."
     for m in $models
         _info "Pulling $m..."
         ollama pull $m
@@ -124,8 +180,7 @@ function _cmd_install
             return 1
         end
     end
-    _info "Tier 1 model pull complete. Deferred (not-installed) roster in"
-    _info "artifacts/harness/model-fleet.txt; see comments for rationale."
+    _info "Tier '$tier' model pull complete (bundle from ~/.config/aho/tier.json)."
     _info "Next step: run 'aho-models vet' to smoke-probe each model."
 end
 

@@ -146,7 +146,7 @@ class TestQwenConfig(unittest.TestCase):
 
     @patch("aho.pipeline.dispatcher.urllib.request.urlopen")
     def test_qwen_num_predict_8000(self, mock_urlopen):
-        """Qwen must set num_predict=8000 — 0.2.16 W0 raised from 2000 after
+        """Qwen must set num_predict=8000 - 0.2.16 W0 raised from 2000 after
         W4 measured thinking-mode exhausting the 2000 budget on cascade-scale
         prompts (247K-char doc at 32K context)."""
         mock_urlopen.return_value = _chat_response("ok", "qwen3.5:9b")
@@ -264,7 +264,7 @@ class TestRetryBackoff(unittest.TestCase):
     @patch("aho.pipeline.dispatcher.time.sleep")
     @patch("aho.pipeline.dispatcher.urllib.request.urlopen")
     def test_no_retry_on_404(self, mock_urlopen, mock_sleep):
-        """404 (model not found) should NOT retry — it's permanent."""
+        """404 (model not found) should NOT retry - it's permanent."""
         import urllib.error
         mock_urlopen.side_effect = urllib.error.HTTPError(
             url="", code=404, msg="Not Found", hdrs=None, fp=None,

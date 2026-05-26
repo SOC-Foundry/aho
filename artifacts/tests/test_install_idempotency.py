@@ -1,4 +1,4 @@
-"""test_install_idempotency.py — W1 D7 of 0.3.1.
+"""test_install_idempotency.py - W1 D7 of 0.3.1.
 
 Tests install.fish's idempotency property + structured JSON output schema
 + --check mode produces no mutations.
@@ -88,7 +88,7 @@ def test_check_mode_emits_valid_jsonl():
 
 
 def test_check_mode_no_writes_to_state_file():
-    """--check mode is read-only — no writes to legacy install.state."""
+    """--check mode is read-only - no writes to legacy install.state."""
     state_file = Path.home() / ".local" / "state" / "aho" / "install.state"
     if not state_file.exists():
         pytest.skip("legacy install.state does not exist (fresh install state)")

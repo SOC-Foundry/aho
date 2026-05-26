@@ -1,4 +1,4 @@
-# Kyle's Notes — 0.2.12 (W8 Close)
+# Kyle's Notes - 0.2.12 (W8 Close)
 
 ## Prompts for Sign-off
 

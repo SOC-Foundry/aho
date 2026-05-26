@@ -1,4 +1,4 @@
-"""W2 D11 — write preliminary acceptance archive, run llama self-audit,
+"""W2 D11 - write preliminary acceptance archive, run llama self-audit,
 emit disposition. Halt-and-surface after emission per plan.
 """
 from __future__ import annotations
@@ -48,7 +48,7 @@ def build_preliminary_archive() -> dict:
         "audit_status": "pending_audit",
         "executor": "claude-code (claude-opus-4-7)",
         "drafter": "claude-web",
-        "auditor_assigned": "llama3.2:3b (in-container; W2 bootstrap test 3 — first iteration with in-container auditor)",
+        "auditor_assigned": "llama3.2:3b (in-container; W2 bootstrap test 3 - first iteration with in-container auditor)",
         "executor_session_started_utc": "2026-05-03T04:30:00Z",
         "archive_written_utc": _now(),
         "auditor_seat_transition_recorded": True,
@@ -183,7 +183,7 @@ def build_preliminary_archive() -> dict:
                         "(e.g. 'moderate' from carry-forward entries). Added explicit, "
                         "exhaustive synonym table: low/minor/cosmetic→info; "
                         "medium/moderate/notable→important; high/severe/blocker→critical. "
-                        "Unknown severities still raise — G083 preserved."
+                        "Unknown severities still raise - G083 preserved."
                     ),
                 },
             },
@@ -287,9 +287,9 @@ def build_preliminary_archive() -> dict:
                         "Dispatch drafter+auditor same family → CouncilRoleCollapseError raised",
                     ],
                     "mutation_tests": [
-                        "test_mutation_nemotron_hardening_is_load_bearing — bypasses validator, asserts bad output passes through",
-                        "test_mutation_confidence_floor_is_load_bearing — sets floor=0.0, asserts clean disposition passes through",
-                        "test_mutation_role_collapse_is_load_bearing — empties _COLLAPSE_ROLES, asserts trip-wire silent",
+                        "test_mutation_nemotron_hardening_is_load_bearing - bypasses validator, asserts bad output passes through",
+                        "test_mutation_confidence_floor_is_load_bearing - sets floor=0.0, asserts clean disposition passes through",
+                        "test_mutation_role_collapse_is_load_bearing - empties _COLLAPSE_ROLES, asserts trip-wire silent",
                     ],
                 },
             },
@@ -305,12 +305,12 @@ def build_preliminary_archive() -> dict:
                     "topical_overlap": "llama AF-1 overlaps with gemini AF003 via keywords [0007, deferral, passthrough]",
                     "novel_llama_findings_count": 0,
                     "disposition_axis_disagreement": True,
-                    "disagreement_shape": "severity inflation — both auditors caught B2.3 GPU passthrough deferral; llama escalated severity to critical, gemini classified as important",
+                    "disagreement_shape": "severity inflation - both auditors caught B2.3 GPU passthrough deferral; llama escalated severity to critical, gemini classified as important",
                     "substantively_important_disagreement": False,
                     "drafter_arbitration_required": True,
                     "drafter_arbitration_note": "B2.3 deferral was explicitly accepted in sealed W0 archive (ADR 0007 amendment, hybrid mode workaround). Llama's halt would not invalidate the sealed disposition because the deferral is documented, not a live failure.",
                 },
-                "notes": "Stylistic disagreement per plan — recorded, not reconciled. Drafter arbitrates post-close in chat with operator.",
+                "notes": "Stylistic disagreement per plan - recorded, not reconciled. Drafter arbitrates post-close in chat with operator.",
             },
             {
                 "id": "D10",
@@ -324,7 +324,7 @@ def build_preliminary_archive() -> dict:
                     "topical_overlap": "llama F-0.2.17-W1-003 overlaps with gemini AF-0.2.17-W1-001 via keywords [secrets, stdout, test]",
                     "novel_llama_findings_count": 0,
                     "disposition_axis_disagreement": False,
-                    "disagreement_shape": "framing difference — gemini uses 'Pillar 11 friction' framing while llama describes the symptom 'aho secrets-test prints decrypted value to stdout'",
+                    "disagreement_shape": "framing difference - gemini uses 'Pillar 11 friction' framing while llama describes the symptom 'aho secrets-test prints decrypted value to stdout'",
                     "substantively_important_disagreement": False,
                     "drafter_arbitration_required": True,
                     "drafter_arbitration_note": "Both auditors caught F-0.2.17-W1-003. Different vocabulary, same content. Stylistic.",
@@ -356,8 +356,8 @@ def build_preliminary_archive() -> dict:
                     "verification_probe_path": "artifacts/iterations/0.2.17/probes/W2_materiality_telemetry.py",
                     "verification_result": "all four counters emitted at least once with required resource attributes (aho.iteration=0.2.17, aho.workstream=W2, aho.tier=base)",
                     "wired_call_sites": {
-                        "caught_by_llama": "src/aho/council/audit.py — one increment per finding inside audit() return path",
-                        "caught_by_drafter": "src/aho/gap_carry_forward_writer.py — one increment per appended carry-forward entry",
+                        "caught_by_llama": "src/aho/council/audit.py - one increment per finding inside audit() return path",
+                        "caught_by_drafter": "src/aho/gap_carry_forward_writer.py - one increment per appended carry-forward entry",
                         "escaped": "placeholder bump only (W3 wires real escape detection)",
                         "carry_forward_resolution_rate": "placeholder bump only (W3 wires resolution flow)",
                     },
@@ -406,9 +406,9 @@ def build_preliminary_archive() -> dict:
         "pillar_11_invariant_check": {
             "result": "pass",
             "evidence": {
-                "git_operations_in_executor_session": "none — executor did not invoke git, gh, or any push/commit/PR/merge primitive",
-                "secret_reads_attempted": "none — all secret access flows through aho.host.secrets_broker contract from W1; this executor did not attempt to read or surface any secret",
-                "files_written": "all writes targeted src/aho/, artifacts/iterations/0.2.17/, artifacts/tests/ — no .git/, no ~/.config/, no /etc/, no .ssh/ writes",
+                "git_operations_in_executor_session": "none - executor did not invoke git, gh, or any push/commit/PR/merge primitive",
+                "secret_reads_attempted": "none - all secret access flows through aho.host.secrets_broker contract from W1; this executor did not attempt to read or surface any secret",
+                "files_written": "all writes targeted src/aho/, artifacts/iterations/0.2.17/, artifacts/tests/ - no .git/, no ~/.config/, no /etc/, no .ssh/ writes",
                 "operator_only_actions_respected": (
                     "F-0.2.17-W1-003 (Telegram bot token rotation) explicitly NOT performed by this executor. "
                     "Surfaced under outstanding_pre_03x_gates as a continuing reminder per executor prompt."
@@ -427,14 +427,14 @@ def build_preliminary_archive() -> dict:
                 "id": "F-0.2.17-W1-003",
                 "title": "Telegram bot token rotation (operator-side, pre-0.3.x hard gate)",
                 "status": "operator_action_pending",
-                "executor_action": "none — surfaced as continuing reminder per W2 executor prompt",
+                "executor_action": "none - surfaced as continuing reminder per W2 executor prompt",
                 "next_surface": "W3 close + W4 close + tsP3 handoff",
             },
             {
                 "id": "F-0.2.17-W1-001",
                 "title": "secrets-test subcommand still in rc1 image",
                 "status": "carry_forward",
-                "executor_action": "none — folded into W4 retrospective per plan",
+                "executor_action": "none - folded into W4 retrospective per plan",
                 "next_surface": "W4 retrospective",
             },
         ],
@@ -471,7 +471,7 @@ def main() -> int:
     archive_sha = _sha256_path(ACCEPTANCE_PATH)
     print(f"preliminary acceptance sha256: {archive_sha[:16]}…", flush=True)
 
-    # Self-audit — llama audits the W2 acceptance archive itself.
+    # Self-audit - llama audits the W2 acceptance archive itself.
     print("running llama self-audit on W2 acceptance archive…", flush=True)
     artifact_text = ACCEPTANCE_PATH.read_text(encoding="utf-8")
     last_exc = None

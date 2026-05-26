@@ -1,11 +1,11 @@
-"""Qwen Producer probe with num_predict=8000 — 0.2.16 W0 substrate fix.
+"""Qwen Producer probe with num_predict=8000 - 0.2.16 W0 substrate fix.
 
 Reproduces the 0.2.15 W4 Producer scenario exactly: same 247K-char NoSQL
 manual, same system prompt, same model, same num_ctx=32768. Only change:
 dispatcher.MODEL_FAMILY_CONFIG["qwen"]["num_predict"] is now 8000 (was 2000).
 
 Hard gate: content_chars >= 500 AND done_reason != "length". If either
-condition fails, halt and surface — do not move to next contingency lever
+condition fails, halt and surface - do not move to next contingency lever
 without Kyle input.
 """
 import json

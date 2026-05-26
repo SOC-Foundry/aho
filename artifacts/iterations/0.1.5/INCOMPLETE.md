@@ -1,4 +1,4 @@
-# INCOMPLETE — iao 0.1.5
+# INCOMPLETE - iao 0.1.5
 
 **Status:** Drafted but never executed.
 **Date marked incomplete:** 2026-04-09 (during 0.1.7 W0)
@@ -33,4 +33,4 @@ iao 0.1.7 executes the repairs informed by the 0.1.5 failure modes. Streaming, r
 
 Both files are immutable historical record. Do not regenerate, do not edit, do not delete.
 
-— iao 0.1.7 W0, 2026-04-09
+- iao 0.1.7 W0, 2026-04-09

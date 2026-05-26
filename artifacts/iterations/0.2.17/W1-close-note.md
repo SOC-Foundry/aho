@@ -27,7 +27,7 @@ text is reproduced verbatim per finding so this close note is
 internally complete without requiring read-through to the audit
 archive.
 
-- **AF-0.2.17-W1-001 (important) — Pillar 11 Incident Judgment
+- **AF-0.2.17-W1-001 (important) - Pillar 11 Incident Judgment
   (F-0.2.17-W1-003).** Status: `remediation_pending_operator`.
   Gemini summary verbatim: "The exposure of a Telegram bot token
   to the agent's stdout is a genuine Pillar 11 friction event.
@@ -44,7 +44,7 @@ archive.
   F-0.2.17-W1-003 remediation field). No edits to acceptance or
   audit archive.
 
-- **AF-0.2.17-W1-002 (info) — Subcommand Leakage
+- **AF-0.2.17-W1-002 (info) - Subcommand Leakage
   (F-0.2.17-W1-001).** Status: `carry_forward`. Gemini summary
   verbatim: "Leaving 'secrets-test' in the rc1 image contradicts
   the plan-doc ideal but is acceptable for a release candidate.
@@ -56,7 +56,7 @@ archive.
   affordance and production images do not). No edits required to
   rc1 image; rc1 stands as released.
 
-- **AF-0.2.17-W1-003 (info) — Networking Insight
+- **AF-0.2.17-W1-003 (info) - Networking Insight
   (F-0.2.17-W1-002).** Status: `resolved`. Gemini summary
   verbatim: "The podman pasta SNAT behavior is a valuable
   discovery. The remediation (iif lo nft rules) correctly
@@ -77,7 +77,7 @@ section placement to be confirmed by operator at carry-forwards
 update time). Full entry text mirrors the W1.json deliverable
 findings for completeness:
 
-- **F-0.2.17-W1-001 — `aho secrets-test` test-only subcommand
+- **F-0.2.17-W1-001 - `aho secrets-test` test-only subcommand
   left in 0.2.17-rc1 image.** Severity: low. Source: 0.2.17 W1
   D7 (image-push acceptance gate). Title: "aho secrets-test
   test-only subcommand left in 0.2.17-rc1 image." Summary: "The
@@ -93,7 +93,7 @@ findings for completeness:
   retain it but production images do not." Target iteration:
   0.2.17 W4 (or earlier removal).
 
-- **F-0.2.17-W1-002 — Rootless podman pasta networking SNATs
+- **F-0.2.17-W1-002 - Rootless podman pasta networking SNATs
   container→host traffic to host primary interface; firewall
   rules must be iif-scoped.** Severity: moderate. Source: 0.2.17
   W1 D5 (Ollama firewall mitigation). Title: "Rootless podman
@@ -112,7 +112,7 @@ findings for completeness:
   in-iteration (D5 functional gates pass post-amendment); the
   carry-forward is the documentation-binding restatement.
 
-- **F-0.2.17-W1-003 — `secrets-test` subcommand exposes decrypted
+- **F-0.2.17-W1-003 - `secrets-test` subcommand exposes decrypted
   value to agent (Pillar 11 friction).** Severity: moderate.
   Source: 0.2.17 W1 D3 Gate 1 (host+container broker round-trip).
   Title: "secrets-test command exposes decrypted secret value to
@@ -132,7 +132,7 @@ findings for completeness:
   surface raw secret values." Target iteration: 0.2.17 W2 or W3
   (broker test redesign). **Operator-side remediation outstanding
   (token rotation) is explicitly carried forward as a pre-0.3.x
-  hard gate** — see Pillar 11 incident summary section below.
+  hard gate** - see Pillar 11 incident summary section below.
 
 The actual append to
 `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` is
@@ -154,7 +154,7 @@ F-0.2.17-W0-005 in the same file.
   F-0.2.17-W1-003) → **32 total** post-update.
 - Audit archive's `count_coherence_check` reads "clean: 3
   carry-forwards added (F-0.2.17-W1-001, 002, 003), all
-  documented in W1.json" — internally consistent with the count
+  documented in W1.json" - internally consistent with the count
   walk above.
 - Reconciliation against the file's actual line count is pending
   the carry-forwards file update; current pre-update line count
@@ -170,7 +170,7 @@ F-0.2.17-W0-005 in the same file.
 exercised at D3 Gate 1 (host+container broker round-trip
 acceptance gate), printed the decrypted value of
 `ahomw:telegram_bot_token` to the executor's Bash stdout. The
-executor (Claude Code) read the token's bytes via tool output —
+executor (Claude Code) read the token's bytes via tool output -
 a direct contradiction of CLAUDE.md hard rule "No reading
 secrets."
 
@@ -180,7 +180,7 @@ secrets."
 telegram_bot_token` (test-only command, removed before image
 push) returns the same value that `get_secret("ahomw",
 "telegram_bot_token")` returns when called directly on the host."
-That specification — raw-value return for a value-equality gate —
+That specification - raw-value return for a value-equality gate -
 **was wrong on Pillar 11 grounds**. The acceptance gate it
 described could not be exercised by an agent without the agent
 reading the secret. Drafter-side error; documented here as a
@@ -228,7 +228,7 @@ explicitly under `otel_spot_checks`: "Gemini CLI has no OTLP
 export capability. Auditor verification of OTEL signals relies
 on inspecting 'W1.json' evidence and source code calls to
 '_emit_tier_span' and 'emit_stub_span'." For W1 this was
-acceptable — council components ship as stubs that emit
+acceptable - council components ship as stubs that emit
 attribute-only spans, and the audit could verify the call sites
 in source. For W2, council components emit real OTEL signals
 (real producer/auditor work, real triage classification, real

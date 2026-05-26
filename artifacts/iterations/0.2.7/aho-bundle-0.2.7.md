@@ -11,17 +11,17 @@
 
 ### DESIGN (aho-design-0.2.7.md)
 ```markdown
-# aho Design — 0.2.7
+# aho Design - 0.2.7
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 7
-**Theme:** Visibility + carry-forward closeout — flutter dashboard, install.fish coverage audit, orchestrator config, three deferred 0.2.5 defects
+**Theme:** Visibility + carry-forward closeout - flutter dashboard, install.fish coverage audit, orchestrator config, three deferred 0.2.5 defects
 **Predecessor:** 0.2.6 (live-fire hardening, closed clean)
 
 ---
 
 ## Why this iteration exists
 
-0.2.6 proved install.fish runs end-to-end on NZXTcos. What it didn't prove is that *every component declared in components.yaml is actually installed by some step in install.fish*. Right now there's no way to see this — Kyle's exact words: "I can't tell because I don't have a dashboard lol." That's not a joke; it's the diagnostic. The system has 88 declared components, 4 daemons, 9 MCP packages, 4 models, an OTEL pipeline, ChromaDB, age + fernet secrets, and an event log. Verifying state today requires running 6+ separate commands and reading the output by eye. That's the problem 0.2.7 fixes.
+0.2.6 proved install.fish runs end-to-end on NZXTcos. What it didn't prove is that *every component declared in components.yaml is actually installed by some step in install.fish*. Right now there's no way to see this - Kyle's exact words: "I can't tell because I don't have a dashboard lol." That's not a joke; it's the diagnostic. The system has 88 declared components, 4 daemons, 9 MCP packages, 4 models, an OTEL pipeline, ChromaDB, age + fernet secrets, and an event log. Verifying state today requires running 6+ separate commands and reading the output by eye. That's the problem 0.2.7 fixes.
 
 0.2.7 has three goals that share a theme of *visibility into the installed system*.
 
@@ -47,9 +47,9 @@
 ## Non-goals
 
 - P3 clone-to-deploy (still future iteration, likely 0.3.x once dashboard is in)
-- Dashboard authentication, multi-user, remote access — localhost only, single user
-- Real-time websocket updates — polling at 5s intervals is fine for v1
-- Replacing the existing bin/aho-dashboard JSON skeleton — the dashboard reads from it, doesn't replace it
+- Dashboard authentication, multi-user, remote access - localhost only, single user
+- Real-time websocket updates - polling at 5s intervals is fine for v1
+- Replacing the existing bin/aho-dashboard JSON skeleton - the dashboard reads from it, doesn't replace it
 - kjtcom anything
 - MCP fetch/github/slack/google-drive replacement ADR (still separate)
 - Telegram bot interactive token entry beyond what 0.2.6 already shipped
@@ -95,9 +95,9 @@ The audit process:
 5. Identify gaps and either fix in install.fish or document as intentional
 
 Predicted gaps (to be confirmed during W2):
-- **chromadb** — installed via pip as transitive dep, not explicitly. Either declare it explicitly in install.fish step 3 (python) or document the transitive path.
-- **opentelemetry exporter** — same pattern
-- **brave-integration** — module exists but no token configured. The new orchestrator config (W3) addresses this.
+- **chromadb** - installed via pip as transitive dep, not explicitly. Either declare it explicitly in install.fish step 3 (python) or document the transitive path.
+- **opentelemetry exporter** - same pattern
+- **brave-integration** - module exists but no token configured. The new orchestrator config (W3) addresses this.
 
 ---
 
@@ -123,7 +123,7 @@ New file: `~/.config/aho/orchestrator.json`. Schema:
 
 The brave token itself lives in the existing fernet secrets store under key `brave_search_token`, never plaintext on disk. `bin/aho-secrets-init` gains a `--add-brave-token` flag that prompts for the token, encrypts it, stores it, and updates orchestrator.json to reference the key.
 
-Engine field reserved for future per-workstream engine selection. For 0.2.7 it's metadata only — actual engine choice is still per-invocation. Future iteration uses this to drive default behavior.
+Engine field reserved for future per-workstream engine selection. For 0.2.7 it's metadata only - actual engine choice is still per-invocation. Future iteration uses this to drive default behavior.
 
 ---
 
@@ -152,26 +152,26 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 
 1. **Dashboard depth for v1.** Six sections is the target. Is component coverage matrix the priority, or daemon health? If wall-clock pressure forces a cut, which two sections ship and which two defer to 0.2.8?
 
-2. **components.yaml audit — fix gaps in 0.2.7 or document them?** Predicted gaps (chromadb transitive, opentelemetry transitive, brave-integration unconfigured) all have a "leave it as-is and document" path and a "make install.fish explicit" path. Lean: document for transitive deps, fix for brave-integration. Confirm.
+2. **components.yaml audit - fix gaps in 0.2.7 or document them?** Predicted gaps (chromadb transitive, opentelemetry transitive, brave-integration unconfigured) all have a "leave it as-is and document" path and a "make install.fish explicit" path. Lean: document for transitive deps, fix for brave-integration. Confirm.
 
-3. **Brave token entry flow.** Same question as 0.2.5 telegram: capability gap with file-drop instructions, or interactive prompt inside `bin/aho-secrets-init --add-brave-token`? Lean interactive prompt this time — token is short, not multiline, low risk.
+3. **Brave token entry flow.** Same question as 0.2.5 telegram: capability gap with file-drop instructions, or interactive prompt inside `bin/aho-secrets-init --add-brave-token`? Lean interactive prompt this time - token is short, not multiline, low risk.
 
 4. **Engine field purpose.** Is the orchestrator.json `engine` field forward-looking (reserved metadata, no behavior change in 0.2.7), or should 0.2.7 actually change something based on it? Lean reserved.
 
-5. **Iteration size.** This is 7+ workstreams. Same risk as 0.2.5 — possible scope creep. Acceptable to defer dashboard sections 5 (MCP fleet) and 6 (model fleet) to 0.2.8 if W2 audit takes longer than expected?
+5. **Iteration size.** This is 7+ workstreams. Same risk as 0.2.5 - possible scope creep. Acceptable to defer dashboard sections 5 (MCP fleet) and 6 (model fleet) to 0.2.8 if W2 audit takes longer than expected?
 ```
 
 ## §2. Plan
 
 ### PLAN (aho-plan-0.2.7.md)
 ```markdown
-# aho Plan — 0.2.7
+# aho Plan - 0.2.7
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 7
 **Theme:** Visibility + carry-forward closeout
 **Predecessor:** 0.2.6 (live-fire hardening, closed clean)
 **Design:** `aho-design-0_2_7.md`
-**Agent split:** Single-agent Claude Code throughout. Larger surface but coherent — dashboard, audit, and carry-forwards all touch related state surfaces.
+**Agent split:** Single-agent Claude Code throughout. Larger surface but coherent - dashboard, audit, and carry-forwards all touch related state surfaces.
 
 ---
 
@@ -196,7 +196,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 
 ## Workstream details
 
-### W0 — Bumps + decisions
+### W0 - Bumps + decisions
 
 - All 10 canonical artifacts → 0.2.7
 - `.aho.json` `current_iteration` → 0.2.7
@@ -207,7 +207,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
   - Engine field reserved-vs-active
   - Iteration scope cut policy
 
-### W1 — Dashboard backend aggregator
+### W1 - Dashboard backend aggregator
 
 - Extend `bin/aho-dashboard` with HTTP server (Python `http.server` or `aiohttp` if already a dep)
 - Endpoint `/api/state` returns single JSON document:
@@ -226,7 +226,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Polling-friendly: cache responses for 2s to avoid hammering downstream commands
 - Tests: each section returns valid JSON, /api/state aggregates all 6 sections, static file serving works
 
-### W2 — components.yaml coverage audit
+### W2 - components.yaml coverage audit
 
 - Parse `components.yaml` (88 entries)
 - For each entry, identify install source (which install.fish step or wrapper installs it)
@@ -240,29 +240,29 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - For each gap (verified missing or unknown), mark fix or document per W0 decision
 - Output is itself a deliverable, not just a working file
 
-### W3 — install.fish gap fixes
+### W3 - install.fish gap fixes
 
 - Apply fixes from W2 for any gaps marked "fix"
 - Likely candidates based on prior analysis:
   - Explicit chromadb declaration in step 3 if W2 confirms transitive dep is fragile
   - opentelemetry exporter explicit declaration (same pattern)
   - Any other surprises from the audit
-- All changes additive — install.fish step structure unchanged
+- All changes additive - install.fish step structure unchanged
 - Re-run install.fish on NZXTcos to confirm idempotency holds
 
-### W4 — Flutter dashboard UI
+### W4 - Flutter dashboard UI
 
 - Initialize `web/claw3d/` Flutter Web project (or extend existing placeholder)
 - Six sections per design doc, top to bottom
 - Stack: Flutter Web, Geist Sans/Mono, trident palette
 - Single-page, no routing
 - Polls `/api/state` every 5s via HTTP
-- Read-only — no buttons that mutate
+- Read-only - no buttons that mutate
 - Build output goes to `web/claw3d/build/web/`, served by W1 backend
 - Tests: widget tests for each section, mock /api/state response
 - Build artifact: `flutter build web` runs clean, no analyze warnings
 
-### W5 — Orchestrator config + brave token
+### W5 - Orchestrator config + brave token
 
 - Schema for `~/.config/aho/orchestrator.json` documented in `artifacts/harness/orchestrator-config.md`
 - `bin/aho-secrets-init --add-brave-token` subcommand: prompt for token, encrypt to fernet store under key `brave_search_token`, update orchestrator.json reference
@@ -271,7 +271,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Default config written by `bin/aho-secrets-init` if missing
 - Tests: config parsing, brave token encryption round-trip, default fallback
 
-### W6 — OTEL aho.tokens scalar fix
+### W6 - OTEL aho.tokens scalar fix
 
 - Locate OTEL span emission (grep for `set_attribute.*aho.tokens` first; fall back to `src/aho/logger.py` if no direct hits)
 - Add `set_attrs_from_dict(span, prefix, d)` helper at the emission site
@@ -280,7 +280,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Add aho-G064 to gotcha_archive.json
 - Verify with `journalctl --user -u aho-nemoclaw --since "5 min ago" | grep "Invalid type"` returning zero hits after restart
 
-### W7 — Evaluator score parser fix
+### W7 - Evaluator score parser fix
 
 - File: `src/aho/agents/roles/evaluator.py`
 - Add scale detection: if score ≤ 1.0, multiply by 10
@@ -288,7 +288,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Update existing tests if any assert old broken behavior
 - New unit tests: GLM 0–1 input, Qwen 0–10 input, malformed input
 
-### W8 — Conductor smoke subcommand
+### W8 - Conductor smoke subcommand
 
 - Add `smoke` subcommand to `bin/aho-conductor`
 - Implementation: generate marker filename, dispatch deterministic task, poll for completion, assert file exists + content correct + ≥7 spans in event log within timestamp window
@@ -297,14 +297,14 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Add aho-G065 to gotcha_archive.json
 - Test: shell out to `bin/aho-conductor smoke`, assert exit 0
 
-### W9 — Close
+### W9 - Close
 
 - Full test suite green (target: 155+ tests, up from 143)
 - Bundle generation, postflight green
 - New postflight gates:
-  - `dashboard_present` — assert `web/claw3d/build/web/index.html` exists
-  - `components_coverage_present` — assert `components-coverage.md` exists for current iteration
-  - `orchestrator_config_present` — assert `~/.config/aho/orchestrator.json` exists OR is documented as user-supplied
+  - `dashboard_present` - assert `web/claw3d/build/web/index.html` exists
+  - `components_coverage_present` - assert `components-coverage.md` exists for current iteration
+  - `orchestrator_config_present` - assert `~/.config/aho/orchestrator.json` exists OR is documented as user-supplied
 - Run report `aho-run-0_2_7.md`
 - Build log `aho-build-log-0_2_7.md`
 - CHANGELOG entry for 0.2.7
@@ -339,7 +339,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 
 ## Risk register
 
-- **Scope size:** 9 workstreams again. W4 Flutter dashboard is the longest pole and the most likely to slip. Mitigation: if W4 runs long, ship 0.2.7 with the backend (W1) + audit (W2) + carry-forwards (W6–W8) and defer the Flutter UI to 0.2.8. The backend alone is useful — `curl http://127.0.0.1:7800/api/state | jq` is a valid (if ugly) dashboard substitute and gets Kyle the visibility he asked for.
+- **Scope size:** 9 workstreams again. W4 Flutter dashboard is the longest pole and the most likely to slip. Mitigation: if W4 runs long, ship 0.2.7 with the backend (W1) + audit (W2) + carry-forwards (W6–W8) and defer the Flutter UI to 0.2.8. The backend alone is useful - `curl http://127.0.0.1:7800/api/state | jq` is a valid (if ugly) dashboard substitute and gets Kyle the visibility he asked for.
 - **Audit surprises:** W2 may surface 5+ gaps instead of the predicted 0–3. Mitigation: Kyle's W0 decision sets the fix-vs-document policy globally; W3 just executes. Don't let surprises trigger re-planning.
 - **Brave token interactive prompt:** stdin prompts inside fish wrappers historically have edge cases. Mitigation: test with `printf 'token\n' | bin/aho-secrets-init --add-brave-token`.
 - **Dashboard polling vs daemon load:** 5s polling × 6 sections × 88 components could hammer downstream commands. Mitigation: W1 caches /api/state for 2s.
@@ -354,21 +354,21 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - kjtcom anything
 - MCP fetch/github/slack/google-drive replacement ADR (still separate)
 - Telegram bot interactive token entry beyond what 0.2.6 already shipped
-- Engine-driven behavior changes — orchestrator.json `engine` field is reserved metadata for 0.2.7
+- Engine-driven behavior changes - orchestrator.json `engine` field is reserved metadata for 0.2.7
 ```
 
 ## §3. Build Log
 
 ### BUILD LOG (MANUAL) (aho-build-log-0.2.7.md)
 ```markdown
-# Build Log — aho 0.2.7
+# Build Log - aho 0.2.7
 
 **Executor:** claude-code
 **Date:** 2026-04-11
 
 ---
 
-### W0 — PASS
+### W0 - PASS
 
 - 10 canonical artifacts bumped 0.2.6 → 0.2.7
 - .aho.json current_iteration → 0.2.7
@@ -376,7 +376,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - decisions.md written with Kyle's answers to 5 open questions
 - Completed: 2026-04-11
 
-### W1 — PASS
+### W1 - PASS
 
 - Created src/aho/dashboard/__init__.py, aggregator.py, server.py
 - aggregator.py: 6 section collectors (system, components, daemons, traces, mcp, models)
@@ -385,7 +385,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - 8 tests written and passing
 - Completed: 2026-04-11
 
-### W2 — PASS
+### W2 - PASS
 
 - Parsed components.yaml: 88 components
 - All non-MCP component files verified present
@@ -394,13 +394,13 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Zero install.fish gaps found
 - Completed: 2026-04-11
 
-### W3 — PASS
+### W3 - PASS
 
 - No-op: W2 audit found zero gaps requiring install.fish changes
 - All components map to existing install steps
 - Completed: 2026-04-11
 
-### W4 — PASS
+### W4 - PASS
 
 - Flutter project initialized in web/claw3d/
 - lib/main.dart: 6 sections (banner, component matrix, daemon health, traces, MCP fleet, model fleet)
@@ -410,7 +410,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - Build output at web/claw3d/build/web/index.html
 - Completed: 2026-04-11
 
-### W5 — PASS
+### W5 - PASS
 
 - Created src/aho/orchestrator_config.py (load, save, ensure, getters)
 - Created artifacts/harness/orchestrator-config.md (schema doc)
@@ -421,7 +421,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - 5 tests written and passing
 - Completed: 2026-04-11
 
-### W6 — PASS
+### W6 - PASS
 
 - Added set_attrs_from_dict(span, prefix, value) to logger.py
 - Recursive: handles nested dicts, lists, and scalars
@@ -429,14 +429,14 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - 2 new tests (nested dict, scalar), all 6 OTEL tests passing
 - Completed: 2026-04-11
 
-### W7 — PASS
+### W7 - PASS
 
 - Already implemented in evaluator_agent.py (lines 56-58): scale detection + raw field preservation
 - All 5 tests verified passing
 - No code changes needed
 - Completed: 2026-04-11
 
-### W8 — PASS
+### W8 - PASS
 
 - Already implemented in conductor.py smoke() function (lines 67-117)
 - File marker task, content assertion, 7-span event log check
@@ -445,7 +445,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 - No code changes needed
 - Completed: 2026-04-11
 
-### W9 — PASS
+### W9 - PASS
 
 - Full test suite: 158 passed, 1 skipped
 - aho doctor: 10/10 checks green
@@ -464,7 +464,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 
 ### RUN REPORT (aho-run-0.2.7.md)
 ```markdown
-# aho Run Report — 0.2.7
+# aho Run Report - 0.2.7
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 7
 **Theme:** Visibility + carry-forward closeout
@@ -480,7 +480,7 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 | W0 | Canonical bumps + decisions | pass | 10 artifacts bumped, decisions.md from 5 open questions |
 | W1 | Dashboard backend aggregator | pass | src/aho/dashboard/ module, /api/state endpoint, 8 tests |
 | W2 | components.yaml coverage audit | pass | 88 components mapped, zero gaps, components-coverage.md |
-| W3 | install.fish gap fixes | pass | No-op — audit found zero gaps requiring changes |
+| W3 | install.fish gap fixes | pass | No-op - audit found zero gaps requiring changes |
 | W4 | Flutter dashboard UI | pass | 6 sections, trident palette, flutter build web clean |
 | W5 | Orchestrator config + brave token | pass | orchestrator.json, --add-brave-token, openclaw/nemoclaw config read, 5 tests |
 | W6 | OTEL aho.tokens scalar fix | pass | set_attrs_from_dict helper, recursive flattening, 6 tests |
@@ -501,7 +501,7 @@ None. All 5 design questions answered in W0 decisions.md. No capability gaps enc
 
 ## Kyle's Notes
 
-_(empty — for Kyle to fill post-review)_
+_(empty - for Kyle to fill post-review)_
 
 ## Sign-off
 
@@ -534,7 +534,7 @@ _(empty — for Kyle to fill post-review)_
 # aho - Base Harness
 
 **Version:** 0.2.7
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -546,7 +546,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -558,9 +558,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -661,9 +661,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
+aho treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
 **Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.7** | **Status: Global Deployment + Full Telemetry**
 
@@ -697,13 +697,13 @@ graph BT
 
 aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 9).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
 
 ---
 
@@ -741,7 +741,7 @@ aho/
 
 ## Phase 0 Status
 
-**Phase:** 0 — Clone-to-Deploy
+**Phase:** 0 - Clone-to-Deploy
 **Charter:** artifacts/phase-charters/aho-phase-0.md
 
 Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
@@ -766,7 +766,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.4 — aho.run — Phase 0 — April 2026*
+*aho v0.2.4 - aho.run - Phase 0 - April 2026*
 ```
 
 ## §8. CHANGELOG
@@ -775,59 +775,59 @@ License to be determined before v0.6.0 release.
 ```markdown
 # aho changelog
 
-## [0.2.7] — 2026-04-11
+## [0.2.7] - 2026-04-11
 
-**Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config
+**Theme:** Visibility + carry-forward closeout - dashboard, coverage audit, orchestrator config
 
-- `src/aho/dashboard/` — new Python module: aggregator + HTTP server for localhost dashboard
+- `src/aho/dashboard/` - new Python module: aggregator + HTTP server for localhost dashboard
 - `bin/aho-dashboard` rewritten to serve `/api/state` (aggregated JSON) and `/` (Flutter app)
 - `/api/state` endpoint aggregates system, component, daemon, trace, MCP, and model state with 2s cache
-- Flutter Web dashboard at `web/claw3d/` — 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
+- Flutter Web dashboard at `web/claw3d/` - 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
 - Trident palette (#0D9488 shaft, #161B22 background, #4ADE80 accent), monospace typography, 5s polling
-- `components-coverage.md` — 88 components audited, all mapped to install.fish steps, zero gaps
-- `~/.config/aho/orchestrator.json` — engine (reserved), search provider, openclaw/nemoclaw model config
-- `bin/aho-secrets-init --add-brave-token` — interactive prompt, fernet-encrypted storage
+- `components-coverage.md` - 88 components audited, all mapped to install.fish steps, zero gaps
+- `~/.config/aho/orchestrator.json` - engine (reserved), search provider, openclaw/nemoclaw model config
+- `bin/aho-secrets-init --add-brave-token` - interactive prompt, fernet-encrypted storage
 - openclaw and nemoclaw read model defaults from orchestrator.json, fallback to hardcoded
-- `set_attrs_from_dict()` helper in logger.py — recursive OTEL span attribute flattening (aho-G064 final fix)
+- `set_attrs_from_dict()` helper in logger.py - recursive OTEL span attribute flattening (aho-G064 final fix)
 - 158 tests passing (up from 143)
 
-## [0.2.6] — 2026-04-11
+## [0.2.6] - 2026-04-11
 
-**Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor
+**Theme:** install.fish live-fire hardening - pacman, secrets, telegram doctor
 
-- Removed ollama from `pacman-packages.txt` — installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
+- Removed ollama from `pacman-packages.txt` - installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
 - `bin/aho-pacman`: added `_pkg_present` fallback that checks `command -q` for upstream-installed packages
 - `bin/aho-secrets-init`: rewritten to check fernet secrets store + telegram daemon instead of bogus `.age` file scaffold
 - `aho doctor preflight`: telegram check now shows `@aho_run_bot` via cached `getMe` API response
 - Telegram daemon writes bot identity to `~/.local/state/aho/telegram_bot.json` on startup
 - install.fish completes all 9 steps clean on NZXTcos, second run fully idempotent
 
-## [0.2.5] — 2026-04-11
+## [0.2.5] - 2026-04-11
 
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
 
 - `install.fish` rewritten as thin 9-step orchestrator with resume support via `install.state`
 - 6 new bin wrappers: `aho-pacman`, `aho-aur`, `aho-models`, `aho-secrets-init`, `aho-systemd`, `aho-python`
 - 3 declarative lists: `pacman-packages.txt` (15 packages), `aur-packages.txt` (empty), `model-fleet.txt` (4 models)
-- `bin/aho-install` renamed to `bin/aho-bootstrap` — install.fish is now the top-level entry point
+- `bin/aho-install` renamed to `bin/aho-bootstrap` - install.fish is now the top-level entry point
 - `bin/aho-secrets-init`: age keygen + keyring bootstrap + telegram scaffold with capability gap halt
 - `bin/aho-systemd install` deploys all 4 user daemons including `aho-harness-watcher.service` (0.2.3 W3 fix)
-- OTEL `aho.tokens` dict→scalar flatten — no more `Invalid type dict` errors (aho-G064)
+- OTEL `aho.tokens` dict→scalar flatten - no more `Invalid type dict` errors (aho-G064)
 - Evaluator score parser: scale detection (0-1 → 0-10), preserves `raw_score` and `raw_recommendation`
 - `bin/aho-conductor smoke`: verifiable smoke test with file marker + event log span assertion (aho-G065)
 - 2 new gotchas: aho-G064, aho-G065. Registry at 19 entries
 - 143 tests pass (was 137)
 
-## [0.2.4] — 2026-04-11
+## [0.2.4] - 2026-04-11
 
-**Theme:** W1 remediation — canonical MCP list correction + verification harness
+**Theme:** W1 remediation - canonical MCP list correction + verification harness
 
 - MCP fleet corrected from 12 to 9 registry-verified packages
 - Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
 - Added: server-everything (reference/test server)
 - `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
 - `bin/aho-mcp doctor` gains registry verification pass via `npm view`
-- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New postflight gate: `mcp_canonical_registry_verify` - fails on 404 or deprecation
 - New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
 - 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
 - Gotcha registry at 17 entries
@@ -835,17 +835,17 @@ License to be determined before v0.6.0 release.
 - 10 canonical artifacts at 0.2.4
 - 137 tests passing
 
-## [0.2.3] — 2026-04-11
+## [0.2.3] - 2026-04-11
 
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
 
 - Three-agent role split: WorkstreamAgent (Qwen), EvaluatorAgent (GLM), HarnessAgent (Nemotron) at `src/aho/agents/roles/`
 - Conductor orchestrator: dispatch → nemoclaw.route → workstream → evaluator → telegram
 - 12 MCP servers as global npm components with `bin/aho-mcp` manager (list/status/doctor/install)
-- `aho-harness-watcher.service` — 4th systemd user daemon, long-lived event log watcher
+- `aho-harness-watcher.service` - 4th systemd user daemon, long-lived event log watcher
 - Localhost dashboard plumbing: dashboard_port=7800, aho_role field, heartbeat emission (30s intervals)
-- `artifacts/harness/dashboard-contract.md` — canonical artifact #9 (heartbeat schema, health states)
-- `artifacts/harness/mcp-fleet.md` — canonical artifact #10 (12-server fleet spec)
+- `artifacts/harness/dashboard-contract.md` - canonical artifact #9 (heartbeat schema, health states)
+- `artifacts/harness/mcp-fleet.md` - canonical artifact #10 (12-server fleet spec)
 - `web/claw3d/index.html` placeholder (real implementation in 0.2.6)
 - `bin/aho-dashboard` skeleton (127.0.0.1:7800, traces.jsonl tail as JSON)
 - Bundle expanded with §24 Infrastructure, §25 Harnesses, §26 Configuration
@@ -856,9 +856,9 @@ License to be determined before v0.6.0 release.
 - 10 canonical artifacts at 0.2.3
 - 137 tests passing (29 new)
 
-## [0.2.2] — 2026-04-11
+## [0.2.2] - 2026-04-11
 
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 
 - OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
 - NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
@@ -872,29 +872,29 @@ License to be determined before v0.6.0 release.
 - `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
 - 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
 
-## [0.2.1] — 2026-04-11
+## [0.2.1] - 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
 
-- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
-- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
-- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Global deployment architecture (`global-deployment.md`) - hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` - idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` - clean removal with safety contract (never touches data/artifacts/git)
 - Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
-- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL always-on by default - opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
 - OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
-- `bin/aho-models-status` — Ollama fleet status wrapper
-- `bin/aho-otel-status` — collector service + trace status
+- `bin/aho-models-status` - Ollama fleet status wrapper
+- `bin/aho-otel-status` - collector service + trace status
 - Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
 - `build_log_complete.py` design path fix using `get_artifacts_root()`
 - 8 canonical artifacts (added global-deployment.md)
 - 87 tests passing (7 new OTEL instrumentation tests)
 
-## [0.1.16] — 2026-04-11
+## [0.1.16] - 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation
 
 - Close sequence refactored: tests → bundle → report → run file → postflight → .aho.json → checkpoint
-- Canonical artifacts gate (`canonical_artifacts_current.py`) — 7 versioned artifacts checked at close
+- Canonical artifacts gate (`canonical_artifacts_current.py`) - 7 versioned artifacts checked at close
 - Run file wired through report_builder for agent attribution and component activity section
 - `aho_json.py` helper for `last_completed_iteration` auto-update
 - Iteration 1 graduation ceremony: close artifact, iteration 2 charter, phase 0 charter update
@@ -904,11 +904,11 @@ License to be determined before v0.6.0 release.
 - pyproject.toml: version 0.1.16, project URLs added
 - `_iao_data()` bug fixed in components attribution CLI
 
-## [0.1.15] — 2026-04-11
+## [0.1.15] - 2026-04-11
 
 **Theme:** Foundation for Phase 0 exit
 
-- Mechanical report builder (`report_builder.py`) — ground-truth-driven, Qwen as commentary only
+- Mechanical report builder (`report_builder.py`) - ground-truth-driven, Qwen as commentary only
 - Component manifest system (`components.yaml`, `aho components` CLI, §23 bundle section)
 - OpenTelemetry dual emitter in `logger.py` (JSONL authoritative, OTEL additive)
 - Flutter `/app` scaffold with 5 placeholder pages
@@ -917,7 +917,7 @@ License to be determined before v0.6.0 release.
 - MANIFEST.json refresh with blake2b hashes
 - CHANGELOG.md restored with full iteration history
 
-## [0.1.14] — 2026-04-11
+## [0.1.14] - 2026-04-11
 
 **Theme:** Evaluator hardening + Qwen loop reliability
 
@@ -927,7 +927,7 @@ License to be determined before v0.6.0 release.
 - Seed extraction CLI (`aho iteration seed`)
 - Two-pass artifact generation for design and plan docs
 
-## [0.1.13] — 2026-04-10
+## [0.1.13] - 2026-04-10
 
 **Theme:** Folder consolidation + build log split
 
@@ -937,7 +937,7 @@ License to be determined before v0.6.0 release.
 - Graduation analysis via `aho iteration graduate`
 - Event log JSONL structured logging
 
-## [0.1.12] — 2026-04-10
+## [0.1.12] - 2026-04-10
 
 **Theme:** RAG archive + ChromaDB integration
 
@@ -946,7 +946,7 @@ License to be determined before v0.6.0 release.
 - GLM client integration alongside Qwen and Nemotron
 - Evaluator baseline reload fix (aho-G060)
 
-## [0.1.11] — 2026-04-10
+## [0.1.11] - 2026-04-10
 
 **Theme:** Agent roles + secret rotation
 
@@ -955,7 +955,7 @@ License to be determined before v0.6.0 release.
 - Age + OS keyring secret backends
 - Pipeline validation improvements
 
-## [0.1.10] — 2026-04-09
+## [0.1.10] - 2026-04-09
 
 **Theme:** Pipeline scaffolding + doctor levels
 
@@ -964,7 +964,7 @@ License to be determined before v0.6.0 release.
 - Postflight plugin system with dynamic module loading
 - Disk space and dependency checks
 
-## [0.1.9] — 2026-04-09
+## [0.1.9] - 2026-04-09
 
 **Theme:** IAO → AHO rename
 
@@ -975,18 +975,18 @@ License to be determined before v0.6.0 release.
 - Renamed gotcha code prefix ahomw-G* → aho-G*
 - Build log filename split: manual authoritative, Qwen synthesis to -synthesis suffix (ADR-042)
 
-## [0.1.0-alpha] — 2026-04-08
+## [0.1.0-alpha] - 2026-04-08
 
 First versioned release. Extracted from kjtcom POC project as iaomw (later renamed iao, then aho).
 
-- iaomw.paths — path-agnostic project root resolution
-- iaomw.registry — script and gotcha registry queries
-- iaomw.bundle — bundle generator with 10-item minimum spec
-- iaomw.compatibility — data-driven compatibility checker
-- iaomw.doctor — shared pre/post-flight health check module
-- iaomw.cli — CLI with project, init, status, check, push subcommands
-- iaomw.harness — two-harness alignment tool
-- pyproject.toml — pip-installable package
+- iaomw.paths - path-agnostic project root resolution
+- iaomw.registry - script and gotcha registry queries
+- iaomw.bundle - bundle generator with 10-item minimum spec
+- iaomw.compatibility - data-driven compatibility checker
+- iaomw.doctor - shared pre/post-flight health check module
+- iaomw.cli - CLI with project, init, status, check, push subcommands
+- iaomw.harness - two-harness alignment tool
+- pyproject.toml - pip-installable package
 - Linux + fish + Python 3.11+ targeted
 ```
 
@@ -994,7 +994,7 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — aho (Agentic Harness Orchestration) Phase 0
+# CLAUDE.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Claude Code executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -1034,14 +1034,14 @@ Split-agent model: Gemini CLI runs W0–W5 (bulk execution); you run W6 close (d
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. If closing a run: read the manual build log first (authoritative per ADR-042), synthesis second.
 
-## Gotcha Registry — Query First
+## Gotcha Registry - Query First
 
 Before any novel action, query the gotcha registry. Known Phase 0 gotchas include:
 - **aho-G001 (printf not heredoc):** Use `printf '...\n' > file` not heredocs in fish.
 - **aho-G022 (command ls):** Use `command ls` to strip color codes from agent output.
 - **aho-G060:** Evaluator baseline must reload per call, not at init (fixed 0.1.12).
 - **aho-G061:** Smoke instrumentation reads iteration from checkpoint at script start.
-- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` — leaks API keys.
+- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` - leaks API keys.
 
 ## Sign-off Format
 
@@ -1049,7 +1049,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
 
 ## What NOT to Do
 
@@ -1067,27 +1067,27 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 ## Close Sequence (W6 pattern)
 
 1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates.
+2. `aho doctor` - all gates.
 3. Bundle: validate §1–§21 spec, §22 component checklist = 6.
 4. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
-5. Populate `aho-run-{iteration}.md` — workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
+5. Populate `aho-run-{iteration}.md` - workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
 6. Generate `aho-bundle-{iteration}.md`.
 7. Write checkpoint state = closed. Notify Kyle.
 
 ## Communication Style
 
-Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout — no bashisms.
+Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout - no bashisms.
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.7 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 - updated during 0.2.7 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §10. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — aho (Agentic Harness Orchestration) Phase 0
+# GEMINI.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Gemini CLI executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -1103,7 +1103,7 @@ Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux 
 
 You are Gemini CLI operating inside an aho iteration. You are the primary bulk executor for Phase 0 runs, handling workstreams W0 through W5 in the split-agent model. Claude Code handles W6 close. You execute workstreams defined by the run's plan doc. You do not design scope, invent amendments, or produce artifacts Kyle has not explicitly requested.
 
-You are launched with `gemini --yolo` which implies sandbox bypass — single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
+You are launched with `gemini --yolo` which implies sandbox bypass - single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
 
 ## The Eleven Pillars
 
@@ -1127,7 +1127,7 @@ You are launched with `gemini --yolo` which implies sandbox bypass — single fl
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. Write first event to `data/aho_event_log.jsonl` marking workstream start.
 
-## Gotcha Registry — Phase 0 Critical List
+## Gotcha Registry - Phase 0 Critical List
 
 - **aho-G001 (printf not heredoc):** Fish heredocs break on nested quotes. Use `printf '...\n' > file`.
 - **aho-G022 (command ls):** Bare `ls` injects color escape codes into agent output. Use `command ls`.
@@ -1154,7 +1154,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
 
 ## What NOT to Do
 
@@ -1188,7 +1188,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — updated during 0.2.3 W0. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 - updated during 0.2.3 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §11. .aho.json
@@ -1883,8 +1883,8 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 ### install.fish (install.fish)
 ```fish
 #!/usr/bin/env fish
-# install.fish — Clone-to-deploy orchestrator for aho.
-# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# install.fish - Clone-to-deploy orchestrator for aho.
+# 0.2.5 - Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
 # Pillar 4: wrappers are the tool surface.
 #
 # Usage: ./install.fish
@@ -1970,7 +1970,7 @@ function _run_step
 end
 
 # ─────────────────────────────────────────────────────────────────────────
-# Platform check (not a resumable step — always runs)
+# Platform check (not a resumable step - always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
 if not test -f /etc/arch-release
@@ -3600,59 +3600,59 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 ```markdown
 # aho changelog
 
-## [0.2.7] — 2026-04-11
+## [0.2.7] - 2026-04-11
 
-**Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config
+**Theme:** Visibility + carry-forward closeout - dashboard, coverage audit, orchestrator config
 
-- `src/aho/dashboard/` — new Python module: aggregator + HTTP server for localhost dashboard
+- `src/aho/dashboard/` - new Python module: aggregator + HTTP server for localhost dashboard
 - `bin/aho-dashboard` rewritten to serve `/api/state` (aggregated JSON) and `/` (Flutter app)
 - `/api/state` endpoint aggregates system, component, daemon, trace, MCP, and model state with 2s cache
-- Flutter Web dashboard at `web/claw3d/` — 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
+- Flutter Web dashboard at `web/claw3d/` - 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
 - Trident palette (#0D9488 shaft, #161B22 background, #4ADE80 accent), monospace typography, 5s polling
-- `components-coverage.md` — 88 components audited, all mapped to install.fish steps, zero gaps
-- `~/.config/aho/orchestrator.json` — engine (reserved), search provider, openclaw/nemoclaw model config
-- `bin/aho-secrets-init --add-brave-token` — interactive prompt, fernet-encrypted storage
+- `components-coverage.md` - 88 components audited, all mapped to install.fish steps, zero gaps
+- `~/.config/aho/orchestrator.json` - engine (reserved), search provider, openclaw/nemoclaw model config
+- `bin/aho-secrets-init --add-brave-token` - interactive prompt, fernet-encrypted storage
 - openclaw and nemoclaw read model defaults from orchestrator.json, fallback to hardcoded
-- `set_attrs_from_dict()` helper in logger.py — recursive OTEL span attribute flattening (aho-G064 final fix)
+- `set_attrs_from_dict()` helper in logger.py - recursive OTEL span attribute flattening (aho-G064 final fix)
 - 158 tests passing (up from 143)
 
-## [0.2.6] — 2026-04-11
+## [0.2.6] - 2026-04-11
 
-**Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor
+**Theme:** install.fish live-fire hardening - pacman, secrets, telegram doctor
 
-- Removed ollama from `pacman-packages.txt` — installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
+- Removed ollama from `pacman-packages.txt` - installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
 - `bin/aho-pacman`: added `_pkg_present` fallback that checks `command -q` for upstream-installed packages
 - `bin/aho-secrets-init`: rewritten to check fernet secrets store + telegram daemon instead of bogus `.age` file scaffold
 - `aho doctor preflight`: telegram check now shows `@aho_run_bot` via cached `getMe` API response
 - Telegram daemon writes bot identity to `~/.local/state/aho/telegram_bot.json` on startup
 - install.fish completes all 9 steps clean on NZXTcos, second run fully idempotent
 
-## [0.2.5] — 2026-04-11
+## [0.2.5] - 2026-04-11
 
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
 
 - `install.fish` rewritten as thin 9-step orchestrator with resume support via `install.state`
 - 6 new bin wrappers: `aho-pacman`, `aho-aur`, `aho-models`, `aho-secrets-init`, `aho-systemd`, `aho-python`
 - 3 declarative lists: `pacman-packages.txt` (15 packages), `aur-packages.txt` (empty), `model-fleet.txt` (4 models)
-- `bin/aho-install` renamed to `bin/aho-bootstrap` — install.fish is now the top-level entry point
+- `bin/aho-install` renamed to `bin/aho-bootstrap` - install.fish is now the top-level entry point
 - `bin/aho-secrets-init`: age keygen + keyring bootstrap + telegram scaffold with capability gap halt
 - `bin/aho-systemd install` deploys all 4 user daemons including `aho-harness-watcher.service` (0.2.3 W3 fix)
-- OTEL `aho.tokens` dict→scalar flatten — no more `Invalid type dict` errors (aho-G064)
+- OTEL `aho.tokens` dict→scalar flatten - no more `Invalid type dict` errors (aho-G064)
 - Evaluator score parser: scale detection (0-1 → 0-10), preserves `raw_score` and `raw_recommendation`
 - `bin/aho-conductor smoke`: verifiable smoke test with file marker + event log span assertion (aho-G065)
 - 2 new gotchas: aho-G064, aho-G065. Registry at 19 entries
 - 143 tests pass (was 137)
 
-## [0.2.4] — 2026-04-11
+## [0.2.4] - 2026-04-11
 
-**Theme:** W1 remediation — canonical MCP list correction + verification harness
+**Theme:** W1 remediation - canonical MCP list correction + verification harness
 
 - MCP fleet corrected from 12 to 9 registry-verified packages
 - Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
 - Added: server-everything (reference/test server)
 - `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
 - `bin/aho-mcp doctor` gains registry verification pass via `npm view`
-- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New postflight gate: `mcp_canonical_registry_verify` - fails on 404 or deprecation
 - New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
 - 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
 - Gotcha registry at 17 entries
@@ -3660,17 +3660,17 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - 10 canonical artifacts at 0.2.4
 - 137 tests passing
 
-## [0.2.3] — 2026-04-11
+## [0.2.3] - 2026-04-11
 
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
 
 - Three-agent role split: WorkstreamAgent (Qwen), EvaluatorAgent (GLM), HarnessAgent (Nemotron) at `src/aho/agents/roles/`
 - Conductor orchestrator: dispatch → nemoclaw.route → workstream → evaluator → telegram
 - 12 MCP servers as global npm components with `bin/aho-mcp` manager (list/status/doctor/install)
-- `aho-harness-watcher.service` — 4th systemd user daemon, long-lived event log watcher
+- `aho-harness-watcher.service` - 4th systemd user daemon, long-lived event log watcher
 - Localhost dashboard plumbing: dashboard_port=7800, aho_role field, heartbeat emission (30s intervals)
-- `artifacts/harness/dashboard-contract.md` — canonical artifact #9 (heartbeat schema, health states)
-- `artifacts/harness/mcp-fleet.md` — canonical artifact #10 (12-server fleet spec)
+- `artifacts/harness/dashboard-contract.md` - canonical artifact #9 (heartbeat schema, health states)
+- `artifacts/harness/mcp-fleet.md` - canonical artifact #10 (12-server fleet spec)
 - `web/claw3d/index.html` placeholder (real implementation in 0.2.6)
 - `bin/aho-dashboard` skeleton (127.0.0.1:7800, traces.jsonl tail as JSON)
 - Bundle expanded with §24 Infrastructure, §25 Harnesses, §26 Configuration
@@ -3681,9 +3681,9 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - 10 canonical artifacts at 0.2.3
 - 137 tests passing (29 new)
 
-## [0.2.2] — 2026-04-11
+## [0.2.2] - 2026-04-11
 
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 
 - OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
 - NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
@@ -3697,29 +3697,29 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
 - 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
 
-## [0.2.1] — 2026-04-11
+## [0.2.1] - 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
 
-- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
-- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
-- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Global deployment architecture (`global-deployment.md`) - hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` - idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` - clean removal with safety contract (never touches data/artifacts/git)
 - Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
-- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL always-on by default - opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
 - OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
-- `bin/aho-models-status` — Ollama fleet status wrapper
-- `bin/aho-otel-status` — collector service + trace status
+- `bin/aho-models-status` - Ollama fleet status wrapper
+- `bin/aho-otel-status` - collector service + trace status
 - Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
 - `build_log_complete.py` design path fix using `get_artifacts_root()`
 - 8 canonical artifacts (added global-deployment.md)
 - 87 tests passing (7 new OTEL instrumentation tests)
 
-## [0.1.16] — 2026-04-11
+## [0.1.16] - 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation
 
 - Close sequence refactored: tests → bundle → report → run file → postflight → .aho.json → checkpoint
-- Canonical artifacts gate (`canonical_artifacts_current.py`) — 7 versioned artifacts checked at close
+- Canonical artifacts gate (`canonical_artifacts_current.py`) - 7 versioned artifacts checked at close
 - Run file wired through report_builder for agent attribution and component activity section
 - `aho_json.py` helper for `last_completed_iteration` auto-update
 - Iteration 1 graduation ceremony: close artifact, iteration 2 charter, phase 0 charter update
@@ -3729,11 +3729,11 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - pyproject.toml: version 0.1.16, project URLs added
 - `_iao_data()` bug fixed in components attribution CLI
 
-## [0.1.15] — 2026-04-11
+## [0.1.15] - 2026-04-11
 
 **Theme:** Foundation for Phase 0 exit
 
-- Mechanical report builder (`report_builder.py`) — ground-truth-driven, Qwen as commentary only
+- Mechanical report builder (`report_builder.py`) - ground-truth-driven, Qwen as commentary only
 - Component manifest system (`components.yaml`, `aho components` CLI, §23 bundle section)
 - OpenTelemetry dual emitter in `logger.py` (JSONL authoritative, OTEL additive)
 - Flutter `/app` scaffold with 5 placeholder pages
@@ -3742,7 +3742,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - MANIFEST.json refresh with blake2b hashes
 - CHANGELOG.md restored with full iteration history
 
-## [0.1.14] — 2026-04-11
+## [0.1.14] - 2026-04-11
 
 **Theme:** Evaluator hardening + Qwen loop reliability
 
@@ -3752,7 +3752,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - Seed extraction CLI (`aho iteration seed`)
 - Two-pass artifact generation for design and plan docs
 
-## [0.1.13] — 2026-04-10
+## [0.1.13] - 2026-04-10
 
 **Theme:** Folder consolidation + build log split
 
@@ -3762,7 +3762,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - Graduation analysis via `aho iteration graduate`
 - Event log JSONL structured logging
 
-## [0.1.12] — 2026-04-10
+## [0.1.12] - 2026-04-10
 
 **Theme:** RAG archive + ChromaDB integration
 
@@ -3771,7 +3771,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - GLM client integration alongside Qwen and Nemotron
 - Evaluator baseline reload fix (aho-G060)
 
-## [0.1.11] — 2026-04-10
+## [0.1.11] - 2026-04-10
 
 **Theme:** Agent roles + secret rotation
 
@@ -3780,7 +3780,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - Age + OS keyring secret backends
 - Pipeline validation improvements
 
-## [0.1.10] — 2026-04-09
+## [0.1.10] - 2026-04-09
 
 **Theme:** Pipeline scaffolding + doctor levels
 
@@ -3789,7 +3789,7 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - Postflight plugin system with dynamic module loading
 - Disk space and dependency checks
 
-## [0.1.9] — 2026-04-09
+## [0.1.9] - 2026-04-09
 
 **Theme:** IAO → AHO rename
 
@@ -3800,18 +3800,18 @@ Per-run manifest of every model, agent, CLI command, and tool invoked during ite
 - Renamed gotcha code prefix ahomw-G* → aho-G*
 - Build log filename split: manual authoritative, Qwen synthesis to -synthesis suffix (ADR-042)
 
-## [0.1.0-alpha] — 2026-04-08
+## [0.1.0-alpha] - 2026-04-08
 
 First versioned release. Extracted from kjtcom POC project as iaomw (later renamed iao, then aho).
 
-- iaomw.paths — path-agnostic project root resolution
-- iaomw.registry — script and gotcha registry queries
-- iaomw.bundle — bundle generator with 10-item minimum spec
-- iaomw.compatibility — data-driven compatibility checker
-- iaomw.doctor — shared pre/post-flight health check module
-- iaomw.cli — CLI with project, init, status, check, push subcommands
-- iaomw.harness — two-harness alignment tool
-- pyproject.toml — pip-installable package
+- iaomw.paths - path-agnostic project root resolution
+- iaomw.registry - script and gotcha registry queries
+- iaomw.bundle - bundle generator with 10-item minimum spec
+- iaomw.compatibility - data-driven compatibility checker
+- iaomw.doctor - shared pre/post-flight health check module
+- iaomw.cli - CLI with project, init, status, check, push subcommands
+- iaomw.harness - two-harness alignment tool
+- pyproject.toml - pip-installable package
 - Linux + fish + Python 3.11+ targeted
 ```
 
@@ -3819,9 +3819,9 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
+aho treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
 **Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.7** | **Status: Global Deployment + Full Telemetry**
 
@@ -3855,13 +3855,13 @@ graph BT
 
 aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 9).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
 
 ---
 
@@ -3899,7 +3899,7 @@ aho/
 
 ## Phase 0 Status
 
-**Phase:** 0 — Clone-to-Deploy
+**Phase:** 0 - Clone-to-Deploy
 **Charter:** artifacts/phase-charters/aho-phase-0.md
 
 Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
@@ -3924,12 +3924,12 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.4 — aho.run — Phase 0 — April 2026*
+*aho v0.2.4 - aho.run - Phase 0 - April 2026*
 ```
 
 ### CLAUDE.md
 ```markdown
-# CLAUDE.md — aho (Agentic Harness Orchestration) Phase 0
+# CLAUDE.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Claude Code executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -3969,14 +3969,14 @@ Split-agent model: Gemini CLI runs W0–W5 (bulk execution); you run W6 close (d
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. If closing a run: read the manual build log first (authoritative per ADR-042), synthesis second.
 
-## Gotcha Registry — Query First
+## Gotcha Registry - Query First
 
 Before any novel action, query the gotcha registry. Known Phase 0 gotchas include:
 - **aho-G001 (printf not heredoc):** Use `printf '...\n' > file` not heredocs in fish.
 - **aho-G022 (command ls):** Use `command ls` to strip color codes from agent output.
 - **aho-G060:** Evaluator baseline must reload per call, not at init (fixed 0.1.12).
 - **aho-G061:** Smoke instrumentation reads iteration from checkpoint at script start.
-- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` — leaks API keys.
+- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` - leaks API keys.
 
 ## Sign-off Format
 
@@ -3984,7 +3984,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
 
 ## What NOT to Do
 
@@ -4002,25 +4002,25 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 ## Close Sequence (W6 pattern)
 
 1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates.
+2. `aho doctor` - all gates.
 3. Bundle: validate §1–§21 spec, §22 component checklist = 6.
 4. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
-5. Populate `aho-run-{iteration}.md` — workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
+5. Populate `aho-run-{iteration}.md` - workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
 6. Generate `aho-bundle-{iteration}.md`.
 7. Write checkpoint state = closed. Notify Kyle.
 
 ## Communication Style
 
-Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout — no bashisms.
+Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout - no bashisms.
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.7 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 - updated during 0.2.7 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ### GEMINI.md
 ```markdown
-# GEMINI.md — aho (Agentic Harness Orchestration) Phase 0
+# GEMINI.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Gemini CLI executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -4036,7 +4036,7 @@ Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux 
 
 You are Gemini CLI operating inside an aho iteration. You are the primary bulk executor for Phase 0 runs, handling workstreams W0 through W5 in the split-agent model. Claude Code handles W6 close. You execute workstreams defined by the run's plan doc. You do not design scope, invent amendments, or produce artifacts Kyle has not explicitly requested.
 
-You are launched with `gemini --yolo` which implies sandbox bypass — single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
+You are launched with `gemini --yolo` which implies sandbox bypass - single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
 
 ## The Eleven Pillars
 
@@ -4060,7 +4060,7 @@ You are launched with `gemini --yolo` which implies sandbox bypass — single fl
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. Write first event to `data/aho_event_log.jsonl` marking workstream start.
 
-## Gotcha Registry — Phase 0 Critical List
+## Gotcha Registry - Phase 0 Critical List
 
 - **aho-G001 (printf not heredoc):** Fish heredocs break on nested quotes. Use `printf '...\n' > file`.
 - **aho-G022 (command ls):** Bare `ls` injects color escape codes into agent output. Use `command ls`.
@@ -4087,7 +4087,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
 
 ## What NOT to Do
 
@@ -4121,14 +4121,14 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — updated during 0.2.3 W0. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 - updated during 0.2.3 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ### install.fish
 ```fish
 #!/usr/bin/env fish
-# install.fish — Clone-to-deploy orchestrator for aho.
-# 0.2.5 — Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
+# install.fish - Clone-to-deploy orchestrator for aho.
+# 0.2.5 - Thin orchestrator. Every step delegates to a bin/aho-* wrapper.
 # Pillar 4: wrappers are the tool surface.
 #
 # Usage: ./install.fish
@@ -4214,7 +4214,7 @@ function _run_step
 end
 
 # ─────────────────────────────────────────────────────────────────────────
-# Platform check (not a resumable step — always runs)
+# Platform check (not a resumable step - always runs)
 # ─────────────────────────────────────────────────────────────────────────
 
 if not test -f /etc/arch-release
@@ -4276,7 +4276,7 @@ _info "────────────────────────�
 
 ### agents-architecture.md
 ```markdown
-# Agents Architecture — aho 0.2.1
+# Agents Architecture - aho 0.2.1
 
 **Version:** 0.2.7
 **Status:** Canonical
@@ -4284,7 +4284,7 @@ _info "────────────────────────�
 
 ## Overview
 
-Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet — including LLMs, MCPs, and tool wrappers — can be deployed as a unified package with zero manual configuration.
+Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet - including LLMs, MCPs, and tool wrappers - can be deployed as a unified package with zero manual configuration.
 
 The current architecture (ADR-040) prioritizes **Ollama-native primitives**. By leveraging the streaming `QwenClient` and the proven classification capabilities of `nemotron-mini:4b`, aho provides a functional agentic layer with zero external library dependencies beyond `requests` and the standard library.
 
@@ -4342,7 +4342,7 @@ This data feeds the **BUNDLE_SPEC §22 Component Checklist**, providing Kyle wit
 # aho - Base Harness
 
 **Version:** 0.2.7
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -4354,7 +4354,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -4366,9 +4366,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -4533,7 +4533,7 @@ Deferred. In Phase 1, clones will push heartbeat summaries to aho.run for centra
 
 ---
 
-*Dashboard contract for aho Phase 0 — authored during 0.2.3 W3.*
+*Dashboard contract for aho Phase 0 - authored during 0.2.3 W3.*
 ```
 
 ### global-deployment.md
@@ -4553,7 +4553,7 @@ aho uses a **hybrid** systemd deployment:
 - **System services** (require sudo): Ollama (`ollama.service`). Installed via upstream installer, managed by systemd system scope.
 - **User services** (no sudo): All aho daemons (`aho-otel-collector.service`, future `aho-telegram.service`, etc.). Managed by `systemctl --user`, enabled via `loginctl enable-linger`.
 
-This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement — both one-time setup steps documented as capability gaps.
+This split means `bin/aho-bootstrap` never requires sudo for aho's own components. Sudo is only needed for Ollama install and linger enablement - both one-time setup steps documented as capability gaps.
 
 ## 2. Install Paths
 
@@ -4613,12 +4613,12 @@ Uninstall is non-destructive to user data. Re-running `bin/aho-bootstrap` after 
 
 Every install operation is safe to re-run:
 
-- `mkdir -p` — no-op if exists
-- `pip install -e .` — upgrades in place
-- Unit file generation — overwrites with identical content
-- `systemctl --user daemon-reload` — safe always
-- `systemctl --user enable --now` — no-op if already running
-- Model pulls — skipped if `ollama list` shows model present
+- `mkdir -p` - no-op if exists
+- `pip install -e .` - upgrades in place
+- Unit file generation - overwrites with identical content
+- `systemctl --user daemon-reload` - safe always
+- `systemctl --user enable --now` - no-op if already running
+- Model pulls - skipped if `ollama list` shows model present
 
 Second run of `bin/aho-bootstrap` produces identical state to first run. No side effects, no error output.
 
@@ -4649,7 +4649,7 @@ aho doctor
 
 ### mcp-fleet.md
 ```markdown
-# aho MCP Fleet — Architectural Specification
+# aho MCP Fleet - Architectural Specification
 
 **Version:** 0.2.7
 **Date:** 2026-04-11
@@ -4690,14 +4690,14 @@ All packages install globally via `sudo npm install -g`. This is a one-time capa
 ## 4. Per-Server Role
 
 - **firebase-tools**: Firestore CRUD for TripleDB and project state persistence.
-- **context7**: Documentation RAG — fetches library docs on demand for agent context.
+- **context7**: Documentation RAG - fetches library docs on demand for agent context.
 - **firecrawl**: Structured web extraction for research tasks.
 - **playwright**: End-to-end browser testing for app/ builds.
 - **flutter**: Flutter widget scaffolding and build tooling.
 - **server-filesystem**: Safe, sandboxed file I/O for agent workdirs.
 - **server-memory**: Cross-session persistent key-value store.
 - **server-sequential-thinking**: Structured reasoning for complex multi-step tasks.
-- **server-everything**: Reference/test MCP server — useful as conductor smoke target and integration test fixture.
+- **server-everything**: Reference/test MCP server - useful as conductor smoke target and integration test fixture.
 
 ## 5. Doctor Checks
 
@@ -4715,21 +4715,21 @@ All packages install globally via `sudo npm install -g`. This is a one-time capa
 ---
 
 **Removed in 0.2.4 (registry-verified as 404/deprecated/non-npm):**
-- `@modelcontextprotocol/server-github` — moved to `github/github-mcp-server` (Go binary, not npm)
-- `@modelcontextprotocol/server-google-drive` — archived, no first-party replacement
-- `@modelcontextprotocol/server-slack` — deprecated, no current replacement
-- `@modelcontextprotocol/server-fetch` — Python-only (`uvx mcp-server-fetch`), not an npm package
+- `@modelcontextprotocol/server-github` - moved to `github/github-mcp-server` (Go binary, not npm)
+- `@modelcontextprotocol/server-google-drive` - archived, no first-party replacement
+- `@modelcontextprotocol/server-slack` - deprecated, no current replacement
+- `@modelcontextprotocol/server-fetch` - Python-only (`uvx mcp-server-fetch`), not an npm package
 
 Replacement servers for github/slack/google-drive/fetch are tracked under a separate ADR (not Phase 0 scope).
 
 ---
 
-*MCP fleet specification for aho Phase 0 — updated during 0.2.4 W0.*
+*MCP fleet specification for aho Phase 0 - updated during 0.2.4 W0.*
 ```
 
 ### model-fleet.md
 ```markdown
-# aho Model Fleet — Architectural Specification
+# aho Model Fleet - Architectural Specification
 
 **Version:** 0.2.7
 **Date:** 2026-04-11
@@ -4865,7 +4865,7 @@ The token is never stored in plaintext on disk. The `token_secret_key` field in 
 
 ---
 
-*orchestrator-config.md v0.2.7 — aho harness artifact.*
+*orchestrator-config.md v0.2.7 - aho harness artifact.*
 ```
 
 ### canonical_artifacts.yaml

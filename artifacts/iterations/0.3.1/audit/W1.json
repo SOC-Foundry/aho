@@ -1,0 +1,236 @@
+{
+  "disposition": "halt",
+  "confidence": 0.85,
+  "auditor_model_id": "llama3.2:3b",
+  "audit_started_utc": "2026-05-25T14:25:35.661189+00:00",
+  "audit_completed_utc": "2026-05-25T14:36:34.915487+00:00",
+  "target_artifact_sha256": "4aea25b1e7611d49e4ba2c0a5d33d6ddc82c5d31cd28f754bd3c9ef1844a848e",
+  "findings_count": 2,
+  "evidence_trace_count": 1,
+  "audit_kind": "self",
+  "iteration": "0.3.1",
+  "workstream": "W1",
+  "schema_version": "audit-v2-llama-seat",
+  "findings": [
+    {
+      "id": "D2",
+      "severity": "important",
+      "description": "The artifact claims that the carry-forward F-0.3.1-W0-002 is closed structurally, but the evidence snippet shows that it is not."
+    },
+    {
+      "id": "F-0.2.17-W5-001",
+      "severity": "important",
+      "description": "The artifact claims that the audit-time structural pre-check self-referential pattern is present, but the evidence snippet does not show this."
+    }
+  ],
+  "evidence_traces": [
+    "...spurious-ID test token is not structurally detectable.** Severity: info. Source: 0.2.17 W3 D1/D2 implementation. Summary: \"Plan doc D2 acceptance gate names `F-FAKE-9.9.9-W9-999` as the spuriou\u2026"
+  ],
+  "structural_pre_checks": {
+    "g081_banned_phrases": "pass",
+    "g081_banned_phrases_hits": [],
+    "git_ops_referenced": "pass",
+    "git_ops_hits": [],
+    "three_octet_versioning_present": "pass",
+    "three_octet_versioning_examples": [
+      "0.3.1",
+      "0.2.17",
+      "0.2.18",
+      "0.3.1",
+      "0.3.1"
+    ]
+  },
+  "confidence_floor": 0.85,
+  "confidence_floor_locked": false,
+  "structural_override_to_surface": false,
+  "unsupported_halt_downgrade": false,
+  "latency_ms": 659252,
+  "body_md": "# Self-Audit \u2014 0.3.1 W1\n**Disposition:** halt\n**Confidence:** 0.85\n**Auditor:** llama3.2:3b\n**Target:** `/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/acceptance/W1.json`\n\n## Structural pre-checks\n\n- g081_banned_phrases: **pass**\n- git_ops_referenced: **pass**\n- three_octet_versioning_present: **pass**\n\n## Findings\n\n### Finding D2 (important)\n\nThe artifact claims that the carry-forward F-0.3.1-W0-002 is closed structurally, but the evidence snippet shows that it is not.\n\n### Finding F-0.2.17-W5-001 (important)\n\nThe artifact claims that the audit-time structural pre-check self-referential pattern is present, but the evidence snippet does not show this.\n\n\n## Evidence traces\n\nThe auditor cited the following evidence:\n- \u201c...spurious-ID test token is not structurally detectable.** Severity: info. Source: 0.2.17 W3 D1/D2 implementation. Summary: \"Plan doc D2 acceptance gate names `F-FAKE-9.9.9-W9-999` as the spuriou\u2026\u201d\n",
+  "rag_enrichment": {
+    "enabled": true,
+    "detected_count": 28,
+    "registered_count": 20,
+    "unverified_count": 8,
+    "truncated": false,
+    "section_chars": 9114,
+    "references": [
+      {
+        "id": "D8",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D2",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.2.17/W3-close-note.md"
+      },
+      {
+        "id": "D1",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.2.17/W3-close-note.md"
+      },
+      {
+        "id": "D7",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.3.1-W0-002",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.17-W1-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.18-W2-004",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "ADR-0011",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "ADR-0007",
+        "kind": "adr",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.2.18-W0-008",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "D3",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.2.17/W6-close-note.md"
+      },
+      {
+        "id": "F-0.3.1-W0-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/W0-close-note.md"
+      },
+      {
+        "id": "F-0.2.18-W2-003",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "D0",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D4",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.2.17/W3-close-note.md"
+      },
+      {
+        "id": "F-0.2.18-W1-004",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.3.1-W0-004",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.3.1-W0-005",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.3.1-W0-003",
+        "kind": "carry_forward_full",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "D5",
+        "kind": "deliverable",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "D6",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      },
+      {
+        "id": "F-0.2.18-W2-002",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.2.18-W2-005",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.2.18-W2-007",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.2.18-W2-009",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.2.17-W5-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "F-0.2.17-W6-001",
+        "kind": "carry_forward_full",
+        "status": "registered",
+        "top_source_artifact_path": "/home/kthompson/Development/Projects/socfoundry/aho/artifacts/iterations/0.3.1/aho-plan-0.3.1.md"
+      },
+      {
+        "id": "D9",
+        "kind": "deliverable",
+        "status": "unverified",
+        "top_source_artifact_path": null
+      }
+    ]
+  },
+  "suppressed_findings": [],
+  "finding_filter": {
+    "filter_enabled": true,
+    "filter_eligible": true,
+    "registered_id_count": 20,
+    "model_findings_count": 2,
+    "active_findings_count": 2,
+    "suppressed_count": 0
+  }
+}

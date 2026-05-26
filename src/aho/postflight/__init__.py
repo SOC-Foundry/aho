@@ -17,7 +17,7 @@ class CheckResult:
 @dataclass
 class GateResult:
     """Top-level gate result with optional per-check detail."""
-    status: str  # ok|fail|skip|deferred — rollup of checks
+    status: str  # ok|fail|skip|deferred - rollup of checks
     message: str
     checks: list[CheckResult] = field(default_factory=list)
 

@@ -1,4 +1,4 @@
-"""W4 D2 — per-component brick acceptance tests.
+"""W4 D2 - per-component brick acceptance tests.
 
 Each of the ten bricks must:
   - render green against synthetic-healthy signal state
@@ -6,7 +6,7 @@ Each of the ten bricks must:
   - unknown when its slice of signal_state is empty
 
 Plus the brick spec list itself must cover the W4 plan-doc §D2 component
-list verbatim — drift between the plan and the spec list fails this
+list verbatim - drift between the plan and the spec list fails this
 test loud.
 """
 from __future__ import annotations
@@ -91,7 +91,7 @@ def test_empty_signal_state_every_brick_unknown():
 
 
 # ---------------------------------------------------------------------------
-# Per-brick fault-injection — for each spec, isolate the brick by
+# Per-brick fault-injection - for each spec, isolate the brick by
 # constructing a signal_state that's healthy elsewhere but fault-injected
 # in this brick's signal slice. Spec must red.
 # ---------------------------------------------------------------------------
@@ -162,7 +162,7 @@ def test_render_brick_grid_summary_counts_match_states():
 
 def test_council_audit_brick_surfaces_filter_activity():
     """The aho.council.audit brick's extra_render must surface filter
-    activity — eligible_count, suppressed_count, audit_count."""
+    activity - eligible_count, suppressed_count, audit_count."""
     state = synthetic_signal_state(healthy=True)
     state["counters"]["aho.council.audit.finding_filter.suppressed_count"] = 2
     states = evaluate_all(state)

@@ -1,4 +1,4 @@
-"""aho.claw3d.substrate_panel — substrate-freshness panel for the claw3d
+"""aho.claw3d.substrate_panel - substrate-freshness panel for the claw3d
 dashboard. W1 D5 of 0.3.1.
 
 Reads `aho.observability.snapshot_all_facts()`, renders a 13-fact brick grid
@@ -6,9 +6,9 @@ with color cascade (green / yellow / red) and a summary tile (count of
 stale facts).
 
 Two surfaces:
-- get_substrate_state() — JSON dict for /api/substrate consumers (Flutter
+- get_substrate_state() - JSON dict for /api/substrate consumers (Flutter
   app or future tooling)
-- render_substrate_html() — self-contained HTML page for /substrate route
+- render_substrate_html() - self-contained HTML page for /substrate route
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from aho.observability import (
 
 def _format_age(seconds):
     if seconds is None:
-        return "—"
+        return "-"
     s = float(seconds)
     if s < 60:
         return f"{int(s)}s"
@@ -78,7 +78,7 @@ _COLOR_BG = {
 
 
 def render_substrate_html() -> str:
-    """Self-contained HTML page for the /substrate route. No JS — server-side
+    """Self-contained HTML page for the /substrate route. No JS - server-side
     render with a meta-refresh for live updates.
     """
     state = get_substrate_state()
@@ -111,7 +111,7 @@ def render_substrate_html() -> str:
         + ".warn{font-size:10px;opacity:.7;margin-top:4px;}"
         + ".footer{margin-top:16px;font-size:11px;color:#888;}"
         + "</style></head><body>"
-        + "<h1>aho substrate freshness — 13 facts</h1>"
+        + "<h1>aho substrate freshness - 13 facts</h1>"
         + "<div class=\"summary\">stale: " + str(stale) + " / " + str(summary["total"])
         + "  ·  green " + str(summary["green_count"])
         + "  ·  yellow " + str(summary["yellow_count"])

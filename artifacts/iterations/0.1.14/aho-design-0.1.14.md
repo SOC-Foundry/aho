@@ -1,4 +1,4 @@
-# aho 0.1.14 — Design
+# aho 0.1.14 - Design
 
 **Phase:** 0
 **Iteration:** 0.1.14
@@ -32,45 +32,45 @@
 
 ## Workstreams
 
-### W0 — Hygiene + reorg cleanup
+### W0 - Hygiene + reorg cleanup
 Bump `.aho.json` and `.aho-checkpoint.json` to 0.1.14. Backup tarball. Populate `MANIFEST.json` with current package manifest (walk `src/aho/`). Restore fish marker block in `install.fish`. Flatten `artifacts/docs/iterations/0.1.2/` → `artifacts/iterations/0.1.2/`. Remove `artifacts/docs/` tree entirely (verify empty after move). `aho doctor` → 6 ok / 0 warn gate.
 
-### W1 — Terminology sweep (iao → aho, ahomw → ahomw, IAO expansion)
+### W1 - Terminology sweep (iao → aho, ahomw → ahomw, IAO expansion)
 Three-pass sweep:
 
 **Pass 1: "Agentic Harness Orchestration" → "Agentic Harness Orchestration"**
 - Grep all `.md` under `artifacts/harness/`, `artifacts/adrs/`, `artifacts/roadmap/`, plus `CLAUDE.md`, `GEMINI.md`, `README.md`.
 - Update every full expansion. Update every casual use ("the Iterative Agentic..." variants).
-- Mermaid trident chart label: `IAO` stays (it's the acronym for the new expansion too — "Agentic Harness Orchestration" abbreviates awkwardly; keep three-letter shaft text as `AHO` and update).
+- Mermaid trident chart label: `IAO` stays (it's the acronym for the new expansion too - "Agentic Harness Orchestration" abbreviates awkwardly; keep three-letter shaft text as `AHO` and update).
 
 **Pass 2: `ahomw` → `ahomw`**
-- `artifacts/harness/base.md` — footer "ahomw - inviolable" → "ahomw - inviolable", and all ADR prefixes `ahomw-ADR-*` → `ahomw-ADR-*` (ADR-003, 005, 007, 009, 012, 014, 015, 017, 021, 027).
-- `projects.json` — entry key `ahomw` → `ahomw`.
+- `artifacts/harness/base.md` - footer "ahomw - inviolable" → "ahomw - inviolable", and all ADR prefixes `ahomw-ADR-*` → `ahomw-ADR-*` (ADR-003, 005, 007, 009, 012, 014, 015, 017, 021, 027).
+- `projects.json` - entry key `ahomw` → `ahomw`.
 - Script registry `data/script_registry.json`.
-- Gotcha registry `data/gotcha_archive.json` — any `ahomw-*` prefixes.
-- `src/aho/registry.py` — hardcoded prefix strings if any.
+- Gotcha registry `data/gotcha_archive.json` - any `ahomw-*` prefixes.
+- `src/aho/registry.py` - hardcoded prefix strings if any.
 - Pattern refs in base.md (`aho-Pattern-*` already correct, verify).
 
 **Pass 3: Residual `iao` narrative prose**
 - Sweep for any `iao` still surviving in prose (not filenames, not historical iteration dirs).
-- Whitelist: `docs/phase-charters/iao-phase-0.md` (historical filename, now at `artifacts/phase-charters/iao-phase-0.md`) — do not rename file, content already historical.
+- Whitelist: `docs/phase-charters/iao-phase-0.md` (historical filename, now at `artifacts/phase-charters/iao-phase-0.md`) - do not rename file, content already historical.
 - Whitelist: everything under `artifacts/iterations/0.1.2/` through `artifacts/iterations/0.1.12/`.
 
 **Gate:** `rg -i "iterative agentic-orchestration" artifacts/ CLAUDE.md GEMINI.md README.md` returns zero. `rg "ahomw" artifacts/ src/ data/ projects.json` returns zero outside historical iteration dirs.
 
-### W2 — Six canonical artifacts repair
+### W2 - Six canonical artifacts repair
 Full audit + rewrite pass, in order:
 
-1. **`artifacts/harness/base.md`** — footer `ahomw` → `ahomw`, all ADR prefixes, version bump to 0.1.14. Verify Eleven Pillars unchanged.
-2. **`artifacts/harness/agents-architecture.md`** — verify 0.1.13 body rewrite held, bump header to 0.1.14, update footer ("Updated by Gemini CLI during aho 0.1.14 W2").
-3. **`artifacts/harness/model-fleet.md`** — footer still says "Document updated for aho 0.1.12 W3" — bump to 0.1.14 W2. Verify no ahomw refs.
-4. **`CLAUDE.md`** — verify 0.1.13 rewrite held, add "Agentic Harness Orchestration" expansion if any full expansion is used, bump phase rewrite date.
-5. **`GEMINI.md`** — same as CLAUDE.md.
-6. **`README.md`** — update trident chart label text (`Agentic Harness Orchestration` → `Agentic Harness Orchestration`), update all body references, bump iteration to 0.1.14, update component count if §22 classification ships.
+1. **`artifacts/harness/base.md`** - footer `ahomw` → `ahomw`, all ADR prefixes, version bump to 0.1.14. Verify Eleven Pillars unchanged.
+2. **`artifacts/harness/agents-architecture.md`** - verify 0.1.13 body rewrite held, bump header to 0.1.14, update footer ("Updated by Gemini CLI during aho 0.1.14 W2").
+3. **`artifacts/harness/model-fleet.md`** - footer still says "Document updated for aho 0.1.12 W3" - bump to 0.1.14 W2. Verify no ahomw refs.
+4. **`CLAUDE.md`** - verify 0.1.13 rewrite held, add "Agentic Harness Orchestration" expansion if any full expansion is used, bump phase rewrite date.
+5. **`GEMINI.md`** - same as CLAUDE.md.
+6. **`README.md`** - update trident chart label text (`Agentic Harness Orchestration` → `Agentic Harness Orchestration`), update all body references, bump iteration to 0.1.14, update component count if §22 classification ships.
 
 **Gate:** all six files pass `rg -i "iterative agentic"` → zero, `rg "ahomw"` → zero, header versions all 0.1.14.
 
-### W3 — Build log stub generator
+### W3 - Build log stub generator
 New module `src/aho/feedback/build_log_stub.py`. Signature: `generate_stub(iteration: str) -> Path`.
 
 Behavior:
@@ -84,31 +84,31 @@ Test: `artifacts/tests/test_build_log_stub.py` with a fixture checkpoint + event
 
 **Gate:** stub generation on 0.1.13 fixture data produces a well-formed build log; bundle §3 validation passes on the stub output.
 
-### W4 — Postflight gate repair
+### W4 - Postflight gate repair
 Two changes:
 
-1. **`pillars_present.py` + `structural_gates.py`** — detect layout variant (W-based workstream or §-based template) and apply variant-appropriate checks. Add `LayoutVariant` enum. W-based runs check for W0–Wn headers and workstream summary tables; §-based runs check for §1–§22. Both must produce passing gates.
+1. **`pillars_present.py` + `structural_gates.py`** - detect layout variant (W-based workstream or §-based template) and apply variant-appropriate checks. Add `LayoutVariant` enum. W-based runs check for W0–Wn headers and workstream summary tables; §-based runs check for §1–§22. Both must produce passing gates.
 
-2. **§22 component checklist minimum-by-run-type.** Add `run_type` classification to checkpoint schema: `{"run_type": "agent_execution" | "reorg_docs" | "hygiene" | "mixed"}`. §22 gate applies floor based on run_type — agent_execution expects ≥6, reorg_docs expects ≥2, hygiene expects ≥1. Classification is declared in the design doc (new required field) and read from checkpoint at close.
+2. **§22 component checklist minimum-by-run-type.** Add `run_type` classification to checkpoint schema: `{"run_type": "agent_execution" | "reorg_docs" | "hygiene" | "mixed"}`. §22 gate applies floor based on run_type - agent_execution expects ≥6, reorg_docs expects ≥2, hygiene expects ≥1. Classification is declared in the design doc (new required field) and read from checkpoint at close.
 
 Update `aho-design-0.1.14.md` to declare `run_type: mixed` for its own run.
 
 **Gate:** replay 0.1.13 bundle through new gates → all green. New tests in `artifacts/tests/test_postflight_layouts.py` and `test_postflight_run_types.py`.
 
-### W5 — P3 deployment dry-run on NZXT
+### W5 - P3 deployment dry-run on NZXT
 Scratch dir: `/tmp/aho-p3-dryrun/`. Execute `bin/aho-install --dry-run --target /tmp/aho-p3-dryrun` (add `--dry-run` flag if not present).
 
 Validate:
-- XDG paths created (`~/.local/bin/`, `~/.config/aho/`, `~/.local/share/aho/` — but scoped under scratch root, not real XDG, to avoid polluting NZXT).
+- XDG paths created (`~/.local/bin/`, `~/.config/aho/`, `~/.local/share/aho/` - but scoped under scratch root, not real XDG, to avoid polluting NZXT).
 - Wrapper symlinks created.
 - Credential template copied.
 - Capability-gap interrupt list matches `artifacts/harness/p3-deployment-runbook.md`.
 
-Any surface issues get captured as runbook updates. Do NOT attempt real XDG writes on NZXT — scratch root only.
+Any surface issues get captured as runbook updates. Do NOT attempt real XDG writes on NZXT - scratch root only.
 
 **Gate:** dry-run completes cleanly, runbook updated with any surfaced gaps.
 
-### W6 — Dogfood + close (Claude Code)
+### W6 - Dogfood + close (Claude Code)
 Full test suite (57+ tests). `aho doctor`. Bundle generation using new build log stub generator if manual log absent (it will be absent since Gemini runs overnight again). Bundle §1–§22 validation. Postflight gates with new layout variant + run_type classification. Populate `aho-run-0.1.14.md`. Handoff.
 
 ## Risks

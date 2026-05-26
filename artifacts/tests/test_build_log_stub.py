@@ -37,7 +37,7 @@ def test_generate_stub(tmp_path):
     # Assertions
     assert output_path.exists()
     content = output_path.read_text()
-    assert "# aho 0.1.99 — Build Log (Stub)" in content
+    assert "# aho 0.1.99 - Build Log (Stub)" in content
     assert "**Run Type:** hygiene" in content
     assert "Auto-generated from checkpoint + event log" in content
     assert "| W0 | test-agent | pass | 2 |" in content

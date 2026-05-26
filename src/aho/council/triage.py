@@ -1,19 +1,19 @@
-"""council.triage — real implementation (W2).
+"""council.triage - real implementation (W2).
 
 Calls nemotron-mini:4b via host Ollama for two modes:
 
 1. classify(): assign an artifact to one of a fixed rubric. Out-of-rubric
    model output raises CouncilTriageMalformedError. NO categories[-1]
-   fallback (G083 — silent rubber-stamp gotcha this primitive refuses).
+   fallback (G083 - silent rubber-stamp gotcha this primitive refuses).
 
 2. draft_registry_delta(): given an executor-output blob and the current
    registry state (gotcha registry + ADR index), draft proposed new
-   entries. Drafts are *proposals* — the dispatcher writes them later.
+   entries. Drafts are *proposals* - the dispatcher writes them later.
 
 Wire-up env:
-- OLLAMA_BASE_URL — default http://localhost:11434
-- AHO_COUNCIL_TRIAGE_MODEL — default nemotron-mini:4b
-- AHO_COUNCIL_TRIAGE_TIMEOUT_S — default 120
+- OLLAMA_BASE_URL - default http://localhost:11434
+- AHO_COUNCIL_TRIAGE_MODEL - default nemotron-mini:4b
+- AHO_COUNCIL_TRIAGE_TIMEOUT_S - default 120
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ from ._client import (
 DEFAULT_MODEL = "nemotron-mini:4b"
 DEFAULT_TIMEOUT_S = 120.0
 
-# Rubric — fixed at module level. Adding a category is a deliberate change,
+# Rubric - fixed at module level. Adding a category is a deliberate change,
 # not a model-output-tolerated drift.
 CLASSIFY_CATEGORIES = (
     "gotcha-candidate",
@@ -55,7 +55,7 @@ class CouncilTriageInputError(ValueError):
 
 class CouncilTriageMalformedError(RuntimeError):
     """Model output not parseable as the expected JSON shape, OR returned a
-    category outside the rubric, OR confidence outside [0,1]. Raise — never
+    category outside the rubric, OR confidence outside [0,1]. Raise - never
     fall back to categories[-1] or synthesise a 'best-guess' shape.
     """
 
@@ -154,7 +154,7 @@ def _validate_classify_payload(payload: Any) -> Dict[str, Any]:
     if category not in CLASSIFY_CATEGORIES and category != "unknown":
         raise CouncilTriageMalformedError(
             f"classify category {category!r} not in rubric "
-            f"{CLASSIFY_CATEGORIES + ('unknown',)} — refusing categories[-1] fallback"
+            f"{CLASSIFY_CATEGORIES + ('unknown',)} - refusing categories[-1] fallback"
         )
     confidence = payload["confidence"]
     if not isinstance(confidence, (int, float)) or not (0.0 <= float(confidence) <= 1.0):
@@ -239,7 +239,7 @@ _DELTA_SYSTEM = """You are aho's council registry-delta drafter (base tier).
 You receive an executor-output blob and a JSON snapshot of the current
 registry state (existing gotcha IDs and ADR titles). Your job is to draft
 PROPOSALS for new registry entries that the executor's output suggests
-should land in the registry. You DO NOT write to the registry — you only
+should land in the registry. You DO NOT write to the registry - you only
 draft proposals. Dispatcher routes proposals through approval flow later.
 
 You MUST respond with JSON in EXACTLY this shape, no other keys:

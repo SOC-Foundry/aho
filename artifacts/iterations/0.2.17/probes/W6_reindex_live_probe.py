@@ -1,4 +1,4 @@
-"""W6 D2.2 live verification — F-0.2.17-W6-PROBE round-trip through the
+"""W6 D2.2 live verification - F-0.2.17-W6-PROBE round-trip through the
 gap_carry_forward_writer.append_to_file → ChromaDB re-index hook.
 
 Process:
@@ -9,7 +9,7 @@ Process:
      verify a result references F-0.2.17-W6-PROBE.
   4. Restore original file content (byte-perfect rollback).
   5. Manually re-index the restored file so ChromaDB mirrors the file again
-     (idempotent overwrite — `index_artifact` is keyed by path-derived
+     (idempotent overwrite - `index_artifact` is keyed by path-derived
      doc id, not content).
   6. Verify final file sha256 matches the pre-probe sha256.
 
@@ -71,7 +71,7 @@ def main() -> int:
     hit = None
 
     try:
-        # Step 2 — append probe entry
+        # Step 2 - append probe entry
         append_result = gcfw.append_to_file(
             file_path=CARRY_FWD,
             entry={
@@ -80,7 +80,7 @@ def main() -> int:
                 "severity": "info",
                 "what_surfaced": PROBE_BODY,
                 "disposition": "remove at end of probe run",
-                "target": "0.2.17 W6 (probe — temporary, not a real carry-forward)",
+                "target": "0.2.17 W6 (probe - temporary, not a real carry-forward)",
                 "source": "0.2.17 W6 D2.2 live verification",
             },
         )
@@ -94,13 +94,13 @@ def main() -> int:
 
         if append_result["reindex"]["reindex_status"] != "ok":
             print(
-                "FAIL: reindex did not return ok — "
+                "FAIL: reindex did not return ok - "
                 f"{append_result['reindex']!r}",
                 flush=True,
             )
             return 3
 
-        # Step 3a — embedding-similarity query (best-effort signal)
+        # Step 3a - embedding-similarity query (best-effort signal)
         query_text = f"{PROBE_ID} probe entry verifying re-index hook live"
         project = os.environ.get("AHO_PROJECT", "ahomw")
         retrievals = _rag.query(query_text, k=10, project=project)
@@ -111,7 +111,7 @@ def main() -> int:
                 hit = r
                 break
 
-        # Step 3b — DETERMINISTIC chunk inspection. Use collection.get()
+        # Step 3b - DETERMINISTIC chunk inspection. Use collection.get()
         # with a path metadata filter to fetch all chunks indexed for the
         # carry-forwards file, then scan their `documents` text for the
         # PROBE_ID. This avoids the failure mode where the chunk containing
@@ -179,7 +179,7 @@ def main() -> int:
             )
             hit["verification_path"] = "embedding_similarity_top_10"
     finally:
-        # Always restore the file contents — byte-perfect rollback.
+        # Always restore the file contents - byte-perfect rollback.
         CARRY_FWD.write_text(original_text, encoding="utf-8")
         post_restore_sha = _sha256(CARRY_FWD)
         print(f"[probe] restore-sha256={post_restore_sha}", flush=True)
@@ -191,7 +191,7 @@ def main() -> int:
         )
         return 5
 
-    # Step 5 — re-index the restored content so ChromaDB mirrors the file
+    # Step 5 - re-index the restored content so ChromaDB mirrors the file
     re_doc_id = _rag.index_artifact(
         CARRY_FWD,
         project=os.environ.get("AHO_PROJECT", "ahomw"),

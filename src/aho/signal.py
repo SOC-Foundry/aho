@@ -1,11 +1,11 @@
-"""signal — SIGTERM / SIGINT graceful-drain primitive for the container.
+"""signal - SIGTERM / SIGINT graceful-drain primitive for the container.
 
 Sets a process-global shutdown flag readable by all components. Caller is
 responsible for noticing the flag in their loops. Caller is also responsible
 for installing the handler at process start (idempotent).
 
 Drain budget per ADR 0007 §k8s-readiness: ≤30s. The handler itself does not
-sleep — components are expected to exit their work loops promptly. Flush of
+sleep - components are expected to exit their work loops promptly. Flush of
 OTEL is left to caller's exit path.
 """
 from __future__ import annotations
@@ -29,7 +29,7 @@ def wait_for_shutdown(timeout: float | None = None) -> bool:
 
 
 def request_shutdown() -> None:
-    """Programmatic trigger — equivalent to receiving SIGTERM."""
+    """Programmatic trigger - equivalent to receiving SIGTERM."""
     _shutdown.set()
     for cb in list(_callbacks):
         try:
@@ -59,7 +59,7 @@ def install_handlers() -> None:
 
 
 def reset_for_tests() -> None:
-    """Test-only — clears flag, callbacks, and handler-installed state."""
+    """Test-only - clears flag, callbacks, and handler-installed state."""
     global _handlers_installed
     _shutdown.clear()
     _callbacks.clear()

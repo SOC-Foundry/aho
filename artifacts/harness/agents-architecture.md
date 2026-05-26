@@ -1,4 +1,4 @@
-# Agents Architecture — aho 0.2.1
+# Agents Architecture - aho 0.2.1
 
 **Version:** 0.2.10
 **Status:** Canonical
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet — including LLMs, MCPs, and tool wrappers — can be deployed as a unified package with zero manual configuration.
+Iteration 0.2.1 begins the global deployment phase of aho Phase 0 agentic foundations. The architecture has transitioned from a centralized, NZXT-only authoring model to a **clone-to-deploy** strategy targeting the ThinkStation P3. This shift ensures that the agentic fleet - including LLMs, MCPs, and tool wrappers - can be deployed as a unified package with zero manual configuration.
 
 The current architecture (ADR-040) prioritizes **Ollama-native primitives**. By leveraging the streaming `QwenClient` and the proven classification capabilities of `nemotron-mini:4b`, aho provides a functional agentic layer with zero external library dependencies beyond `requests` and the standard library.
 

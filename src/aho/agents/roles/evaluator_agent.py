@@ -1,9 +1,9 @@
-"""EvaluatorAgent — GLM-bound review role.
+"""EvaluatorAgent - GLM-bound review role.
 
-0.2.3 W2: Pillar 7 enforcement — generation and evaluation are separate roles.
+0.2.3 W2: Pillar 7 enforcement - generation and evaluation are separate roles.
 Wraps OpenClawSession with role="evaluator", LLM=GLM-4.6V-Flash-9B.
 
-0.2.13 W1: Parse fix — strip markdown fences before json.loads(),
+0.2.13 W1: Parse fix - strip markdown fences before json.loads(),
 raise GLMParseError on failure instead of hardcoded fallback.
 """
 import json

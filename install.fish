@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
-# install.fish — Idempotent clone-to-deploy orchestrator for aho.
-# 0.3.1 W1 — Check-first / remediate-on-fail / re-check / report-final-status.
+# install.fish - Idempotent clone-to-deploy orchestrator for aho.
+# 0.3.1 W1 - Check-first / remediate-on-fail / re-check / report-final-status.
 # Pillar 4: wrappers are the tool surface.
 #
 # Usage:
@@ -53,7 +53,7 @@ for arg in $argv
             set mode_step (string replace -- '--step=' '' $arg)
             set mode_label "step"
         case --step
-            # next arg is the step id — handled by loop below
+            # next arg is the step id - handled by loop below
             set -g _expect_step_arg 1
         case '*'
             if set -q _expect_step_arg
@@ -167,7 +167,7 @@ function _run_check_remediate
         end
     end
 
-    _step_header "$step_id — $step_name"
+    _step_header "$step_id - $step_name"
 
     set -l started_at (_utc_now)
     set -l t0 (_epoch_ms)
@@ -381,42 +381,15 @@ end
 "
 or set fail_count (math $fail_count + 1)
 
-# 9. tier.json present (D1 amendment add — was implicit in 0.2.18 W2 carry-forward)
-#    W1 remediation = minimal viable tier-detect-and-write (W2 expands per
-#    F-0.2.18-W2-003 closure into `aho install tier-manifest` subcommand).
+# 9. tier.json present (F-0.2.18-W2-003). Remediation delegates to the
+#    first-class `bin/aho-install-tier-manifest` subcommand (W2 D6 extracted
+#    this from the W1 inline writer; VRAM probe + classification live in
+#    aho.tier_detect / aho.tier_manifest).
 _run_check_remediate \
     tier_json_present "~/.config/aho/tier.json exists with required keys" \
     "tier.json present with host_id + tier + bundle keys" \
     "test -f $HOME/.config/aho/tier.json; and python3 -c 'import json; d=json.load(open(\"$HOME/.config/aho/tier.json\")); assert all(k in d for k in [\"host_id\",\"tier\",\"bundle\"])' 2>/dev/null" \
-    "
-mkdir -p $HOME/.config/aho
-python3 -c '
-import json, os, subprocess, socket
-host = socket.gethostname().split(\".\")[0]
-# Probe for NVIDIA GPU
-try:
-    out = subprocess.run([\"nvidia-smi\", \"--query-gpu=memory.total\", \"--format=csv,noheader,nounits\"], capture_output=True, text=True, timeout=5)
-    vram_mb = int(out.stdout.strip().split(\"\\n\")[0]) if out.returncode == 0 else 0
-except Exception:
-    vram_mb = 0
-vram_gb = vram_mb // 1024 if vram_mb else 0
-if vram_gb >= 32: tier, bundle = \"full\", [\"qwen3.5:9b\",\"glm-4.6v:flash\",\"nomic-embed-text\"]
-elif vram_gb >= 12: tier, bundle = \"partial\", [\"qwen3.5:9b\",\"nomic-embed-text\"]
-else: tier, bundle = \"base\", [\"llama3.2:3b\",\"nomic-embed-text\"]
-d = {
-    \"host_id\": host,
-    \"tier\": tier,
-    \"deployment_mode\": \"production\",
-    \"families\": [\"llama3\" if tier == \"base\" else \"qwen3\", \"nomic\"],
-    \"bundle\": bundle,
-    \"rationale\": f\"auto-detected by install.fish (vram_gb={vram_gb}); W2 expands per F-0.2.18-W2-003 closure\",
-    \"vram_gb\": vram_gb,
-}
-p = os.path.expanduser(\"~/.config/aho/tier.json\")
-with open(p, \"w\") as f: json.dump(d, f, indent=2)
-print(f\"wrote {p}: tier={tier}\")
-'
-"
+    "$project_root/bin/aho-install-tier-manifest"
 or set fail_count (math $fail_count + 1)
 
 # 10. chromadb importable (W0 D9 substrate-prerequisite gap)
@@ -459,7 +432,7 @@ print(f\"wrote {p}\")
 "
 or set fail_count (math $fail_count + 1)
 
-# 12. python sys.path clean (W1 probe; W2 remediates) — closes F-0.3.1-W0-005 partially
+# 12. python sys.path clean (W1 probe; W2 remediates) - closes F-0.3.1-W0-005 partially
 _run_check_remediate \
     python_sys_path_clean "Python sys.path has no legacy pre-migration aho/src entry (configurable via \$AHO_SYS_PATH_LEGACY_MARKER)" \
     "sys.path does not include legacy pre-migration path" \
@@ -491,7 +464,57 @@ _run_check_remediate \
     "$project_root/bin/aho-probe-substrate --summary > /dev/null 2>&1"
 or set fail_count (math $fail_count + 1)
 
-# 14. doctor (aho doctor — gateway probe; preserves backward-compat with 0.2.x final step)
+# 13b. Beacon env-file present (W2 D2). Remediation writes the structural
+#      env-file with non-Track-B values populated; the OTLP endpoint + token
+#      stay commented until Track B (operator + Beacon dev) provisions them.
+_run_check_remediate \
+    beacon_env_file_present "~/.config/aho/beacon.env present (OTLP + resource attrs)" \
+    "beacon.env exists with OTEL_SERVICE_NAME + OTEL_RESOURCE_ATTRIBUTES" \
+    "test -f $HOME/.config/aho/beacon.env; and grep -q '^OTEL_SERVICE_NAME=' $HOME/.config/aho/beacon.env" \
+    "
+mkdir -p $HOME/.config/aho
+test -f $HOME/.config/aho/beacon.env; or begin
+    echo '# aho Beacon / OTLP environment file (deployment-private; gitignored).' >> $HOME/.config/aho/beacon.env
+    echo '# Track B fills OTEL_EXPORTER_OTLP_ENDPOINT + token once Beacon is provisioned.' >> $HOME/.config/aho/beacon.env
+    echo '# OTEL_EXPORTER_OTLP_ENDPOINT=https://<beacon-host>.<tailnet>.ts.net:4317' >> $HOME/.config/aho/beacon.env
+    echo '# OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer <token-from-broker>' >> $HOME/.config/aho/beacon.env
+    echo 'OTEL_SERVICE_NAME=aho' >> $HOME/.config/aho/beacon.env
+end
+"
+or set fail_count (math $fail_count + 1)
+
+# 13c. OTLP endpoint configured (W2 D1). Probe-only: the endpoint VALUE is a
+#      Track B dependency (operator + Beacon dev surface it). Until the env-file
+#      has an uncommented OTEL_EXPORTER_OTLP_ENDPOINT, this step reports the gate
+#      (analogous to python_sys_path_clean reporting drift until W2 D7 fixes it).
+#      aho falls back to the logger.py localhost default meanwhile.
+_run_check_remediate \
+    otel_endpoint_configured "OTEL_EXPORTER_OTLP_ENDPOINT set (uncommented) in beacon.env" \
+    "active OTLP endpoint line present in beacon.env" \
+    "test -f $HOME/.config/aho/beacon.env; and grep -qE '^OTEL_EXPORTER_OTLP_ENDPOINT=' $HOME/.config/aho/beacon.env" \
+    ""
+or set fail_count (math $fail_count + 1)
+
+# 13d. pacman IgnorePkg pin for syncthing (W2 D8; absorbed from 0.3.0 fix script).
+#      Probe-only here: the pin check is read-only. Applying the pin (if absent)
+#      needs sudo - `sudo aho-pacman pin-apply syncthing` - which is operator-run.
+_run_check_remediate \
+    pacman_ignorepkg_syncthing "IgnorePkg includes syncthing in pacman.conf [options]" \
+    "syncthing in active IgnorePkg line" \
+    "$project_root/bin/aho-pacman pin syncthing > /dev/null 2>&1" \
+    ""
+or set fail_count (math $fail_count + 1)
+
+# 13e. syncthing version pinned to v1.30.0 (W2 D8; SCoT compliance invariant).
+#      v2.x trips this probe. Read-only version check.
+_run_check_remediate \
+    syncthing_version_1_30_0 "syncthing version is v1.30.0 (SCoT-pinned)" \
+    "syncthing --version reports 1.30.0" \
+    "syncthing --version 2>/dev/null | grep -q 'v1.30.0'" \
+    ""
+or set fail_count (math $fail_count + 1)
+
+# 14. doctor (aho doctor - gateway probe; preserves backward-compat with 0.2.x final step)
 _run_check_remediate \
     doctor "aho doctor passes (gateway probe)" \
     "aho doctor exits 0" \

@@ -12,7 +12,7 @@ The AHO (Agentic Harness Orchestration) methodology produces reusable harness co
 Externalize the harness components into an `aho` Python package that is:
 
 1. Authored as its own subdirectory inside the originating project for Phase A.
-2. Authored in standalone-repo voice — its own README, CHANGELOG, VERSION, pyproject.toml, .gitignore, `artifacts/adrs` tree.
+2. Authored in standalone-repo voice - its own README, CHANGELOG, VERSION, pyproject.toml, .gitignore, `artifacts/adrs` tree.
 3. Extracted to a standalone repository in Phase B.
 4. Versioned independently of the originating project's iteration numbers (semver starting 0.1.0).
 
@@ -24,7 +24,7 @@ Externalize the harness components into an `aho` Python package that is:
 - Independent versioning frees middleware iteration cadence.
 
 **Negative:**
-- Two parallel ADR streams (project harness ADRs vs aho internal ADRs) — intentional scope separation.
+- Two parallel ADR streams (project harness ADRs vs aho internal ADRs) - intentional scope separation.
 - License decision deferred until v0.2.0.
 
 ## Status

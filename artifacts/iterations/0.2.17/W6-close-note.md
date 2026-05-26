@@ -7,11 +7,11 @@ W6 acceptance archive sealed at
 `artifacts/iterations/0.2.17/acceptance/W6.json`.
 W6 audit archive sealed at
 `artifacts/iterations/0.2.17/audit/W6.json` with
-`disposition: "halt"` (llama self-audit verbatim — driven by
+`disposition: "halt"` (llama self-audit verbatim - driven by
 F-0.2.17-W4-001 unverified status surfacing in RAG enrichment +
 self-referential AUDIT-PILLAR11 structural pre-check). Drafter
-(claude-web) arbitrated all three findings under Option C —
-partial closure framing — and arbitrated disposition to
+(claude-web) arbitrated all three findings under Option C -
+partial closure framing - and arbitrated disposition to
 `pass_with_findings`. Two new W6 carry-forwards added (W6-001
 audit-time lookup ranking; W6-002 council embed timeout default).
 Sealed shas (verified at close-note authoring time):
@@ -23,7 +23,7 @@ Sealed shas (verified at close-note authoring time):
   (target_artifact_sha256 inside the audit document:
   `f105f65c2d9e029a12b63e567b97e196e88f1ce69d337f4a2ab22e089690e867`,
   reflecting the pre-edit acceptance archive content the audit ran
-  against — drafter arbitration occurs in the acceptance archive
+  against - drafter arbitration occurs in the acceptance archive
   only, not the audit JSON)
 - carry-forwards file sha256 (post-W6-001 + W6-002 append):
   `cd9f2726ee75a54c447dc6bf2a20275887d3fad563f3b68487d151019d83119b`
@@ -33,7 +33,7 @@ disposition field reads `halt`; drafter arbitration is recorded
 only in the acceptance archive's D3 `drafter_review_note` block
 + `carry_forwards_added` entries, and in this close note's prose.
 Per Adversarial Authorship sealed-archive convention, audit
-archives are not amended after emit — corrections and arbitrations
+archives are not amended after emit - corrections and arbitrations
 land in acceptance evidence and close-note prose, never in the
 audit JSON.
 
@@ -63,7 +63,7 @@ audit-target shapes:
   ran on every model finding, suppressed_count=0. The halt
   disposition was driven by a real surface (F-0.2.17-W4-001
   unverified in RAG enrichment) that drafter arbitration revealed
-  as closure-of-different-defect — F-0.2.17-W4-001 itself closes
+  as closure-of-different-defect - F-0.2.17-W4-001 itself closes
   at the data layer; the lookup-ranking surface is captured as new
   F-0.2.17-W6-001.
 
@@ -73,7 +73,7 @@ opaque-ID queries against a 158-chunk corpus). Drafter arbitration
 revealed scope distinction: W4-001 closes at the data layer;
 W6-001 captures the lookup-ranking layer as a separate carry-
 forward. The W4 D1 deterministic post-hoc filter remains
-structurally narrow across five deployments — code-heavy (W4 and
+structurally narrow across five deployments - code-heavy (W4 and
 W6) and documentation-heavy (W5) work both produce the same
 filter behavior because the filter inspects literal description
 text, not domain context.
@@ -91,7 +91,7 @@ moment of seal-1 (pre-edit, target sha
 Llama returned disposition `halt` at confidence 0.95 with 3
 findings (2 model + 1 structural pre-check). Drafter
 (claude-web) arbitrated all 3 to `pass_with_findings` under
-Option C — partial closure framing:
+Option C - partial closure framing:
 
 - **D1 (important).** Auditor text: *"The carry-forward_full ID
   F-0.2.17-W1-001 is registered, but its source is not found in
@@ -101,13 +101,13 @@ Option C — partial closure framing:
   pointing to `W1-close-note.md`. The auditor's text "but its
   source is not found" contradicts its own RAG context section.
   The W4 D1 filter correctly did not suppress this finding because
-  the description has no fake-ID phrase — the filter's structural
+  the description has no fake-ID phrase - the filter's structural
   narrowness is intentional and preserved. Drafter arbitration:
   no action; auditor self-contradiction artifact, not a real
   finding.
 
 - **F-0.2.17-W4-001 (info).** Auditor text: *"The carry-forward_full
-  ID F-0.2.17-W4-001 is unverified."* Real surface — but reflects
+  ID F-0.2.17-W4-001 is unverified."* Real surface - but reflects
   closure-of-different-defect, not regression on D2. F-0.2.17-W4-001
   itself closes AT THE DATA LEVEL: D2's append-triggered reindex
   landed; chunk015 of carry-forwards-workstream chunks contains
@@ -142,16 +142,16 @@ captured as separate carry-forward (W4-001 closes at data layer,
 W6-001 captures lookup-ranking layer); one is fourth occurrence
 of a pattern already captured at W5-001.
 
-The D3 hard-fail condition — "self-audit produces fake-ID-on-
+The D3 hard-fail condition - "self-audit produces fake-ID-on-
 registered-anchor false positives that the filter should have
-caught (W4 D1 hardening regression)" — **did not trigger.** No
+caught (W4 D1 hardening regression)" - **did not trigger.** No
 finding has the failure shape. Filter was active and eligible
 (filter_eligible=true, registered_id_count=9, model_findings=2,
 suppressed=0). The F-0.2.17-W4-001 finding's description ("is
 unverified") has no fake-ID phrase from FAKE_ID_PHRASES set; the
 filter correctly preserved it as an active finding for drafter
 review. **Bootstrap test 7 (loop closure on final code-change
-workstream) passes structurally** — the halt-and-surface
+workstream) passes structurally** - the halt-and-surface
 mechanism functioned correctly: auditor surfaced a real lookup-
 ranking concern that drafter arbitration revealed as closure-of-
 different-defect.
@@ -160,12 +160,12 @@ different-defect.
 
 Two carry-forwards closed in W6:
 
-- **F-0.2.17-W1-001 — `aho secrets-test` test-only subcommand
+- **F-0.2.17-W1-001 - `aho secrets-test` test-only subcommand
   left in 0.2.17-rc1 image.** Closure mechanism: D1 hash-
   fingerprint redesign (Path A) in `src/aho/cli.py`. Subcommand
-  still present in rc2 image (per drafter recommendation —
+  still present in rc2 image (per drafter recommendation -
   preserves verification capability), but no longer prints
-  decrypted value — emits SHA-256 first 8 hex + length JSON
+  decrypted value - emits SHA-256 first 8 hex + length JSON
   instead. Pillar 11 invariant: agent stdout never contains the
   decrypted value during `aho secrets-test` invocation. Verified
   by local mock test + four in-container W1 D3 gate revalidations
@@ -173,9 +173,9 @@ Two carry-forwards closed in W6:
   missing JSON exit 5, gate4 unregistered-UID exit 4). Image
   `aho:0.2.17-rc2` built and pushed to ghcr (manifest digest
   `sha256:b6dd0596…`); pull-clean and healthcheck-clean both
-  verified. Closure clean — no contestation.
+  verified. Closure clean - no contestation.
 
-- **F-0.2.17-W4-001 — ChromaDB iteration-context index does not
+- **F-0.2.17-W4-001 - ChromaDB iteration-context index does not
   auto-refresh on carry-forwards-0.2.16.md updates.** Closure
   mechanism: D2 append-triggered reindex hook in
   `src/aho/gap_carry_forward_writer.append_to_file`. Every append
@@ -191,7 +191,7 @@ Two carry-forwards closed in W6:
   F-0.2.17-W6-001. The two W6 carry-forward additions (W6-001 +
   W6-002, see below) were both appended via this hook in the
   D7-style dogfooding pattern; both invocations returned
-  `reindex_status: 'ok'` — production-shape verification of the
+  `reindex_status: 'ok'` - production-shape verification of the
   D2 closure invariant.
 
 ## Carry-forwards ADDED
@@ -199,7 +199,7 @@ Two carry-forwards closed in W6:
 Two new W6 carry-forwards, surfaced by D3 self-audit drafter
 arbitration + D2 substrate observation:
 
-- **F-0.2.17-W6-001 — Audit-time lookup ranking misses opaque-ID
+- **F-0.2.17-W6-001 - Audit-time lookup ranking misses opaque-ID
   matches in carry-forwards file.** Severity: important. Source:
   0.2.17 W6 D3 self-audit. Summary: `audit_ref_lookup` retrieves
   top-24 chunks by cosine similarity then filters to literal-ID-
@@ -210,7 +210,7 @@ arbitration + D2 substrate observation:
   containing the literal token IS in chromadb (verified twice
   independently) but does not rank top-24 → status=unverified
   surfaces in audit RAG enrichment. Disposition: drafter-
-  recommended structural fix — add ID-keyed metadata field at
+  recommended structural fix - add ID-keyed metadata field at
   index time so direct lookup by ID-token avoids cosine entirely.
   Alternative options (larger pool multiplier, lower threshold
   floor) are statistical and less robust. Target: 0.3.x base-
@@ -218,7 +218,7 @@ arbitration + D2 substrate observation:
   bb7b1d1f...) F-0.2.17-W4-001 unverified finding +
   acceptance/W6.json deliverables[2].evidence.lookup_ranking_failure_mode.
 
-- **F-0.2.17-W6-002 — Council embed timeout default too tight
+- **F-0.2.17-W6-002 - Council embed timeout default too tight
   under VRAM contention.** Severity: info. Source: 0.2.17 W6 D2
   live probe. Summary: default `AHO_COUNCIL_EMBED_TIMEOUT_S=30s`
   in `src/aho/council/embed.py` is too short when nomic-embed-text
@@ -228,7 +228,7 @@ arbitration + D2 substrate observation:
   failure-handling path fires (warning + counter, append still
   succeeds) but no actual indexing occurs. Mechanism: substrate
   condition (Ollama state hygiene + 8GB VRAM contention with co-
-  resident large models — qwen3.5:9b at 7.4GB held by aho-
+  resident large models - qwen3.5:9b at 7.4GB held by aho-
   nemoclaw or aho-openclaw user-service), not a council/embed
   defect. Same family as 0.2.15 substrate findings. Disposition:
   bump default in `src/aho/council/embed.py` from 30 → 120 in
@@ -238,7 +238,7 @@ arbitration + D2 substrate observation:
   fix. Audit traceability: acceptance/W6.json
   deliverables[1].evidence.substrate_observation_during_probe_runs.
 
-The carry-forwards file update is **complete in this turn** —
+The carry-forwards file update is **complete in this turn** -
 both new entries appended via
 `aho.gap_carry_forward_writer.append_to_file` in the same
 dogfooding pattern W2 / W4 / W5 used. Writer logged
@@ -246,8 +246,8 @@ dogfooding pattern W2 / W4 / W5 used. Writer logged
 under its strict regex; the permissive cross-iteration counter
 took the file from 41 to 43 (W4 close-note convention).
 
-The two counts measure different things — the strict regex counts
-canonical `- **{id} — {title}**` entries inside the file scope of
+The two counts measure different things - the strict regex counts
+canonical `- **{id} - {title}**` entries inside the file scope of
 the writer's heading detection; the permissive counter sweeps the
 entire file including legacy entries. Both are honest; neither
 contradicts the other. Same shape as W4 + W5 close notes.
@@ -282,7 +282,7 @@ state machine `pending_audit → blocked → pending_drafter_review
 → operator_sign` advances exactly as the architecture specifies.
 The temporary `blocked` state during the halt-and-surface
 window between executor halt and drafter arbitration is a real
-state-machine vertex — first observed at W6, validates the
+state-machine vertex - first observed at W6, validates the
 halt-and-surface protocol's integrity (executor cannot
 unilaterally advance the state machine past a halt condition;
 drafter arbitration is required).
@@ -295,7 +295,7 @@ registered_id_count=9, model_findings_count=2,
 active_findings_count=2, suppressed_count=0. The filter ran on
 every model finding and produced the right answer for each. The
 F-0.2.17-W4-001 finding's description has no fake-ID phrase, so
-the filter correctly preserved it as an active finding — that's
+the filter correctly preserved it as an active finding - that's
 exactly the structural narrowness the W4 D1 hardening was
 designed to provide.
 
@@ -305,29 +305,29 @@ D3 (AUDIT-PILLAR11 critical), now occurring four times within
 the 0.2.17 iteration (W3 D5, W4 D7, W5 D8, W6 D3). F-0.2.17-W5-001
 captures this with a two-option disposition (JSON path exclusion
 preferred; context-aware regex secondary). Confidence in the
-0.3.x base-tier hardening target is high — pattern is fully
+0.3.x base-tier hardening target is high - pattern is fully
 characterized.
 
 ## Pre-0.3.x hard gates (final state at W6 close)
 
 **Hard gate (one remaining):**
 
-- **F-0.2.17-W1-003** — Telegram bot token rotation. Operator-
+- **F-0.2.17-W1-003** - Telegram bot token rotation. Operator-
   side, post-0.2.17. The only remaining pre-tsP3 hard gate.
   Status as of W6 close-note authoring:
   **operator_action_pending**.
 
 **Carry-forwards into 0.3.x (not hard gates):**
 
-- F-0.2.17-W5-001 — Structural pre-check self-referential pattern
+- F-0.2.17-W5-001 - Structural pre-check self-referential pattern
   scope discrimination (now four occurrences pattern-confirmed).
   Target: 0.3.x base-tier hardening.
-- F-0.2.17-W5-002 — Plan-doc / repo-convention path drift.
+- F-0.2.17-W5-002 - Plan-doc / repo-convention path drift.
   Target: drafter chat-side process improvement + 0.3.x plan-doc
   convention notes.
-- F-0.2.17-W6-001 — Audit-time lookup ranking misses opaque-ID
+- F-0.2.17-W6-001 - Audit-time lookup ranking misses opaque-ID
   matches. Target: 0.3.x base-tier hardening.
-- F-0.2.17-W6-002 — Council embed timeout default too tight under
+- F-0.2.17-W6-002 - Council embed timeout default too tight under
   VRAM contention. Target: 0.3.x base-tier hardening or earlier
   substrate fix.
 
@@ -354,7 +354,7 @@ hardening:
 Plus operator-side F-0.2.17-W1-003 (token rotation), the only
 remaining pre-tsP3 hard gate.
 
-The 0.2.17 iteration close is drafter (claude-web) scope —
+The 0.2.17 iteration close is drafter (claude-web) scope -
 authored after operator signs this W6 close note. The close
 covers all six workstreams (W0 through W6) plus the pre-tsP3
 operator action queue.
@@ -373,7 +373,7 @@ operator action queue.
   (target_artifact_sha256 inside the document is
   `f105f65c2d9e029a12b63e567b97e196e88f1ce69d337f4a2ab22e089690e867`,
   reflecting the pre-edit acceptance archive content the audit
-  ran against — drafter arbitration occurs in the acceptance
+  ran against - drafter arbitration occurs in the acceptance
   archive only, not the audit JSON).
 - **Carry-forwards file:** updated in this turn. Two new entries
   appended (F-0.2.17-W6-001 under existing target heading
@@ -382,7 +382,7 @@ operator action queue.
   earlier substrate fix`). Strict-regex count (writer-internal):
   34 → 36. Permissive cross-iteration count (per W4 close
   convention): 41 → 43. Both reindex-hook invocations returned
-  `reindex_status: 'ok'` — production-shape verification of D2
+  `reindex_status: 'ok'` - production-shape verification of D2
   closure invariant. File update is **complete** pending
   operator review of this close note. sha256
   `cd9f2726ee75a54c447dc6bf2a20275887d3fad563f3b68487d151019d83119b`.
@@ -407,20 +407,20 @@ operator action queue.
   `pillar_11_invariant_check` in `acceptance/W6.json` reads
   `result: "pass"` with evidence: no git/gh/push/commit/PR/merge
   primitive invoked across the executor session; all writes
-  targeted `src/aho/cli.py` (modify — secrets-test redesign),
-  `src/aho/gap_carry_forward_writer.py` (modify — reindex hook +
-  counter + helpers), `Dockerfile` (modify — image label rc1→rc2),
+  targeted `src/aho/cli.py` (modify - secrets-test redesign),
+  `src/aho/gap_carry_forward_writer.py` (modify - reindex hook +
+  counter + helpers), `Dockerfile` (modify - image label rc1→rc2),
   `artifacts/tests/test_gap_carry_forward_writer_reindex.py`
-  (new — 3 unit tests), `artifacts/iterations/0.2.17/probes/W6_reindex_live_probe.py`
-  (new — D2 live verification probe),
-  `artifacts/iterations/0.2.17/probes/W6_self_audit.py` (new —
+  (new - 3 unit tests), `artifacts/iterations/0.2.17/probes/W6_reindex_live_probe.py`
+  (new - D2 live verification probe),
+  `artifacts/iterations/0.2.17/probes/W6_self_audit.py` (new -
   D3 self-audit probe), `artifacts/iterations/0.2.17/acceptance/W6.json`
   (this archive), `artifacts/iterations/0.2.17/audit/W6.json`
   (audit emit by self-audit probe),
   `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` (two
   appends for F-0.2.17-W6-001 + F-0.2.17-W6-002 via
   gap_carry_forward_writer in the same dogfooding pattern
-  W2/W4/W5 established) — no `.git/`, no `~/.config/`, no
+  W2/W4/W5 established) - no `.git/`, no `~/.config/`, no
   `/etc/`, no `.ssh/` writes. F-0.2.17-W1-003 token rotation
   explicitly NOT performed (surfaced as continuing reminder
   under `outstanding_pre_03x_gates`).
@@ -438,7 +438,7 @@ operator action queue.
 - **Auditor (llama3.2:3b in-container, RAG + filter):** zero git
   operations. In-container model has no shell, no filesystem
   write capability outside the audit primitive's controlled
-  emitter path. Audit archive itself is JSON-only — no
+  emitter path. Audit archive itself is JSON-only - no
   executable artifacts. The RAG retrieval step
   (`aho.council.audit_ref_lookup`) reads the host-mounted
   ChromaDB collection only; no git tree access. The W4 D1
@@ -461,17 +461,17 @@ operator action queue.
   agent observed only the structured output (fingerprint JSON,
   AUTH_FAIL stderr, missing JSON, AUTH_FAIL UID stderr). The
   decrypted secret value never enters agent stdout in the new
-  contract — that is the F-0.2.17-W1-001 closure invariant.
+  contract - that is the F-0.2.17-W1-001 closure invariant.
 
 ## Operator sign-off
 
 Signed by:
 Date:
-Disposition acknowledged: pass_with_findings (drafter-arbitrated from llama self-audit halt under Option C — partial closure framing)
+Disposition acknowledged: pass_with_findings (drafter-arbitrated from llama self-audit halt under Option C - partial closure framing)
 D3 self-audit drafter arbitration acknowledged: 1 auditor self-contradiction artifact (no action), 1 real surface captured as F-0.2.17-W6-001 (W4-001 closes at data layer, lookup-ranking layer captured separately), 1 self-referential structural pre-check artifact (fourth occurrence under existing F-0.2.17-W5-001)
 Carry-forwards added acknowledged: F-0.2.17-W6-001 (audit-time lookup ranking misses opaque-ID matches), F-0.2.17-W6-002 (council embed timeout default too tight under VRAM contention)
-Carry-forwards closed acknowledged: F-0.2.17-W1-001 (secrets-test hash-fingerprint redesign + image rebuild + ghcr push + pull-clean + healthcheck — clean closure), F-0.2.17-W4-001 (closed at data layer per drafter Option C arbitration; lookup-ranking concern captured separately as F-0.2.17-W6-001)
-Pre-0.3.x hard gates (continuing): rotate ahomw:telegram_bot_token (F-0.2.17-W1-003) — only remaining hard gate before tsP3 handoff
+Carry-forwards closed acknowledged: F-0.2.17-W1-001 (secrets-test hash-fingerprint redesign + image rebuild + ghcr push + pull-clean + healthcheck - clean closure), F-0.2.17-W4-001 (closed at data layer per drafter Option C arbitration; lookup-ranking concern captured separately as F-0.2.17-W6-001)
+Pre-0.3.x hard gates (continuing): rotate ahomw:telegram_bot_token (F-0.2.17-W1-003) - only remaining hard gate before tsP3 handoff
 Auditor-seat-transition continuation acknowledged (5th deployment, bootstrap test 7 passes structurally): yes
 0.2.17 iteration close orchestration drafter delivery acknowledged: yes (drafter-scope work, follows operator sign on this close note)
 0.2.17 iteration close gate: blocked on operator sign of this note
@@ -485,6 +485,6 @@ Carry-forwards closed: F-0.2.17-W1-001 (secrets-test hash-fingerprint redesign +
 Carry-forwards added: F-0.2.17-W6-001 (audit-time lookup ranking misses opaque-ID matches in carry-forwards file), F-0.2.17-W6-002 (council embed timeout default too tight under VRAM contention)
 D2 closure invariant production-shape verified: both W6-001 + W6-002 appends triggered reindex_status=ok via the new hook
 Auditor-seat-transition continuation acknowledged (5th deployment, bootstrap test 7 passes structurally)
-Pre-0.3.x final hard gate: rotate ahomw:telegram_bot_token (F-0.2.17-W1-003) — operator post-0.2.17, the only remaining hard gate before tsP3 handoff
+Pre-0.3.x final hard gate: rotate ahomw:telegram_bot_token (F-0.2.17-W1-003) - operator post-0.2.17, the only remaining hard gate before tsP3 handoff
 0.3.x base-tier hardening carry-forwards (NOT hard gates): F-0.2.17-W5-001, F-0.2.17-W5-002, F-0.2.17-W6-001, F-0.2.17-W6-002
 0.2.17 iteration close gate: lifted upon workstream_complete emit

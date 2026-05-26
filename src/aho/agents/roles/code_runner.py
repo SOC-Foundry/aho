@@ -1,4 +1,4 @@
-"""Code runner — role for code execution tasks."""
+"""Code runner - role for code execution tasks."""
 from aho.agents.roles.base_role import AgentRole
 
 

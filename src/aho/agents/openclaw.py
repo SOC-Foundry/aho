@@ -1,4 +1,4 @@
-"""OpenClaw — Qwen/Ollama-native execution primitive.
+"""OpenClaw - Qwen/Ollama-native execution primitive.
 
 aho 0.1.7 W8 rebuild, 0.2.2 W1 global daemon.
 NO dependency on open-interpreter, tiktoken, or Rust.
@@ -51,7 +51,7 @@ def _detect_and_truncate_repetition(text: str, threshold: float = 0.3, min_phras
                     truncated = text[:second_idx].rstrip()
                     log_event("repetition_detected", "openclaw", "qwen", "truncate",
                               output_summary=f"truncated at {second_idx}/{len(text)} chars")
-                    return truncated + "\n\n[output truncated — repetition detected]"
+                    return truncated + "\n\n[output truncated - repetition detected]"
 
     return text
 
@@ -283,7 +283,7 @@ class OpenClawHandler(socketserver.StreamRequestHandler):
             # Errno 104: client disconnected before we could read
             return
         except OSError as e:
-            if e.errno == 11:  # EAGAIN — non-blocking socket not ready
+            if e.errno == 11:  # EAGAIN - non-blocking socket not ready
                 import time as _time
                 _time.sleep(0.1)
                 try:

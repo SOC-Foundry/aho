@@ -40,7 +40,7 @@ def _load_harness_blocks() -> Dict[str, str]:
     pillars = pillars_match.group(0).strip() if pillars_match else "(pillars not found in base.md)"
 
     return {
-        "trident_block": "(retired in 0.1.8 — see Pillar 1 and 8)",
+        "trident_block": "(retired in 0.1.8 - see Pillar 1 and 8)",
         "pillars_block": pillars,
         "ten_pillars_block": pillars,  # backward compat alias
     }

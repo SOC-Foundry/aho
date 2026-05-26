@@ -1,4 +1,4 @@
-"""W2 D1 pre-seed probe — index sealed 0.2.16 W0–W4 + 0.2.17 W0/W1.
+"""W2 D1 pre-seed probe - index sealed 0.2.16 W0–W4 + 0.2.17 W0/W1.
 
 Run from repo root with AHO_CHROMA_DIR set to the host-side dev path
 (or unset to use /var/lib/aho/chroma → ~/.local/share/aho/chroma fallback).

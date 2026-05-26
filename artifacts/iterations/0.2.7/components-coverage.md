@@ -1,4 +1,4 @@
-# Components Coverage Matrix — 0.2.7 W2
+# Components Coverage Matrix - 0.2.7 W2
 
 **Iteration:** 0.2.7 | **Date:** 2026-04-11
 **Total components:** 88 | **All files verified present**
@@ -20,15 +20,15 @@
 
 ## Install path mapping
 
-### Step 1 — pacman (bin/aho-pacman install)
+### Step 1 - pacman (bin/aho-pacman install)
 | Component | Kind | Notes |
 |---|---|---|
 | ollama | external_service | Installed via pacman or upstream script |
 
-### Step 2 — AUR (bin/aho-aur install)
+### Step 2 - AUR (bin/aho-aur install)
 No components exclusively from AUR. age is installed here but is a tool, not a component.
 
-### Step 3 — python (bin/aho-python install)
+### Step 3 - python (bin/aho-python install)
 All 59 python_module entries, all 10 agent entries (source code), all 3 llm client entries, and these external_service entries:
 
 | Component | Notes |
@@ -37,17 +37,17 @@ All 59 python_module entries, all 10 agent entries (source code), all 3 llm clie
 | opentelemetry | Installed via: pip explicit (opentelemetry-api, opentelemetry-sdk in pyproject.toml) |
 | telegram | Source code installed via pip; daemon via Step 7 |
 
-### Step 4 — models (bin/aho-models install)
+### Step 4 - models (bin/aho-models install)
 | Component | Kind | Notes |
 |---|---|---|
 | qwen-client | llm | Client code via Step 3; model weights (qwen3.5:9b) pulled by ollama |
 | nemotron-client | llm | Client code via Step 3; model weights (nemotron-mini:4b) pulled by ollama |
 | glm-client | llm | Client code via Step 3; model weights pulled by ollama |
 
-### Step 5 — secrets (bin/aho-secrets-init)
+### Step 5 - secrets (bin/aho-secrets-init)
 No components directly installed. Secrets infrastructure (age key, fernet store) is tooling, not a component.
 
-### Step 6 — mcp (bin/aho-mcp install)
+### Step 6 - mcp (bin/aho-mcp install)
 | Component | Package | Status |
 |---|---|---|
 | mcp-firebase-tools | firebase-tools | ok |
@@ -63,7 +63,7 @@ No components directly installed. Secrets infrastructure (age key, fernet store)
 | mcp-server-memory | @modelcontextprotocol/server-memory | ok |
 | mcp-server-sequential-thinking | @modelcontextprotocol/server-sequential-thinking | ok |
 
-### Step 7 — systemd (bin/aho-systemd install)
+### Step 7 - systemd (bin/aho-systemd install)
 | Component | Service unit | Notes |
 |---|---|---|
 | openclaw | aho-openclaw.service | Daemon service file |
@@ -71,10 +71,10 @@ No components directly installed. Secrets infrastructure (age key, fernet store)
 | telegram | aho-telegram.service | Daemon service file |
 | harness-agent | aho-harness-watcher.service | Daemon service file |
 
-### Step 8 — symlinks
+### Step 8 - symlinks
 No components. Bin wrapper symlinks only.
 
-### Step 9 — doctor
+### Step 9 - doctor
 No components. Verification only.
 
 ---

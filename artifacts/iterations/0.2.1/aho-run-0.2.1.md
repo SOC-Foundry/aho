@@ -1,4 +1,4 @@
-# Run File — aho 0.2.1
+# Run File - aho 0.2.1
 
 **Generated:** 2026-04-11
 **Iteration:** 0.2.1 (Iteration 2, Run 1)
@@ -19,16 +19,16 @@
 
 Wall clock: 14m 22s. Components: 72 (69 active, 3 stub). Bundle: 322KB.
 
-**Soc-foundry/aho second commit pushed:** `9635d5b` — 50 files, +5125/-324, ChromaDB binaries scrubbed from HEAD, 0.2.1 artifacts uploaded.
+**Soc-foundry/aho second commit pushed:** `9635d5b` - 50 files, +5125/-324, ChromaDB binaries scrubbed from HEAD, 0.2.1 artifacts uploaded.
 
 ---
 
-## Agent Questions — Answered
+## Agent Questions - Answered
 
 No questions surfaced. Three carryover items identified for 0.2.2 W0 hygiene:
 
 1. **`build_log_complete` still WARN** ("design doc not found, skipping completeness check"). The W0 fix in 0.2.1 didn't fully resolve it. Needs another look at the path resolution in `build_log_complete.py`.
-2. **Risk Register shows 20+ evaluator warns/rejects** during 0.2.1 close — all from `build_log_synthesis` evaluator firing repeatedly. Likely the Qwen synthesis loop hitting the rejection threshold but the mechanical builder catching it gracefully. Worth a one-line investigation to confirm it's noise, not a real signal.
+2. **Risk Register shows 20+ evaluator warns/rejects** during 0.2.1 close - all from `build_log_synthesis` evaluator firing repeatedly. Likely the Qwen synthesis loop hitting the rejection threshold but the mechanical builder catching it gracefully. Worth a one-line investigation to confirm it's noise, not a real signal.
 3. **Wall clock per-workstream still shows `-`** in run file. Agent attribution landed (`claude-code`), component section embedded, but wall clock from checkpoint timestamps isn't being computed. Small fix in `report_builder.py` workstream parser.
 
 ---
@@ -46,20 +46,20 @@ No questions surfaced. Three carryover items identified for 0.2.2 W0 hygiene:
 - 8 canonical artifacts now version-tracked
 - soc-foundry/aho second commit live
 
-**The deferral debt is still in components.yaml.** openclaw, nemoclaw, telegram are still `stub` with `next_iteration: 0.1.16` (stale — should have been bumped to 0.2.2 in 0.2.1 but missed). 0.2.2 is the run where they actually graduate from stub to active. The instrumentation pass in 0.2.1 W5 wired spans into them — now 0.2.2 makes them functional.
+**The deferral debt is still in components.yaml.** openclaw, nemoclaw, telegram are still `stub` with `next_iteration: 0.1.16` (stale - should have been bumped to 0.2.2 in 0.2.1 but missed). 0.2.2 is the run where they actually graduate from stub to active. The instrumentation pass in 0.2.1 W5 wired spans into them - now 0.2.2 makes them functional.
 
 **Today's status:** ~7:35am PST. Three runs shipped this morning (0.1.15, 0.1.16 iteration 1 graduation, 0.2.1). Family time mid-afternoon. 6-11pm evening block available. P3 ship deadline = end of today. Alex ship deadline = Sunday. Fly Sunday.
 
 **Phase 0 exit roadmap update (3 iterations + ship gauntlet):**
-- **0.2.2** — openclaw/nemoclaw global daemons + telegram bridge real implementation + 3 stubs flip to active (today, ~2-3 hours)
-- **0.2.3** — MCP server fleet (firebase-tools, context7, firecrawl, playwright, flutter, modelcontextprotocol/server-*) (today evening or tomorrow morning)
-- **0.2.4** — P3 clone attempt + smoke test + capability gap capture (tomorrow)
-- **0.2.5+** — Whatever P3 surfaces, fix in tight runs
+- **0.2.2** - openclaw/nemoclaw global daemons + telegram bridge real implementation + 3 stubs flip to active (today, ~2-3 hours)
+- **0.2.3** - MCP server fleet (firebase-tools, context7, firecrawl, playwright, flutter, modelcontextprotocol/server-*) (today evening or tomorrow morning)
+- **0.2.4** - P3 clone attempt + smoke test + capability gap capture (tomorrow)
+- **0.2.5+** - Whatever P3 surfaces, fix in tight runs
 - **Iteration 2 graduates** when P3 runs an aho iteration end-to-end
-- **0.3.x** — Alex demo prep, claw3d, novice operability validation (Sunday SF prep)
+- **0.3.x** - Alex demo prep, claw3d, novice operability validation (Sunday SF prep)
 - **Phase 0 graduates** when iteration 3 closes clean
 
-**Event log audit clean.** The W6 smoke spans contain only `test prompt`, `hello`, `test task`, `print('hello')` — no credentials, no secrets, no API keys. Telemetry design records `input_summary` (truncated/shape) not full prompts, which is the right pattern. Confirmed safe.
+**Event log audit clean.** The W6 smoke spans contain only `test prompt`, `hello`, `test task`, `print('hello')` - no credentials, no secrets, no API keys. Telemetry design records `input_summary` (truncated/shape) not full prompts, which is the right pattern. Confirmed safe.
 
 **First commit history note.** `data/chroma/` and `data/aho_event_log.jsonl` exist in commit `ac0f66b` history but are gone from HEAD. ChromaDB binaries are noise. Event log is shape-only smoke data. No security action required. Future `git filter-repo` cleanup is a Phase 1 housekeeping item, not a Phase 0 blocker.
 

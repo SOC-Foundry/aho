@@ -1,4 +1,4 @@
-# aho Roadmap — Phase 0 and Phase 1
+# aho Roadmap - Phase 0 and Phase 1
 
 **Status:** Living document, updated each iteration
 **Bootstrap:** Created 2026-04-08 by Claude web during aho 0.1.2 design conversation
@@ -22,8 +22,8 @@ aho is an Agentic Harness Orchestration methodology and toolkit. It formalizes h
 
 aho is being built across two phases that span roughly a year of focused work:
 
-**Phase 0 — Authoring on NZXT** (current phase, 0.1.2 through 0.6.x)
-**Phase 1 — Cross-machine and cross-platform validation** (1.0.x through 1.5.x)
+**Phase 0 - Authoring on NZXT** (current phase, 0.1.2 through 0.6.x)
+**Phase 1 - Cross-machine and cross-platform validation** (1.0.x through 1.5.x)
 
 Between Phase 0 and Phase 1, two transition iterations create the public repository (0.6.x) and the production fork (0.7.x). After Phase 1, aho is presumed mature enough to be used by TachTech engineers in production work without active development support.
 
@@ -46,7 +46,7 @@ Each iteration is a complete AHO cycle (design → plan → build → report →
 
 ---
 
-## Phase 0 — Authoring on NZXT
+## Phase 0 - Authoring on NZXT
 
 **Where it happens:** Entirely on NZXT, the development workstation.
 

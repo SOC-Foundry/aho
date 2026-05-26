@@ -1,4 +1,4 @@
-# Investigation 6 — Gotcha Registry Schema and Cross-Project Feasibility
+# Investigation 6 - Gotcha Registry Schema and Cross-Project Feasibility
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
@@ -14,7 +14,7 @@ type: dict
 keys: ['gotchas']
 ```
 
-The file is a dict with a single `"gotchas"` key containing a list. This is what caused the `AttributeError: 'dict' object has no attribute 'append'` error in the Gemini session — code tried to call `.append()` on the dict itself instead of on `d["gotchas"]`.
+The file is a dict with a single `"gotchas"` key containing a list. This is what caused the `AttributeError: 'dict' object has no attribute 'append'` error in the Gemini session - code tried to call `.append()` on the dict itself instead of on `d["gotchas"]`.
 
 ### Entry count
 
@@ -46,7 +46,7 @@ context, id, kjtcom_source_id, mitigation, pattern, symptoms, title
 ### Project code status
 
 - **No `project_code` field** exists on any entry.
-- 8 entries have `kjtcom_source_id` (values: G1, G19, G31, G39, G41, G49, G62, G71) — these are the migrated kjtcom entries.
+- 8 entries have `kjtcom_source_id` (values: G1, G19, G31, G39, G41, G49, G62, G71) - these are the migrated kjtcom entries.
 - 5 entries are iao-native (no `kjtcom_source_id`).
 - All entries use the `iaomw-G###` id format regardless of origin.
 
@@ -84,7 +84,7 @@ This is surprising. It suggests either:
 ~/dev/projects/kjtcom/app/lib/widgets/gotcha_tab.dart
 ```
 
-The `template/gotcha/gotcha_registry.json` is likely the source of truth. The `app/assets/gotcha_archive.json` and `app/build/` variants are Flutter app assets — the gotcha data is displayed in the kjtcom app's "Gotcha" tab.
+The `template/gotcha/gotcha_registry.json` is likely the source of truth. The `app/assets/gotcha_archive.json` and `app/build/` variants are Flutter app assets - the gotcha data is displayed in the kjtcom app's "Gotcha" tab.
 
 ---
 
@@ -114,7 +114,7 @@ The kjtcom schema cannot be fully characterized because the `data/gotcha_archive
 
 ## Cross-Project Registry Options
 
-### Option A — Single file with `project_code` field
+### Option A - Single file with `project_code` field
 
 Add a `project_code` field to each entry in iao's `data/gotcha_archive.json`. All entries from all projects live in one file.
 
@@ -139,30 +139,30 @@ Add a `project_code` field to each entry in iao's `data/gotcha_archive.json`. Al
 ```
 
 **Pros:**
-- Simple — one file to query, one index to maintain
+- Simple - one file to query, one index to maintain
 - Cross-project queries are trivial (filter by `project_code` or don't)
 - Existing code only needs to learn about the `project_code` field
 - Consistent with iao's current "everything in one place" philosophy
 
 **Cons:**
-- File grows with every project — could become large if many projects feed gotchas
+- File grows with every project - could become large if many projects feed gotchas
 - Merge conflicts if multiple agents write concurrently (not currently a concern in Phase 0)
-- Mixes concerns — iao-specific gotchas live alongside kjtcom-specific ones
+- Mixes concerns - iao-specific gotchas live alongside kjtcom-specific ones
 
-### Option B — One file per project
+### Option B - One file per project
 
 Split into `data/gotchas/iaomw.json`, `data/gotchas/kjtco.json`, `data/gotchas/tripl.json` with a merger at query time.
 
 **Structure:**
 ```
 data/gotchas/
-├── iaomw.json  — {"gotchas": [...]}
-├── kjtco.json  — {"gotchas": [...]}
-└── tripl.json  — {"gotchas": [...]}
+├── iaomw.json  - {"gotchas": [...]}
+├── kjtco.json  - {"gotchas": [...]}
+└── tripl.json  - {"gotchas": [...]}
 ```
 
 **Pros:**
-- Clean separation — each project owns its registry
+- Clean separation - each project owns its registry
 - Easier to import/export individual project gotchas
 - No merge conflicts between projects
 - Aligns with the 5-char project code convention
@@ -170,7 +170,7 @@ data/gotchas/
 **Cons:**
 - Query API needs a merger layer
 - Cross-project search requires reading N files
-- More file management — creating new project = creating new file
+- More file management - creating new project = creating new file
 - Current code assumes a single file; needs more refactoring
 
 ### Recommendation

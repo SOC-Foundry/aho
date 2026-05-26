@@ -1,11 +1,11 @@
-"""gap_carry_forward_writer — append carry-forward entries to the canonical
+"""gap_carry_forward_writer - append carry-forward entries to the canonical
 carry-forwards-{iteration}.md file in the existing structural shape.
 
 Entry shape (per carry-forwards-0.2.16.md):
 
-    - **{id} — {title}**
+    - **{id} - {title}**
       - Severity: {info|important|cosmetic|critical}
-      - {body line(s) — what surfaced / mechanism / location}
+      - {body line(s) - what surfaced / mechanism / location}
       - Disposition: {disposition text}
       - Target: {target iteration or workstream}
       - Source: {source reference}
@@ -50,7 +50,7 @@ except ImportError:  # pragma: no cover
 
 VALID_SEVERITIES = ("info", "cosmetic", "important", "critical")
 
-ENTRY_HEADER_RE = re.compile(r"^- \*\*([A-Za-z0-9.\-_/]+)\s+—\s+")
+ENTRY_HEADER_RE = re.compile(r"^- \*\*([A-Za-z0-9.\-_/]+)\s+-\s+")
 TARGET_HEADER_RE = re.compile(r"^## Target:\s+(.+?)\s*$")
 CARRY_FWD_FILENAME_RE = re.compile(r"^carry-forwards-(\d+\.\d+\.\d+)\.md$")
 
@@ -79,16 +79,16 @@ def render_entry(entry: Dict[str, Any]) -> str:
     """Render a structured entry into markdown matching the existing file
     shape. Caller-provided fields:
 
-    - id (required) — e.g. "F-0.2.17-W2-001"
-    - title (required) — short headline
-    - severity (required) — one of VALID_SEVERITIES
-    - what_surfaced (required) — short prose; rendered as the first body line
-    - mechanism (optional) — second body bullet line
-    - location (optional) — file/line pointer
-    - disposition (required) — short prose
-    - target (required) — e.g. "0.2.17 W3" or "0.2.18"
-    - source (required) — reference to the surfacing artifact
-    - audit_traceability (optional) — link to the audit finding that
+    - id (required) - e.g. "F-0.2.17-W2-001"
+    - title (required) - short headline
+    - severity (required) - one of VALID_SEVERITIES
+    - what_surfaced (required) - short prose; rendered as the first body line
+    - mechanism (optional) - second body bullet line
+    - location (optional) - file/line pointer
+    - disposition (required) - short prose
+    - target (required) - e.g. "0.2.17 W3" or "0.2.18"
+    - source (required) - reference to the surfacing artifact
+    - audit_traceability (optional) - link to the audit finding that
       surfaced this carry-forward
     """
     for required in ("id", "title", "severity", "what_surfaced",
@@ -104,7 +104,7 @@ def render_entry(entry: Dict[str, Any]) -> str:
         )
 
     lines: List[str] = []
-    lines.append(f"- **{entry['id']} — {str(entry['title']).strip()}**")
+    lines.append(f"- **{entry['id']} - {str(entry['title']).strip()}**")
     lines.append(f"  - Severity: {severity}")
 
     what = str(entry["what_surfaced"]).strip()
@@ -274,7 +274,7 @@ def _record_reindex_failure(
             },
         )
     except (ValueError, RuntimeError, AttributeError):
-        # OTEL is observability — never block the append return.
+        # OTEL is observability - never block the append return.
         pass
 
 
@@ -327,7 +327,7 @@ def append_to_file(
     entries_after = total_entry_count(new_text)
     line_count_after = len(new_text.splitlines())
     _emit_span(file_path=p, target=target, entry_id=str(entry["id"]))
-    # Materiality — drafter-flagged carry-forward addition is the
+    # Materiality - drafter-flagged carry-forward addition is the
     # caught_by_drafter signal; W3 will add resolution-rate signal when
     # an executor closes a carry-forward in their workstream output.
     try:

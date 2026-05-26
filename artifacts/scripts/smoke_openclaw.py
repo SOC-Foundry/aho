@@ -1,4 +1,4 @@
-"""Smoke test OpenClaw — Ollama-native, no open-interpreter."""
+"""Smoke test OpenClaw - Ollama-native, no open-interpreter."""
 import sys
 import os
 

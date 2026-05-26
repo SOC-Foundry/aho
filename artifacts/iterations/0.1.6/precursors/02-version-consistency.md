@@ -1,4 +1,4 @@
-# Investigation 2 — Version Consistency and Stale Install
+# Investigation 2 - Version Consistency and Stale Install
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
@@ -19,7 +19,7 @@ Kyle discovered that `iao iteration close --confirm` failed at the global `iao` 
 | `./bin/iao` (local) | Direct shim in project | `0.1.4` |
 | `python3 -m iao.cli` | Editable install → `src/iao/cli.py` | `0.1.4` |
 
-**The global `iao` binary is a completely different program.** It resolves to `/home/kthompson/iao-middleware/bin/iao`, which is a bash script from an older project layout ("iao-middleware"). This is not a stale pip install — it's a separate, legacy binary.
+**The global `iao` binary is a completely different program.** It resolves to `/home/kthompson/iao-middleware/bin/iao`, which is a bash script from an older project layout ("iao-middleware"). This is not a stale pip install - it's a separate, legacy binary.
 
 ---
 
@@ -37,7 +37,7 @@ $ head -5 /home/kthompson/iao-middleware/bin/iao
 set -e
 ```
 
-This is a bash dispatcher script from `iao-middleware/`, a predecessor directory to the current `~/dev/projects/iao/` project. It only exposes: `{project, init, check, status, eval, registry}` — no `iteration`, `doctor`, `telegram`, `log`, `rag`, `secret`, `pipeline`, `preflight`, or `postflight` subcommands.
+This is a bash dispatcher script from `iao-middleware/`, a predecessor directory to the current `~/dev/projects/iao/` project. It only exposes: `{project, init, check, status, eval, registry}` - no `iteration`, `doctor`, `telegram`, `log`, `rag`, `secret`, `pipeline`, `preflight`, or `postflight` subcommands.
 
 ### Local binary
 ```
@@ -80,14 +80,14 @@ The `iteration` subcommand supports `design`, `plan`, `build-log`, `report`, `cl
 
 ## Diagnosis
 
-**Answer: (b) — `./bin/iao` is a shim that bypasses the stale global binary.**
+**Answer: (b) - `./bin/iao` is a shim that bypasses the stale global binary.**
 
 The global `iao` binary is NOT a stale pip install. It is a completely separate legacy bash script from `~/iao-middleware/`. The pip-installed entry point does exist at `~/.local/bin/iao`, but `~/iao-middleware/bin/` shadows it in PATH.
 
 The divergence:
-1. `~/iao-middleware/bin/iao` — v0.1.0 bash dispatcher, 6 subcommands, legacy
-2. `~/.local/bin/iao` — pip entry point, would call `iao.cli:main` (v0.1.4), but is shadowed
-3. `./bin/iao` — local shim, calls source directly, 16 subcommands, current
+1. `~/iao-middleware/bin/iao` - v0.1.0 bash dispatcher, 6 subcommands, legacy
+2. `~/.local/bin/iao` - pip entry point, would call `iao.cli:main` (v0.1.4), but is shadowed
+3. `./bin/iao` - local shim, calls source directly, 16 subcommands, current
 
 ---
 
@@ -103,4 +103,4 @@ The divergence:
 
 ## What This Tells Us
 
-The `iteration` subcommand failure that Kyle hit was not a code bug — the code is correct. It was a deployment/PATH configuration issue. The 0.1.4 iteration close likely worked via `./bin/iao` but any time Kyle or an agent typed bare `iao`, they got the wrong binary. This may have caused confusion in previous agent sessions as well.
+The `iteration` subcommand failure that Kyle hit was not a code bug - the code is correct. It was a deployment/PATH configuration issue. The 0.1.4 iteration close likely worked via `./bin/iao` but any time Kyle or an agent typed bare `iao`, they got the wrong binary. This may have caused confusion in previous agent sessions as well.

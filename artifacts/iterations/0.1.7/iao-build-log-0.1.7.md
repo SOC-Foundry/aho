@@ -5,11 +5,11 @@
 **Machine:** NZXTcos  
 **Phase:** 0 (NZXT-only authoring)  
 **Iteration:** 0.1.7  
-**Theme:** Let Qwen Cook — repair the artifact loop supporting Qwen  
+**Theme:** Let Qwen Cook - repair the artifact loop supporting Qwen  
 
 ---
 
-## W0 — Environment Hygiene
+## W0 - Environment Hygiene
 
 Verified working directory: `/home/kthompson/dev/projects/iao`. Created backup at `~/dev/projects/iao.backup-pre-0.1.7` (1.4 MB). Python 3.14.3 confirmed at `/usr/bin/python3`. Ollama running with `qwen3.5:9b` and `nomic-embed-text` present. Disk: 739G free on `/dev/nvme0n1p2`. Tools: `jq` present, `age` not found (non-blocking).
 
@@ -17,7 +17,7 @@ Verified working directory: `/home/kthompson/dev/projects/iao`. Created backup a
 
 ---
 
-## W1 — Stream + Repetition Detection
+## W1 - Stream + Repetition Detection
 
 Rewrote `src/iao/artifacts/qwen_client.py` to enable streaming output with repetition detection. The `generate()` method now yields tokens incrementally. Added `repetition_detector.py` to track token-level repetition patterns.
 
@@ -30,7 +30,7 @@ Rewrote `src/iao/artifacts/qwen_client.py` to enable streaming output with repet
 
 ---
 
-## W2 — Word Count + Structural Gates
+## W2 - Word Count + Structural Gates
 
 Updated `src/iao/postflight/structural_gates.py` to enforce word count limits on build logs (500-1500 words) and reports (≤1000 words). Added checks for required markdown headers (`# Build Log`, `## W0`, etc.).
 
@@ -43,7 +43,7 @@ Updated `src/iao/postflight/structural_gates.py` to enforce word count limits on
 
 ---
 
-## W3 — Evaluator
+## W3 - Evaluator
 
 Integrated `src/iao/artifacts/evaluator.py` into the artifact generation pipeline. The evaluator runs after each artifact is generated, checking for structural compliance and content quality.
 
@@ -56,7 +56,7 @@ Integrated `src/iao/artifacts/evaluator.py` into the artifact generation pipelin
 
 ---
 
-## W4 — Rich Seed
+## W4 - Rich Seed
 
 Populated `docs/iterations/0.1.7/seed.json` with iteration metadata, carryover debts, and scope hints. Included `kyles_notes` from 0.1.4 run report and `anti_hallucination_list` to prevent common errors.
 
@@ -69,7 +69,7 @@ Populated `docs/iterations/0.1.7/seed.json` with iteration metadata, carryover d
 
 ---
 
-## W5 — RAG Freshness
+## W5 - RAG Freshness
 
 Updated `src/iao/rag/archive.py` to ensure RAG queries use fresh data from the current iteration. Modified `iao-rag-query` command to prioritize recent artifacts.
 
@@ -82,7 +82,7 @@ Updated `src/iao/rag/archive.py` to ensure RAG queries use fresh data from the c
 
 ---
 
-## W6 — Two-Pass (Experimental)
+## W6 - Two-Pass (Experimental)
 
 Implemented optional two-pass generation behind `--two-pass` flag. First pass generates artifact, second pass refines based on evaluator feedback.
 
@@ -95,7 +95,7 @@ Implemented optional two-pass generation behind `--two-pass` flag. First pass ge
 
 ---
 
-## W7 — Component Checklist
+## W7 - Component Checklist
 
 Created `src/iao/bundle/components_section.py` to auto-generate §22 "Agentic Components" from the event log. Updated `src/iao/bundle.py` to include this section. Modified `src/iao/postflight/bundle_quality.py` to expect 22 sections.
 
@@ -109,7 +109,7 @@ Created `src/iao/bundle/components_section.py` to auto-generate §22 "Agentic Co
 
 ---
 
-## W8 — OpenClaw/NemoClaw Ollama-Native Rebuild
+## W8 - OpenClaw/NemoClaw Ollama-Native Rebuild
 
 Rewrote `src/iao/agents/openclaw.py` and `src/iao/agents/nemoclaw.py` to be Ollama-native, removing open-interpreter and tiktoken dependencies. Created role definitions in `src/iao/agents/roles/`.
 
@@ -124,7 +124,7 @@ Rewrote `src/iao/agents/openclaw.py` and `src/iao/agents/nemoclaw.py` to be Olla
 
 ---
 
-## W9 — Dogfood + Close
+## W9 - Dogfood + Close
 
 Ran `iao iteration build-log`, `iao iteration report`, `iao doctor postflight`, and `iao iteration close`. Generated run report and bundle. Sent Telegram notification.
 
@@ -142,15 +142,15 @@ Ran `iao iteration build-log`, `iao iteration report`, `iao doctor postflight`, 
 
 The 0.1.7 iteration executed all 10 workstreams (W0-W9) without blocking discrepancies. Key patterns observed:
 
-1. **Streaming worked reliably** — W1's repetition detection and streaming output functioned as designed, with no token-level repetition issues detected.
+1. **Streaming worked reliably** - W1's repetition detection and streaming output functioned as designed, with no token-level repetition issues detected.
 
-2. **Evaluator integration succeeded** — W3's evaluator passed all artifacts without false positives. The structural gates in W2 enforced consistent markdown structure.
+2. **Evaluator integration succeeded** - W3's evaluator passed all artifacts without false positives. The structural gates in W2 enforced consistent markdown structure.
 
-3. **Component checklist automated** — W7's §22 auto-generation from event log provided per-run audit trails without manual effort.
+3. **Component checklist automated** - W7's §22 auto-generation from event log provided per-run audit trails without manual effort.
 
-4. **OpenClaw rebuild completed** — W8 successfully removed open-interpreter and tiktoken dependencies, making agents Ollama-native.
+4. **OpenClaw rebuild completed** - W8 successfully removed open-interpreter and tiktoken dependencies, making agents Ollama-native.
 
-5. **Rich seed populated** — W4's seed.json provided sufficient context for the Qwen loop to generate artifacts without hallucination.
+5. **Rich seed populated** - W4's seed.json provided sufficient context for the Qwen loop to generate artifacts without hallucination.
 
 The iteration followed the bounded sequential pattern with split-agent execution (Gemini W0-W5, Claude W6-W7). Wall clock time was within the soft cap of ~12 hours. No rollback was necessary.
 

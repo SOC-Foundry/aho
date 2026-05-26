@@ -1,18 +1,18 @@
-# Pillar 11 monitoring notes — 0.2.16 W3
+# Pillar 11 monitoring notes - 0.2.16 W3
 
 Rule rationale, calibration math, deferred verification, and surfaced plan
 inconsistencies for the W3 alert rule files.
 
 Companion artifacts:
-- `alerts/pillar-11-violations.yaml` — rules 1, 2 (Pillar 11 hard policy)
-- `alerts/anomaly-rules.yaml` — rules 3, 4, 5 (anomaly detection)
-- `probes/w3_baseline_calibration.py` — re-runnable calibration script
-- `src/aho/alerts/telegram_alerts.py` — webhook → dedicated Telegram bridge
+- `alerts/pillar-11-violations.yaml` - rules 1, 2 (Pillar 11 hard policy)
+- `alerts/anomaly-rules.yaml` - rules 3, 4, 5 (anomaly detection)
+- `probes/w3_baseline_calibration.py` - re-runnable calibration script
+- `src/aho/alerts/telegram_alerts.py` - webhook → dedicated Telegram bridge
 
 ## Status banner
 
 W3 ships rule files, bridge code, mocked unit tests, and a calibrated
-baseline value. **Live engine evaluation is deferred** — the reduced-scope
+baseline value. **Live engine evaluation is deferred** - the reduced-scope
 Option 4 disposition recorded at the top of this iteration. No alert engine
 is yet running on the host and the OTel collector has no exporter path that
 could feed one (file + Jaeger only). Standing up Prometheus + Alertmanager
@@ -23,7 +23,7 @@ dedicated ADR.
 
 ## Rule rationale
 
-### Rule 1 — `Pillar11CommitViolation` (severity: critical)
+### Rule 1 - `Pillar11CommitViolation` (severity: critical)
 
 **Expression:** `increase(claude_code_commit_count[1m]) > 0`
 
@@ -31,7 +31,7 @@ dedicated ADR.
 harness has historically treated this as a convention; 0.2.16 makes it a
 monitored invariant. Any non-zero increment in the `claude_code.commit.count`
 counter over any one-minute window is a violation candidate. The rule fires
-immediately (`for: 0m`) — there is no acceptable sustained-volume threshold
+immediately (`for: 0m`) - there is no acceptable sustained-volume threshold
 because the acceptable volume is zero.
 
 The synthetic test (W3 bucket 5, deferred) was to emit a single counter
@@ -39,15 +39,15 @@ increment via probe and verify the rule fires + the bridge delivers within
 60 seconds. Without an engine, the test cannot run; the deferral is
 documented under §"Deferred verification" below.
 
-### Rule 2 — `Pillar11PullRequestViolation` (severity: critical)
+### Rule 2 - `Pillar11PullRequestViolation` (severity: critical)
 
 **Expression:** `increase(claude_code_pull_request_count[1m]) > 0`
 
 **Why:** Same Pillar 11 absolute. PR creation is a strictly forbidden agent
 operation regardless of whether it is paired with a commit. Rule structure
-mirrors rule 1 exactly — one minute of evaluation, immediate firing.
+mirrors rule 1 exactly - one minute of evaluation, immediate firing.
 
-### Rule 3 — `ClaudeAPIErrorSpike` (severity: important)
+### Rule 3 - `ClaudeAPIErrorSpike` (severity: important)
 
 **Expression:** `rate(claude_code_api_error[5m]) > 1` (sustained for 5m)
 
@@ -59,18 +59,18 @@ hour," not "page someone immediately."
 See §"Plan inconsistencies" below for the formal expression vs prose
 mismatch and the disposition recommendation.
 
-### Rule 4 — `ClaudeCostAnomaly` (severity: important)
+### Rule 4 - `ClaudeCostAnomaly` (severity: important)
 
 **Expression:** `increase(claude_code_cost_usage[10m]) > 2.0`
 
 **Why:** Pillar 8 cost attribution invariant. The aho-internal cost ceiling
 for a single workstream is ~$1.00/iteration in routine operation; $2.00
 spent in 10 minutes signals a runaway loop, context-window blowout, or an
-unattended automation. Threshold is per-host, not per-tenant — multi-tenant
+unattended automation. Threshold is per-host, not per-tenant - multi-tenant
 deployments need additional aho.workstream / tenant labels in the rule
 expression.
 
-### Rule 5 — `ToolDurationOutlier` (severity: info)
+### Rule 5 - `ToolDurationOutlier` (severity: info)
 
 **Expression:**
 `histogram_quantile(0.99, sum by (le) (rate(claude_code_tool_result_duration_ms_bucket[5m]))) > 2411`
@@ -78,7 +78,7 @@ expression.
 **Why:** Tool execution slow-paths are a leading indicator of subprocess
 hangs, MCP server failures, network slowness on tool-invoked APIs, or a
 misbehaving custom hook. Threshold is `baseline_p99 × 3` per the plan brief.
-Severity is info — this is a "look at it eventually" signal, not a page.
+Severity is info - this is a "look at it eventually" signal, not a page.
 
 See §"Plan inconsistencies" below for the metric-vs-event source caveat.
 
@@ -89,7 +89,7 @@ attribute ∈ {W1, W2}, body string `claude_code.tool_result`, attribute
 `duration_ms`.
 
 **Time range surveyed:** 2026-04-30 17:35:14 UTC → 2026-05-01 03:40:07 UTC
-(spans the second half of W2 only; W1 absent — see below).
+(spans the second half of W2 only; W1 absent - see below).
 
 **Sample count:** 21 events. All from W2. **W1 absent from on-disk logs**:
 the OTel file exporter wasn't yet writing during W1, so no W1 records exist
@@ -139,17 +139,17 @@ python3 artifacts/iterations/0.2.16/probes/w3_baseline_calibration.py \
 ```
 
 Output includes time range, sample count, full distribution, and the
-substitution value. Same pattern as W2's end-to-end probe — retained for
+substitution value. Same pattern as W2's end-to-end probe - retained for
 audit reproducibility.
 
 ## Deferred verification
 
 The following W3 deliverables were deferred under Option 4 reduced scope.
 Each is registered as a carry-forward in `acceptance/W3.json`. None is a
-W3 failure — each is a deliberate decision to avoid silently absorbing
+W3 failure - each is a deliberate decision to avoid silently absorbing
 infrastructure scope that belongs in a future iteration.
 
-### B5 — synthetic alert delivery test
+### B5 - synthetic alert delivery test
 
 The plan's bucket 5 specified a synthetic `claude_code.commit.count`
 increment via probe → rule fire → webhook → Telegram delivery, with a
@@ -168,7 +168,7 @@ Tier 3 managed services. Doing it as part of W3 would commit aho to a
 local-stack convention that it does not intend to keep. The engine
 selection is a substantive design decision (Prometheus stack vs
 VictoriaMetrics vs cloud-managed vs custom evaluator) and warrants a
-dedicated ADR. ADR number is **not pre-allocated** — it will be the next
+dedicated ADR. ADR number is **not pre-allocated** - it will be the next
 sequential aho-internal number from `artifacts/adrs/` at the time the
 iteration owning that work begins (0006 is the next aho-native slot as of
 this writing, but pre-allocation is forbidden per CLAUDE.md cross-project
@@ -194,8 +194,8 @@ wire-up shape is:
 `ahomw:telegram_alerts_bot_token` and `ahomw:telegram_alerts_chat_id` are
 **Kyle-created, agent-read-only** per Pillar 11. No agent in W3 attempted
 to write either secret. The bridge module's `_get_alert_creds()` raises
-`AlertSecretMissingError` on absent secrets — the unit tests verify the
-fail-loud behavior — so when Kyle eventually provisions the pair against
+`AlertSecretMissingError` on absent secrets - the unit tests verify the
+fail-loud behavior - so when Kyle eventually provisions the pair against
 a dedicated `@aho_alerts_bot`, the bridge picks them up on next request
 without code changes.
 
@@ -214,18 +214,18 @@ Two material discrepancies between plan §W3 and the reality of the metrics
 emission. Both are documented here for the audit; neither is silently
 absorbed into the rule files.
 
-### Inconsistency 1 — Rule 3 expression vs prose
+### Inconsistency 1 - Rule 3 expression vs prose
 
 Plan §W3 row 3 specifies:
 
 > `rate(claude_code_api_error[5m]) > 1` (>5 in 5m)
 
 The formal expression `rate > 1` evaluates to "over 1 event per second
-sustained over 5 minutes" — roughly 300+ events in a 5-minute window. The
+sustained over 5 minutes" - roughly 300+ events in a 5-minute window. The
 parenthetical "(>5 in 5m)" describes a much tighter threshold:
 `increase(claude_code_api_error[5m]) > 5`. The two cannot both be true.
 
-**Disposition:** the W3 brief instructed "match plan table exactly — do
+**Disposition:** the W3 brief instructed "match plan table exactly - do
 not adjust thresholds for 'feel.'" The shipped rule uses the formal
 expression verbatim (`rate > 1`). The parenthetical is preserved in
 source comments and in the export-pack README so a downstream reader can
@@ -233,7 +233,7 @@ choose the form that matches their operational tolerance. Audit: confirm
 which interpretation the plan author intended; correct the plan and
 optionally re-evaluate the rule choice.
 
-### Inconsistency 2 — Rule 5 metric does not exist
+### Inconsistency 2 - Rule 5 metric does not exist
 
 Plan §W3 row 5 specifies a histogram-quantile expression over the metric
 `claude_code_tool_result_duration_ms_bucket`. Survey of all metric names
@@ -302,7 +302,7 @@ events:
 
 **Fail-loud invariant.** If the event log append fails for any reason
 (disk full, parent directory not writable, etc.), the bridge surfaces an
-`OSError` to the engine — the engine returns a 500 to the operator. Silent
+`OSError` to the engine - the engine returns a 500 to the operator. Silent
 swallowing is forbidden because alert delivery without an audit-log entry
 is invisible to Pillar 11 enforcement. The `webhook_handler` ordering is
 deliberate: Telegram first, then log. If Telegram fails, no log is written
@@ -315,5 +315,5 @@ human got the alert.
 This document was assembled from aho canonical references only. No
 kjtcom or other-project terminology was reached for; "11 Pillars" is
 verified against `artifacts/harness/base.md`. ADR numbers are not
-pre-allocated — the engine-selection ADR will receive its number from
+pre-allocated - the engine-selection ADR will receive its number from
 disk enumeration when it lands.

@@ -1,4 +1,4 @@
-"""W4 D5 — materiality comparison surface (with vs without base container).
+"""W4 D5 - materiality comparison surface (with vs without base container).
 
 Side-by-side two-column rendering: pre-base-container baseline (0.2.16)
 on the left, post-base-container actuals (0.2.17) on the right. Each
@@ -6,15 +6,15 @@ column uses the same four-bucket protocol shape so deltas are
 inspectable.
 
 The surface explicitly annotates that the comparison sample is below
-the threshold (N=4 below threshold of 8 iterations) — drafter or
+the threshold (N=4 below threshold of 8 iterations) - drafter or
 operator can see at a glance that the comparison is *suggestive*, not
 *conclusive*.
 
 Inputs:
 
-  - ``baseline_state`` — normalized materiality state from
+  - ``baseline_state`` - normalized materiality state from
     ``aho.materiality_baseline_extract.reconstruct_baseline``.
-  - ``post_state`` — normalized materiality state for the post-
+  - ``post_state`` - normalized materiality state for the post-
     base-container iteration (0.2.17), built from live OTEL counter
     state via
     ``aho.claw3d.lego.materiality_surfaces.materiality_state_from_otel_counters``.
@@ -78,7 +78,7 @@ def render_comparison(
     if n_iterations_observed < N_ITERATIONS_THRESHOLD:
         annotations.append(
             f"N={n_iterations_observed} below threshold of "
-            f"{N_ITERATIONS_THRESHOLD} iterations — comparison is"
+            f"{N_ITERATIONS_THRESHOLD} iterations - comparison is"
             " suggestive, not conclusive. Statistical confidence requires"
             f" ≥{N_ITERATIONS_THRESHOLD} iteration data points."
         )
@@ -88,7 +88,7 @@ def render_comparison(
             f"{N_ITERATIONS_THRESHOLD} iterations."
         )
 
-    # Surface baseline_provenance from the baseline state if present —
+    # Surface baseline_provenance from the baseline state if present -
     # falsifiable by drafter / operator.
     provenance = baseline_state.get("baseline_provenance")
 

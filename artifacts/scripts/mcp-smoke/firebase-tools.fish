@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/firebase-tools.fish — CLI health check for firebase-tools MCP
+# mcp-smoke/firebase-tools.fish - CLI health check for firebase-tools MCP
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 # Note: requires `firebase login` for full functionality;
 # this smoke tests protocol handshake only

@@ -1,4 +1,4 @@
-"""W4 D6 — anti-rubber-stamp verification dashboard (four surfaces + overview).
+"""W4 D6 - anti-rubber-stamp verification dashboard (four surfaces + overview).
 
 Three original failure-mode surfaces, plus the new D1 deterministic
 post-hoc filter as a fourth hardening surface. Plus an overview surface
@@ -6,27 +6,27 @@ aggregating all four into a single state.
 
 Surfaces:
 
-  1. **nemotron_raise_on_malformed** — G083 protection on triage. Reds
+  1. **nemotron_raise_on_malformed** - G083 protection on triage. Reds
      when nemotron triage emits an out-of-rubric category that the
      hardening would have raised on. Green when triage invocations
      proceed without malformed output.
-  2. **llama_confidence_floor_lock** — Rubber-stamp protection on
+  2. **llama_confidence_floor_lock** - Rubber-stamp protection on
      audit. Reds when the floor lock fires (model said clean at low
      confidence; hardening rewrote disposition to surface_to_drafter).
      Green when no lock fires across audit invocations.
-  3. **role_collapse_tripwire** — D4's surface, surfaced here too as
+  3. **role_collapse_tripwire** - D4's surface, surfaced here too as
      part of the anti-rubber-stamp verification view.
-  4. **deterministic_post_hoc_filter** — NEW W4 D1. Surfaces filter
+  4. **deterministic_post_hoc_filter** - NEW W4 D1. Surfaces filter
      suppression activity per audit, with drill-down to individual
      suppressed_findings records.
 
 Plus an **overview** surface that combines the four into one
-"hardening healthy?" state — green only if all four surfaces are
+"hardening healthy?" state - green only if all four surfaces are
 green or unknown (no firings indicate either healthy or no signal),
 red if any surface reds.
 
 The drill-down for surface 4 takes a list of audit dispositions and
-their suppressed_findings — drafter or operator can inspect what was
+their suppressed_findings - drafter or operator can inspect what was
 suppressed per audit.
 """
 from __future__ import annotations
@@ -175,7 +175,7 @@ def _filter_surface(
     """The new W4 D1 hardening surface.
 
     Filter suppression activity is healthy (green) when the filter is
-    eligible and operating — suppressions are NOT red. The filter is the
+    eligible and operating - suppressions are NOT red. The filter is the
     fix, not the symptom. Red would indicate a filter error
     (filter_error_count > 0); the W4 D1 implementation cannot raise from
     the happy path, so red here is reserved for instrumentation problems.
@@ -187,7 +187,7 @@ def _filter_surface(
     if errors > 0:
         color = BRICK_RED
         headline = (
-            f"Filter encountered {errors} error(s) — instrumentation"
+            f"Filter encountered {errors} error(s) - instrumentation"
             " problem requiring drafter inspection"
         )
     elif eligible > 0:
@@ -292,7 +292,7 @@ def render_dashboard(
     *,
     audit_disposition_records: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
-    """Render the full D6 anti-rubber-stamp dashboard payload — four
+    """Render the full D6 anti-rubber-stamp dashboard payload - four
     surfaces + overview, in JSON form."""
     surfaces = evaluate_all_surfaces(
         state, audit_disposition_records=audit_disposition_records

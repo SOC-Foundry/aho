@@ -1,4 +1,4 @@
-# aho Design — 0.2.10
+# aho Design - 0.2.10
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 10
 **Theme:** Install surface implementation + CLI unification + observability deployment
@@ -73,10 +73,10 @@ Auto-push to Telegram fires on every workstream_complete event. Kyle wakes to a 
 If any workstream fails, checkpoint sets proceed_awaited=true automatically (new behavior for overnight mode). Agent halts at next boundary, waits for Kyle's `/ws proceed` from phone.
 
 Kyle controls via phone:
-- `/ws status` — current state
-- `/ws pause` — halt at next boundary
-- `/ws proceed` — resume
-- `/ws last` — last completed handoff
+- `/ws status` - current state
+- `/ws pause` - halt at next boundary
+- `/ws proceed` - resume
+- `/ws last` - last completed handoff
 
 Normal green-path execution: agent works through W1-W15 unattended, halts at W16 for review, Kyle reviews in morning.
 
@@ -85,6 +85,6 @@ Normal green-path execution: agent works through W1-W15 unattended, halts at W16
 - **Overnight agent drift.** Highest risk. Mitigation: auto-halt-on-failure pattern above, conservative MCP-first mandate on every workstream, explicit no-scope-invention reminder in W0 prompt.
 - **AUR package unavailability or build failure.** otelcol-contrib and jaeger both exist in AUR but AUR packages can break. Mitigation: capability gap on AUR failure, workstream halts with clear diagnostic, Kyle resolves in morning.
 - **OpenClaw socket relocation breaks existing 0.2.9 functionality.** Telegram daemon depends on openclaw. Mitigation: relocation workstream (W5) tests Telegram end-to-end before declaring pass.
-- **CLI unification breaks existing wrappers.** W1 maintains shims; W2 adds subcommands; only W17 close decides shim deletion (it does not — deferred to 0.2.11).
+- **CLI unification breaks existing wrappers.** W1 maintains shims; W2 adds subcommands; only W17 close decides shim deletion (it does not - deferred to 0.2.11).
 - **MANIFEST live-refresh creates storm.** Harness-watcher may trigger on every write. Mitigation: 5-second debounce window, W11 tests no-storm behavior.
 - **Openclaw stability issues block persona 3 dispatch.** Mitigation: W13 is dedicated to Errno 11/104 fixes; if those fail, persona 3 dispatch degrades but iteration still closes.

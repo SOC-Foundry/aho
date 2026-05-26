@@ -1,7 +1,7 @@
-# aho Run Report — 0.2.8
+# aho Run Report - 0.2.8
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 8
-**Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
+**Theme:** Discovery + exercise - MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
 **Executor:** claude-code (single-agent)
 **Date:** 2026-04-11
 
@@ -12,9 +12,9 @@
 | WS | Surface | Status | Notes |
 |---|---|---|---|
 | W0 | Bumps + decisions + run report template | pass | 10 artifacts bumped, decisions.md, MCP Tools Invoked section added |
-| W1 | D1 diagnosis report | pass | mcp-utilization-gap.md — zero usage confirmed, structural wiring gap found |
+| W1 | D1 diagnosis report | pass | mcp-utilization-gap.md - zero usage confirmed, structural wiring gap found |
 | W2 | CLAUDE.md + GEMINI.md MCP-first rules | pass | MCP Toolchain section in both, MUST rules, [INSTALLED-NOT-WIRED] tag, plan doc updated |
-| W2.5 | MCP wiring — project .mcp.json | pass | .mcp.json with 9 servers, mcp-wiring.md, verification deferred to session restart |
+| W2.5 | MCP wiring - project .mcp.json | pass | .mcp.json with 9 servers, mcp-wiring.md, verification deferred to session restart |
 | W3 | 9 per-server MCP smoke scripts | pass | 9/9 CLI pass, 7/9 protocol pass (firebase+dart need restart), firebase entry point fixed, flutter-mcp replaced with dart mcp-server |
 | W4 | bin/aho-mcp smoke aggregator | pass | 9/9 pass, mcp-readiness.md + data/mcp_readiness.json produced |
 | W5 | Dashboard MCP verifier | pass | aggregator reads mcp_readiness.json, 7 unknowns → ok, 5 dead stay unknown (W6), verified via Playwright MCP |
@@ -23,7 +23,7 @@
 | W8 | harness-watcher diagnosis + branch fix | pass | Branch A: installer enable-not-start bug, fixed, daemon running |
 | W9 | aho-G066 + G067 + G068 + G069 + ADR-044 update | pass | 4 new gotchas (23 total), ADR-044 Phase 2 dashboard section |
 | W10 | Bundle generator sidecars + ADRs fix | pass | §6 includes ADRs (2 found), §12 walks iteration dir (4 sidecars), §4 deferred to close |
-| W11 | bundle_completeness postflight gate | pass | Gate works, correctly flags 2 canonical missing (build-log, report — W13 generates) |
+| W11 | bundle_completeness postflight gate | pass | Gate works, correctly flags 2 canonical missing (build-log, report - W13 generates) |
 | W12 | Telegram inbound bridge to openclaw | pass | inbound.py + openclaw_client.py, daemon extended, 5 commands + free-text, 24 tests pass |
 | W13 | Close | pass | 182 tests, doctor 9/10, bundle 610KB, all postflight gates green |
 
@@ -31,26 +31,26 @@
 
 | WS | mcp_used | Justification (if none) |
 |---|---|---|
-| W0 | none | bump workstream — no technology-specific work requiring MCP |
-| W1 | none | servers not wired as MCP connections in Claude Code — structurally unavailable, not a choice |
-| W2 | none | instruction workstream — no technology-specific work requiring MCP |
-| W2.5 | none | wiring workstream — MCP surface being established, not yet available |
+| W0 | none | bump workstream - no technology-specific work requiring MCP |
+| W1 | none | servers not wired as MCP connections in Claude Code - structurally unavailable, not a choice |
+| W2 | none | instruction workstream - no technology-specific work requiring MCP |
+| W2.5 | none | wiring workstream - MCP surface being established, not yet available |
 | W3 | mcp__filesystem__list_directory, mcp__memory__read_graph, mcp__everything__echo, mcp__context7__resolve-library-id, mcp__sequential-thinking__sequentialthinking, mcp__playwright__browser_snapshot, mcp__firecrawl__firecrawl_scrape | 7 servers invoked agent-native |
-| W4 | none | aggregator workstream — runs fish scripts, no technology-specific MCP domain |
-| W5 | mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_close | Dashboard verification via Playwright MCP — MCP-first dogfood |
-| W6 | none | YAML reconciliation — no technology-specific MCP domain |
-| W7 | none | postflight gate implementation — no technology-specific MCP domain |
-| W8 | none | systemd diagnosis — no technology-specific MCP domain |
-| W9 | none | gotcha + ADR text — no technology-specific MCP domain |
+| W4 | none | aggregator workstream - runs fish scripts, no technology-specific MCP domain |
+| W5 | mcp__playwright__browser_navigate, mcp__playwright__browser_snapshot, mcp__playwright__browser_take_screenshot, mcp__playwright__browser_evaluate, mcp__playwright__browser_close | Dashboard verification via Playwright MCP - MCP-first dogfood |
+| W6 | none | YAML reconciliation - no technology-specific MCP domain |
+| W7 | none | postflight gate implementation - no technology-specific MCP domain |
+| W8 | none | systemd diagnosis - no technology-specific MCP domain |
+| W9 | none | gotcha + ADR text - no technology-specific MCP domain |
 | W10 | mcp__filesystem__list_directory (2 calls: iteration dir + adrs dir) | Directory walks for sidecar and ADR discovery |
-| W11 | none | postflight gate implementation — no technology-specific MCP domain |
+| W11 | none | postflight gate implementation - no technology-specific MCP domain |
 | W12 | mcp__context7__resolve-library-id, mcp__context7__query-docs | Telegram Bot API getUpdates docs via context7-mcp |
 | W13 | mcp__playwright__browser_navigate, mcp__playwright__browser_take_screenshot (planned for final dashboard verify) | Close: tests, doctor, build-log, report, bundle, postflight |
 
 ## Metrics
 
 - **Tests:** 182 passed, 1 skipped (target: 175+)
-- **Doctor:** 9/10 checks pass (dashboard_port warn expected — port in use)
+- **Doctor:** 9/10 checks pass (dashboard_port warn expected - port in use)
 - **Postflight gates:** mcp_sources_aligned ok, bundle_completeness ok
 - **New files:** 10 (inbound.py, openclaw_client.py, mcp_sources_aligned.py, bundle_completeness.py, 9 smoke scripts, mcp-wiring.md, .mcp.json)
 - **Modified files:** 18 (10 canonical bumps, aggregator.py, doctor.py, mcp_canonical_registry_verify.py, notifications.py, bundle/__init__.py, bin/aho-mcp, bin/aho-systemd, components.yaml)
@@ -78,7 +78,7 @@ consequential. Five real discoveries landed as shipped fixes:
    recurrence.
 
 3. harness-watcher daemon active. Root cause was Branch A installer
-   bug — bin/aho-systemd enabled but did not start. One-line fix.
+   bug - bin/aho-systemd enabled but did not start. One-line fix.
 
 4. Bundle generator fixed. §4 Report no longer hollow, §12 Sidecars
    populated (4 entries), §6 includes iteration-window ADRs. New
@@ -89,7 +89,7 @@ consequential. Five real discoveries landed as shipped fixes:
    to Kyle's phone. Single-user allow-list, 30s sync wait with async
    ack fallback. First daemon to operate the harness from off-keyboard.
 
-Four new gotchas form a coherent family — a pattern language for
+Four new gotchas form a coherent family - a pattern language for
 "things that pretend to work but don't":
 - aho-G066: declared != exercised
 - aho-G067: declared != populated

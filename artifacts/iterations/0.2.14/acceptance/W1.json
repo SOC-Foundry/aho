@@ -11,7 +11,7 @@
     {
       "name": "Step 0: Root cleanup executed",
       "passed": true,
-      "notes": "29 files moved to artifacts/iterations/0.2.12/scratch/ (20 patch_*.py, 7 run_acceptance_w*.py, 2 install backups). firebase-debug.log added to .gitignore. Baseline stable after moves. W0 proposal count said 28 — actual was 29 (20 patch files, not 19)."
+      "notes": "29 files moved to artifacts/iterations/0.2.12/scratch/ (20 patch_*.py, 7 run_acceptance_w*.py, 2 install backups). firebase-debug.log added to .gitignore. Baseline stable after moves. W0 proposal count said 28 - actual was 29 (20 patch files, not 19)."
     },
     {
       "name": "Gate 1: Vetting table complete",
@@ -21,7 +21,7 @@
     {
       "name": "Nemoclaw investigation: B classification",
       "passed": true,
-      "notes": "Explicit role routing supported (bypass classify). model_id routing needs ~20 lines. dispatch(task, role=param) works — tested via socket, 18.5s round-trip."
+      "notes": "Explicit role routing supported (bypass classify). model_id routing needs ~20 lines. dispatch(task, role=param) works - tested via socket, 18.5s round-trip."
     },
     {
       "name": "Dispatch decision recorded",
@@ -36,12 +36,12 @@
     {
       "name": "Cascade orchestrator built",
       "passed": true,
-      "notes": "src/aho/pipeline/orchestrator.py — 5-stage flow with trace events, per-stage artifacts, dispatcher wrapper."
+      "notes": "src/aho/pipeline/orchestrator.py - 5-stage flow with trace events, per-stage artifacts, dispatcher wrapper."
     },
     {
       "name": "Integration test on dummy document",
       "passed": true,
-      "notes": "5 stages completed on dummy doc. All stages produced non-null output. All stage artifacts written. Trace file written. Mock capture mechanism had bug (wraps vs call_count) — fixed but not re-run due to 10+ min runtime. Core cascade mechanics proven."
+      "notes": "5 stages completed on dummy doc. All stages produced non-null output. All stage artifacts written. Trace file written. Mock capture mechanism had bug (wraps vs call_count) - fixed but not re-run due to 10+ min runtime. Core cascade mechanics proven."
     },
     {
       "name": "NoSQL smoke test executed",
@@ -72,10 +72,10 @@
   "findings": [
     "CRITICAL: Ollama runs Qwen 3.5:9B with context_length: 4096 (not 256K). The model's full context window is not utilized. The 247K-char NoSQL document is truncated to ~4K tokens. Fix: set num_ctx in Ollama API call or modelfile. This is a configuration issue, not a model limitation.",
     "Producer stage generated off-topic Chinese customer service response. The system prompt was not effective at Q4_K_M quantization with truncated 4K context. Output quality is a measurement/configuration concern for 0.2.15, not a cascade mechanics failure.",
-    "Auditor stage produced partially Chinese JSON output with delta_validations. The delta validation mechanism works — auditor accepted/rejected deltas with reasoning. Language mixing is a prompt engineering issue.",
+    "Auditor stage produced partially Chinese JSON output with delta_validations. The delta validation mechanism works - auditor accepted/rejected deltas with reasoning. Language mixing is a prompt engineering issue.",
     "Model inference speed: ~2-9 minutes per stage at Q4_K_M on consumer hardware. Full 5-stage cascade takes 20-60+ minutes. Acceptable for batch but too slow for interactive use.",
-    "Existing test_workstream_events.py corrupts real checkpoint when run (doesn't mock find_project_root). This caused checkpoint to be reset 3 times during W1. Deferred fix — not in W1 scope.",
-    "Integration test mock capture mechanism (wraps + _captured list) doesn't work with MagicMock. Fixed to use call_count. Not re-run due to 10+ min runtime — core cascade proven.",
+    "Existing test_workstream_events.py corrupts real checkpoint when run (doesn't mock find_project_root). This caused checkpoint to be reset 3 times during W1. Deferred fix - not in W1 scope.",
+    "Integration test mock capture mechanism (wraps + _captured list) doesn't work with MagicMock. Fixed to use call_count. Not re-run due to 10+ min runtime - core cascade proven.",
     "Assessor produced 1,468 chars structured JSON assessment. Validated prior work products and produced meta-assessment. Strongest output of all 5 stages (received smaller inputs, coherent structured analysis).",
     "Pillar 7 violated: all 5 roles bound to Qwen 3.5:9B (drafter = reviewer). Only viable option given vetting results. Documented in role-assignment.md.",
     "Smoke test completed: 5/5 stages, 1885.3s total, 0 exceptions. All stage artifacts and trace.json written to run-1/. Indexer_out correctly identified no deltas in auditor output (honest empty response). Assessor produced structured JSON meta-assessment."

@@ -63,7 +63,7 @@ class TestMatchCategory(unittest.TestCase):
         self.assertEqual(_match_category("Feature", ["bug", "feature"]), "feature")
 
     def test_first_match_wins_on_substring(self):
-        # "bug" appears in "debugger" — that is a known limitation of the
+        # "bug" appears in "debugger" - that is a known limitation of the
         # substring matcher, preserved from nemotron_client.classify() for
         # behavioural continuity. Documented so future callers know.
         self.assertEqual(_match_category("debugger", ["bug", "feature"]), "bug")

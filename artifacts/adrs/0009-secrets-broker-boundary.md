@@ -1,10 +1,10 @@
-# ADR 0009 — Secrets Broker Boundary
+# ADR 0009 - Secrets Broker Boundary
 
 **Status:** Accepted
 **Date:** 2026-05-03
 **Iteration of record:** aho 0.2.17 W5 (consolidating 0.2.17 W1 D3 implementation)
 **Decision owner:** Kyle Thompson (signs), Claude web (drafted), Claude Code (executed at W1 D3), llama3.2 + RAG + filter (audits at W5)
-**Context surface:** aho project-internal — credential boundary between
+**Context surface:** aho project-internal - credential boundary between
 container and host under tiered containerized deployment. Binds 0.2.17
 W1 D3, W2 broker test redesign, F-0.2.17-W1-001 subcommand removal,
 F-0.2.17-W1-003 token rotation. Inherits in 0.3.x for partial- and
@@ -16,9 +16,9 @@ full-tier deployment.
 
 ADR 0007 establishes that aho ships as a single tier-aware container
 image with secrets stored host-side and bind-mounted into the
-container. ADR 0007 §Secrets model fixes the *what* — secrets do not
+container. ADR 0007 §Secrets model fixes the *what* - secrets do not
 live in the image, in the registry, or in the container's writable
-layer — but does not fix the *how*: the mechanism by which the
+layer - but does not fix the *how*: the mechanism by which the
 container reads those secrets at runtime, the authentication
 boundary between container and host, and the per-engineer onboarding
 shape.
@@ -41,7 +41,7 @@ Three forces shape the boundary mechanism:
 3. **Authentication binds to the operating-system boundary, not to a
    credential the container holds.** Any credential the container
    holds for the broker is a credential that lives in image layers
-   or in container runtime config — both Pillar 11 violations.
+   or in container runtime config - both Pillar 11 violations.
    Authentication must instead derive from the host kernel's process
    identity (UID, project label) at the socket layer.
 
@@ -117,7 +117,7 @@ broker before invoking `podman run`, mounts the broker socket
 read-only at `/run/host-services/aho-secrets.sock`, and unregisters on
 exit. The wrapper is the canonical surface; raw `podman run`
 invocations bypass the registration step and the SO_PEERCRED check
-fails closed (correct behavior — the container cannot reach secrets
+fails closed (correct behavior - the container cannot reach secrets
 if launched outside the wrapper).
 
 ### Per-engineer onboarding
@@ -136,8 +136,8 @@ each engineer's container mounts that engineer's
 that engineer's registered UIDs. There is no shared keystore between
 engineers; there is no broker-to-broker secret exchange.
 
-Cross-engineer secret sharing — when two engineers need access to the
-same upstream credential — is solved out-of-band by the upstream
+Cross-engineer secret sharing - when two engineers need access to the
+same upstream credential - is solved out-of-band by the upstream
 provider (each engineer holds their own copy of the credential under
 their own age identity). aho does not synchronize secrets across
 engineers and does not need to, because the same upstream credential
@@ -159,26 +159,26 @@ Modules and shas at W1 D3 close (recorded in W1 acceptance archive
 
 W1 D3 acceptance gates:
 
-- **Gate 1 (round-trip, correct project):** pass — broker returns
+- **Gate 1 (round-trip, correct project):** pass - broker returns
   decrypted value to authorized container, exit 0.
-- **Gate 2 (project mismatch):** pass — broker rejects with
+- **Gate 2 (project mismatch):** pass - broker rejects with
   `AUTH_FAIL: project_mismatch`, exit 4.
-- **Gate 3 (missing key):** pass — broker returns `MISSING`, exit 5.
-- **Gate 4 (unregistered UID, SO_PEERCRED):** pass — broker rejects
+- **Gate 3 (missing key):** pass - broker returns `MISSING`, exit 5.
+- **Gate 4 (unregistered UID, SO_PEERCRED):** pass - broker rejects
   with `AUTH_FAIL: uid_not_registered`, exit 4. Verified via
   `podman run --userns=keep-id` mapping the in-container UID to a
   host-visible subuid (~100999) the broker has not registered.
-- **Gate 5 (broker log inspection):** operator-pending at W1 close —
+- **Gate 5 (broker log inspection):** operator-pending at W1 close -
   broker writes only request shape by design, never the value, but
   only the operator can confirm on the foreground broker terminal.
 
-### F-0.2.17-W1-003 — worked example
+### F-0.2.17-W1-003 - worked example
 
 The W1 plan-doc specified a Gate-1 implementation that printed the
 decrypted value to stdout to verify broker round-trip equivalence
 with direct host-side `get_secret()`. Executing this gate caused the
 agent (Claude Code) to read the bytes of `ahomw:telegram_bot_token`
-via Bash tool stdout — a direct contradiction of CLAUDE.md hard rule
+via Bash tool stdout - a direct contradiction of CLAUDE.md hard rule
 "No reading secrets."
 
 This is the **worked example of why the hash-fingerprint contract
@@ -188,8 +188,8 @@ is a Pillar 11 violation by construction, regardless of how
 short-lived the surface is or how careful the agent is about not
 reproducing the value downstream.
 
-The remediation pattern — generalizing from the W2 broker test
-redesign work — is that broker round-trip equivalence is verified
+The remediation pattern - generalizing from the W2 broker test
+redesign work - is that broker round-trip equivalence is verified
 **without** the value crossing the agent boundary. Two designs are
 acceptable:
 
@@ -237,7 +237,7 @@ config. Three forces drive the choice:
    bit-identical across engineers; the host-side broker is per-host;
    the registered-UID set is per-broker. Adding an engineer is `aho
    host install` on their workstation. Removing an engineer is
-   stopping their broker — their fernet store and age identity stay
+   stopping their broker - their fernet store and age identity stay
    on their workstation, never replicated.
 
 3. **No SSH agent forward closes the git write surface entirely.**
@@ -248,8 +248,8 @@ config. Three forces drive the choice:
    primitive is unreachable, not because the container chooses not
    to use it.
 
-The alternative — a long-lived bearer token in the container,
-authenticated against the broker — would require either baking the
+The alternative - a long-lived bearer token in the container,
+authenticated against the broker - would require either baking the
 token into image layers (Pillar 11 violation) or generating it at
 container start and passing it via env (env-based credential, harder
 to audit, leaks through process inspection on shared hosts). The
@@ -271,7 +271,7 @@ unix-socket + SO_PEERCRED design has neither of those surfaces.
   invariant ("no agent writes to git") is mechanically true, not
   policy-true.
 - The broker socket lives in `${XDG_RUNTIME_DIR}` (host-volatile,
-  per-user, mode 0600) — no concerns about world-readable socket
+  per-user, mode 0600) - no concerns about world-readable socket
   paths or socket persistence across reboots.
 - The hash-fingerprint contract (W2 redesign) keeps the
   round-trip-equivalence acceptance gate exercisable by an agent
@@ -293,7 +293,7 @@ unix-socket + SO_PEERCRED design has neither of those surfaces.
   used by multiple engineers' aho instances), the upstream provider
   must mint per-engineer credentials or the engineers coordinate
   out-of-band. aho does not solve this and does not need to.
-- The W1 incident (F-0.2.17-W1-003) burned one Telegram bot token —
+- The W1 incident (F-0.2.17-W1-003) burned one Telegram bot token -
   operator-side rotation is the hard gate for closure. Drafter-side
   process gotcha (any acceptance gate surfacing decrypted secrets to
   agent stdout violates Pillar 11) is documented here as
@@ -418,29 +418,29 @@ following become true:
 ## References
 
 - `artifacts/adrs/0007-containerization-architecture.md` §Secrets
-  model — the *what* (host-side, never in image); this ADR fixes
+  model - the *what* (host-side, never in image); this ADR fixes
   the *how*.
 - `artifacts/adrs/0007-containerization-architecture.md` §Council
-  roles — describes the in-container model fleet that consumes the
+  roles - describes the in-container model fleet that consumes the
   broker for project secrets when needed.
-- `artifacts/iterations/0.2.17/W1-plan-doc.md` line 63 — the
+- `artifacts/iterations/0.2.17/W1-plan-doc.md` line 63 - the
   plan-doc design defect that surfaced as F-0.2.17-W1-003 (the
   drafter-side gotcha on agent-stdout-surfacing-secret-values).
 - `artifacts/iterations/0.2.17/acceptance/W1.json` (sha256
   `e4d076eec6c1e703635e9befb98bc46c7bf171c7fec3a4c3f64161ec60725a6e`)
-  D3 evidence block — gates 1–4 pass, gate 5 operator-pending at W1
+  D3 evidence block - gates 1–4 pass, gate 5 operator-pending at W1
   close.
 - `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md`
-  F-0.2.17-W1-003 entry — operator-side token rotation as
+  F-0.2.17-W1-003 entry - operator-side token rotation as
   pre-0.3.x hard gate.
 - `artifacts/harness/base.md` §Pillar 11 ("the human holds the keys")
-  — binding constraint on the boundary.
-- `src/aho/host/secrets_broker.py` — host-side broker implementation
+  - binding constraint on the boundary.
+- `src/aho/host/secrets_broker.py` - host-side broker implementation
   (W1 D3 close sha
   `4cff78274f587e4781663f0755407a4eb8b4a96d839c8a481bdc5273d6171019`).
-- `src/aho/secrets_client.py` — container-side client (W1 D3 close
+- `src/aho/secrets_client.py` - container-side client (W1 D3 close
   sha
   `e9b305f7db831a267fd8a013185ae2549a1b6cc88cdd6b4fe0f5327043f5a04e`).
-- `src/aho/host/run_container.py` — wrapper that registers the
+- `src/aho/host/run_container.py` - wrapper that registers the
   calling UID before invoking `podman run` (W1 D3 close sha
   `036a267f43772f2da2c5995b0d5c233d8af319fca90505ae254b9963b6856bfd`).

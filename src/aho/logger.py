@@ -17,7 +17,7 @@ from pathlib import Path
 
 from aho.paths import find_project_root, get_iterations_dir, get_data_dir
 
-# OTEL dual emitter — always-on by default (0.2.1). Opt-out via AHO_OTEL_DISABLED=1.
+# OTEL dual emitter - always-on by default (0.2.1). Opt-out via AHO_OTEL_DISABLED=1.
 # JSONL stays authoritative. OTEL is additive.
 _otel_tracer = None
 _otel_disabled = os.environ.get("AHO_OTEL_DISABLED") == "1"
@@ -29,13 +29,23 @@ if not _otel_disabled:
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
         from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 
+        # Endpoint is env-driven (OpenTelemetry SDK standard var) so the same
+        # build emits to a local collector, a central aggregator, or nothing,
+        # per deployment config. Falls back to the historical localhost gRPC
+        # endpoint when unset, preserving prior single-host behavior.
+        _otlp_endpoint = os.environ.get(
+            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:4317"
+        )
+        # insecure transport unless the endpoint is https (TLS-terminated
+        # aggregator) - the SDK reads OTEL_EXPORTER_OTLP_HEADERS itself for auth.
+        _otlp_insecure = not _otlp_endpoint.lower().startswith("https://")
         provider = TracerProvider()
-        exporter = OTLPSpanExporter(endpoint="http://127.0.0.1:4317", insecure=True)
+        exporter = OTLPSpanExporter(endpoint=_otlp_endpoint, insecure=_otlp_insecure)
         provider.add_span_processor(BatchSpanProcessor(exporter))
         trace.set_tracer_provider(provider)
         _otel_tracer = trace.get_tracer("aho", "0.2.11")
     except Exception as _otel_err:
-        # Silently fall back — collector may not be running
+        # Silently fall back - collector may not be running
         _otel_tracer = None
 
 
@@ -290,7 +300,7 @@ def log_workstream_complete(workstream_id, status, summary):
         # Prepare entry
         ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         status_tag = status.upper()
-        entry = f"\n### {workstream_id} — {status_tag}\n\n- {summary}\n- Completed: {ts}\n"
+        entry = f"\n### {workstream_id} - {status_tag}\n\n- {summary}\n- Completed: {ts}\n"
 
         if build_log_path.exists():
             with open(build_log_path, 'a') as f:
@@ -340,7 +350,7 @@ def log_event(event_type, source_agent="", target="", action="",
     with open(LOG_PATH, 'a') as f:
         f.write(json.dumps(event) + '\n')
 
-    # OTEL span emission — additive, never load-bearing
+    # OTEL span emission - additive, never load-bearing
     if _otel_tracer is not None:
         try:
             with _otel_tracer.start_as_current_span(event_type) as span:

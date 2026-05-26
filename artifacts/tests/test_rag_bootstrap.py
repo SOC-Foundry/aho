@@ -1,4 +1,4 @@
-"""test_rag_bootstrap.py — W1 D7 of 0.3.1.
+"""test_rag_bootstrap.py - W1 D7 of 0.3.1.
 
 Tests aho.rag.bootstrap:
 - discover_canonical_artifacts returns non-empty set
@@ -59,12 +59,12 @@ def test_idempotent_collection_count(bootstrap_module):
     the idempotency property only.
     """
     if os.environ.get("AHO_SKIP_SLOW_TESTS"):
-        pytest.skip("AHO_SKIP_SLOW_TESTS set — bootstrap is the slow path")
+        pytest.skip("AHO_SKIP_SLOW_TESTS set - bootstrap is the slow path")
     from aho.rag import collection_count
     project = os.environ.get("AHO_PROJECT", "ahomw")
     n_before = collection_count(project)
     if n_before == 0:
-        pytest.skip("collection not yet bootstrapped — run aho-rag-bootstrap first")
+        pytest.skip("collection not yet bootstrapped - run aho-rag-bootstrap first")
     # Re-run; should not change count.
     result = bootstrap_module.bootstrap(progress=False)
     assert result.mode == "execute"
@@ -82,7 +82,7 @@ def test_lookup_returns_registered_for_canonical_ids():
     from aho.council.audit_ref_lookup import lookup_references
     from aho.rag import collection_count
     if collection_count(os.environ.get("AHO_PROJECT", "ahomw")) == 0:
-        pytest.skip("collection empty — run aho-rag-bootstrap first")
+        pytest.skip("collection empty - run aho-rag-bootstrap first")
     text = "Refs: F-0.2.17-W1-003 and F-0.2.18-W2-004 and ADR-0011 and ADR-0007."
     refs = detect_references(text)
     assert len(refs) == 4

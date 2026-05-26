@@ -1,4 +1,4 @@
-# Report — aho 0.2.8
+# Report - aho 0.2.8
 
 **Generated:** 2026-04-12T00:01:37Z
 **Iteration:** 0.2.8
@@ -153,7 +153,7 @@ Artifacts: Missing artifacts: report.md |
 | mcp_canonical_registry_verify | ok | all 9 MCP packages registry-verified |
 | mcp_sources_aligned | ok | MCP sources aligned: 9 entries match |
 | pillars_present | fail | 4 errors: Design doc missing Pillar 9; Design doc missing Pillar 10; Design doc missing Pillar 11 |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-11T21:49:23.840484+00:00 < iteration start 2026-04-11T23:00:00Z |
 | run_complete | deferred | Sign-off incomplete: All 10 canonical artifacts at 0.2.8, Run report template includes "MCP Tools Invoked" section |
 | run_quality | ok | Run file passes quality gate |
@@ -194,17 +194,17 @@ From 0.2.7 Kyle's Notes:
 
 0.2.7 verified end-to-end on NZXTcos. Dashboard at http://127.0.0.1:7800/ renders all six sections with the correct trident palette and Geist typography. Component coverage matrix shows 76 ok / 0 missing / 88 total. Daemon health card visible. Recent traces showing live telegram heartbeats.
 
-The dashboard did its job in the first 60 seconds of being open: it surfaced four real findings that no prior audit, test suite, or bundle review had caught. None of these are 0.2.7 defects — they are 0.2.7 wins, because the dashboard is exactly the diagnostic that made them visible. They become 0.2.8 inputs:
+The dashboard did its job in the first 60 seconds of being open: it surfaced four real findings that no prior audit, test suite, or bundle review had caught. None of these are 0.2.7 defects - they are 0.2.7 wins, because the dashboard is exactly the diagnostic that made them visible. They become 0.2.8 inputs:
 
 1. **MCP fleet utilization gap.** The 12 "unknown" components in the coverage matrix are the entire MCP fleet (rows 76-87). The verifier does not know how to ping MCP servers because no agent code has ever talked to one. This validates the broader concern: the MCP fleet has been installed since 0.2.3 and has not been used during a single agent execution across five iterations. Declared but not exercised. 0.2.8 makes MCP-first agent behavior a primary theme.
 
-2. **components.yaml drift.** Still references mcp-server-github, mcp-server-google-drive, mcp-server-slack, and mcp-server-fetch — the four packages 0.2.4 W1 removed from bin/aho-mcp because they 404 or are deprecated. Two sources of truth that should agree have been silently drifting since 0.2.4. The dashboard surfaces the drift visually for the first time. Source-of-truth reconciliation lands in 0.2.8 W6/W7.
+2. **components.yaml drift.** Still references mcp-server-github, mcp-server-google-drive, mcp-server-slack, and mcp-server-fetch - the four packages 0.2.4 W1 removed from bin/aho-mcp because they 404 or are deprecated. Two sources of truth that should agree have been silently drifting since 0.2.4. The dashboard surfaces the drift visually for the first time. Source-of-truth reconciliation lands in 0.2.8 W6/W7.
 
-3. **harness-watcher daemon inactive.** Daemon health card shows red. The service was installed in 0.2.5 W5 and verified present in 0.2.6, but it is not currently running on NZXTcos. Root cause unknown — possibly bin/aho-systemd enables but does not start, possibly a crash. 0.2.8 W8 investigates and either fixes the installer, fixes the daemon, or removes the daemon if its purpose has been superseded.
+3. **harness-watcher daemon inactive.** Daemon health card shows red. The service was installed in 0.2.5 W5 and verified present in 0.2.6, but it is not currently running on NZXTcos. Root cause unknown - possibly bin/aho-systemd enables but does not start, possibly a crash. 0.2.8 W8 investigates and either fixes the installer, fixes the daemon, or removes the daemon if its purpose has been superseded.
 
 4. **Bundle generator drops canonical artifacts.** Discovered during bundle review: §4 Report is hollow, §12 Sidecars says "(no sidecars)" despite W2 producing components-coverage.md and W5 producing orchestrator-config.md as explicit deliverables, and ADR-044 (the four-phase cadence ADR captured during 0.2.5 W0) does not appear in §6 despite existing on disk in artifacts/adrs/. Five real artifacts are missing from this iteration's permanent record. Fix lands in 0.2.8 W10/W11.
 
-A fifth finding came from operational reality, not the dashboard: the Telegram bot @aho_run_bot is alive and receiving messages (delivery checkmarks visible) but it's send-only — no router consumes Telegram getUpdates and nothing bridges chat to openclaw's Unix socket. 0.2.8 W12 builds the inbound bridge so the harness can be operated from chat.
+A fifth finding came from operational reality, not the dashboard: the Telegram bot @aho_run_bot is alive and receiving messages (delivery checkmarks visible) but it's send-only - no router consumes Telegram getUpdates and nothing bridges chat to openclaw's Unix socket. 0.2.8 W12 builds the inbound bridge so the harness can be operated from chat.
 
 These findings vindicate ADR-044 Phase 2 (forensic bundle consumption) and extend it: the dashboard automates a chunk of Phase 2 by making state visible at a glance. ADR-044 will be updated in 0.2.8 W9 to reference the dashboard as Phase 2 tooling, not just a visibility nicety.
 

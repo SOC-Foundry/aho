@@ -1,4 +1,4 @@
-"""Assistant — general-purpose helper role."""
+"""Assistant - general-purpose helper role."""
 from aho.agents.roles.base_role import AgentRole
 
 

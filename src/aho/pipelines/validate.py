@@ -1,4 +1,4 @@
-"""Pipeline validation — `aho pipeline validate <name>`."""
+"""Pipeline validation - `aho pipeline validate <name>`."""
 from pathlib import Path
 
 from aho.pipelines.pattern import PHASE_DESCRIPTIONS

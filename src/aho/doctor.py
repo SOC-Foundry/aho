@@ -307,7 +307,7 @@ def _check_aho_daemons():
                 if svc == "aho-telegram":
                     bot_name = _get_telegram_bot_name()
                     if bot_name:
-                        results[svc] = ("ok", f"{svc} running — @{bot_name}")
+                        results[svc] = ("ok", f"{svc} running - @{bot_name}")
                     else:
                         results[svc] = ("ok", f"{svc} running")
                 else:
@@ -459,7 +459,7 @@ def _check_install_completeness():
     expected_dirs = ["bin", "harness", "registries", "agents", "secrets", "runtime"]
     missing = [d for d in expected_dirs if not (base / d).is_dir()]
     if not base.is_dir():
-        return ("warn", "~/.local/share/aho/ not found — run aho install")
+        return ("warn", "~/.local/share/aho/ not found - run aho install")
     if missing:
         return ("warn", f"missing subdirs: {', '.join(missing)}")
     return ("ok", f"all {len(expected_dirs)} install directories present")

@@ -1,16 +1,16 @@
-"""council.embed — real implementation (W2).
+"""council.embed - real implementation (W2).
 
 Calls nomic-embed-text via host Ollama. Returns a 768-dim float vector.
 Raises CouncilEmbedInputError on malformed input. Emits one OTEL span per
 call carrying model_id, tier, latency_ms, input_token_count, output_dim.
-No `stub: true` attribute — that was a W1 marker.
+No `stub: true` attribute - that was a W1 marker.
 
 Wire-up:
 - OLLAMA_BASE_URL env override; default http://localhost:11434 (host) /
-  http://host.containers.internal:11434 (container — set there via env).
+  http://host.containers.internal:11434 (container - set there via env).
 - AHO_COUNCIL_EMBED_MODEL env override; default nomic-embed-text.
 - AHO_COUNCIL_EMBED_TIMEOUT_S env override; default 120 (raised from 30
-  in 0.2.18 W0 per F-0.2.17-W6-002 — 30s was too tight under cold-start
+  in 0.2.18 W0 per F-0.2.17-W6-002 - 30s was too tight under cold-start
   + concurrent embed load on NZXTcos 8GB VRAM substrate).
 
 G083 discipline: malformed model output (missing 'embeddings' / wrong dim)
@@ -29,7 +29,7 @@ from typing import Any, Dict, List, Optional
 try:
     from opentelemetry import trace as _otel_trace
     _tracer = _otel_trace.get_tracer("aho.council.embed")
-except ImportError:  # pragma: no cover — opentelemetry is a hard dep
+except ImportError:  # pragma: no cover - opentelemetry is a hard dep
     _otel_trace = None
     _tracer = None
 
@@ -46,7 +46,7 @@ class CouncilEmbedInputError(ValueError):
 class CouncilEmbedMalformedError(RuntimeError):
     """Ollama returned a payload that doesn't match the expected shape.
 
-    Raised, never swallowed. G083 discipline applies — the embed primitive
+    Raised, never swallowed. G083 discipline applies - the embed primitive
     refuses to substitute a degraded vector.
     """
 

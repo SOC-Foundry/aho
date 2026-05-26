@@ -34,14 +34,14 @@
   "baseline_known_failures": 13,
   "baseline_new_failures": 0,
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after every src/aho/ touch",
-    "G071 — noted daemon restart needed if modules imported (postflight ran fine)",
-    "G078 — schema drift: added AgentInvolvement model to acceptance.py, updated test",
-    "G079 — no rigid numeric assertions in new code",
-    "G080 — documented Pattern C protocol in harness doc",
-    "G081 — no celebratory framing in this archive",
-    "G082 — canonical paths only (no hardcoded paths added)",
-    "G083 — no new except Exception blocks introduced, no hardcoded positive fallbacks"
+    "G070 - cleared __pycache__ after every src/aho/ touch",
+    "G071 - noted daemon restart needed if modules imported (postflight ran fine)",
+    "G078 - schema drift: added AgentInvolvement model to acceptance.py, updated test",
+    "G079 - no rigid numeric assertions in new code",
+    "G080 - documented Pattern C protocol in harness doc",
+    "G081 - no celebratory framing in this archive",
+    "G082 - canonical paths only (no hardcoded paths added)",
+    "G083 - no new except Exception blocks introduced, no hardcoded positive fallbacks"
   ],
   "audit_status": "pending_audit",
   "findings": {
@@ -74,17 +74,17 @@
       "site": "src/aho/workstream_gate.py:24",
       "rationale": "Single file (47 lines). Private function _read_proceed_awaited(). No cross-module imports of the function. Isolated except Exception: return False handler. Existing test coverage: 8 tests in artifacts/tests/test_workstream_gate.py covering _read_proceed_awaited directly. Fix scope: replace blanket except Exception with specific exceptions (json.JSONDecodeError, FileNotFoundError) and log unexpected errors. No blast radius beyond this file.",
       "alternatives_considered": [
-        "compatibility.py:38 — no test coverage",
-        "pipelines/registry.py:28 — returns hardcoded dict, slightly higher blast radius"
+        "compatibility.py:38 - no test coverage",
+        "pipelines/registry.py:28 - returns hardcoded dict, slightly higher blast radius"
       ]
     },
     "baseline_additions": {
       "added_to_baseline": 3,
       "new_total": 13,
       "entries": [
-        "test_daemon_healthy.py::test_healthy_unit_passes — DBUS unavailable in sandbox",
-        "test_gate_verbosity.py::test_run_quality_emits_checks — iteration-state dependent (no run file at start)",
-        "test_ws_fixes.py::test_planned_ws_count_reads_plan_doc — hardcoded threshold from 0.2.12 plan"
+        "test_daemon_healthy.py::test_healthy_unit_passes - DBUS unavailable in sandbox",
+        "test_gate_verbosity.py::test_run_quality_emits_checks - iteration-state dependent (no run file at start)",
+        "test_ws_fixes.py::test_planned_ws_count_reads_plan_doc - hardcoded threshold from 0.2.12 plan"
       ],
       "note": "All 3 are pre-existing state/environment dependencies, not caused by W0 code changes."
     }

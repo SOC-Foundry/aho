@@ -1,4 +1,4 @@
-# Build Log — aho 0.1.10
+# Build Log - aho 0.1.10
 
 **Start:** 2026-04-10
 **Agent:** Claude Code (claude-opus-4-6)
@@ -9,7 +9,7 @@
 
 ---
 
-## W0 — Environment Hygiene
+## W0 - Environment Hygiene
 
 **Actions:**
 - Backed up files 0.1.10 will modify to ~/dev/projects/iao.backup-pre-0.1.10/
@@ -20,14 +20,14 @@
 - Initialized manual build log
 
 **Pre-flight discrepancies:**
-- Not a git repo — git mv in plan replaced with plain mv/cp throughout
+- Not a git repo - git mv in plan replaced with plain mv/cp throughout
 - 0.1.9 files already aho-* prefixed (W1 already resolved from 0.1.9 run)
-- Checkpoint had completed_at=null for 0.1.9, last_completed_iteration was 0.1.8 — corrected to last_completed_iteration=0.1.9
-- pyproject.toml was at 0.1.8 (not 0.1.9) — bumped directly to 0.1.10
+- Checkpoint had completed_at=null for 0.1.9, last_completed_iteration was 0.1.8 - corrected to last_completed_iteration=0.1.9
+- pyproject.toml was at 0.1.8 (not 0.1.9) - bumped directly to 0.1.10
 
 ---
 
-## W1 — Rename 0.1.9 iao-prefixed files
+## W1 - Rename 0.1.9 iao-prefixed files
 
 **Actions:**
 - Verified: all 0.1.9 files already aho-* prefixed on disk (rename completed during 0.1.9 execution)
@@ -39,7 +39,7 @@
 
 ---
 
-## W2 — log_event source_agent sweep
+## W2 - log_event source_agent sweep
 
 **Actions:**
 - Found 6 sites with hardcoded "iao-cli" in src/aho/: cli.py, brave.py, firestore.py, router.py, query.py (x2)
@@ -53,12 +53,12 @@
 
 ---
 
-## W3 — OpenClaw/NemoClaw/structural-gates instrumentation audit
+## W3 - OpenClaw/NemoClaw/structural-gates instrumentation audit
 
 **Actions:**
-- Audited openclaw.py: log_event at session_start, chat, execute_code — all wired, source_agent="openclaw" ✓
-- Audited nemoclaw.py: log_event at dispatch — wired, source_agent="nemoclaw" ✓
-- Audited structural_gates.py: log_event at check_artifact, check_required_sections — wired, source_agent="structural-gates" ✓
+- Audited openclaw.py: log_event at session_start, chat, execute_code - all wired, source_agent="openclaw" ✓
+- Audited nemoclaw.py: log_event at dispatch - wired, source_agent="nemoclaw" ✓
+- Audited structural_gates.py: log_event at check_artifact, check_required_sections - wired, source_agent="structural-gates" ✓
 - Fixed scripts/smoke_instrumentation.py: ./bin/iao → ./bin/aho
 - Ran smoke_instrumentation.py: 8 events, 6 unique components
   - aho-cli, evaluator, nemoclaw, openclaw, qwen-client, structural-gates
@@ -68,7 +68,7 @@
 
 ---
 
-## W4 — Manual-build-log-first enforcement in loop.py
+## W4 - Manual-build-log-first enforcement in loop.py
 
 **Actions:**
 - Added generate_build_log_synthesis() function to src/aho/artifacts/loop.py
@@ -85,14 +85,14 @@
 
 ---
 
-## W5 — Dogfood + close
+## W5 - Dogfood + close
 
 **Actions:**
 - Verified manual build log has 5 workstream headers (W0-W4)
 - Updated .aho.json current_iteration to 0.1.10
-- Build-log synthesis: DEGENERATE — Qwen entered "Wait, checking..." loop, killed after ~5min
+- Build-log synthesis: DEGENERATE - Qwen entered "Wait, checking..." loop, killed after ~5min
   - Synthesis file not written. Manual build log is primary per ADR-042
-- Report synthesis: PASS — 715 words, generated at aho-report-0.1.10.md
+- Report synthesis: PASS - 715 words, generated at aho-report-0.1.10.md
 - Postflight: ran with expected warnings (bundle not yet gen, readme date)
 - Close: generated run report and bundle
 - Re-ran smoke_instrumentation.py to populate event log with all 6 components
@@ -109,14 +109,14 @@
 
 **Discrepancies:**
 - Build-log synthesis degenerate (Qwen "Wait, checking..." loop). Non-blocking per ADR-042.
-- pyproject.toml was at 0.1.8 not 0.1.9 going in — suggests 0.1.9 close did not bump it
+- pyproject.toml was at 0.1.8 not 0.1.9 going in - suggests 0.1.9 close did not bump it
 
 ---
 
-## W6 — Project Root Rename (conditional)
+## W6 - Project Root Rename (conditional)
 
 **Actions:**
-- All W5 verifications passed — W6 eligible
+- All W5 verifications passed - W6 eligible
 - Surfacing capability-gap interrupt for Kyle
 - Project root rename requires human action (shell session cannot rename its own cwd)
 
@@ -135,7 +135,7 @@ functions -q iao-cd; and functions --erase iao-cd
 # (Kyle to audit and update as needed)
 ```
 
-**Status:** W6 INTERRUPT — awaiting Kyle action
+**Status:** W6 INTERRUPT - awaiting Kyle action
 
 ---
 

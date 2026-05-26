@@ -1,15 +1,15 @@
-# 0.2.15 Planning Inputs — Surfaced during 0.2.14 close session
+# 0.2.15 Planning Inputs - Surfaced during 0.2.14 close session
 
 Not part of 0.2.14 acceptance archive. Material that emerged in W2 close conversation and belongs in 0.2.15 planning context.
 
 ## Fleet topology
 
 Fleet as of 0.2.14 close:
-- **A8cos** — AMD APU integrated GPU; Tier 0 (orchestration/dev, daily driver)
-- **NZXTcos** — RTX 2080 SUPER 8GB; Tier 1 (partial council)
-- **tsP3-cos** — RTX 2000 Ada 16GB; Tier 2 (live aho host, aho.run target, full council)
-- **Luke's machine** — 24GB GPU; Tier 3 (first 24GB clone, matrix headroom baseline); spec request sent to Alex
-- **Intranet GCP project** — unlimited; Tier ∞ (future cloud burst)
+- **A8cos** - AMD APU integrated GPU; Tier 0 (orchestration/dev, daily driver)
+- **NZXTcos** - RTX 2080 SUPER 8GB; Tier 1 (partial council)
+- **tsP3-cos** - RTX 2000 Ada 16GB; Tier 2 (live aho host, aho.run target, full council)
+- **Luke's machine** - 24GB GPU; Tier 3 (first 24GB clone, matrix headroom baseline); spec request sent to Alex
+- **Intranet GCP project** - unlimited; Tier ∞ (future cloud burst)
 
 Strategic decision (tentative): move daily-driver work to A8cos, dedicate tsP3-cos to aho for reproducible matrix baselines. Resource isolation during calibration phase.
 
@@ -27,9 +27,9 @@ install.fish has never been tested on fresh CachyOS. Likely hidden "already set 
 ## Multi-iteration arc: 0.2.16-0.2.18
 
 Fleet bootstrap sequencing (tentative):
-- **0.2.16** — Tiered install spec + A8cos bootstrap (Tier 0)
-- **0.2.17** — Luke's machine bootstrap (Tier 3) + matrix headroom testing
-- **0.2.18** — tsP3-cos refresh / clone bootstrap (Tier 2 production) + aho.run hosting
+- **0.2.16** - Tiered install spec + A8cos bootstrap (Tier 0)
+- **0.2.17** - Luke's machine bootstrap (Tier 3) + matrix headroom testing
+- **0.2.18** - tsP3-cos refresh / clone bootstrap (Tier 2 production) + aho.run hosting
 
 0.2.15 measurement matrix must precede fleet bootstrap so roster decisions are evidence-based before clones happen.
 

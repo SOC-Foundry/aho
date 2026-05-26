@@ -1,11 +1,11 @@
-"""Classification router — thin routing layer over the hardened dispatcher.
+"""Classification router - thin routing layer over the hardened dispatcher.
 
 0.2.15 W3: supersedes `aho.artifacts.nemotron_client.classify()`. Uses
 `/api/chat` (W2 hardened dispatcher) instead of `/api/generate`, so
 model-family chat templates are applied server-side. This improves
 classifier conformance on small models (see W3 comparison).
 
-0.2.16 W2: W3C TRACEPARENT propagation — wraps classify_task in an
+0.2.16 W2: W3C TRACEPARENT propagation - wraps classify_task in an
 `aho.route.classify` span (child of parent when TRACEPARENT is set,
 root otherwise).
 
@@ -43,7 +43,7 @@ DEFAULT_CLASSIFIER_MODEL = "nemotron-mini:4b"
 DEFAULT_TIMEOUT = 30
 DEFAULT_NUM_CTX = 2048
 
-# Span attribute truncation. Trace payloads should be lean — input text is
+# Span attribute truncation. Trace payloads should be lean - input text is
 # kept only as a debug breadcrumb, not a full record of classifier input.
 INPUT_EXCERPT_MAX_CHARS = 200
 

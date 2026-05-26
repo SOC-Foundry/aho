@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/server-memory.fish — CLI health check for @modelcontextprotocol/server-memory
+# mcp-smoke/server-memory.fish - CLI health check for @modelcontextprotocol/server-memory
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 
 set -l server_name "server-memory"

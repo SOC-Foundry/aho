@@ -46,50 +46,50 @@ graph BT
 
 ### In scope
 
-- **4 chat LLMs via Ollama** — Qwen 3.5:9B, Llama 3.2:3B, GLM-4.6V-Flash-9B, Nemotron-mini:4b
-- **Fair re-test of GLM and Nemotron** on fixed dispatcher (0.2.13 W2.5 findings were measured on broken substrate — re-test with clean-slate methodology)
-- **Ollama Tier 1 capability audit** — requirements list with per-requirement probe (Framing A: test-based evaluation)
-- **Dispatcher protocol hardening** — stop tokens per model family, error handling, retry/backoff, timeouts, model-swap handling
+- **4 chat LLMs via Ollama** - Qwen 3.5:9B, Llama 3.2:3B, GLM-4.6V-Flash-9B, Nemotron-mini:4b
+- **Fair re-test of GLM and Nemotron** on fixed dispatcher (0.2.13 W2.5 findings were measured on broken substrate - re-test with clean-slate methodology)
+- **Ollama Tier 1 capability audit** - requirements list with per-requirement probe (Framing A: test-based evaluation)
+- **Dispatcher protocol hardening** - stop tokens per model family, error handling, retry/backoff, timeouts, model-swap handling
 - **Nemoclaw re-vetting on fixed dispatcher** with measured comparison to direct Ollama
-- **ADR for Tier 1 Dispatcher Choice** — direct Ollama / Nemoclaw / thin custom wrapper (evidence-based)
-- **Cross-model cascade integration test** — Pillar 7 separation attempt, compare to W1.5 Qwen-solo baseline
+- **ADR for Tier 1 Dispatcher Choice** - direct Ollama / Nemoclaw / thin custom wrapper (evidence-based)
+- **Cross-model cascade integration test** - Pillar 7 separation attempt, compare to W1.5 Qwen-solo baseline
 - **Tier 1 install.fish** definition finalized based on validated evidence
 
 ### Out of scope
 
-- **nomic-embed-text validation** — deferred to 0.2.16 or 0.2.17 with ChromaDB RAG integration
-- **Gemma 2 9B, DeepSeek-Coder-V2, Mistral-Nemo** — Tier 2/3 roster, require >8GB VRAM, land with Luke's machine (24GB) or P3 clone installs in 0.2.17+
-- **Auditor role-prompt redesign** — carried forward from 0.2.14, deferred to later iteration
-- **Capability-routed vs role-assigned cascade architectural decision** — carried forward, not forced in 0.2.15
-- **Executor-as-outer-loop-judge (Critic/Arbiter)** — carried forward, 0.2.16 candidate
-- **OpenClaw disposition decision** — Qwen wrapper, cosmetic, carried forward
+- **nomic-embed-text validation** - deferred to 0.2.16 or 0.2.17 with ChromaDB RAG integration
+- **Gemma 2 9B, DeepSeek-Coder-V2, Mistral-Nemo** - Tier 2/3 roster, require >8GB VRAM, land with Luke's machine (24GB) or P3 clone installs in 0.2.17+
+- **Auditor role-prompt redesign** - carried forward from 0.2.14, deferred to later iteration
+- **Capability-routed vs role-assigned cascade architectural decision** - carried forward, not forced in 0.2.15
+- **Executor-as-outer-loop-judge (Critic/Arbiter)** - carried forward, 0.2.16 candidate
+- **OpenClaw disposition decision** - Qwen wrapper, cosmetic, carried forward
 
 ---
 
 ## Workstreams
 
-### W0 — Setup + Tier 1 roster re-vetting
+### W0 - Setup + Tier 1 roster re-vetting
 
 Version bump, scaffolding, checkpoint init. Integrate Llama 3.2 3B into dispatcher (first real integration, currently disk-resident only). Fair re-vetting of all 4 chat LLMs on fixed dispatcher (`/api/chat`, `num_ctx=32768`, stop tokens per model family):
 
-- Qwen 3.5:9B — regression check (proven in 0.2.14 W1.5, verify still clean)
-- Llama 3.2:3B — full vetting (identity probe, structured output, Llama 3.x chat template, stop tokens `<|eot_id|>`, `<|end_of_text|>`)
-- GLM-4.6V-Flash-9B — full re-vet (clean slate). Structured JSON output, Chinese-drift check, template honoring. 0.2.13 W2.5 finding (80% timeout, wrong-schema JSON) was measured on broken dispatcher — re-test produces evidence for retain/remove decision.
-- Nemotron-mini:4b — full re-vet. Classify task specifically (80% feature-bias was the W2.5 failure mode). 0.2.13 W2.5 finding measured on broken dispatcher — re-test produces evidence.
+- Qwen 3.5:9B - regression check (proven in 0.2.14 W1.5, verify still clean)
+- Llama 3.2:3B - full vetting (identity probe, structured output, Llama 3.x chat template, stop tokens `<|eot_id|>`, `<|end_of_text|>`)
+- GLM-4.6V-Flash-9B - full re-vet (clean slate). Structured JSON output, Chinese-drift check, template honoring. 0.2.13 W2.5 finding (80% timeout, wrong-schema JSON) was measured on broken dispatcher - re-test produces evidence for retain/remove decision.
+- Nemotron-mini:4b - full re-vet. Classify task specifically (80% feature-bias was the W2.5 failure mode). 0.2.13 W2.5 finding measured on broken dispatcher - re-test produces evidence.
 
 **Gate:** All 4 LLMs have explicit status (`operational` / `partial` / `compromised`) with fixed-dispatcher evidence. No `unknown` at W0 close.
 
 **Deliverable:** `tier1-roster-validation-0.2.15.md`
 
-### W1 — Ollama Tier 1 capability audit
+### W1 - Ollama Tier 1 capability audit
 
 Define Tier 1 requirement list for Ollama as the control plane. Probe each requirement across all 4 chat LLMs. Classify per requirement.
 
 Requirements (target ~10-12):
 
 - Concurrent model awareness (`/api/ps` accuracy)
-- LRU eviction predictability under VRAM pressure (critical — 4 chat LLMs together are 19.3GB, won't fit in 8GB simultaneously)
-- Explicit unload API (`keep_alive: 0` trick or equivalent) — verify per model
+- LRU eviction predictability under VRAM pressure (critical - 4 chat LLMs together are 19.3GB, won't fit in 8GB simultaneously)
+- Explicit unload API (`keep_alive: 0` trick or equivalent) - verify per model
 - Request queuing behavior when busy
 - Multi-model routing by name for all 4 LLMs
 - Context preservation / leak across concurrent requests
@@ -98,13 +98,13 @@ Requirements (target ~10-12):
 - Model-swap latency
 - Stop token acceptance variance across model families
 - Chat template handling across Qwen / Llama 3.x / GLM / Nemotron families
-- Embedding endpoint sanity (doesn't interfere with chat — nomic validation deferred)
+- Embedding endpoint sanity (doesn't interfere with chat - nomic validation deferred)
 
 **Gate:** Every requirement has a pass / partial / fail classification with evidence.
 
-**Deliverable:** `ollama-tier1-fitness-0.2.15.md` — goes / no-goes / workarounds
+**Deliverable:** `ollama-tier1-fitness-0.2.15.md` - goes / no-goes / workarounds
 
-### W2 — Dispatcher protocol hardening
+### W2 - Dispatcher protocol hardening
 
 Harden `src/aho/pipeline/dispatcher.py` for multi-model Tier 1 use:
 
@@ -112,22 +112,22 @@ Harden `src/aho/pipeline/dispatcher.py` for multi-model Tier 1 use:
 - Error handling: malformed response per model, connection loss, timeout, partial response
 - Retry logic + backoff design
 - Per-stage timeout enforcement with multi-model cascade
-- Model-swap graceful handling (Qwen loaded, Llama needs to run — wait or fail cleanly)
+- Model-swap graceful handling (Qwen loaded, Llama needs to run - wait or fail cleanly)
 - Unit tests for each hardening concern
 
 **Gate:** Dispatcher handles all 4 LLMs with model-family-appropriate configuration, graceful failure modes, measurable timeout / retry behavior.
 
 **Deliverable:** Hardened `dispatcher.py`, expanded `test_dispatcher_chat_api.py` or new test file
 
-### W3 — Nemoclaw re-vetting + ADR dispatcher choice
+### W3 - Nemoclaw re-vetting + ADR dispatcher choice
 
-Nemoclaw on fixed dispatcher: explicit routing test with all 4 LLMs. Multi-model routing via Nemoclaw tested. Latency comparison — direct Ollama HTTP vs Nemoclaw for equivalent operations. Evidence-based decision.
+Nemoclaw on fixed dispatcher: explicit routing test with all 4 LLMs. Multi-model routing via Nemoclaw tested. Latency comparison - direct Ollama HTTP vs Nemoclaw for equivalent operations. Evidence-based decision.
 
-**Gate:** ADR published — direct Ollama / Nemoclaw wrapper / thin custom wrapper — with measured rationale. Pillar 4 (wrappers are tool surface) examined with evidence.
+**Gate:** ADR published - direct Ollama / Nemoclaw wrapper / thin custom wrapper - with measured rationale. Pillar 4 (wrappers are tool surface) examined with evidence.
 
-**Deliverable:** `artifacts/adrs/adr-NNN-tier1-dispatcher-choice.md` (ADR number confirmed during W3 via ADR index read — no fabrication)
+**Deliverable:** `artifacts/adrs/adr-NNN-tier1-dispatcher-choice.md` (ADR number confirmed during W3 via ADR index read - no fabrication)
 
-### W4 — Integration + close
+### W4 - Integration + close
 
 Full cascade run with cross-model role assignment. Specific assignment depends on W0 re-test outcomes:
 
@@ -136,7 +136,7 @@ Full cascade run with cross-model role assignment. Specific assignment depends o
 - Auditor = GLM or Nemotron if operational after W0; fall back to Qwen if both still compromised
 - Assessor = Qwen or different operational model
 
-Compare to 0.2.14 W1.5 Qwen-solo baseline — does cross-model role assignment reduce auditor rubber-stamp pattern, produce different output, introduce new failure modes.
+Compare to 0.2.14 W1.5 Qwen-solo baseline - does cross-model role assignment reduce auditor rubber-stamp pattern, produce different output, introduce new failure modes.
 
 install.fish Tier 1 definition finalized based on W0–W3 evidence. Retrospective, carry-forwards, bundle, sign-off sheet.
 
@@ -156,7 +156,7 @@ install.fish Tier 1 definition finalized based on W0–W3 evidence. Retrospectiv
 
 **If exactly one of GLM/Nemotron passes:** Whichever passes fills an Auditor-candidate slot; other stays removed; roster is 3 operational.
 
-All four outcomes are acceptable iteration outcomes — what changes is evidence quality and downstream iteration plan.
+All four outcomes are acceptable iteration outcomes - what changes is evidence quality and downstream iteration plan.
 
 ---
 
@@ -169,8 +169,8 @@ All four outcomes are acceptable iteration outcomes — what changes is evidence
 - Audit archive overwrites forbidden
 - Sign-off boxes are Kyle's (Pillar 11)
 - No git operations by agents (Pillar 11)
-- Cross-project contamination vigilance — version labels, pillar lists, ADR numbers, bundle sections must verify against aho canonical references before use
+- Cross-project contamination vigilance - version labels, pillar lists, ADR numbers, bundle sections must verify against aho canonical references before use
 
 ---
 
-*Design doc 0.2.15. Pillars and trident copied verbatim from README.md (aho canonical). ADR number for W3 deliverable determined at W3 execution time from ADR index — not pre-fabricated here.*
+*Design doc 0.2.15. Pillars and trident copied verbatim from README.md (aho canonical). ADR number for W3 deliverable determined at W3 execution time from ADR index - not pre-fabricated here.*

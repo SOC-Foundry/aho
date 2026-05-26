@@ -31,7 +31,7 @@ disposition field reads `surface_to_drafter`; drafter arbitration
 is recorded only in the acceptance archive's D9 / D11 evidence
 sections and in the close-note section below. Per Adversarial
 Authorship sealed-archive convention, audit archives are not
-amended after emit — corrections and arbitrations land in
+amended after emit - corrections and arbitrations land in
 acceptance evidence and close-note prose, never in the audit JSON.
 
 ## D9 / D10 / D11 disposition section
@@ -39,46 +39,46 @@ acceptance evidence and close-note prose, never in the audit JSON.
 Three audit-replay / self-audit dispositions, each requiring
 drafter arbitration.
 
-- **D9 — W0 audit replay (llama vs Gemini sealed audit/W0.json).**
+- **D9 - W0 audit replay (llama vs Gemini sealed audit/W0.json).**
   Llama disposition: `halt` at confidence 0.99, one finding plus
   a novel finding ("F-W0-004 not corroborated"). Gemini sealed
   disposition: `pass_with_findings` (3 findings AF001–AF003).
   Topical overlap: llama's primary finding overlaps with
-  Gemini's AF003 via keywords [0007, deferral, passthrough] —
+  Gemini's AF003 via keywords [0007, deferral, passthrough] -
   same B2.3 GPU passthrough deferral that Gemini sealed as
   acceptable per ADR 0007 amendment (hybrid mode is the planned
   workaround). Drafter arbitration: stylistic disagreement
   (severity inflation on B2.3 deferral overlap) plus a novel
   false-positive on F-W0-004 (an ID that IS sealed and
   registered in the 0.2.16 W4 surface). Both axes consolidated
-  with D11 finding as F-0.2.17-W2-006 — the auditor
+  with D11 finding as F-0.2.17-W2-006 - the auditor
   reference-resolution gap is the root cause of both
   disagreements; W3 closes the gap. No invalidation of the
   sealed Gemini W0 disposition; Gemini's `pass_with_findings`
   stands.
 
-- **D10 — W1 audit replay (llama vs Gemini sealed audit/W1.json).**
+- **D10 - W1 audit replay (llama vs Gemini sealed audit/W1.json).**
   Llama disposition: `surface_to_drafter` at confidence 0.99,
   one finding citing F-0.2.17-W1-003 (the sealed Pillar 11
   incident). Gemini sealed disposition: `pass_with_findings`
   (3 findings AF-0.2.17-W1-001 through 003). Topical overlap:
   llama's finding overlaps with Gemini's AF-0.2.17-W1-001 via
-  keywords [secrets, stdout, test] — same Pillar 11 friction
+  keywords [secrets, stdout, test] - same Pillar 11 friction
   event. Disposition axis agrees (`surface_to_drafter` ↔
   `pass_with_findings`). Drafter arbitration: framing
-  difference only — Gemini uses architectural framing ("Pillar
+  difference only - Gemini uses architectural framing ("Pillar
   11 friction"), llama uses symptom-level description ("aho
   secrets-test prints decrypted value to stdout"). Same
   finding, different vocabulary. Stylistic. No new
   carry-forward; no invalidation of sealed disposition.
 
-- **D11 — W2 self-audit (llama against the W2 acceptance
+- **D11 - W2 self-audit (llama against the W2 acceptance
   archive itself).** Llama disposition:
   `surface_to_drafter` at confidence 0.90, one finding flagging
   the reference to F-0.2.17-W1-003 in the W2 acceptance archive
   as "the ID does not look real (matches naming conventions)" at
   severity critical. F-0.2.17-W1-003 is in fact the sealed
-  Pillar 11 ID from W1 close — referenced multiple times across
+  Pillar 11 ID from W1 close - referenced multiple times across
   acceptance, audit, and carry-forwards artifacts. Drafter
   arbitration: false-positive on small-model ID-validation
   reasoning. Llama at audit time has no tool-access to the
@@ -86,10 +86,10 @@ drafter arbitration.
   pattern-matches reference IDs by syntax in isolation.
   Consolidated with D9 novel finding as F-0.2.17-W2-006. The
   pattern is: D9 W0 replay flagged F-W0-004 as not corroborated
-  (false positive — F-W0-004 is real, registered in 0.2.16 W4);
+  (false positive - F-W0-004 is real, registered in 0.2.16 W4);
   D11 self-audit flagged F-0.2.17-W1-003 as not real-looking
-  (false positive — same ID is sealed in W1 audit chain). Same
-  root cause. **W2 closes pass_with_findings — the
+  (false positive - same ID is sealed in W1 audit chain). Same
+  root cause. **W2 closes pass_with_findings - the
   auditor-capability gap is W3 work, not a W2-substance
   defect.** The gap-net activated as designed; the disposition
   surfaced to drafter exactly as the architecture specifies.
@@ -110,7 +110,7 @@ entry text mirrors the W2.json `carry_forwards_added` field and
 matches the canonical bullet shape used by F-0.2.17-W0-001
 through F-0.2.17-W1-003 in the same file.
 
-- **F-0.2.17-W2-001 — ChromaDB host-side dev fallback path
+- **F-0.2.17-W2-001 - ChromaDB host-side dev fallback path
   documentation.** Severity: info. Source: 0.2.17 W2 D1
   implementation experience. Summary: "AHO_CHROMA_DIR defaults
   to /var/lib/aho/chroma; on hosts without operator-side sudo to
@@ -121,7 +121,7 @@ through F-0.2.17-W1-003 in the same file.
   amendment at W4 retrospective. No code change needed." Target:
   0.2.17 W4.
 
-- **F-0.2.17-W2-002 — nomic-embed-text context-length cap
+- **F-0.2.17-W2-002 - nomic-embed-text context-length cap
   surfaces as HTTP 400.** Severity: info. Source: 0.2.17 W2 D1
   implementation experience. Summary: "nomic-embed-text in
   Ollama 0.20 returns HTTP 400 'the input length exceeds the
@@ -132,7 +132,7 @@ through F-0.2.17-W1-003 in the same file.
   docstring; future fine-grained chunking work is W3+ scope."
   Target: 0.3.x.
 
-- **F-0.2.17-W2-003 — Llama3.2:3b mirrors source-artifact
+- **F-0.2.17-W2-003 - Llama3.2:3b mirrors source-artifact
   severity vocabulary.** Severity: info. Source: 0.2.17 W2 D10
   W1 replay run. Summary: "Llama3.2:3b prefers severity
   vocabulary present in the audit target (e.g. 'moderate' from
@@ -147,7 +147,7 @@ through F-0.2.17-W1-003 in the same file.
   the synonym set, that's a real schema gap to surface."
   Target: 0.3.x.
 
-- **F-0.2.17-W2-006 — Auditor reference-resolution gap (llama
+- **F-0.2.17-W2-006 - Auditor reference-resolution gap (llama
   systematically flags carry-forward / ADR / gotcha IDs as
   "not real-looking" without registry access at audit time).**
   Severity: important. Source: 0.2.17 W2 D9 (W0 replay) + D11
@@ -164,13 +164,13 @@ through F-0.2.17-W1-003 in the same file.
   ChromaDB query before flagging reference-resolution issues.
   This is the RAG-as-context-feed for auditor seat from
   architecture artifact §Component decomposition (aho.rag feeds
-  context to triage and audit)." Target: 0.2.17 W3 — RAG-audit
+  context to triage and audit)." Target: 0.2.17 W3 - RAG-audit
   integration during materiality / claw3d work. Audit
   traceability: surfaced in W2 self-audit disposition
   (`audit/W2.json` sha `b9c2f1bb…`); documented in this close
   note as drafter arbitration of D9 / D11 findings.
 
-The carry-forwards file update is **complete in this turn** —
+The carry-forwards file update is **complete in this turn** -
 all four entries appended via `aho.gap_carry_forward_writer`
 (D7) before close-note authoring, since the W2 plan executor
 runs both the writer and this prose. Operator review of the
@@ -187,7 +187,7 @@ this close note.
   -006) → **36 total** post-update (cross-iteration tracking
   convention via permissive header regex).
 - Strict-header tracker (the `aho.gap_carry_forward_writer`
-  regex `^- \*\*[A-Za-z0-9.\-_/]+ — `): 25 → **29** post-update.
+  regex `^- \*\*[A-Za-z0-9.\-_/]+ - `): 25 → **29** post-update.
   The +4 delta is consistent across both conventions; the
   baseline drift between conventions (28-vs-25 and 32-vs-29)
   reflects multi-word IDs in older entries that the strict
@@ -224,7 +224,7 @@ carry-forward (F-0.2.17-W2-006) with a concrete W3 fix.
 F-0.2.17-W2-006 captures the lesson: small-model auditor at
 base tier cannot reason about registered identifiers without a
 registry handle. The W2 architecture explicitly anticipated
-this — `aho.rag.query` exists as the substrate primitive (D1).
+this - `aho.rag.query` exists as the substrate primitive (D1).
 W3 wires it into the auditor prompt-construction path. The
 W2-to-W3 handoff is therefore: substrate exists (W2 D1 RAG +
 138 chunks of indexed iteration context), wire-up pending (W3
@@ -236,7 +236,7 @@ reference-resolution false positives go away.
 (claude-web) perspective: the Adversarial Authorship at
 base-tier protocol works as the architecture specifies. The
 gap-net activates exactly when the architecture says it
-should — when the auditor surfaces something it cannot
+should - when the auditor surfaces something it cannot
 fully resolve, the drafter arbitrates with the broader
 context the auditor lacks. This is the design intent of the
 two-tier structural-vs-architectural separation, not a
@@ -264,7 +264,7 @@ Status check at W2 close:
   **operator_action_pending**.
 - Outstanding pre-0.3.x gates: F-0.2.17-W1-003 (token
   rotation), F-0.2.17-W1-001 (secrets-test subcommand still in
-  rc1 image — folded into W4 retrospective per W1 close).
+  rc1 image - folded into W4 retrospective per W1 close).
 
 ## State at close
 
@@ -307,14 +307,14 @@ Status check at W2 close:
   `result: "pass"` with evidence: no git/gh/push/commit/PR/merge
   primitive invoked across the executor session; all writes
   targeted `src/aho/`, `artifacts/iterations/0.2.17/`,
-  `artifacts/tests/` — no `.git/`, no `~/.config/`, no `/etc/`,
+  `artifacts/tests/` - no `.git/`, no `~/.config/`, no `/etc/`,
   no `.ssh/` writes; F-0.2.17-W1-003 token rotation explicitly
   NOT performed (surfaced as continuing reminder under
   `outstanding_pre_03x_gates`).
 - **Auditor (llama3.2:3b in-container):** zero git operations.
   In-container model has no shell, no filesystem write
   capability outside the audit primitive's controlled emitter
-  path. Audit archive itself is JSON-only — no executable
+  path. Audit archive itself is JSON-only - no executable
   artifacts.
 - **Materiality counters:** four counters emit correctly
   (D12 verification probe). `caught_by_llama` increments per
@@ -342,5 +342,5 @@ Date: 2026-05-03T14:04:46Z
 Disposition acknowledged: pass_with_findings (drafter-arbitrated from llama self-audit surface_to_drafter)
 Auditor-seat transition acknowledged: Gemini exited W1 close; llama3.2 first deployment in W2; capability gap captured as F-0.2.17-W2-006, W3 fix
 Carry-forwards acknowledged: F-0.2.17-W2-001, F-0.2.17-W2-002, F-0.2.17-W2-003, F-0.2.17-W2-006
-Pre-0.3.x hard gate: rotate ahomw:telegram_bot_token (F-0.2.17-W1-003 remediation) — surfaced at W2 close per recurring protocol
+Pre-0.3.x hard gate: rotate ahomw:telegram_bot_token (F-0.2.17-W1-003 remediation) - surfaced at W2 close per recurring protocol
 W3 launch gate: lifted

@@ -1,4 +1,4 @@
-"""W4 D7 — self-audit with stabilized auditor.
+"""W4 D7 - self-audit with stabilized auditor.
 
 Runs `aho.council.audit` against the W4 acceptance archive itself with
 rag_enrichment=True. The W4 D1 deterministic post-hoc filter is now wired
@@ -60,7 +60,7 @@ def main() -> int:
         result = council_audit(
             artifact_text,
             contract=(
-                "W4 acceptance archive — deterministic post-hoc filter on"
+                "W4 acceptance archive - deterministic post-hoc filter on"
                 " RAG-aware audit findings + claw3d brick rendering +"
                 " materiality dashboard surfaces. Auditor must spot-check"
                 " whether deliverables D1–D6 actually correspond to module"

@@ -1,4 +1,4 @@
-# aho Design — 0.2.11
+# aho Design - 0.2.11
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 11
 **Theme:** Verifiable acceptance framework + gate reconciliation + persona 3 end-to-end validation + AUR installer abstraction + tech-legacy-debt audit
@@ -15,7 +15,7 @@
 
 0.2.11 fixes this structurally. The verifiable acceptance framework (W1-W2) replaces prose claims with AcceptanceCheck primitives (command + expected pattern/exit). AUR installer abstraction (W15-W16) becomes the first real test of the new framework. Persona 3 validation (W9-W14) exercises the install surface 0.2.10 built, using the 4 tasks from 0.2.9 W8 that failed when no entry point existed.
 
-Event log (87.83MB, hit GitHub >50MB warning on 0.2.10 push) relocates to `~/.local/share/aho/events/` matching the pattern 0.2.10 established for traces/chromadb/secrets. Tech-legacy-debt sweep (W18) audits all components built to reach current state but no longer needed — shims, unused modules, stale harness files, orphaned tests. Audit-only in 0.2.11; prunes execute in 0.2.12 after persona 2 validation.
+Event log (87.83MB, hit GitHub >50MB warning on 0.2.10 push) relocates to `~/.local/share/aho/events/` matching the pattern 0.2.10 established for traces/chromadb/secrets. Tech-legacy-debt sweep (W18) audits all components built to reach current state but no longer needed - shims, unused modules, stale harness files, orphaned tests. Audit-only in 0.2.11; prunes execute in 0.2.12 after persona 2 validation.
 
 ## §2 Goals
 
@@ -28,7 +28,7 @@ Event log (87.83MB, hit GitHub >50MB warning on 0.2.10 push) relocates to `~/.lo
 7. Retrofit otelcol-contrib + jaeger to AUR pattern, aur-packages.txt becomes source of truth
 8. Harden Openclaw Errno 32 broken pipe + Errno 104 connection reset (0.2.10 KT carry)
 9. Audit tech-legacy-debt: shims, unused modules, stale harness, orphaned tests, deprecated patterns
-10. Ship 0.2.11 with zero overstated-completion risk — every acceptance check executable
+10. Ship 0.2.11 with zero overstated-completion risk - every acceptance check executable
 
 ## §3 Trident
 
@@ -117,11 +117,11 @@ None. All questions resolved in chat pre-iteration:
 
 ## §9 Risks
 
-1. **W1-W2 framework scope creep** — AcceptanceCheck primitive touches event schema, CLI, report generation. Mitigation: MVP only (command + expected pattern/exit), richer assertions deferred to 0.2.12.
-2. **Persona 3 fixture drift** — reportlab PDF generation may differ across sessions. Mitigation: fixture hash in harness, regenerate on mismatch.
-3. **AUR keyring still corrupted on NZXTcos** — may block W16 retrofit. Mitigation: aur_or_binary() helper's binary fallback is the path; W16 succeeds via fallback with AcceptanceCheck asserting "installed, method=binary or method=aur".
-4. **Tech-debt sweep false positives** — audit may flag components that persona 2 silently needs. Mitigation: W18 audit-only; confidence tags (safe-delete/needs-verification/keep-with-justification); 0.2.12 executes only after persona 2 validation.
-5. **Three-session coordination** — context rot across sessions. Mitigation: session-boundary KT bundle generation; checkpoint + event log persistence.
+1. **W1-W2 framework scope creep** - AcceptanceCheck primitive touches event schema, CLI, report generation. Mitigation: MVP only (command + expected pattern/exit), richer assertions deferred to 0.2.12.
+2. **Persona 3 fixture drift** - reportlab PDF generation may differ across sessions. Mitigation: fixture hash in harness, regenerate on mismatch.
+3. **AUR keyring still corrupted on NZXTcos** - may block W16 retrofit. Mitigation: aur_or_binary() helper's binary fallback is the path; W16 succeeds via fallback with AcceptanceCheck asserting "installed, method=binary or method=aur".
+4. **Tech-debt sweep false positives** - audit may flag components that persona 2 silently needs. Mitigation: W18 audit-only; confidence tags (safe-delete/needs-verification/keep-with-justification); 0.2.12 executes only after persona 2 validation.
+5. **Three-session coordination** - context rot across sessions. Mitigation: session-boundary KT bundle generation; checkpoint + event log persistence.
 
 ## §10 Success Criteria
 

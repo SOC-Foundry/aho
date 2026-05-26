@@ -1,7 +1,7 @@
-# Forensic Patch Report — 0.2.10
+# Forensic Patch Report - 0.2.10
 
 **Date:** 2026-04-12
-**Trigger:** Post-close forensic by Kyle — 3 unverified claims + repo hygiene
+**Trigger:** Post-close forensic by Kyle - 3 unverified claims + repo hygiene
 **Scope:** Verification only. No version bump. No postflight re-run.
 
 ---
@@ -36,7 +36,7 @@ srwxr-xr-x 1 kthompson kthompson 0 Apr 11 22:35 /run/user/1000/openclaw.sock
 
 ```
 $ journalctl --user -u aho-otel-collector --since "22:45" -n 50 | grep -iE 'jaeger|refused|error|warn'
-(no output — zero errors since 22:45)
+(no output - zero errors since 22:45)
 
 $ cat ~/.config/aho/otel-collector.yaml | grep -A5 -iE 'exporter|jaeger'
 exporters:
@@ -80,7 +80,7 @@ $ python -m aho.cli doctor deep | grep -E "flutter|dart|install_comp"
 
 **Result:** VERIFIED. `deep` subcommand registered, all three SDK checks execute and pass. No fix needed.
 
-**Note:** `aho doctor deep` exits with FAIL overall due to pre-existing postflight gates (pillars_present, run_complete sign-off). These are not --deep flag issues — they're iteration-close gates that fire at any level >= postflight.
+**Note:** `aho doctor deep` exits with FAIL overall due to pre-existing postflight gates (pillars_present, run_complete sign-off). These are not --deep flag issues - they're iteration-close gates that fire at any level >= postflight.
 
 ---
 
@@ -93,8 +93,8 @@ drwxr-xr-x 2 kthompson kthompson 4096  jaeger-1.62.0-linux-amd64/
 ```
 
 **Actions taken:**
-- `mv jaeger-1.62.0-linux-amd64.tar.gz /tmp/` — tarball moved out of repo
-- `rm -rf jaeger-1.62.0-linux-amd64/` — extracted dir deleted
+- `mv jaeger-1.62.0-linux-amd64.tar.gz /tmp/` - tarball moved out of repo
+- `rm -rf jaeger-1.62.0-linux-amd64/` - extracted dir deleted
 - Added to `.gitignore`: `*.tar.gz` and `jaeger-*-linux-amd64/`
 
 **After:**
@@ -127,5 +127,5 @@ No item required scope beyond a fix. Items 1-3 verified clean with no code chang
 | aho-jaeger | 3546197 | 127.0.0.1:14317 (gRPC), :14318 (HTTP), :16686 (UI) | active |
 | aho-otel-collector | (restarted) | 127.0.0.1:4317 (gRPC), :4318 (HTTP) | active |
 | aho-dashboard | 3546665 | 127.0.0.1:7800 | active |
-| aho-telegram | (restarted) | — | active |
-| aho-harness-watcher | — | — | active |
+| aho-telegram | (restarted) | - | active |
+| aho-harness-watcher | - | - | active |

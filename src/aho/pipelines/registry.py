@@ -1,4 +1,4 @@
-"""Pipeline registry — tracks pipelines in consumer projects."""
+"""Pipeline registry - tracks pipelines in consumer projects."""
 import json
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-"""aho.host — host-side primitives that the container does NOT carry.
+"""aho.host - host-side primitives that the container does NOT carry.
 
 The secrets broker, the run-container wrapper, and any future host-only tooling
 live under this package. Container images do not need to import these modules

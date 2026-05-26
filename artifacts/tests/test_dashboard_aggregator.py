@@ -1,4 +1,4 @@
-"""Tests for aho.claw3d.aggregator — W1 0.2.7."""
+"""Tests for aho.claw3d.aggregator - W1 0.2.7."""
 import json
 import os
 import pytest

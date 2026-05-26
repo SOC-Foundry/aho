@@ -1,11 +1,11 @@
-"""0.2.18 W0 — Pillar 11 git-op pre-check enforcement-narration suppression.
+"""0.2.18 W0 - Pillar 11 git-op pre-check enforcement-narration suppression.
 
 The deterministic git-op regex (`_GIT_OP_PATTERNS` in `aho.council.audit`)
 auto-injects an `AUDIT-PILLAR11` finding whenever it matches `git
 commit|push|merge|add|...` in the audit target. In 0.2.18 W0, the
 acceptance archive narrated the Pillar 11 invariant by *negating* exactly
 those ops ("No `git commit`, `git push`, ... from this session") and the
-pre-check fired on its own enforcement language — a known false-positive
+pre-check fired on its own enforcement language - a known false-positive
 shape.
 
 Closure: a sentinel-based ±150-char context window suppresses hits when
@@ -60,12 +60,12 @@ def test_no_git_negation_sentinel_suppresses():
 
 
 def test_opr_action_id_sentinel_suppresses():
-    text = "OPR-W0-003 — operator runs git push to ghcr.io at W1 close"
+    text = "OPR-W0-003 - operator runs git push to ghcr.io at W1 close"
     assert _scan_git_ops(text) == []
 
 
 def test_actual_w0_acceptance_archive_shape_suppressed():
-    """The literal 0.2.18 W0 false-positive shape — four ops in one
+    """The literal 0.2.18 W0 false-positive shape - four ops in one
     negation, expected to suppress every match.
     """
     text = (
@@ -78,7 +78,7 @@ def test_actual_w0_acceptance_archive_shape_suppressed():
 def test_multiple_hits_in_sentinel_window_all_suppressed():
     text = (
         "operator-only ops list: git commit, git push, git merge, git add, "
-        "git reset, git rebase — all routed to operator."
+        "git reset, git rebase - all routed to operator."
     )
     assert _scan_git_ops(text) == []
 

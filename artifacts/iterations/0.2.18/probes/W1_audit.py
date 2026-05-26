@@ -1,4 +1,4 @@
-"""0.2.18 W1 — invoke the council audit primitive against acceptance/W1.json.
+"""0.2.18 W1 - invoke the council audit primitive against acceptance/W1.json.
 
 Mirrors probes/W0_audit.py (same retry + emitter contract). WORKSTREAM is the
 only structural change. Per CLAUDE.md re-audit convention: original audit at

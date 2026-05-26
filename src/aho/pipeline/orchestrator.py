@@ -1,4 +1,4 @@
-"""Cascade orchestrator — 5-stage pipeline execution (0.2.14 W1).
+"""Cascade orchestrator - 5-stage pipeline execution (0.2.14 W1).
 
 Executes: indexer_in → producer → auditor → indexer_out → assessor
 Each stage dispatches to the model assigned in the RoleAssignment.

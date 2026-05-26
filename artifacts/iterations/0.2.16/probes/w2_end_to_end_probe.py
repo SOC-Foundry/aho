@@ -34,7 +34,7 @@ def main() -> int:
     print(f"dispatch.result.tokens_eval={disp.get('tokens_eval')}", flush=True)
     print(f"dispatch.internal_timing_ms={t_disp * 1000:.2f}", flush=True)
 
-    # Evict qwen before loading nemotron — 8GB VRAM won't hold both.
+    # Evict qwen before loading nemotron - 8GB VRAM won't hold both.
     # Nemotron is the canonical classifier (CLAUDE.md, 0.2.15 retrospective);
     # qwen-as-classifier blows the budget on thinking-mode.
     dispatcher.unload_model("qwen3.5:9b")

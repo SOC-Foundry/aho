@@ -1,4 +1,4 @@
-# Investigation 3 — Artifact Loop Diagnosis
+# Investigation 3 - Artifact Loop Diagnosis
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
@@ -75,7 +75,7 @@ The Qwen artifact loop (`iao iteration design`, `iao iteration plan`, etc.) is s
 ```
 GPU: NVIDIA GeForce RTX 2080 (Super variant likely, 8GB VRAM)
 Driver: 595.58.03, CUDA: 13.2
-Memory: 667 MiB / 8192 MiB used (idle — only KDE processes)
+Memory: 667 MiB / 8192 MiB used (idle - only KDE processes)
 GPU Utilization: 2%
 ```
 
@@ -98,10 +98,10 @@ The loop is straightforward:
 ### QwenClient (`src/iao/artifacts/qwen_client.py`)
 
 - Uses `/api/chat` endpoint (not `/api/generate`)
-- `stream: false` — waits for complete response before returning
-- `timeout: 1800` seconds (30 minutes!) — this is the default
+- `stream: false` - waits for complete response before returning
+- `timeout: 1800` seconds (30 minutes!) - this is the default
 - `temperature: 0.2`, `num_ctx: 8192`
-- No progress reporting — the caller gets nothing until Qwen finishes or times out
+- No progress reporting - the caller gets nothing until Qwen finishes or times out
 
 ### Template Prompts
 
@@ -124,7 +124,7 @@ The templates are small and well-structured:
 
 ### ADR-012 Immutability
 
-Design and plan artifacts are treated as immutable — if they already exist on disk, the loop skips regeneration and returns the existing file. This means the 0.1.5 design (34.7KB) and plan (26.0KB) that exist on disk will NOT be regenerated if the loop runs again for 0.1.5.
+Design and plan artifacts are treated as immutable - if they already exist on disk, the loop skips regeneration and returns the existing file. This means the 0.1.5 design (34.7KB) and plan (26.0KB) that exist on disk will NOT be regenerated if the loop runs again for 0.1.5.
 
 ---
 
@@ -132,7 +132,7 @@ Design and plan artifacts are treated as immutable — if they already exist on 
 
 ### Ranked from most to least probable:
 
-**1. (a) Qwen is just slow for long-form generation — MOST PROBABLE**
+**1. (a) Qwen is just slow for long-form generation - MOST PROBABLE**
 
 Evidence:
 - Qwen 9B takes 7.1s for a 2-token response (cold start). Generation speed is roughly 15-25 tokens/second on an RTX 2080.
@@ -144,7 +144,7 @@ Evidence:
 
 **Why it looks like a hang:** `stream: false` + `timeout: 1800s` means the HTTP request blocks silently for up to 30 minutes. There is no progress output. The caller (CLI or agent) sees nothing until the response arrives or the timeout fires.
 
-**2. (d) The CLI orchestration has no user-visible progress — PROBABLE CONTRIBUTING FACTOR**
+**2. (d) The CLI orchestration has no user-visible progress - PROBABLE CONTRIBUTING FACTOR**
 
 Evidence:
 - `QwenClient.generate()` does `requests.post(..., timeout=self.timeout)` with `timeout=1800`.
@@ -152,34 +152,34 @@ Evidence:
 - The only stderr output is retry messages: `[iao.loop] {artifact} attempt {n}: {words} words < {min} min, retrying...`
 - An agent (Gemini or Claude) waiting for stdout/stderr and seeing nothing for 5+ minutes may conclude the process is hung and kill it, or the session may time out.
 
-**3. (b) Prompt asks for impossible length — UNLIKELY**
+**3. (b) Prompt asks for impossible length - UNLIKELY**
 
 Evidence:
 - The prompts are reasonable. 5000 words for a design doc is ambitious but achievable for Qwen 9B.
-- The design doc WAS generated (5132 words) — proving the prompt works.
+- The design doc WAS generated (5132 words) - proving the prompt works.
 - The plan doc WAS generated (3274 words, meeting the 3000 min).
 - Both documents exist on disk. The loop did work at least once.
 
-**4. (c) RAG context injects garbage — UNLIKELY**
+**4. (c) RAG context injects garbage - UNLIKELY**
 
 Evidence:
 - RAG enrichment adds ~3000 chars of context (snippets from iaomw_archive).
 - ChromaDB query returned sensible results (0.1.3 report, run-report, build-log).
-- Total prompt with RAG is only 920 words — well within Qwen's 8192 token context window.
+- Total prompt with RAG is only 920 words - well within Qwen's 8192 token context window.
 
-**5. (e) Ollama misconfigured or OOM — UNLIKELY**
+**5. (e) Ollama misconfigured or OOM - UNLIKELY**
 
 Evidence:
 - Ollama is running and responsive.
 - All 4 models are installed.
-- GPU has 7.5GB free VRAM — Qwen 9B (6.6GB) fits comfortably.
+- GPU has 7.5GB free VRAM - Qwen 9B (6.6GB) fits comfortably.
 - All smoke tests passed.
 
-**6. (f) Template rendering broken — RULED OUT**
+**6. (f) Template rendering broken - RULED OUT**
 
 Evidence:
 - Templates render correctly. The computed prompts have correct structure.
-- Design and plan artifacts exist on disk — they WERE generated from these templates.
+- Design and plan artifacts exist on disk - they WERE generated from these templates.
 
 ---
 
@@ -196,7 +196,7 @@ Based on the evidence, here is the most likely sequence:
 
 3. A subsequent Claude Code session picked up the project but focused on cleanup rather than re-attempting the artifact loop, finding the design and plan already on disk.
 
-4. The 0.1.5 plan file exists on disk (25,953 bytes, 3274 words), so the "hang" may have been misdiagnosed — the plan may have completed but a later artifact (build-log or report) hung, or the session ended before the next step.
+4. The 0.1.5 plan file exists on disk (25,953 bytes, 3274 words), so the "hang" may have been misdiagnosed - the plan may have completed but a later artifact (build-log or report) hung, or the session ended before the next step.
 
 ---
 

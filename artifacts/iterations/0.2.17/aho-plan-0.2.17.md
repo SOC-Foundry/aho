@@ -1,7 +1,7 @@
 # aho-plan-0.2.17
 
 **Iteration:** 0.2.17
-**Theme:** Containerized aho — base-tier image, install-time tier
+**Theme:** Containerized aho - base-tier image, install-time tier
 detection, host-mounted secrets and tier manifest, hybrid-mode
 dispatcher
 **Phase:** 0 (Clone-to-Deploy)
@@ -22,7 +22,7 @@ dispatcher
 > model families in production deployment; an env-gated hybrid mode
 > routes partial-tier dispatches to the host's native Ollama for
 > development on NZXTcos. OTEL telemetry continues across the
-> container boundary — the existing host-side collector at
+> container boundary - the existing host-side collector at
 > `localhost:4317` ingests metric, log, and trace signals from the
 > containerized harness, with the new `aho.deployment.mode` resource
 > attribute distinguishing development from production at every
@@ -130,7 +130,7 @@ Three pre-launch amendments applied 2026-05-02 before W0 launched:
    in place; W1 acceptance gate added. Premature manifests calcify
    decisions before there is a cluster; image properties survive that
    gap. Pre-launch scope addition to a not-yet-started workstream
-   (W1) — not iteration-scope drift.
+   (W1) - not iteration-scope drift.
 
 Plan-time amendment per ADR 0006: 0.2.17 has not yet started;
 pre-launch scoping is not iteration-scope amendment. Hard meta-rule
@@ -145,30 +145,30 @@ treatment does not apply.
 | W0 | Substrate carry-forward closure + Podman/runtime decision + hello-world container + Adversarial Authorship rename | AF004/AF005 closed; F-W0-004 conftest brittleness fixed; Podman runs hello-world container on NZXTcos OR Docker fallback engaged with rationale; "Pattern C" find/replaced to "Adversarial Authorship" across live governance docs (sealed acceptance archives untouched) |
 | W1 | Dockerfile + image build + local registry push | `Dockerfile` builds clean; `aho:0.2.17-rc1` pushed to local registry; image size under 2 GB excluding models; `podman run aho:0.2.17-rc1 aho --version` returns expected string |
 | W2 | install.fish tier detection + tier manifest + secrets mount layout | install.fish detects NZXTcos as base tier (8 GB → < 12 GB threshold); writes `~/.config/aho/tier.json` with correct shape (per ADR 0008); secrets host-mount layout documented and tested |
-| W3 | aho CLI in container + hybrid-mode dispatcher + `ModelNotAvailableError` | dispatcher reads tier manifest from `/etc/aho/tier.json`; hard-errors on missing family in production mode; routes to `host.containers.internal:11434` in hybrid mode; `on_missing=` parameter implemented; tests cover all four parameter values (error/hybrid/fallback/cloud — fallback and cloud raise NotImplementedError) |
+| W3 | aho CLI in container + hybrid-mode dispatcher + `ModelNotAvailableError` | dispatcher reads tier manifest from `/etc/aho/tier.json`; hard-errors on missing family in production mode; routes to `host.containers.internal:11434` in hybrid mode; `on_missing=` parameter implemented; tests cover all four parameter values (error/hybrid/fallback/cloud - fallback and cloud raise NotImplementedError) |
 | W4 | Telemetry from container + close package | OTEL signals from container land in host collector with `aho.deployment.mode` resource attribute; retrospective applies ADR 0006 deliverable + criterion (no retroactive section needed); carry-forward register lands; iteration close package per ADR 0004's redesigned `--confirm` semantics if 0.2.x close-confirm cleanup landed by then, otherwise per legacy semantics |
 
 ---
 
-## W0 — Substrate carry-forward closure + Podman/runtime decision + hello-world container
+## W0 - Substrate carry-forward closure + Podman/runtime decision + hello-world container
 
-**Scope:** Three coordinated buckets — close out 0.2.16 carry-forwards
+**Scope:** Three coordinated buckets - close out 0.2.16 carry-forwards
 that target 0.2.17, decide and verify the container runtime, and
 prove the runtime works with a hello-world container before any aho-
 specific work begins.
 
-### Bucket 1 — Substrate carry-forward closure
+### Bucket 1 - Substrate carry-forward closure
 
-1. **AF004 — `api_error_count` aliasing in `otel_aggregator.py`.**
+1. **AF004 - `api_error_count` aliasing in `otel_aggregator.py`.**
    Decide: alias intentionally, missing event mapping, or remove dead
    field. Implement the decision; update tests; update
    `otel_aggregator.py` doctring to reflect the contract.
-2. **AF005 — `api_retries_exhausted_count` dead field.** Same shape.
+2. **AF005 - `api_retries_exhausted_count` dead field.** Same shape.
    Either map to a real ingestion site for `claude_code.api_retries_exhausted` events
    or remove from the aggregator output. Decision should be
    one-line: if Claude Code emits this event today, map it; if not,
    remove the field rather than ship dead state.
-3. **F-W0-004 (third recurrence) — conftest allowlist brittleness.**
+3. **F-W0-004 (third recurrence) - conftest allowlist brittleness.**
    The `test_workstream_events.py` fixture has corrupted the
    checkpoint three times. The 0.2.16 W0 fix added an allowlist in
    `artifacts/tests/conftest.py`; the underlying fragility is that
@@ -178,18 +178,18 @@ specific work begins.
    workstream-event-emitting test code must enter explicitly;
    (b) emit a clear-test-error if `find_project_root()` is invoked
    from a path that is not under `tmp_path`. Pick one and implement.
-4. **W2-AF004 — `dispatch.duration_ms` error-path measurement
+4. **W2-AF004 - `dispatch.duration_ms` error-path measurement
    gap.** Add a unit test that asserts error-path duration on
    `DispatchError` is consistent with success-path duration
    accounting. If the test surfaces material drift (>1ms), unify the
    measurement site.
-5. **F-W1-001 — `${VAR}` expansion wrapper.** Implement `bin/aho
+5. **F-W1-001 - `${VAR}` expansion wrapper.** Implement `bin/aho
    workstream init W{N}` (or equivalent) that writes literal values
    into `.claude/settings.json` env block at workstream boundary.
    Remove the literal-value manual-update overhead identified in
    ADR 0003's carry-forward.
 
-### Bucket 2 — Runtime decision + hello-world
+### Bucket 2 - Runtime decision + hello-world
 
 6. **Podman install + first hello-world.** `pacman -S podman` on
    NZXTcos (already CachyOS-supported); verify rootless config
@@ -220,7 +220,7 @@ specific work begins.
    - **Decision gate:** if GPU passthrough fails under rootless
      Podman after reasonable troubleshooting, fall back to Docker
      and update ADR 0007's §Runtime choice with empirical reason.
-     No invented workarounds — measure, decide, document.
+     No invented workarounds - measure, decide, document.
 8. **`host.containers.internal` reachability probe.** From inside a
    minimal container, `curl http://host.containers.internal:11434/api/version`
    should hit the host's Ollama. This is the wire that ADR 0008's
@@ -243,14 +243,14 @@ specific work begins.
    credential/permission issue, (b) amend ADR 0007 §registry-choice
    to a working alternative (self-hosted Harbor on the tailnet, local
    Docker-Distribution, or other). Do NOT proceed to W1 with an
-   unverified registry — W1 spends 3 hours building the real
+   unverified registry - W1 spends 3 hours building the real
    Dockerfile, and discovering registry friction at push time costs
    all of that work.
 
    Pre-test image (`aho-pretest:smoke`) is deleted from the registry
    after verification. This step does not consume a real image tag.
 
-### Bucket 3 — Aho-internal hello-world container
+### Bucket 3 - Aho-internal hello-world container
 
 9. **Minimal Dockerfile (throwaway).** Single layer, base image
    (debian:stable-slim or equivalent), `aho` Python package
@@ -258,35 +258,35 @@ specific work begins.
    `podman run --rm aho:hello aho --version` returns the expected
    version string.
 
-### Bucket 4 — Adversarial Authorship rename (find/replace pass)
+### Bucket 4 - Adversarial Authorship rename (find/replace pass)
 
 10. **"Pattern C" → "Adversarial Authorship" rename.** Find/replace
     across live governance docs only:
-    - `CLAUDE.md` (project instructions — primary drafter doc).
+    - `CLAUDE.md` (project instructions - primary drafter doc).
     - `GEMINI.md` (auditor instructions).
     - `artifacts/adrs/0006-iteration-deliverable-discipline.md`
       (references the workstream-level analog as "pattern-c-protocol";
       replace narrative occurrences, leave file-path references in
       §References as-is until the protocol file is itself renamed).
-    - `artifacts/harness/adversarial-authorship-protocol.md` — was
+    - `artifacts/harness/adversarial-authorship-protocol.md` - was
       `artifacts/harness/pattern-c-protocol.md` before 0.2.17 W0;
       file renamed plus content rename; inbound references updated.
-    - `artifacts/harness/base.md` — narrative occurrences only.
-    - `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` (this file —
+    - `artifacts/harness/base.md` - narrative occurrences only.
+    - `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` (this file -
       the rename pass updates this plan's own "Pattern C" mentions if
       any are added between now and W0 execution).
     - The iteration-plan-doc template (whatever artifact serves as
       the next-iteration boilerplate; if no formal template exists,
       no-op).
-    - `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` — narrative
+    - `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` - narrative
       mentions only; entry text from sealed acceptance archives is
       not edited even where carry-forwards quote those archives.
 
     **Rationale.** "Pattern C" was an arbitrary label that accreted
     load-bearing meaning by repetition. "Adversarial Authorship"
-    describes the pattern's actual structural property — drafter and
+    describes the pattern's actual structural property - drafter and
     auditor are constitutionally adversarial, with human as sole
-    signing authority — and is externally distinctive enough to own
+    signing authority - and is externally distinctive enough to own
     in IR materials, README revisions, and conversation. The verbal
     rename is already in flight per Kyle's 0.2.16 close-time decision;
     this bucket performs the codebase-wide find/replace pass.
@@ -294,7 +294,7 @@ specific work begins.
     **Out of scope.** Sealed acceptance archives in
     `artifacts/iterations/0.2.16/acceptance/W{0..4}.json` and
     `acceptance/W{1,2,3,4}-audit-dispositions.md` retain "Pattern C"
-    verbatim — sealed-archive discipline forbids retroactive content
+    verbatim - sealed-archive discipline forbids retroactive content
     edits. The 0.2.16 retrospective and `iteration-close-0.2.16.md`
     flag the rename for future readers; that pointer is the link from
     historical "Pattern C" archive content to current "Adversarial
@@ -306,11 +306,11 @@ specific work begins.
 ### Carry-forwards potentially closed by W0
 
 - AF004, AF005 closed (or explicitly removed-as-dead).
-- F-W0-004 closed (conftest brittleness — bind-to-tmp_path
+- F-W0-004 closed (conftest brittleness - bind-to-tmp_path
   enforcement).
 - W2-AF004 closed (dispatch.duration_ms error-path test added).
 - F-W1-001 closed (settings.json env-var expansion wrapper).
-- Adversarial Authorship rename — codebase-wide find/replace lands
+- Adversarial Authorship rename - codebase-wide find/replace lands
   (live governance docs only; sealed acceptance + audit archives
   retain "Pattern C" verbatim).
 
@@ -331,7 +331,7 @@ verification + GPU passthrough is the variable wall-clock sink.
 
 ---
 
-## W1 — Dockerfile + image build + local registry push
+## W1 - Dockerfile + image build + local registry push
 
 **Scope:** Build the real `aho:0.2.17` image and publish to the
 local registry.
@@ -350,7 +350,7 @@ local registry.
 2. **Image size discipline.** Target: under 2 GB excluding models.
    Use multi-stage build to drop build-time dependencies; use
    `--squash` if it does not break Podman's layer caching.
-3. **Local registry choice.** ADR 0007 says local-first — either a
+3. **Local registry choice.** ADR 0007 says local-first - either a
    home-network Harbor/Docker-Distribution or `ghcr.io` namespace.
    W1 picks one and pushes; the ADR amendment (if needed) records
    the choice. Default proposal: `ghcr.io/socfoundry/aho` to keep
@@ -359,20 +359,20 @@ local registry.
    `aho:0.2.17` is the iteration-close tag (W4).
 5. **Smoke test.** `podman run --rm aho:0.2.17-rc1 aho --version`
    returns the expected version. `podman run --rm aho:0.2.17-rc1
-   aho doctor full` runs cleanly (subject to mount provisioning —
+   aho doctor full` runs cleanly (subject to mount provisioning -
    may fail without secrets/models mounts, which is fine for W1; W2
    adds the mounts).
 
 ### Carry-forwards potentially closed by W1
 
-None — image build is novel work, not carry-forward closure.
+None - image build is novel work, not carry-forward closure.
 
 ### Acceptance
 
 - `aho:0.2.17-rc1` exists in local registry.
 - Image size under 2 GB.
 - Smoke `aho --version` works.
-- Dockerfile lives at repo root (or `containers/Dockerfile` —
+- Dockerfile lives at repo root (or `containers/Dockerfile` -
   decided in W1 based on repo convention).
 - Image satisfies the k8s-readiness five (per ADR 0007 §k8s-readiness
   amendment). Each of the five is independently testable; tests live
@@ -385,7 +385,7 @@ the bulk; registry push is mechanical.
 
 ---
 
-## W2 — install.fish tier detection + tier manifest + secrets mount layout
+## W2 - install.fish tier detection + tier manifest + secrets mount layout
 
 **Scope:** install.fish gains its tier-detection block (per ADR 0007),
 writes the tier manifest to `~/.config/aho/tier.json` (per ADR 0008
@@ -431,18 +431,18 @@ verified.
    `~/.local/share/aho/models/` (host volume; ollama-runtime layer
    in container reads from this mount). Re-running install.fish on
    unchanged tier is a no-op for already-pulled models.
-4. **Secrets mount layout — documentation.** Document the canonical
+4. **Secrets mount layout - documentation.** Document the canonical
    bind-mount layout:
-   - `~/.config/aho/` → `/etc/aho/` (read-only) — tier manifest +
+   - `~/.config/aho/` → `/etc/aho/` (read-only) - tier manifest +
      any future config
    - `~/.local/share/aho/age/identity.txt` →
-     `/opt/aho/secrets/age/identity.txt` (read-only) — age identity
+     `/opt/aho/secrets/age/identity.txt` (read-only) - age identity
    - `~/.local/share/aho/secrets/bundle.enc` →
-     `/opt/aho/secrets/bundle.enc` (read-only) — encrypted bundle
+     `/opt/aho/secrets/bundle.enc` (read-only) - encrypted bundle
    - `~/.local/share/aho/models/` → `/var/lib/ollama/` (read-only)
-     — model weights
+     - model weights
    - `~/.local/share/aho/{logs,metrics,traces,api-bodies}/` →
-     `/var/log/aho/{...}/` (read-write) — telemetry sinks
+     `/var/log/aho/{...}/` (read-write) - telemetry sinks
 5. **`aho install --container` flag.** New install.fish option that
    produces a host fully-prepared for container deployment: tier
    detected, manifest written, models pulled, secrets-mount-paths
@@ -452,9 +452,9 @@ verified.
 
 ### Carry-forwards potentially closed by W2
 
-- 0.2.15 carry — Tier 1 hardware requirements documentation
+- 0.2.15 carry - Tier 1 hardware requirements documentation
   (ADR 0007's tier table is now the canonical version).
-- 0.2.15 carry — Ollama service layer documentation (subset:
+- 0.2.15 carry - Ollama service layer documentation (subset:
   containerized Ollama via mounted models is documented in W2's
   mount layout).
 
@@ -476,7 +476,7 @@ verified.
 
 ---
 
-## W3 — aho CLI in container + hybrid-mode dispatcher + `ModelNotAvailableError`
+## W3 - aho CLI in container + hybrid-mode dispatcher + `ModelNotAvailableError`
 
 **Scope:** Dispatcher reads the tier manifest, gains hard-error and
 hybrid-mode behavior per ADR 0008, and the override parameter is
@@ -508,7 +508,7 @@ implemented end-to-end.
    log entry is `dispatch_hybrid_routed` with requested family +
    routing decision. The `aho.deployment.mode` resource attribute
    (set by the harness's OTEL init from the tier manifest's
-   `deployment_mode` field) flows through automatically — no
+   `deployment_mode` field) flows through automatically - no
    per-call code needed.
 5. **`aho` CLI in container.** Verify the CLI works inside the
    container against the mounted tier manifest:
@@ -526,7 +526,7 @@ implemented end-to-end.
 
 ### Carry-forwards potentially closed by W3
 
-None — net-new behavior, not carry-forward closure.
+None - net-new behavior, not carry-forward closure.
 
 ### Acceptance
 
@@ -545,7 +545,7 @@ end-to-end-in-container verification.
 
 ---
 
-## W4 — Telemetry from container + close package
+## W4 - Telemetry from container + close package
 
 **Scope:** Verify OTEL telemetry flows from the container to the
 host collector with the new `aho.deployment.mode` resource attribute,
@@ -557,23 +557,23 @@ assemble the close package, run iteration close.
    metrics, traces) reach the host's collector.
 2. **Resource attribute verification.** Every emitted signal carries
    `aho.deployment.mode` with the value from the tier manifest.
-   Verify in `~/.local/share/aho/{logs,metrics,traces}/*.jsonl` —
+   Verify in `~/.local/share/aho/{logs,metrics,traces}/*.jsonl` -
    one record per pipeline, per signal class.
 3. **Cross-container session smoke.** Run a Claude Code session
-   from inside the container (if applicable to W4 scope — may be
+   from inside the container (if applicable to W4 scope - may be
    later iteration). Verify `aho.workstream=W4` resource attr flows
    from container → collector.
-4. **Iteration retrospective.** `retrospective-0.2.17.md` —
+4. **Iteration retrospective.** `retrospective-0.2.17.md` -
    honest retrospective per ADR 0006 (deliverable paragraph +
    graduation criterion are copy-from-plan, not derived).
-5. **Carry-forward register.** `carry-forwards-0.2.17.md` — items
+5. **Carry-forward register.** `carry-forwards-0.2.17.md` - items
    not completed, grouped by target iteration.
-6. **Bundle.** `aho-bundle-0.2.17.md` — standard 9-section bundle
+6. **Bundle.** `aho-bundle-0.2.17.md` - standard 9-section bundle
    per the convention 0.2.15 established. Counts internally
    consistent (avoid the 0.2.15 AF001 recurrence; ADR 0004's
    redesign should make this mechanical if it ships in 0.2.x
    close-confirm cleanup before 0.2.17 close).
-7. **Sign-off sheet.** Per ADR 0004's redesign — if landed,
+7. **Sign-off sheet.** Per ADR 0004's redesign - if landed,
    sign-off sheet is auto-generated post-close from audit archives.
    If not landed, manual checkbox-tick per legacy 0.2.x convention.
 8. **`aho iteration close --confirm`.** Run with
@@ -601,26 +601,26 @@ carry-forwards-0.2.16.md`):
 
 **Folded into 0.2.17 W0–W4 workstreams above:**
 
-- AF004 / AF005 — otel_aggregator dead/alias fields (W0 Bucket 1)
-- F-W0-004 — conftest allowlist brittleness (W0 Bucket 1)
-- W2-AF004 — dispatch.duration_ms error-path measurement gap (W0
+- AF004 / AF005 - otel_aggregator dead/alias fields (W0 Bucket 1)
+- F-W0-004 - conftest allowlist brittleness (W0 Bucket 1)
+- W2-AF004 - dispatch.duration_ms error-path measurement gap (W0
   Bucket 1)
-- F-W1-001 — `${VAR}` expansion wrapper (W0 Bucket 1)
+- F-W1-001 - `${VAR}` expansion wrapper (W0 Bucket 1)
 
-**Not folded — remain open carry-forwards for 0.2.18+ or specific
+**Not folded - remain open carry-forwards for 0.2.18+ or specific
 iterations:**
 
-- W3-AF001 — Rule 3 expression repair (paired with engine-selection
+- W3-AF001 - Rule 3 expression repair (paired with engine-selection
   ADR)
-- W3-AF002 — Rule 5 baseline larger n
-- W3-AF003 — Rule 5 metric-source gap
-- W3-CF1 — synthetic alert delivery test (engine-blocked)
-- W3-CF2 — engine selection ADR (its own iteration)
-- W3-CF3 — bridge live wire-up (engine-blocked)
-- W3-CF4 — dedicated alerts-channel secrets (Kyle action; bridge-
+- W3-AF002 - Rule 5 baseline larger n
+- W3-AF003 - Rule 5 metric-source gap
+- W3-CF1 - synthetic alert delivery test (engine-blocked)
+- W3-CF2 - engine selection ADR (its own iteration)
+- W3-CF3 - bridge live wire-up (engine-blocked)
+- W3-CF4 - dedicated alerts-channel secrets (Kyle action; bridge-
   blocked)
-- W3-CF5 — pillar-11-monitoring-notes as forward-pointer
-- Cross-model cascade re-run (Pillar 7 verdict — its own iteration)
+- W3-CF5 - pillar-11-monitoring-notes as forward-pointer
+- Cross-model cascade re-run (Pillar 7 verdict - its own iteration)
 - Mercor reference pack assembly (its own iteration when needed)
 - OTLP alias deprecation warning (next collector config touch)
 - Historical trend graphs (separate iteration when metric retention
@@ -639,18 +639,18 @@ iterations:**
 Same as 0.2.16 close, plus:
 
 - ADR 0006 deliverable paragraph + graduation criterion are
-  authoritative — the retrospective reads from this plan, not from
+  authoritative - the retrospective reads from this plan, not from
   derived gate-summaries.
-- ADR 0007 binds W1/W2 — single image, tier-conditional bundle,
+- ADR 0007 binds W1/W2 - single image, tier-conditional bundle,
   Podman default, host-mounted secrets.
-- ADR 0008 binds W3 — hard-error production, hybrid-mode
+- ADR 0008 binds W3 - hard-error production, hybrid-mode
   development, `on_missing=` parameter, tier manifest at
   `~/.config/aho/tier.json` (host) → `/etc/aho/tier.json`
   (container).
-- `AHO_DISPATCH_HYBRID_MODE` is a development affordance only —
+- `AHO_DISPATCH_HYBRID_MODE` is a development affordance only -
   the iteration's own deployment mode is `development`; production
   use of hybrid mode would be the violation alert rule fires on.
-- Cross-project contamination vigilance per CLAUDE.md continues —
+- Cross-project contamination vigilance per CLAUDE.md continues -
   zero contamination across 0.2.14, 0.2.15, 0.2.16; the discipline
   works.
 
@@ -659,4 +659,4 @@ Same as 0.2.16 close, plus:
 *Plan doc 0.2.17. Companion artifacts: `aho-design-0.2.17.md`
 (authored at iteration-open time), ADRs 0006 / 0007 / 0008 under
 `artifacts/adrs/`. ADR numbers for any new 0.2.17 ADRs determined
-at execution time from disk enumeration — not pre-fabricated here.*
+at execution time from disk enumeration - not pre-fabricated here.*

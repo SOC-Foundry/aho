@@ -1,20 +1,20 @@
-"""secrets_broker — host-side unix-socket broker for container secrets.
+"""secrets_broker - host-side unix-socket broker for container secrets.
 
 Responsibilities:
 - Listen on ${XDG_RUNTIME_DIR}/aho-secrets.sock (mode 0600).
 - Authenticate connecting peer via SO_PEERCRED (Linux ucred struct).
 - Maintain an in-memory map of registered UIDs → project labels.
 - Allow control ops (register, unregister, status, shutdown) only from the
-  broker-owner UID — i.e., the host user who started the broker.
+  broker-owner UID - i.e., the host user who started the broker.
 - Allow data op (get_secret) only from a registered UID, and only when the
   requested project matches the registration's project label.
 - Return the secret value via existing aho.secrets.store.get_secret. Never
-  enumerate the keystore. Never log the secret value — only the request shape.
+  enumerate the keystore. Never log the secret value - only the request shape.
 
 Protocol: line-delimited JSON. One request, one response, server closes.
 
 Pillar 11: broker NEVER touches git. Broker NEVER writes to the secrets
-store — read-only round-trips against the operator-controlled store.
+store - read-only round-trips against the operator-controlled store.
 """
 from __future__ import annotations
 
@@ -240,7 +240,7 @@ class SecretsBroker:
     @staticmethod
     def _log_request(uid: int, op: str, project: Optional[str], name: Optional[str],
                      outcome: str) -> None:
-        # Request shape only — never the secret value.
+        # Request shape only - never the secret value.
         sys.stdout.write(
             f"BROKER op={op} uid={uid} project={project} name={name} outcome={outcome}\n"
         )

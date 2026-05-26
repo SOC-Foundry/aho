@@ -1,12 +1,12 @@
-# Adversarial Authorship Protocol — aho 0.2.14
+# Adversarial Authorship Protocol - aho 0.2.14
 
 **Produced:** W0 0.2.13, patched W0 0.2.14 | **Renamed:** 0.2.17 W0 (from "Pattern C Protocol") | **Status:** Active for 0.2.14+
 
 > This protocol was authored as "Pattern C Protocol" through
 > 0.2.13–0.2.16. Renamed to "Adversarial Authorship Protocol" in
-> 0.2.17 W0 to describe the protocol's actual structural property —
+> 0.2.17 W0 to describe the protocol's actual structural property -
 > drafter and auditor are constitutionally adversarial, with human
-> as sole signing authority — rather than an arbitrary letter label.
+> as sole signing authority - rather than an arbitrary letter label.
 > Protocol body (state machine, emitter table, halt conditions) is
 > unchanged. Sealed 0.2.16 acceptance and audit archives retain the
 > original "Pattern C" terminology verbatim per sealed-archive
@@ -43,7 +43,7 @@ Sequence per workstream:
 
 ### workstream_start requirement (0.2.14 patch)
 
-0.2.13 fired zero `workstream_start` events across all workstreams. This created a gap in lifecycle traceability — event log had complete events but no starts. Starting 0.2.14, `workstream_start` is REQUIRED at workstream begin. Missing starts are a protocol violation to be flagged in audit.
+0.2.13 fired zero `workstream_start` events across all workstreams. This created a gap in lifecycle traceability - event log had complete events but no starts. Starting 0.2.14, `workstream_start` is REQUIRED at workstream begin. Missing starts are a protocol violation to be flagged in audit.
 
 ## 3. What Audit Produces
 
@@ -107,7 +107,7 @@ A halt at any workstream triggers review with Kyle before proceeding.
 
 ## 6. Cautionary Examples (0.2.13)
 
-**W0 role-crossing:** Gemini attempted to emit `workstream_complete` in its audit — this is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity. The emitter table (section 1) is now authoritative.
+**W0 role-crossing:** Gemini attempted to emit `workstream_complete` in its audit - this is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity. The emitter table (section 1) is now authoritative.
 
 **Triple-audit timestamp coherence:** Gemini auditing W1, W2, W2.5 in one session gave all three archives timestamps from the batch session, not per-workstream. The overwrite ban (section 3) prevents this going forward.
 

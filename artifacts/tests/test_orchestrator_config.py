@@ -1,4 +1,4 @@
-"""Tests for aho.orchestrator_config — W5 0.2.7."""
+"""Tests for aho.orchestrator_config - W5 0.2.7."""
 import json
 import pytest
 from pathlib import Path

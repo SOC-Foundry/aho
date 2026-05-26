@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/firecrawl.fish — CLI health check for firecrawl-mcp
+# mcp-smoke/firecrawl.fish - CLI health check for firecrawl-mcp
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 # Note: requires FIRECRAWL_API_KEY env var for actual API calls;
 # this smoke only tests protocol handshake, not API functionality

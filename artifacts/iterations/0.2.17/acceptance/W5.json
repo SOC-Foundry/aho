@@ -5,7 +5,7 @@
   "audit_status": "pending_drafter_review",
   "executor": "claude-code (claude-opus-4-7)",
   "drafter": "claude-web",
-  "auditor_assigned": "llama3.2:3b in-container, with RAG enrichment + W4 D1 deterministic post-hoc filter on findings — full stabilized W4 primitive (bootstrap test 6)",
+  "auditor_assigned": "llama3.2:3b in-container, with RAG enrichment + W4 D1 deterministic post-hoc filter on findings - full stabilized W4 primitive (bootstrap test 6)",
   "rag_enrichment_enabled": true,
   "post_hoc_filter_enabled": true,
   "executor_session_started_utc": "2026-05-03T20:00:00Z",
@@ -21,11 +21,11 @@
         "section_added": "Council roles",
         "section_position": "between §GPU passthrough deferral / §k8s-readiness and §Rationale",
         "five_seats_documented": [
-          "Drafter — external (Claude web), persistent across chat sessions",
-          "Executor — external (Claude Code or Gemini CLI), per-iteration",
-          "Auditor — in-container llama3.2:3b at base tier (partial/full deferred to 0.3.x); confidence-floor 0.85; deterministic post-hoc filter on RAG-aware findings",
-          "Triage — in-container nemotron-mini:4b; classification only; G083 raise-on-malformed",
-          "Retrieval — in-container nomic-embed-text + ChromaDB host-mounted volume"
+          "Drafter - external (Claude web), persistent across chat sessions",
+          "Executor - external (Claude Code or Gemini CLI), per-iteration",
+          "Auditor - in-container llama3.2:3b at base tier (partial/full deferred to 0.3.x); confidence-floor 0.85; deterministic post-hoc filter on RAG-aware findings",
+          "Triage - in-container nemotron-mini:4b; classification only; G083 raise-on-malformed",
+          "Retrieval - in-container nomic-embed-text + ChromaDB host-mounted volume"
         ],
         "role_collapse_tripwire_documented": true,
         "anti_rubber_stamp_hardening_documented": [
@@ -204,7 +204,7 @@
           "Materiality status"
         ],
         "carry_forwards_summary_count": 39,
-        "carry_forwards_summary_count_verified_against_file": "permissive cross-iteration count of `^- \\*\\*` entries in artifacts/iterations/0.2.16/carry-forwards-0.2.16.md (sha256 c75e6de5...) yields 39 — matches W4 close note assertion",
+        "carry_forwards_summary_count_verified_against_file": "permissive cross-iteration count of `^- \\*\\*` entries in artifacts/iterations/0.2.16/carry-forwards-0.2.16.md (sha256 c75e6de5...) yields 39 - matches W4 close note assertion",
         "carry_forwards_inherited_count": 22,
         "carry_forwards_opened_during_0_2_17_count": 17,
         "carry_forwards_closed_during_0_2_17_count": 2,
@@ -213,7 +213,7 @@
         "celebratory_framing_check": "no 'clean close', 'landed beautifully', or 'all green' phrases used; characterization explicit; what didn't work section is honest and bounded; materiality section labels qualified-validation status explicitly rather than overclaiming",
         "directory_created": "docs/retrospectives/ (new directory; first retrospective at this canonical location)"
       },
-      "notes": "Five sections populated. All 39 carry-forwards summarized with status. G081 vigilance observed throughout — no celebratory framing; explicit qualified-validation status on materiality section."
+      "notes": "Five sections populated. All 39 carry-forwards summarized with status. G081 vigilance observed throughout - no celebratory framing; explicit qualified-validation status on materiality section."
     },
     {
       "id": "D7",
@@ -259,7 +259,7 @@
           "registered_count": 16,
           "unverified_count": 3,
           "unverified_ids": ["F-0.2.17-W2-006", "F-0.2.17-W3-001", "F-0.2.17-W4-001"],
-          "unverified_explanation": "W2-006 + W3-001 closed at W4 close (per W4 close note). W4-001 is the F-0.2.17-W4-001 ChromaDB index staleness carry-forward — the defect captured by W4-001 is exhibited by W4-001 itself, since the writer's append path does not trigger ChromaDB re-index. Same shape as W4 D7 self-audit's W3-001/W3-002/W2-006 unverified-status surface. ChromaDB re-index hook is W6 scope per plan-doc."
+          "unverified_explanation": "W2-006 + W3-001 closed at W4 close (per W4 close note). W4-001 is the F-0.2.17-W4-001 ChromaDB index staleness carry-forward - the defect captured by W4-001 is exhibited by W4-001 itself, since the writer's append path does not trigger ChromaDB re-index. Same shape as W4 D7 self-audit's W3-001/W3-002/W2-006 unverified-status surface. ChromaDB re-index hook is W6 scope per plan-doc."
         },
         "structural_pre_check_outcome": {
           "g081_banned_phrases": "fail",
@@ -267,20 +267,20 @@
           "git_ops_referenced": "fail",
           "git_ops_hits": ["git-add", "git-commit", "git-push"],
           "three_octet_versioning_present": "pass",
-          "drafter_input_observation": "Both structural pre-check failures are self-referential — same shape as W3 D5 + W4 D7 AUDIT-PILLAR11. The G081 banned phrases appear inside D6 evidence's celebratory_framing_check field as the literal list of banned phrases that were avoided in the retrospective. The git-op tokens appear inside pillar_11_invariant_check.evidence.files_written prose attesting that no git operations occurred (the prose enumerates what executor did NOT invoke). Same drafter-arbitration pattern as W3 D5 / W4 D7 applies."
+          "drafter_input_observation": "Both structural pre-check failures are self-referential - same shape as W3 D5 + W4 D7 AUDIT-PILLAR11. The G081 banned phrases appear inside D6 evidence's celebratory_framing_check field as the literal list of banned phrases that were avoided in the retrospective. The git-op tokens appear inside pillar_11_invariant_check.evidence.files_written prose attesting that no git operations occurred (the prose enumerates what executor did NOT invoke). Same drafter-arbitration pattern as W3 D5 / W4 D7 applies."
         },
-        "halt_disposition_basis": "Disposition is `halt` rather than `surface_to_drafter` because both structural pre-checks failed. Per the auditor contract, halt is a valid disposition for structural pre-check fails. Bootstrap test 6 — the disposition shape itself reflects the auditor's structural pre-check protocol working as designed.",
+        "halt_disposition_basis": "Disposition is `halt` rather than `surface_to_drafter` because both structural pre-checks failed. Per the auditor contract, halt is a valid disposition for structural pre-check fails. Bootstrap test 6 - the disposition shape itself reflects the auditor's structural pre-check protocol working as designed.",
         "hard_fail_check": {
           "condition": "self-audit produces fake-ID-on-registered-anchor false positives that the filter should have caught (W4 D1 filter regression)",
-          "observed": "no finding of that shape arose. The 8 model findings are: 6 path-resolution-note findings (D1/D2/D3 reproducing the path-resolution evidence I wrote into the archive; D5/D6/D7 appear hallucinated by the model — see drafter-input observation below) + 2 carry-forward title citations (F-0.2.17-W1-001 and F-0.2.17-W4-001 which ARE registered and ARE valid open carry-forwards). None of the 8 model findings have a fake-ID phrase substring (the canonical set: 'not real', 'looks placeholder', 'matches naming conventions', etc.). Filter was eligible (16 registered IDs) and ran on every model finding; suppressed_count=0 was structurally correct.",
+          "observed": "no finding of that shape arose. The 8 model findings are: 6 path-resolution-note findings (D1/D2/D3 reproducing the path-resolution evidence I wrote into the archive; D5/D6/D7 appear hallucinated by the model - see drafter-input observation below) + 2 carry-forward title citations (F-0.2.17-W1-001 and F-0.2.17-W4-001 which ARE registered and ARE valid open carry-forwards). None of the 8 model findings have a fake-ID phrase substring (the canonical set: 'not real', 'looks placeholder', 'matches naming conventions', etc.). Filter was eligible (16 registered IDs) and ran on every model finding; suppressed_count=0 was structurally correct.",
           "result": "no_hard_fail"
         },
         "drafter_input_observations": {
           "model_findings_d1_d2_d3": "Auditor accurately reproduced the path-resolution-note prose I wrote into D1/D2/D3 evidence. Three findings reflect the same architectural ambiguity I surfaced for drafter review (plan-doc says 'docs/adr/' but ADR convention is 'artifacts/adrs/'). Drafter arbitration: confirm path-resolution decision as stated in archive evidence.",
           "model_findings_d5_d6_d7_appear_hallucinated": "Findings D5, D6, D7 contain fabricated path-resolution claims that do not match the W5 plan-doc paths or the actual deliverable shapes. D5 plan-doc path is 'docs/architecture/claw3d-brick-spec.md' (not 'docs/adr/0009-...'). D6 plan-doc path is 'docs/retrospectives/0.2.17.md' (not 'docs/adr/0.2.17-...'). D7 is about chat-side artifact supersession, not 'modify existing' (that was D1). Pattern: small-model creativity copying the D1/D2/D3 path-resolution-note shape and applying it to deliverables that don't have that note. Drafter arbitration: surface as a new failure-mode observation worth recording. Possible new carry-forward: 'small-model finding-shape-replication beyond evidence text' if pattern recurs.",
-          "model_findings_w1_001_w4_001": "Both findings just cite carry-forward titles as the description; both ARE registered open carry-forwards (W6 scope per plan-doc). Auditor is reporting the carry-forward IDs from outstanding_pre_03x_gates as findings rather than as informational status references. Drafter arbitration: stylistic — the auditor is reporting open carry-forwards as if they were W5 substance defects. Not W5 defects — they're outstanding pre-0.3.x gates explicitly recorded in this archive's outstanding_pre_03x_gates section.",
+          "model_findings_w1_001_w4_001": "Both findings just cite carry-forward titles as the description; both ARE registered open carry-forwards (W6 scope per plan-doc). Auditor is reporting the carry-forward IDs from outstanding_pre_03x_gates as findings rather than as informational status references. Drafter arbitration: stylistic - the auditor is reporting open carry-forwards as if they were W5 substance defects. Not W5 defects - they're outstanding pre-0.3.x gates explicitly recorded in this archive's outstanding_pre_03x_gates section.",
           "structural_pre_checks_self_referential": "Same shape as W3 D5 + W4 D7. The banned phrases and git-op tokens appear in the archive prose attesting compliance, not as actual operations or actual celebratory framing. Drafter arbitration: structurally identical to prior arbitrations. Pillar 11 in fact respected; G081 in fact respected (the retrospective's celebratory_framing_check explicitly enumerates the banned phrases as the list to avoid).",
-          "auditor_contract_observation": "Bootstrap test 6 — auditor primitive operating with stabilized stack. Filter live, structurally narrow, did NOT over-suppress (F-0.2.17-W1-001 + F-0.2.17-W4-001 NOT suppressed because no fake-ID phrase in description). Filter NOT eligible to suppress D5/D6/D7 hallucinated findings because the descriptions don't match the fake-ID-on-registered-anchor failure mode. The hallucination shape (replicate-evidence-text-pattern) is a different small-model failure mode than the fake-ID-on-registered-anchor mode the W4 D1 filter targets."
+          "auditor_contract_observation": "Bootstrap test 6 - auditor primitive operating with stabilized stack. Filter live, structurally narrow, did NOT over-suppress (F-0.2.17-W1-001 + F-0.2.17-W4-001 NOT suppressed because no fake-ID phrase in description). Filter NOT eligible to suppress D5/D6/D7 hallucinated findings because the descriptions don't match the fake-ID-on-registered-anchor failure mode. The hallucination shape (replicate-evidence-text-pattern) is a different small-model failure mode than the fake-ID-on-registered-anchor mode the W4 D1 filter targets."
         },
         "halt_and_surface_after_emit": true,
         "drafter_review_pre_sign_required": true,
@@ -291,21 +291,21 @@
           "3: W3 D4 RAG-vs-non-RAG comparison",
           "4: W3 D5 self-audit replay (filter pre-deployment)",
           "5: W4 D7 self-audit (filter live, structurally narrow, did not over-suppress)",
-          "6: W5 self-audit (this run — disposition `halt` from structural pre-checks; filter live, structurally narrow, did not over-suppress; small-model hallucination of three D5/D6/D7 findings copying D1/D2/D3 path-resolution-note shape)"
+          "6: W5 self-audit (this run - disposition `halt` from structural pre-checks; filter live, structurally narrow, did not over-suppress; small-model hallucination of three D5/D6/D7 findings copying D1/D2/D3 path-resolution-note shape)"
         ]
       },
-      "notes": "D8 emit complete. Audit archive sealed at audit/W5.json (sha256 5bd170e9...). Acceptance archive transitions to pending_drafter_review per executor prompt. workstream_complete is NOT emitted in this session. Drafter (claude-web) reviewed disposition pre-sign in chat (this turn); arbitrated 10 findings as 6 path-drift surfaces (D1-D6) + 2 outstanding-gate observations (F-0.2.17-W1-001, F-0.2.17-W4-001) + 2 self-referential structural pre-checks (AUDIT-G081, AUDIT-PILLAR11). Drafter arbitration recorded in drafter_review_note below. Audit/W5.json sealed — no post-emit edits. Two new carry-forwards added in carry_forwards_added: F-0.2.17-W5-001 (structural pre-check self-referential pattern, third occurrence) + F-0.2.17-W5-002 (plan-doc / repo-convention path drift).",
+      "notes": "D8 emit complete. Audit archive sealed at audit/W5.json (sha256 5bd170e9...). Acceptance archive transitions to pending_drafter_review per executor prompt. workstream_complete is NOT emitted in this session. Drafter (claude-web) reviewed disposition pre-sign in chat (this turn); arbitrated 10 findings as 6 path-drift surfaces (D1-D6) + 2 outstanding-gate observations (F-0.2.17-W1-001, F-0.2.17-W4-001) + 2 self-referential structural pre-checks (AUDIT-G081, AUDIT-PILLAR11). Drafter arbitration recorded in drafter_review_note below. Audit/W5.json sealed - no post-emit edits. Two new carry-forwards added in carry_forwards_added: F-0.2.17-W5-001 (structural pre-check self-referential pattern, third occurrence) + F-0.2.17-W5-002 (plan-doc / repo-convention path drift).",
       "drafter_review_note": {
         "reviewer": "claude-web (drafter)",
         "reviewed_utc": "2026-05-03T20:50:00Z",
         "arbitrated_disposition": "pass_with_findings",
-        "arbitrated_disposition_basis": "Llama self-audit emitted disposition `halt` driven by two structural pre-check fires (AUDIT-G081 + AUDIT-PILLAR11). Both pre-check fires are self-referential — banned phrases and git-op tokens appear in archive prose attesting compliance, not as actual operations. Same shape as W3 D5 + W4 D7 (third occurrence in iteration; pattern-confirms). Drafter arbitrated to pass_with_findings with two new carry-forwards capturing the patterns surfaced.",
+        "arbitrated_disposition_basis": "Llama self-audit emitted disposition `halt` driven by two structural pre-check fires (AUDIT-G081 + AUDIT-PILLAR11). Both pre-check fires are self-referential - banned phrases and git-op tokens appear in archive prose attesting compliance, not as actual operations. Same shape as W3 D5 + W4 D7 (third occurrence in iteration; pattern-confirms). Drafter arbitrated to pass_with_findings with two new carry-forwards capturing the patterns surfaced.",
         "arbitration_summary": "10 findings: 8 model + 2 structural pre-check. Drafter arbitrated each finding. None were fake-ID-on-registered false positives that the W4 D1 filter should have caught. Filter ran clean (filter_eligible=true, registered_id_count=16, suppressed_count=0). Bootstrap test 6 (loop closure with stabilized auditor on documentation-heavy iteration) passes.",
         "per_finding": [
           {
             "id": "D1",
             "severity": "info",
-            "arbitration": "Auditor accurately surfaces plan-doc-vs-repo-convention path drift on D1 (plan-doc said 'docs/adr/'; ADR convention is 'artifacts/adrs/'). Captured as F-0.2.17-W5-002. Not a W5 substance defect — surfaced for drafter chat-side process improvement."
+            "arbitration": "Auditor accurately surfaces plan-doc-vs-repo-convention path drift on D1 (plan-doc said 'docs/adr/'; ADR convention is 'artifacts/adrs/'). Captured as F-0.2.17-W5-002. Not a W5 substance defect - surfaced for drafter chat-side process improvement."
           },
           {
             "id": "D2",
@@ -320,7 +320,7 @@
           {
             "id": "D5",
             "severity": "info",
-            "arbitration": "Auditor surfaces path drift on D5 (claw3d brick spec). Same pattern as D1/D2/D3. Captured under F-0.2.17-W5-002. Auditor's literal description text re-uses the D2 pattern wording rather than D5's specific path; the underlying signal — path drift in plan-doc — is correct."
+            "arbitration": "Auditor surfaces path drift on D5 (claw3d brick spec). Same pattern as D1/D2/D3. Captured under F-0.2.17-W5-002. Auditor's literal description text re-uses the D2 pattern wording rather than D5's specific path; the underlying signal - path drift in plan-doc - is correct."
           },
           {
             "id": "D6",
@@ -345,12 +345,12 @@
           {
             "id": "AUDIT-G081",
             "severity": "important",
-            "arbitration": "Self-referential structural pre-check fire. Banned phrases ('clean close', 'landed beautifully', 'all green', 'shipped') matched literal text inside D6 evidence's celebratory_framing_check field, which explicitly enumerates the banned-phrase list as the phrases the retrospective avoided. Pre-check has no scope discrimination — it scans archive prose including fields whose content is explicitly the pattern set being checked. Same shape as W3 D5 + W4 D7 AUDIT-PILLAR11 (now confirmed pattern across three occurrences). Captured as F-0.2.17-W5-001."
+            "arbitration": "Self-referential structural pre-check fire. Banned phrases ('clean close', 'landed beautifully', 'all green', 'shipped') matched literal text inside D6 evidence's celebratory_framing_check field, which explicitly enumerates the banned-phrase list as the phrases the retrospective avoided. Pre-check has no scope discrimination - it scans archive prose including fields whose content is explicitly the pattern set being checked. Same shape as W3 D5 + W4 D7 AUDIT-PILLAR11 (now confirmed pattern across three occurrences). Captured as F-0.2.17-W5-001."
           },
           {
             "id": "AUDIT-PILLAR11",
             "severity": "critical",
-            "arbitration": "Self-referential structural pre-check fire. Git-op tokens ('git-add', 'git-commit', 'git-push') matched literal text inside pillar_11_invariant_check.evidence.files_written prose attesting that the executor did NOT invoke these primitives. Same shape as W3 D5 + W4 D7. Pillar 11 invariant in fact respected; prose attests compliance. Captured under F-0.2.17-W5-001 (same root cause as AUDIT-G081 above — pre-check needs scope discrimination per F-0.2.17-W5-001 disposition)."
+            "arbitration": "Self-referential structural pre-check fire. Git-op tokens ('git-add', 'git-commit', 'git-push') matched literal text inside pillar_11_invariant_check.evidence.files_written prose attesting that the executor did NOT invoke these primitives. Same shape as W3 D5 + W4 D7. Pillar 11 invariant in fact respected; prose attests compliance. Captured under F-0.2.17-W5-001 (same root cause as AUDIT-G081 above - pre-check needs scope discrimination per F-0.2.17-W5-001 disposition)."
           }
         ],
         "hard_fail_check_drafter_concurrence": "NO fake-ID-on-registered false positives. Filter live, structurally narrow, did not over-suppress. Bootstrap test 6 passes.",
@@ -365,7 +365,7 @@
       "severity": "important",
       "what_surfaced": "Audit-target documentation prose that explicitly cites the regex patterns being checked (git-op tokens in Pillar 11 evidence; G081 banned phrases in celebratory-framing compliance check) gets flagged as compliance failure by the structural pre-checks. Manifests three times across the iteration (W3 D5, W4 D7, W5 D8).",
       "mechanism": "Structural pre-checks scan the entire audit-target text including fields whose content is explicitly the pattern set being checked. Pre-check has no awareness that a token appearing inside a compliance-evidence field is documentation, not violation.",
-      "disposition": "Structural pre-checks need scope discrimination. Two implementation options: (a) JSON path exclusion in pre-check scan — skip fields tagged as compliance-evidence prose (e.g., pillar_11_invariant_check.evidence, celebratory_framing_check.banned_phrases_avoided). (b) Context-aware regex with negative lookbehind for evidence-field markers. Drafter recommends (a) — explicit and auditable. Approach (b) is fragile because lookbehind state varies with field shape.",
+      "disposition": "Structural pre-checks need scope discrimination. Two implementation options: (a) JSON path exclusion in pre-check scan - skip fields tagged as compliance-evidence prose (e.g., pillar_11_invariant_check.evidence, celebratory_framing_check.banned_phrases_avoided). (b) Context-aware regex with negative lookbehind for evidence-field markers. Drafter recommends (a) - explicit and auditable. Approach (b) is fragile because lookbehind state varies with field shape.",
       "target": "0.3.x base-tier hardening",
       "source": "0.2.17 W3 D5 + W4 D7 + W5 D8 (three occurrences pattern-confirms)",
       "audit_traceability": "W3 D5 (audit/W3.json), W4 D7 (audit/W4.json), W5 D8 (audit/W5.json sha 5bd170e9...)"
@@ -376,7 +376,7 @@
       "severity": "info",
       "what_surfaced": "W5 plan-doc specified `docs/adr/` for new ADRs; repo convention is `artifacts/adrs/`. W4 close-note already pointed at `artifacts/adrs/`. Plan-doc D5/D6 path specs mostly aligned with existing repo convention but D1/D2/D3 didn't.",
       "mechanism": "Drafter (Claude web) wrote plan-doc paths from chat-side architecture-artifact convention rather than consulting actual repo state. Executor surfaced the drift in deliverable evidence (six findings during D8 audit are auditor correctly noting these surfaces).",
-      "disposition": "Future plan-docs should reference `artifacts/adrs/` for ADRs, `docs/architecture/` for architecture docs, `docs/retrospectives/` for retrospectives. Drafter chat-side convention update needed. Executor surfaced rather than silent-picking — that part worked correctly.",
+      "disposition": "Future plan-docs should reference `artifacts/adrs/` for ADRs, `docs/architecture/` for architecture docs, `docs/retrospectives/` for retrospectives. Drafter chat-side convention update needed. Executor surfaced rather than silent-picking - that part worked correctly.",
       "target": "drafter chat-side process improvement + 0.3.x plan-doc convention notes",
       "source": "0.2.17 W5 D8 audit findings 0-5 (D1-D6 path-resolution surfaces)",
       "audit_traceability": "W5 D8 (audit/W5.json sha 5bd170e9...) findings indexed 0-5"
@@ -388,9 +388,9 @@
   "pillar_11_invariant_check": {
     "result": "pass",
     "evidence": {
-      "git_operations_in_executor_session": "none — executor did not invoke git, gh, git-add, git-commit, git-push, gh-pr-create, or any merge/push/commit primitive across the W5 executor session",
-      "secret_reads_attempted": "none — W5 work is documentation only; no broker reads; no ~/.config/, ~/.ssh/, age, or fernet artifact reads",
-      "files_written": "artifacts/adrs/0007-containerization-architecture.md (modify — added §Council roles subsection), artifacts/adrs/0009-secrets-broker-boundary.md (new), artifacts/adrs/0010-materiality-measurement.md (new), docs/architecture/component-decomposition.md (new), docs/architecture/claw3d-brick-spec.md (new), docs/retrospectives/0.2.17.md (new), artifacts/iterations/0.2.17/acceptance/W5.json (this archive), artifacts/iterations/0.2.17/probes/W5_self_audit.py (new — self-audit probe), artifacts/iterations/0.2.17/audit/W5.json (audit emit, written by self-audit probe). No .git/, no ~/.config/, no /etc/, no .ssh/ writes.",
+      "git_operations_in_executor_session": "none - executor did not invoke git, gh, git-add, git-commit, git-push, gh-pr-create, or any merge/push/commit primitive across the W5 executor session",
+      "secret_reads_attempted": "none - W5 work is documentation only; no broker reads; no ~/.config/, ~/.ssh/, age, or fernet artifact reads",
+      "files_written": "artifacts/adrs/0007-containerization-architecture.md (modify - added §Council roles subsection), artifacts/adrs/0009-secrets-broker-boundary.md (new), artifacts/adrs/0010-materiality-measurement.md (new), docs/architecture/component-decomposition.md (new), docs/architecture/claw3d-brick-spec.md (new), docs/retrospectives/0.2.17.md (new), artifacts/iterations/0.2.17/acceptance/W5.json (this archive), artifacts/iterations/0.2.17/probes/W5_self_audit.py (new - self-audit probe), artifacts/iterations/0.2.17/audit/W5.json (audit emit, written by self-audit probe). No .git/, no ~/.config/, no /etc/, no .ssh/ writes.",
       "operator_only_actions_respected": "F-0.2.17-W1-003 (Telegram bot token rotation) explicitly NOT performed by this executor. Surfaced under outstanding_pre_03x_gates."
     }
   },
@@ -399,21 +399,21 @@
       "id": "F-0.2.17-W1-003",
       "title": "Telegram bot token rotation (operator-side, pre-0.3.x hard gate)",
       "status": "operator_action_pending",
-      "executor_action": "none — surfaced as continuing reminder per W5 executor prompt",
+      "executor_action": "none - surfaced as continuing reminder per W5 executor prompt",
       "next_surface": "W5 close (this archive) + W6 close + tsP3 handoff"
     },
     {
       "id": "F-0.2.17-W1-001",
       "title": "secrets-test subcommand still in rc1 image (production-image cut)",
       "status": "carry_forward",
-      "executor_action": "none — W6 scope per plan-doc",
+      "executor_action": "none - W6 scope per plan-doc",
       "next_surface": "W6"
     },
     {
       "id": "F-0.2.17-W4-001",
       "title": "ChromaDB iteration-context index does not auto-refresh on carry-forwards-0.2.16.md updates",
       "status": "carry_forward",
-      "executor_action": "none — W6 scope per plan-doc",
+      "executor_action": "none - W6 scope per plan-doc",
       "next_surface": "W6"
     }
   ],
@@ -458,5 +458,5 @@
   "self_audit_path": "artifacts/iterations/0.2.17/audit/W5.json",
   "self_audit_completed_utc": "2026-05-03T20:34:23.670429+00:00",
   "self_audit_target_artifact_sha256_at_audit_time": "8795328226425c4536ac03bbe7e1ca2a991f65485cf190756aad5bb179faffbd",
-  "self_audit_filter_outcome_summary": "filter_eligible=true, registered_id_count=16, model_findings=8, suppressed=0 — filter live, structurally narrow, no fake-ID-on-registered-anchor false-positive shape surfaced this run. Disposition `halt` driven by two structural pre-check fails (AUDIT-G081 + AUDIT-PILLAR11), both self-referential (banned phrases + git-op tokens appear in archive prose attesting compliance, same shape as W3 D5 + W4 D7)."
+  "self_audit_filter_outcome_summary": "filter_eligible=true, registered_id_count=16, model_findings=8, suppressed=0 - filter live, structurally narrow, no fake-ID-on-registered-anchor false-positive shape surfaced this run. Disposition `halt` driven by two structural pre-check fails (AUDIT-G081 + AUDIT-PILLAR11), both self-referential (banned phrases + git-op tokens appear in archive prose attesting compliance, same shape as W3 D5 + W4 D7)."
 }

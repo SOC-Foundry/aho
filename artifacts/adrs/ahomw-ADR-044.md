@@ -4,13 +4,13 @@
 **Date:** 2026-04-11
 **Iteration of record:** 0.2.5 (W0 capture)
 **Author:** Kyle Thompson
-**Context surface:** aho methodology — the loop the human runs around the harness
+**Context surface:** aho methodology - the loop the human runs around the harness
 
 ---
 
 ## Context
 
-aho documents how agents execute work inside an iteration: pillars, harness contract, gotcha registry, artifact loop, evaluator role split. What aho has not documented is the loop the *human* runs around the harness — the cadence by which Kyle drives iterations from a finished run to the next iteration's W0 contract.
+aho documents how agents execute work inside an iteration: pillars, harness contract, gotcha registry, artifact loop, evaluator role split. What aho has not documented is the loop the *human* runs around the harness - the cadence by which Kyle drives iterations from a finished run to the next iteration's W0 contract.
 
 This cadence emerged organically through iterations 0.1.13 → 0.2.4 and crystallized during the 0.2.3 W1 forensic close-out (where post-run verification surfaced two defects the test suite missed). It is currently undocumented, lives only in Kyle's working memory and chat context, and is at risk of being smoothed away by anyone who finds it clunky without understanding why the clunkiness is load-bearing.
 
@@ -34,7 +34,7 @@ Kyle reads the bundle artifacts cold and checks claims against ground truth. Gro
 
 This phase is adversarial by design. The reader's job is to find the gap between what the run report *says* shipped and what *actually* shipped on disk. Past examples (0.2.3 W1, W3) demonstrate this gap is real and recurring even with green test suites.
 
-The forensic pass cannot be performed by the same agent that executed the run. It requires a different vantage point — either a different agent, a different invocation context, or the human directly. This is the split-agent principle (Pillar 7) extended from generation/evaluation to execution/verification.
+The forensic pass cannot be performed by the same agent that executed the run. It requires a different vantage point - either a different agent, a different invocation context, or the human directly. This is the split-agent principle (Pillar 7) extended from generation/evaluation to execution/verification.
 
 ### Phase 3: Scaffolded design and plan with explicit open questions
 
@@ -61,17 +61,17 @@ Each phase prevents a specific failure mode the others cannot prevent:
 
 | Phase | Prevents |
 |---|---|
-| 1 — Questions, not answers | Silent assumption-burial inside execution |
-| 2 — Forensic consumption | False-positive run reports (claimed-vs-installed gap) |
-| 3 — 85% scaffolded design | Decision fatigue, drift, rubber-stamping |
-| 4 — W0 contract | Mid-run scope reinterpretation, lost context across sessions |
+| 1 - Questions, not answers | Silent assumption-burial inside execution |
+| 2 - Forensic consumption | False-positive run reports (claimed-vs-installed gap) |
+| 3 - 85% scaffolded design | Decision fatigue, drift, rubber-stamping |
+| 4 - W0 contract | Mid-run scope reinterpretation, lost context across sessions |
 
 Collapsing any two phases into one loses one of these protections:
 
 - Collapsing 1+2: agent grades its own work, no adversarial check
 - Collapsing 2+3: design proceeds from claims rather than verified state
 - Collapsing 3+4: decisions are made without the design context they affect, or decisions drift mid-execution
-- Skipping 2 entirely: the failure mode that produced 0.2.3 W1 — pass on paper, broken on disk
+- Skipping 2 entirely: the failure mode that produced 0.2.3 W1 - pass on paper, broken on disk
 
 The cadence is *deliberately* clunky. Every temptation to smooth it ("let me make a small change mid-run," "let me ask one quick question," "let me skip the bundle review this once") would collapse one of the four phases and reintroduce the failure mode it prevents.
 
@@ -81,10 +81,10 @@ The cadence is *deliberately* clunky. Every temptation to smooth it ("let me mak
 
 This ADR does not introduce a new pillar. It documents the human-side companion to several existing pillars:
 
-- **Pillar 6 (transitions are durable)** — extended from agent state transitions to human-agent contract handoffs (Phase 4)
-- **Pillar 7 (generation and evaluation are separate roles)** — extended from agent role splits to execution/verification splits (Phase 2)
-- **Pillar 9 (gotcha registry is the harness's memory)** — fed by Phase 2 forensic findings; aho-G065 (claimed-vs-installed) was born from a Phase 2 pass
-- **Pillar 10 (interrupt-disciplined runs)** — Phase 1's mandatory question section is the structured interrupt point
+- **Pillar 6 (transitions are durable)** - extended from agent state transitions to human-agent contract handoffs (Phase 4)
+- **Pillar 7 (generation and evaluation are separate roles)** - extended from agent role splits to execution/verification splits (Phase 2)
+- **Pillar 9 (gotcha registry is the harness's memory)** - fed by Phase 2 forensic findings; aho-G065 (claimed-vs-installed) was born from a Phase 2 pass
+- **Pillar 10 (interrupt-disciplined runs)** - Phase 1's mandatory question section is the structured interrupt point
 
 ---
 
@@ -93,15 +93,15 @@ This ADR does not introduce a new pillar. It documents the human-side companion 
 **Positive:**
 
 - Decision quality is high because each phase does its specific work without contamination from the others
-- The cadence is teachable — a junior engineer can be told "you are in Phase 2, your job is to find the gap between report and disk" and execute it
-- The cadence is transferable across projects — the same loop drives kjtcom iterations and aho iterations identically
+- The cadence is teachable - a junior engineer can be told "you are in Phase 2, your job is to find the gap between report and disk" and execute it
+- The cadence is transferable across projects - the same loop drives kjtcom iterations and aho iterations identically
 - Defects that bypass automated tests (like 0.2.3 W1 and W3) are caught at Phase 2 before they propagate into the next iteration's foundation
 
 **Negative:**
 
 - Iteration latency is higher than a smooth single-pass loop. A four-phase cycle takes more wall clock than "agent finishes and starts the next thing immediately"
 - The cadence depends on a human (Kyle) being present at the boundaries between phases. It does not run unattended
-- Phase 2 forensic skill is non-trivial to teach — it requires adversarial reading discipline that a fresh operator may lack
+- Phase 2 forensic skill is non-trivial to teach - it requires adversarial reading discipline that a fresh operator may lack
 
 **Mitigations:**
 
@@ -127,20 +127,20 @@ The dashboard does not replace human Phase 2 review. It accelerates it by making
 
 ## What this ADR does NOT decide
 
-- Whether the cadence applies to Phase 1+ iterations (multi-machine, multi-project) — likely yes but TBD when Phase 1 starts
-- Whether Phase 2 should eventually be performed by a dedicated reviewer agent rather than by Kyle — open question for 0.3.x or later
-- Whether the 85% number should be tightened or relaxed based on iteration size — open for empirical calibration after more iterations
+- Whether the cadence applies to Phase 1+ iterations (multi-machine, multi-project) - likely yes but TBD when Phase 1 starts
+- Whether Phase 2 should eventually be performed by a dedicated reviewer agent rather than by Kyle - open question for 0.3.x or later
+- Whether the 85% number should be tightened or relaxed based on iteration size - open for empirical calibration after more iterations
 
 ---
 
 ## References
 
-- Pillars 6, 7, 9, 10 — `artifacts/harness/base.md`
-- aho-G065 (claimed-vs-installed verification) — `data/gotcha_archive.json`, captured 0.2.5 W10
-- 0.2.3 W1 forensic example — `artifacts/iterations/0.2.3/aho-run-0_2_3-amended.md`
-- ADR-045 (Discovery Iteration Formalization) — refines Phase 4 scope contract semantics by iteration type
-- README "IAO as harness engineering" section — pending rewrite to incorporate this cadence as the human-side loop companion to the harness components
+- Pillars 6, 7, 9, 10 - `artifacts/harness/base.md`
+- aho-G065 (claimed-vs-installed verification) - `data/gotcha_archive.json`, captured 0.2.5 W10
+- 0.2.3 W1 forensic example - `artifacts/iterations/0.2.3/aho-run-0_2_3-amended.md`
+- ADR-045 (Discovery Iteration Formalization) - refines Phase 4 scope contract semantics by iteration type
+- README "IAO as harness engineering" section - pending rewrite to incorporate this cadence as the human-side loop companion to the harness components
 
 ---
 
-*ADR-044 — captured during 0.2.5 W0 from the cadence that emerged across 0.1.13–0.2.4. The cadence existed before this ADR; the ADR makes it transmissible.*
+*ADR-044 - captured during 0.2.5 W0 from the cadence that emerged across 0.1.13–0.2.4. The cadence existed before this ADR; the ADR makes it transmissible.*

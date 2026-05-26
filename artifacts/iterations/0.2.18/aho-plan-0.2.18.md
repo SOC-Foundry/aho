@@ -1,7 +1,7 @@
 # aho-plan-0.2.18
 
 **Iteration:** 0.2.18
-**Theme:** Base-tier aho on a second physical host — a8geekomCos via
+**Theme:** Base-tier aho on a second physical host - a8geekomCos via
 Tailscale, cross-host OTEL collection, per-host secrets broker
 **Phase:** 0 (Clone-to-Deploy)
 
@@ -16,7 +16,7 @@ Tailscale, cross-host OTEL collection, per-host secrets broker
 > install.fish runs cleanly on fresh a8geekomCos hardware, classifies
 > the host as base tier (no nvidia-smi → base per ADR 0007), pulls
 > the base bundle, and prompts the operator to provision a host-local
-> secrets broker — no cross-host secret tunneling. The Adversarial
+> secrets broker - no cross-host secret tunneling. The Adversarial
 > Authorship harness exercises end-to-end inside the container on
 > a8geekomCos with the in-container `llama3.2:3b` auditor seat,
 > advancing the ADR-0010 materiality data counter from N=5 to N≥6
@@ -24,7 +24,7 @@ Tailscale, cross-host OTEL collection, per-host secrets broker
 > existing OTEL collector is rebound from `localhost:4317` to its
 > Tailscale interface; a8geekomCos OTLP traffic lands there with
 > `host.name=a8geekomCos` as a resource attribute distinguishing
-> per-host signal flows. The 0.3 charter is untouched —
+> per-host signal flows. The 0.3 charter is untouched -
 > partial-tier on tsP3 remains 0.3.1, full-tier cloud serving plane
 > remains 0.3.2.
 
@@ -122,7 +122,7 @@ sign-off before any `workstream_start` event fires.
 | operator | Kyle |
 
 0.2.18 deviates on the drafter slot: **drafter = claude-code (this
-session)**. Operator-explicit choice — see chat record at plan-doc
+session)**. Operator-explicit choice - see chat record at plan-doc
 authoring time. Other slots unchanged.
 
 **Pillar 7 implications.** Generation/evaluation separation (Pillar 7)
@@ -142,31 +142,31 @@ contract.
 | N | Theme | Gate |
 |---|---|---|
 | W0 | 0.2.17 carry-forward closure + CLAUDE.md rewrite (0.2.16 → 0.2.18) + a8geekomCos hardware/network probe | F-0.2.17-W6-003 gitignore gap closed; CLAUDE.md reflects 0.2.18 iteration + revised role assignment; a8geekomCos OS family + Tailscale reachability + podman-availability + iGPU profile probed and recorded |
-| W1 | `aho:0.2.18` image build with cross-host OTLP endpoint default baked + push to ghcr.io | Image builds clean; size delta vs `aho:0.2.17-rc2` recorded; `OTEL_EXPORTER_OTLP_ENDPOINT` default points at NZXTcos's Tailscale name; smoke `aho --version` works; Kyle pushes to `ghcr.io/soc-foundry/aho:0.2.18` (Pillar 11 — agents prepare, operator pushes) |
+| W1 | `aho:0.2.18` image build with cross-host OTLP endpoint default baked + push to ghcr.io | Image builds clean; size delta vs `aho:0.2.17-rc2` recorded; `OTEL_EXPORTER_OTLP_ENDPOINT` default points at NZXTcos's Tailscale name; smoke `aho --version` works; Kyle pushes to `ghcr.io/soc-foundry/aho:0.2.18` (Pillar 11 - agents prepare, operator pushes) |
 | W2 | install.fish on a8geekomCos + host-local secrets broker provisioning prompt + NZXTcos collector rebind | install.fish runs cleanly on a8geekomCos; tier manifest written with `host_id=a8geekomCos`, `tier=base`, `deployment_mode=production`; broker socket present at `~/.local/share/aho/broker/broker.sock`; NZXTcos collector binds Tailscale interface (config change recorded as artifact); a8geekomCos→NZXTcos OTLP reachability verified |
 | W3 | Adversarial Authorship harness cycle on a8geekomCos + materiality data point | One drafter→executor→auditor cycle runs end-to-end inside container; auditor deployment count advances to N≥6; `acceptance/W3.json` records materiality fields per ADR-0010 |
 | W4 | Telemetry verification + close package | Cross-host OTEL flow verified per graduation criterion step 7; retrospective applies ADR 0006 deliverable + criterion; carry-forward register lands; iteration close package per current `aho iteration close --confirm` semantics |
 
 ---
 
-## W0 — 0.2.17 carry-forward closure + CLAUDE.md rewrite + a8geekomCos probe
+## W0 - 0.2.17 carry-forward closure + CLAUDE.md rewrite + a8geekomCos probe
 
-**Scope:** Three coordinated buckets — close 0.2.17 carry-forwards
+**Scope:** Three coordinated buckets - close 0.2.17 carry-forwards
 that target 0.2.18 / early-base-tier-hygiene, refresh CLAUDE.md to
 0.2.18 contract, and probe a8geekomCos so W1/W2 launch with hardware
 facts in hand rather than assumptions.
 
-### Bucket 1 — Carry-forward closures from 0.2.17
+### Bucket 1 - Carry-forward closures from 0.2.17
 
-1. **F-0.2.17-W6-003 — gitignore gap.** `.aho-checkpoint.json` and
+1. **F-0.2.17-W6-003 - gitignore gap.** `.aho-checkpoint.json` and
    `.claude/settings.json` were tracked despite being in
    `.dockerignore`. Operator-side remediation already executed at
    0.2.17 close per `iteration-close-0.2.17.md`; W0 verifies the
    `.gitignore` mirrors `.dockerignore`'s working-state list and
    that no working-state file is still tracked. If still tracked,
-   surface to Kyle for `git rm --cached` (Pillar 11 — agent
+   surface to Kyle for `git rm --cached` (Pillar 11 - agent
    surfaces, operator executes).
-2. **F-0.2.17-W5-002 — plan-doc / repo-convention path drift.** This
+2. **F-0.2.17-W5-002 - plan-doc / repo-convention path drift.** This
    plan-doc itself is the first 0.2.18 artifact authored under the
    carry-forward; verify `artifacts/adrs/` (not `docs/adr/`) and
    `artifacts/iterations/0.2.18/` (not `docs/iterations/`) are the
@@ -174,7 +174,7 @@ facts in hand rather than assumptions.
    convention-anchor note to `artifacts/harness/prompt-conventions.md`
    so future plan-docs inherit the correction at the convention
    layer, not via repeated drafter-side correction.
-3. **F-0.2.17-W6-002 — council embed timeout default too tight.**
+3. **F-0.2.17-W6-002 - council embed timeout default too tight.**
    Bump default `AHO_COUNCIL_EMBED_TIMEOUT_S` from 30s to 120s in
    `src/aho/council/embed.py`. Single-line change with a unit-test
    amendment. NZXTcos 8GB VRAM substrate condition does not
@@ -187,11 +187,11 @@ facts in hand rather than assumptions.
    audit-machinery iteration. Recorded explicitly in W4
    carry-forward register.
 
-### Bucket 2 — CLAUDE.md rewrite (0.2.16 → 0.2.18)
+### Bucket 2 - CLAUDE.md rewrite (0.2.16 → 0.2.18)
 
 5. **CLAUDE.md content refresh.** Current CLAUDE.md still asserts
    "Current Iteration: 0.2.16" and casts Claude Code as "primary
-   drafter under Adversarial Authorship (modified)" — both stale.
+   drafter under Adversarial Authorship (modified)" - both stale.
    W0 rewrites:
    - Iteration label: 0.2.16 → 0.2.18.
    - Role assignment: explicit four-role table per §Role assignment
@@ -209,7 +209,7 @@ facts in hand rather than assumptions.
      wording; carry forward.
    - Cross-project contamination vigilance: unchanged; carry
      forward (zero contamination across 0.2.14, 0.2.15, 0.2.16,
-     0.2.17 — the discipline works).
+     0.2.17 - the discipline works).
 6. **GEMINI.md content refresh (if applicable).** GEMINI.md exists
    per 0.2.17 W0 rename pass; if 0.2.18 keeps Gemini available
    only as fallback (per Kyle's plan-time decision), GEMINI.md
@@ -218,7 +218,7 @@ facts in hand rather than assumptions.
    GEMINI.md does not exist as a live governance file in
    0.2.18, the bullet is no-op.
 
-### Bucket 3 — a8geekomCos probe
+### Bucket 3 - a8geekomCos probe
 
 7. **Tailscale reachability.** From NZXTcos:
    ```fish
@@ -237,7 +237,7 @@ facts in hand rather than assumptions.
    what the OS is and whether install.fish needs adaptation
    in W2. If significant adaptation is required, surface to
    Kyle as a scope-amendment trigger (ADR 0006 hard meta-rule)
-   before proceeding — do not silently expand W2 scope.
+   before proceeding - do not silently expand W2 scope.
 9. **CPU/iGPU profile.** From a8geekomCos:
    ```fish
    lscpu | head -20
@@ -272,7 +272,7 @@ facts in hand rather than assumptions.
   pass.
 - CLAUDE.md is at 0.2.18 with the role-assignment deviation explicit.
 - a8geekomCos probe artifact lives at
-  `artifacts/iterations/0.2.18/probes/a8geekomCos-baseline.md` —
+  `artifacts/iterations/0.2.18/probes/a8geekomCos-baseline.md` -
   Tailscale latency + MagicDNS name + OS family + CPU/iGPU profile +
   disk capacity recorded.
 - If install.fish portability adaptation is required, scope-amendment
@@ -287,14 +287,14 @@ the OS family requires (~1.5h).
 
 ---
 
-## W1 — `aho:0.2.18` image build with cross-host OTLP endpoint baked + push
+## W1 - `aho:0.2.18` image build with cross-host OTLP endpoint baked + push
 
 **Scope:** Cut a new image that bakes NZXTcos's MagicDNS name as the
 default OTLP collector. Image is otherwise the 0.2.17-rc2 carry-over
 plus the embed-timeout fix from W0 Bucket 1.
 
 1. **Dockerfile delta from 0.2.17.** Compare against the 0.2.17
-   Dockerfile (path determined at execution time — likely
+   Dockerfile (path determined at execution time - likely
    `containers/Dockerfile` per W1 0.2.17 disposition); the only
    intentional changes for 0.2.18 are:
    - `OTEL_EXPORTER_OTLP_ENDPOINT` default in entrypoint shell
@@ -305,7 +305,7 @@ plus the embed-timeout fix from W0 Bucket 1.
    No other intentional content changes. Multi-stage layout +
    image size discipline carry from 0.2.17.
 2. **Image-size delta budget.** ≤ 50 MB delta vs `aho:0.2.17-rc2`.
-   If delta exceeds, surface and investigate — image size
+   If delta exceeds, surface and investigate - image size
    regression is a substrate signal, not a budget rounding.
 3. **Smoke test (host-side build).** On NZXTcos:
    ```fish
@@ -316,7 +316,7 @@ plus the embed-timeout fix from W0 Bucket 1.
    podman run --rm aho:0.2.18 sh -c 'echo $OTEL_EXPORTER_OTLP_ENDPOINT'
    # expected: contains the nzxtcos magicdns name + ":4317"
    ```
-4. **Registry push (Pillar 11 — operator-executed).** Agents
+4. **Registry push (Pillar 11 - operator-executed).** Agents
    prepare the push command; Kyle runs:
    ```fish
    gh auth token | podman login ghcr.io -u <kyle-user> --password-stdin
@@ -354,7 +354,7 @@ would extend W1.
 
 ---
 
-## W2 — install.fish on a8geekomCos + host-local broker + NZXTcos collector rebind
+## W2 - install.fish on a8geekomCos + host-local broker + NZXTcos collector rebind
 
 **Scope:** Bring a8geekomCos to deployable state. install.fish runs
 cleanly, secrets broker provisions host-locally, NZXTcos's collector
@@ -395,7 +395,7 @@ accepts inbound Tailscale traffic.
    prompts the operator:
 
    > "Provision host-local secrets broker on a8geekomCos? Per
-   > ADR 0009, each host runs its own broker — no cross-host
+   > ADR 0009, each host runs its own broker - no cross-host
    > tunneling. Operator action required to seed the broker
    > with local secrets. [y/N]"
 
@@ -407,7 +407,7 @@ accepts inbound Tailscale traffic.
    message that the install is not complete.
 
    No agent reads or writes secret values during this
-   workstream — broker provisioning is structural setup;
+   workstream - broker provisioning is structural setup;
    secret seeding is operator-only.
 4. **NZXTcos collector rebind to Tailscale interface.** On
    NZXTcos:
@@ -425,7 +425,7 @@ accepts inbound Tailscale traffic.
      ```
    - **Pillar 11 alert channel surface.** The 0.2.16 W3
      alert engine (if live) fires on collector reachability
-     change events. W2 is expected to produce one — Kyle
+     change events. W2 is expected to produce one - Kyle
      acknowledges in close-note.
 5. **a8geekomCos → NZXTcos OTLP reachability test.** From
    a8geekomCos:
@@ -433,7 +433,7 @@ accepts inbound Tailscale traffic.
    nc -zv <nzxtcos-magicdns> 4317
    # expected: connection succeeds
    ```
-   If this fails, surface immediately — NZXTcos collector bind
+   If this fails, surface immediately - NZXTcos collector bind
    change did not take, or Tailscale firewall blocks 4317.
 6. **install.fish portability disposition.** If W0 surfaced
    non-Arch OS family on a8geekomCos, W2 carries the
@@ -445,10 +445,10 @@ accepts inbound Tailscale traffic.
 
 ### Carry-forwards potentially closed by W2
 
-- 0.2.17 carry — install.fish second-host portability (was
+- 0.2.17 carry - install.fish second-host portability (was
   implicit until exercised on a different host; now empirically
   tested).
-- ADR 0007 §Registry choice deferral surface — partial
+- ADR 0007 §Registry choice deferral surface - partial
   exercise. W2 demonstrates ghcr.io pull works from a second
   host; full registry-choice resolution remains 0.3.2 scope.
 
@@ -468,14 +468,14 @@ accepts inbound Tailscale traffic.
 ### Estimated budget
 
 4 hours. Image transfer ~30min depending on bandwidth.
-install.fish wall-clock is the variable — clean Arch run is
+install.fish wall-clock is the variable - clean Arch run is
 ~45min including model pulls; portability adaptation could
 extend to 2h+. Collector rebind is ~30min. Reachability +
 disposition record is ~30min.
 
 ---
 
-## W3 — Adversarial Authorship harness cycle on a8geekomCos + materiality data point
+## W3 - Adversarial Authorship harness cycle on a8geekomCos + materiality data point
 
 **Scope:** Exercise the harness end-to-end inside the container on
 a8geekomCos. Drafter→executor→auditor cycle runs once with measured
@@ -486,8 +486,8 @@ materiality fields, advancing the ADR-0010 counter from N=5 to N≥6.
    utility module, or a documentation-only change) as the cycle's
    target. The exercise validates the harness machinery, not the
    specific code change. Selection criterion: the change must
-   have a non-trivial audit surface — registered anchor IDs
-   present, structural pre-checks fire-eligible — so the auditor
+   have a non-trivial audit surface - registered anchor IDs
+   present, structural pre-checks fire-eligible - so the auditor
    has something to assess. Pure-noop changes don't generate
    materiality signal.
 2. **Drafter** (claude-code, this session pattern carried
@@ -545,13 +545,13 @@ verification + materiality fields (~1h).
 
 ---
 
-## W4 — Telemetry verification + close package
+## W4 - Telemetry verification + close package
 
 **Scope:** Verify cross-host OTEL flow per the graduation criterion's
 step 7, assemble close artifacts, run iteration close.
 
 1. **Cross-host telemetry verification.** Graduation criterion
-   step 7 — re-run as part of W4 acceptance with explicit
+   step 7 - re-run as part of W4 acceptance with explicit
    evidence captured:
    - `~/.local/share/aho/logs/*.jsonl` on NZXTcos contains
      `host.name=a8geekomCos` records.
@@ -570,18 +570,18 @@ step 7, assemble close artifacts, run iteration close.
    not derived. §Graduation criterion section asserts each
    numbered fish step against current state.
 3. **Carry-forward register.**
-   `artifacts/iterations/0.2.18/carry-forwards-0.2.18.md` —
+   `artifacts/iterations/0.2.18/carry-forwards-0.2.18.md` -
    items not closed by 0.2.18, with target iteration recorded.
    Expected: F-0.2.17-W5-001, F-0.2.17-W6-001, F-0.2.17-W1-003
    (token rotation if not done by Kyle pre-iteration), plus
    any new findings surfaced during 0.2.18.
 4. **Iteration bundle.**
-   `artifacts/iterations/0.2.18/aho-bundle-0.2.18.md` — standard
+   `artifacts/iterations/0.2.18/aho-bundle-0.2.18.md` - standard
    9-section bundle per the 0.2.15-established convention.
    Counts internally consistent (avoid the 0.2.15 AF001
    recurrence).
 5. **Sign-off sheet.** Per ADR 0004's redesigned `--confirm`
-   semantics — auto-generated post-close from audit archives
+   semantics - auto-generated post-close from audit archives
    if the redesign is live, or manual checkbox-tick per legacy
    convention.
 6. **`aho iteration close --confirm`.** Run with
@@ -615,22 +615,22 @@ Inheriting from 0.2.17 (5 carrying-forward items + 1 hard gate per
 **Folded into 0.2.18 W0 (closed in this iteration if W0 lands
 clean):**
 
-- F-0.2.17-W6-003 — gitignore gap (W0 Bucket 1)
-- F-0.2.17-W6-002 — council embed timeout default (W0 Bucket 1)
-- F-0.2.17-W5-002 — plan-doc / repo-convention path drift (W0 Bucket
+- F-0.2.17-W6-003 - gitignore gap (W0 Bucket 1)
+- F-0.2.17-W6-002 - council embed timeout default (W0 Bucket 1)
+- F-0.2.17-W5-002 - plan-doc / repo-convention path drift (W0 Bucket
   1, convention-layer fix)
 
-**Not folded — remain open for 0.3.x or audit-machinery iteration:**
+**Not folded - remain open for 0.3.x or audit-machinery iteration:**
 
-- F-0.2.17-W5-001 — structural pre-check self-referential pattern
+- F-0.2.17-W5-001 - structural pre-check self-referential pattern
   (audit-machinery refinement; not a8geekomCos-blocker)
-- F-0.2.17-W6-001 — audit-time lookup ranking opaque-ID misses
+- F-0.2.17-W6-001 - audit-time lookup ranking opaque-ID misses
   (audit-machinery refinement; not a8geekomCos-blocker)
 
 **Operator-side hard gate (pre-deployment, non-blocking iteration
 plan but blocks W2 launch):**
 
-- F-0.2.17-W1-003 — `ahomw:telegram_bot_token` rotation. Kyle
+- F-0.2.17-W1-003 - `ahomw:telegram_bot_token` rotation. Kyle
   rotates pre-W2 using the W6 D1 hash-fingerprint contract.
   Verification artifact (pre/post fingerprint differ) lands in
   `artifacts/iterations/0.2.18/probes/`. If not done by W2
@@ -650,22 +650,22 @@ plan but blocks W2 launch):**
 Same as 0.2.17 close, plus:
 
 - ADR 0006 deliverable paragraph + graduation criterion are
-  authoritative — the retrospective reads from this plan, not from
+  authoritative - the retrospective reads from this plan, not from
   derived gate-summaries.
-- ADR 0007 binds W1/W2 — single image, install.fish tier detection,
+- ADR 0007 binds W1/W2 - single image, install.fish tier detection,
   host-mounted secrets per the layout 0.2.17 W2 settled.
 - ADR 0008 binds the dispatcher behavior inside the container; W3's
-  harness cycle exercises in-bundle base-tier dispatches only —
+  harness cycle exercises in-bundle base-tier dispatches only -
   hybrid-mode and on_missing= behavior are unchanged from 0.2.17.
-- ADR 0009 binds the secrets broker boundary — host-local on
+- ADR 0009 binds the secrets broker boundary - host-local on
   a8geekomCos, no cross-host tunneling, operator-provisioned.
-- ADR 0010 binds the materiality measurement — W3 records the
+- ADR 0010 binds the materiality measurement - W3 records the
   per-deployment materiality fields, advancing the counter.
-- Pillar 11 monitored invariant continues — agents do not commit,
+- Pillar 11 monitored invariant continues - agents do not commit,
   push, merge, or surface git operations. W1 image push is
   operator-executed. F-0.2.17-W1-003 token rotation is
   operator-executed pre-W2.
-- Cross-project contamination vigilance per CLAUDE.md continues —
+- Cross-project contamination vigilance per CLAUDE.md continues -
   a8geekomCos is the second physical host aho deploys to and the
   first non-NZXTcos box; this is an elevated contamination-risk
   surface (other-project conventions could leak). Discipline holds.
@@ -678,13 +678,13 @@ Same as 0.2.17 close, plus:
 ---
 
 *Plan doc 0.2.18. Authored by claude-code (Opus 4.7, 1M context) as
-this iteration's drafter — deviation from the 0.2.17 pattern
+this iteration's drafter - deviation from the 0.2.17 pattern
 recorded in §Role assignment. Companion artifacts: ADR 0006
 (deliverable discipline), ADR 0007 amended (containerization +
 council roles), ADR 0009 (secrets broker boundary), ADR 0010
 (materiality measurement). ADR numbers for any new 0.2.18 ADRs
 determined at execution time from
-`artifacts/adrs/` enumeration — not pre-fabricated here. The 0.3
+`artifacts/adrs/` enumeration - not pre-fabricated here. The 0.3
 charter at `artifacts/iterations/0.3/iteration-3-charter.md`
 remains in force; 0.2.18 inserts ahead of 0.3.1 and does not
 amend the charter.*

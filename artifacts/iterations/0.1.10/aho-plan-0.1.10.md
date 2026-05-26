@@ -1,4 +1,4 @@
-# aho — Plan 0.1.10
+# aho - Plan 0.1.10
 
 **Run:** 0.1.10
 **Phase:** 0
@@ -11,82 +11,82 @@ Operational companion to `aho-design-0.1.10.md`. Design is the *why*, this is th
 
 ---
 
-## Section A — Pre-flight checks
+## Section A - Pre-flight checks
 
 ```fish
-# A.0 — Working directory
+# A.0 - Working directory
 cd ~/dev/projects/iao
 command pwd
 # Expected: /home/kthompson/dev/projects/iao
 
-# A.1 — 0.1.9 is closed
+# A.1 - 0.1.9 is closed
 jq .last_completed_iteration .aho-checkpoint.json
 # Expected: "0.1.9"
 
 jq .iteration .aho-checkpoint.json
 # Expected: "0.1.9" (will bump to 0.1.10 in W0)
 
-# A.2 — aho binary works
+# A.2 - aho binary works
 ./bin/aho --version
 # Expected: aho 0.1.9
 
-# A.3 — Design and plan docs present for 0.1.10
+# A.3 - Design and plan docs present for 0.1.10
 command ls docs/iterations/0.1.10/aho-design-0.1.10.md docs/iterations/0.1.10/aho-plan-0.1.10.md
 # Expected: both files listed
 
-# A.4 — Ollama models present
+# A.4 - Ollama models present
 curl -s http://localhost:11434/api/tags | python3 -c "import json, sys; d = json.load(sys.stdin); names = [m['name'] for m in d['models']]; required = ['qwen3.5:9b', 'nemotron-mini:4b']; missing = [r for r in required if not any(r in n for n in names)]; print('OK' if not missing else f'MISSING: {missing}')"
 # Expected: OK
 
-# A.5 — Confirm problem files still exist from 0.1.9
+# A.5 - Confirm problem files still exist from 0.1.9
 command ls docs/iterations/0.1.9/iao-design-0.1.9.md docs/iterations/0.1.9/iao-plan-0.1.9.md docs/iterations/0.1.9/iao-build-log-0.1.9.md
 # Expected: all three listed (they're the files W1 will rename)
 
-# A.6 — Confirm 0.1.99 garbage still on disk (W0 will delete)
+# A.6 - Confirm 0.1.99 garbage still on disk (W0 will delete)
 command ls docs/iterations/0.1.99/ 2>/dev/null; or echo "already gone"
 # Expected: one file listed OR "already gone"
 
-# A.7 — Confirm ChromaDB state
+# A.7 - Confirm ChromaDB state
 python3 -c "import chromadb; c = chromadb.PersistentClient(path='data/chroma'); print([col.name for col in c.list_collections()])"
-# Expected: some list of collection names — record for Condition resolution
+# Expected: some list of collection names - record for Condition resolution
 
-# A.8 — Working tree reasonably clean
+# A.8 - Working tree reasonably clean
 git status --short
 ```
 
 ---
 
-## Section B — Workstream ordering
+## Section B - Workstream ordering
 
 ```
 W0 (env hygiene + 0.1.99 cleanup)
- └─→ W1 (rename iao-* 0.1.9 files to aho-*) — depends on W0 backup
-      └─→ W2 (log_event source_agent sweep) — depends on W0 backup
-           └─→ W3 (openclaw/nemoclaw/structural_gates audit + restore) — depends on W2
-                └─→ W4 (manual-build-log-first enforcement in loop.py) — depends on W0 backup
-                     └─→ W5 (dogfood + close) — depends on all prior
-                          └─→ W6 (project root rename, conditional) — depends on W5 clean pass
+ └─→ W1 (rename iao-* 0.1.9 files to aho-*) - depends on W0 backup
+      └─→ W2 (log_event source_agent sweep) - depends on W0 backup
+           └─→ W3 (openclaw/nemoclaw/structural_gates audit + restore) - depends on W2
+                └─→ W4 (manual-build-log-first enforcement in loop.py) - depends on W0 backup
+                     └─→ W5 (dogfood + close) - depends on all prior
+                          └─→ W6 (project root rename, conditional) - depends on W5 clean pass
 ```
 
 ---
 
-## Section C — Per-workstream fish command blocks
+## Section C - Per-workstream fish command blocks
 
-### W0 — Environment hygiene (15 min)
+### W0 - Environment hygiene (15 min)
 
 ```fish
-# W0.0 — Timestamp
+# W0.0 - Timestamp
 set W0_START (date -u +%Y-%m-%dT%H:%M:%SZ)
 
-# W0.1 — Working directory
+# W0.1 - Working directory
 cd ~/dev/projects/iao
 command pwd
 
-# W0.2 — Create iteration directory and initialize manual build log
+# W0.2 - Create iteration directory and initialize manual build log
 mkdir -p docs/iterations/0.1.10
-printf '# Build Log — aho 0.1.10\n\n**Start:** %s\n**Agent:** %s\n**Machine:** NZXTcos\n**Phase:** 0\n**Run:** 0.1.10\n**Theme:** Restore §22 instrumentation, fix bundle generator, verify rename completeness\n\n---\n\n## W0 — Environment Hygiene\n\n**Start:** %s\n\n' "$W0_START" "$AHO_EXECUTOR" "$W0_START" > docs/iterations/0.1.10/aho-build-log-0.1.10.md
+printf '# Build Log - aho 0.1.10\n\n**Start:** %s\n**Agent:** %s\n**Machine:** NZXTcos\n**Phase:** 0\n**Run:** 0.1.10\n**Theme:** Restore §22 instrumentation, fix bundle generator, verify rename completeness\n\n---\n\n## W0 - Environment Hygiene\n\n**Start:** %s\n\n' "$W0_START" "$AHO_EXECUTOR" "$W0_START" > docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W0.3 — Backup files 0.1.10 will modify
+# W0.3 - Backup files 0.1.10 will modify
 set BACKUP_DIR ~/dev/projects/iao.backup-pre-0.1.10
 mkdir -p $BACKUP_DIR/src-aho-cli
 mkdir -p $BACKUP_DIR/src-aho-agents
@@ -106,13 +106,13 @@ cp docs/iterations/0.1.9/iao-plan-0.1.9.md $BACKUP_DIR/docs-iterations-0.1.9/ 2>
 cp docs/iterations/0.1.9/iao-build-log-0.1.9.md $BACKUP_DIR/docs-iterations-0.1.9/ 2>/dev/null
 command ls -R $BACKUP_DIR | head -30
 
-# W0.4 — Bump checkpoint
+# W0.4 - Bump checkpoint
 jq '.iteration = "0.1.10" | .last_completed_iteration = "0.1.9"' .aho-checkpoint.json > .aho-checkpoint.json.tmp
 mv .aho-checkpoint.json.tmp .aho-checkpoint.json
 jq .iteration .aho-checkpoint.json
 # Expected: "0.1.10"
 
-# W0.5 — Delete docs/iterations/0.1.99/ (Condition 4)
+# W0.5 - Delete docs/iterations/0.1.99/ (Condition 4)
 if test -d docs/iterations/0.1.99
     rm -rf docs/iterations/0.1.99
     echo "Deleted docs/iterations/0.1.99"
@@ -121,36 +121,36 @@ else
 end
 command ls docs/iterations/ | command grep -E '^0\.1\.99$'; or echo "confirmed gone"
 
-# W0.6 — Bump version in cli.py + pyproject.toml (source of truth for --version)
+# W0.6 - Bump version in cli.py + pyproject.toml (source of truth for --version)
 sed -i 's/__version__ = "0.1.9"/__version__ = "0.1.10"/' src/aho/cli.py 2>/dev/null
 sed -i 's/^version = "0.1.9"/version = "0.1.10"/' pyproject.toml
 pip install -e . --break-system-packages --quiet
 ./bin/aho --version
 # Expected: aho 0.1.10
 
-# W0.7 — Log W0 complete
+# W0.7 - Log W0 complete
 printf '**Actions:**\n- Initialized manual build log at docs/iterations/0.1.10/aho-build-log-0.1.10.md\n- Backed up files 0.1.10 will modify to %s\n- Bumped checkpoint to 0.1.10\n- Deleted docs/iterations/0.1.99/\n- Bumped aho version to 0.1.10\n\n**Discrepancies:** none\n\n---\n\n' "$BACKUP_DIR" >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
 ---
 
-### W1 — Rename 0.1.9 iao-prefixed files (20 min)
+### W1 - Rename 0.1.9 iao-prefixed files (20 min)
 
 ```fish
-# W1.0 — Log W1 start
-printf '## W1 — Rename 0.1.9 iao-prefixed files\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W1.0 - Log W1 start
+printf '## W1 - Rename 0.1.9 iao-prefixed files\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W1.1 — Inventory the three files
+# W1.1 - Inventory the three files
 command ls docs/iterations/0.1.9/iao-*.md
 # Expected: iao-build-log-0.1.9.md, iao-design-0.1.9.md, iao-plan-0.1.9.md
 
-# W1.2 — Rename via git mv (preserves history)
+# W1.2 - Rename via git mv (preserves history)
 git mv docs/iterations/0.1.9/iao-design-0.1.9.md docs/iterations/0.1.9/aho-design-0.1.9.md
 git mv docs/iterations/0.1.9/iao-plan-0.1.9.md docs/iterations/0.1.9/aho-plan-0.1.9.md
 git mv docs/iterations/0.1.9/iao-build-log-0.1.9.md docs/iterations/0.1.9/aho-build-log-0.1.9.md
 command ls docs/iterations/0.1.9/
 
-# W1.3 — Audit cross-references inside the renamed files
+# W1.3 - Audit cross-references inside the renamed files
 command rg "iao-design-0.1.9\|iao-plan-0.1.9\|iao-build-log-0.1.9" docs/iterations/0.1.9/
 
 # If any matches, fix them:
@@ -158,83 +158,83 @@ sed -i 's|iao-design-0.1.9|aho-design-0.1.9|g' docs/iterations/0.1.9/aho-*.md
 sed -i 's|iao-plan-0.1.9|aho-plan-0.1.9|g' docs/iterations/0.1.9/aho-*.md
 sed -i 's|iao-build-log-0.1.9|aho-build-log-0.1.9|g' docs/iterations/0.1.9/aho-*.md
 
-# W1.4 — Verify no lingering iao-* references to 0.1.9 files
+# W1.4 - Verify no lingering iao-* references to 0.1.9 files
 command rg "iao-design-0.1.9\|iao-plan-0.1.9\|iao-build-log-0.1.9" docs/ src/
 # Expected: 0 matches (or only within historical run bundles like docs/iterations/0.1.8/)
 
-# W1.5 — Historical iteration files should NOT have been touched
+# W1.5 - Historical iteration files should NOT have been touched
 command ls docs/iterations/0.1.8/ | command grep -E '^iao-'
 # Expected: 0.1.8 files still have iao-* prefix (historical, correct)
 
-# W1.6 — Log W1 complete
+# W1.6 - Log W1 complete
 printf '**Actions:**\n- git mv 3 files: iao-design-0.1.9.md, iao-plan-0.1.9.md, iao-build-log-0.1.9.md → aho-* equivalents\n- Updated internal cross-references\n- Verified no lingering iao-*-0.1.9 references in current docs/src\n- Historical files in 0.1.2-0.1.8 left unchanged\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
 ---
 
-### W2 — log_event source_agent sweep (45 min)
+### W2 - log_event source_agent sweep (45 min)
 
 ```fish
-# W2.0 — Log W2 start
-printf '## W2 — log_event source_agent sweep\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W2.0 - Log W2 start
+printf '## W2 - log_event source_agent sweep\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W2.1 — Find all log_event call sites
+# W2.1 - Find all log_event call sites
 command rg -n "log_event" src/aho/ | head -40
 
-# W2.2 — Find hardcoded iao-* string literals in src
+# W2.2 - Find hardcoded iao-* string literals in src
 command rg -n '"iao-[a-z-]+"' src/aho/
 # Expected: matches in cli.py and possibly elsewhere
 
-# W2.3 — Review each match before applying sed
+# W2.3 - Review each match before applying sed
 # Executor action: for each match from W2.2, determine whether it's a component/source_agent
 # string that should be renamed. Skip any match that refers to historical file paths or 
 # project name strings used for user-facing messages.
 
-# W2.4 — Apply targeted renames — use exact string patterns
+# W2.4 - Apply targeted renames - use exact string patterns
 command rg -l '"iao-cli"' src/aho/ | xargs -r sed -i 's/"iao-cli"/"aho-cli"/g'
 
 # Repeat for any other hardcoded component names found in W2.2
 # E.g. if "iao-pipeline" or similar exist, rename each explicitly
 
-# W2.5 — Verify zero iao-* string literals in src/aho/
+# W2.5 - Verify zero iao-* string literals in src/aho/
 command rg '"iao-[a-z-]+"' src/aho/
 # Expected: 0 matches
 
-# W2.6 — Smoke test: run a trivial command and check the event log
+# W2.6 - Smoke test: run a trivial command and check the event log
 set BEFORE_COUNT (command wc -l < data/aho_event_log.jsonl)
 ./bin/aho --version > /dev/null
 set AFTER_COUNT (command wc -l < data/aho_event_log.jsonl)
 if test $AFTER_COUNT -gt $BEFORE_COUNT
-    command tail -1 data/aho_event_log.jsonl | command grep '"source_agent": "aho-cli"'; and echo "W2 smoke PASS"; or echo "W2 smoke FAIL — check event log source_agent"
+    command tail -1 data/aho_event_log.jsonl | command grep '"source_agent": "aho-cli"'; and echo "W2 smoke PASS"; or echo "W2 smoke FAIL - check event log source_agent"
 else
     echo "W2 smoke: event log did not receive a new entry"
 end
 
-# W2.7 — Run tests
+# W2.7 - Run tests
 python3 -m pytest tests/ -v 2>&1 | tail -10
 
-# W2.8 — Log W2 complete
+# W2.8 - Log W2 complete
 printf '**Actions:**\n- Found hardcoded iao-* string literals in log_event call sites\n- Renamed iao-cli → aho-cli (and any others)\n- Verified 0 lingering iao-* string literals in src/aho/\n- Smoke test: fresh event log entry shows source_agent=aho-cli\n- Tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
 ---
 
-### W3 — OpenClaw / NemoClaw / structural-gates instrumentation audit (75 min)
+### W3 - OpenClaw / NemoClaw / structural-gates instrumentation audit (75 min)
 
 ```fish
-# W3.0 — Log W3 start
-printf '## W3 — OpenClaw/NemoClaw/structural-gates instrumentation audit\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W3.0 - Log W3 start
+printf '## W3 - OpenClaw/NemoClaw/structural-gates instrumentation audit\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W3.1 — Audit openclaw.py for log_event calls
+# W3.1 - Audit openclaw.py for log_event calls
 command rg -n "log_event\|from.*logger" src/aho/agents/openclaw.py
 
-# W3.2 — Audit nemoclaw.py for log_event calls
+# W3.2 - Audit nemoclaw.py for log_event calls
 command rg -n "log_event\|from.*logger" src/aho/agents/nemoclaw.py
 
-# W3.3 — Audit structural_gates.py for log_event calls
+# W3.3 - Audit structural_gates.py for log_event calls
 command rg -n "log_event\|from.*logger" src/aho/postflight/structural_gates.py
 
-# W3.4 — Executor action: for each module above, verify:
+# W3.4 - Executor action: for each module above, verify:
 #   - log_event is imported
 #   - log_event is called at expected points:
 #     * openclaw: session_start (in __init__), openclaw_chat (in chat()), openclaw_execute_code (in execute_code())
@@ -243,15 +243,15 @@ command rg -n "log_event\|from.*logger" src/aho/postflight/structural_gates.py
 #   - source_agent/component string is aho-* (openclaw, nemoclaw, structural-gates)
 #
 # If any instrumentation is missing, restore it. Reference 0.1.8 W5 implementation pattern.
-# If log_event calls exist but use iao-* strings, rename them (may overlap with W2 — that's fine).
+# If log_event calls exist but use iao-* strings, rename them (may overlap with W2 - that's fine).
 
-# W3.5 — Clear event log for a clean smoke test
+# W3.5 - Clear event log for a clean smoke test
 : > data/aho_event_log.jsonl
 
-# W3.6 — Run smoke test from 0.1.8
-test -f scripts/smoke_instrumentation.py; and python3 scripts/smoke_instrumentation.py; or echo "smoke_instrumentation.py missing — create per 0.1.8 pattern"
+# W3.6 - Run smoke test from 0.1.8
+test -f scripts/smoke_instrumentation.py; and python3 scripts/smoke_instrumentation.py; or echo "smoke_instrumentation.py missing - create per 0.1.8 pattern"
 
-# W3.7 — Verify ≥6 unique components in the fresh event log
+# W3.7 - Verify ≥6 unique components in the fresh event log
 python3 -c "
 import json
 with open('data/aho_event_log.jsonl') as f:
@@ -267,27 +267,27 @@ else:
     print('W3 PASS: all 6 expected components present')
 "
 
-# W3.8 — Run tests
+# W3.8 - Run tests
 python3 -m pytest tests/ -v 2>&1 | tail -10
 
-# W3.9 — Log W3 complete
-printf '**Actions:**\n- Audited openclaw.py, nemoclaw.py, structural_gates.py for log_event wiring\n- Restored missing instrumentation where needed\n- Ran smoke_instrumentation.py\n- Verified event log has 6 unique components with aho-* naming\n- Tests pass\n\n**Discrepancies:** (list any components that could not be restored — partial ship acceptable)\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W3.9 - Log W3 complete
+printf '**Actions:**\n- Audited openclaw.py, nemoclaw.py, structural_gates.py for log_event wiring\n- Restored missing instrumentation where needed\n- Ran smoke_instrumentation.py\n- Verified event log has 6 unique components with aho-* naming\n- Tests pass\n\n**Discrepancies:** (list any components that could not be restored - partial ship acceptable)\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
 **Partial-ship criterion:** If fewer than 6 components restore in 60 minutes, ship what's wired, log the rest as discrepancies, continue to W4. Any unwired component carries to the next run.
 
 ---
 
-### W4 — Manual-build-log-first enforcement in loop.py (45 min)
+### W4 - Manual-build-log-first enforcement in loop.py (45 min)
 
 ```fish
-# W4.0 — Log W4 start
-printf '## W4 — Manual-build-log-first enforcement in loop.py\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W4.0 - Log W4 start
+printf '## W4 - Manual-build-log-first enforcement in loop.py\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W4.1 — Locate build log synthesis path in loop.py
+# W4.1 - Locate build log synthesis path in loop.py
 command rg -n "build.log\|build_log" src/aho/artifacts/loop.py
 
-# W4.2 — Executor action: edit loop.py build log synthesis function
+# W4.2 - Executor action: edit loop.py build log synthesis function
 # Add a check at the start of the synthesis function:
 #   from pathlib import Path
 #   manual_path = Path(f"docs/iterations/{version}/aho-build-log-{version}.md")
@@ -299,7 +299,7 @@ command rg -n "build.log\|build_log" src/aho/artifacts/loop.py
 # Then proceed with the existing Qwen synthesis code, writing to
 # docs/iterations/{version}/aho-build-log-synthesis-{version}.md
 
-# W4.3 — Regression test
+# W4.3 - Regression test
 cat > tests/test_build_log_first.py <<'PYEOF'
 """Verify synthesis fails if manual build log is missing (ADR-042 enforcement)."""
 from pathlib import Path
@@ -337,25 +337,25 @@ PYEOF
 
 python3 -m pytest tests/test_build_log_first.py -v
 
-# W4.4 — Log W4 complete
+# W4.4 - Log W4 complete
 printf '**Actions:**\n- Added manual-build-log existence check to loop.py synthesis path\n- Synthesis raises FileNotFoundError with clear message if manual log missing\n- Synthesis file writes to aho-build-log-synthesis-<version>.md\n- Regression test passes\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
 ---
 
-### W5 — Dogfood + close (60 min)
+### W5 - Dogfood + close (60 min)
 
 ```fish
-# W5.0 — Log W5 start
-printf '## W5 — Dogfood + close\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W5.0 - Log W5 start
+printf '## W5 - Dogfood + close\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W5.1 — The manual build log at docs/iterations/0.1.10/aho-build-log-0.1.10.md should already
+# W5.1 - The manual build log at docs/iterations/0.1.10/aho-build-log-0.1.10.md should already
 # contain entries for W0, W1, W2, W3, W4 (the executor has been appending workstream-by-workstream)
 command wc -l docs/iterations/0.1.10/aho-build-log-0.1.10.md
 command grep -c "^## W[0-9]" docs/iterations/0.1.10/aho-build-log-0.1.10.md
 # Expected: 5 or more workstream headers (W0-W4, W5 in progress, W6 conditional)
 
-# W5.2 — Run build log synthesis (should now find the manual file)
+# W5.2 - Run build log synthesis (should now find the manual file)
 ./bin/aho iteration build-log 0.1.10
 
 # Verify synthesis wrote to the -synthesis file
@@ -363,18 +363,18 @@ test -f docs/iterations/0.1.10/aho-build-log-synthesis-0.1.10.md; and echo "synt
 
 # Verify manual file was NOT overwritten
 command md5sum docs/iterations/0.1.10/aho-build-log-0.1.10.md
-# (executor should know the hash from before the synthesis call — if it changed, that's a bug)
+# (executor should know the hash from before the synthesis call - if it changed, that's a bug)
 
-# W5.3 — Generate report
+# W5.3 - Generate report
 ./bin/aho iteration report 0.1.10
 
-# W5.4 — Post-flight
+# W5.4 - Post-flight
 ./bin/aho doctor postflight 0.1.10
 
-# W5.5 — Close (does NOT --confirm)
+# W5.5 - Close (does NOT --confirm)
 ./bin/aho iteration close
 
-# W5.6 — Verification 1: bundle §1 Design contains content
+# W5.6 - Verification 1: bundle §1 Design contains content
 python3 -c "
 import re
 bundle = open('docs/iterations/0.1.10/aho-bundle-0.1.10.md').read()
@@ -385,7 +385,7 @@ else:
     print(f'V1 FAIL: {m.group(1)[:200] if m else \"not found\"}')
 "
 
-# W5.7 — Verification 2: bundle §2 Plan contains content
+# W5.7 - Verification 2: bundle §2 Plan contains content
 python3 -c "
 import re
 bundle = open('docs/iterations/0.1.10/aho-bundle-0.1.10.md').read()
@@ -396,7 +396,7 @@ else:
     print(f'V2 FAIL: {m.group(1)[:200] if m else \"not found\"}')
 "
 
-# W5.8 — Verification 3: bundle §3 has manual build log content
+# W5.8 - Verification 3: bundle §3 has manual build log content
 python3 -c "
 import re
 bundle = open('docs/iterations/0.1.10/aho-bundle-0.1.10.md').read()
@@ -407,7 +407,7 @@ else:
     print(f'V3 FAIL: {m.group(1)[:300] if m else \"not found\"}')
 "
 
-# W5.9 — Verification 4: §22 shows ≥6 components with aho-* naming
+# W5.9 - Verification 4: §22 shows ≥6 components with aho-* naming
 python3 -c "
 import re
 bundle = open('docs/iterations/0.1.10/aho-bundle-0.1.10.md').read()
@@ -432,10 +432,10 @@ else:
         print(f'V4 FAIL: only {len(components)} components')
 "
 
-# W5.10 — Verification 5: docs/iterations/0.1.99/ does not exist
+# W5.10 - Verification 5: docs/iterations/0.1.99/ does not exist
 test ! -d docs/iterations/0.1.99; and echo "V5 PASS"; or echo "V5 FAIL: 0.1.99 still present"
 
-# W5.11 — Verification 6: regenerate 0.1.9 bundle, verify §1/§2/§3 populated
+# W5.11 - Verification 6: regenerate 0.1.9 bundle, verify §1/§2/§3 populated
 ./bin/aho iteration bundle 0.1.9 2>&1; or echo "V6 skip: bundle regen not supported"
 python3 -c "
 import re
@@ -455,10 +455,10 @@ else:
     print('V6 PASS: 0.1.9 bundle regenerates clean')
 "
 
-# W5.12 — Telegram notify (non-blocking)
-./bin/aho telegram notify "aho 0.1.10 complete — $(date -u +%H:%M) UTC" 2>&1; or echo "Telegram not configured — non-blocking"
+# W5.12 - Telegram notify (non-blocking)
+./bin/aho telegram notify "aho 0.1.10 complete - $(date -u +%H:%M) UTC" 2>&1; or echo "Telegram not configured - non-blocking"
 
-# W5.13 — Log W5 complete
+# W5.13 - Log W5 complete
 printf '**Actions:**\n- Generated build log synthesis, report, run report, bundle\n- Ran 6 verification checks\n\n**Verification results:**\n- V1 §1 Design contains content: (pass/fail)\n- V2 §2 Plan contains content: (pass/fail)\n- V3 §3 Build Log has manual content: (pass/fail)\n- V4 §22 has >=6 components with aho-* naming: (pass/fail)\n- V5 0.1.99 deleted: (pass/fail)\n- V6 0.1.9 bundle regen clean: (pass/fail)\n\n**Discrepancies:** (fill in)\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
@@ -466,19 +466,19 @@ printf '**Actions:**\n- Generated build log synthesis, report, run report, bundl
 
 ---
 
-### W6 — Project root rename (conditional, 30 min)
+### W6 - Project root rename (conditional, 30 min)
 
 **Condition:** All six W5 verifications must pass before W6 runs. If any failed, SKIP this workstream.
 
 ```fish
-# W6.0 — Log W6 start (only if reached)
-printf '## W6 — Project Root Rename (conditional)\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+# W6.0 - Log W6 start (only if reached)
+printf '## W6 - Project Root Rename (conditional)\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 
-# W6.1 — Confirm W5 passed all six verifications
+# W6.1 - Confirm W5 passed all six verifications
 # Executor action: read the W5 discrepancies from the build log. If any verification failed,
-# STOP W6 and log "W6 SKIPPED — W5 did not pass clean" then exit.
+# STOP W6 and log "W6 SKIPPED - W5 did not pass clean" then exit.
 
-# W6.2 — Surface a capability-gap interrupt for Kyle
+# W6.2 - Surface a capability-gap interrupt for Kyle
 # The project root rename requires:
 #   1. Exiting the current tmux session / shell (cwd cannot be inside the directory being moved)
 #   2. Kyle manually running: mv ~/dev/projects/iao ~/dev/projects/aho
@@ -489,45 +489,45 @@ printf '## W6 — Project Root Rename (conditional)\n\n' >> docs/iterations/0.1.
 # rename out of band. On return, Kyle runs ./bin/aho iteration close --confirm from the new path.
 
 # The executor writes the interrupt and final status:
-printf '**Actions:**\n- All W5 verifications passed — W6 eligible\n- Surfacing capability-gap interrupt for Kyle\n- Project root rename requires human action (shell session cannot rename its own cwd)\n\n**Capability-gap interrupt:**\n\n```fish\n# From a shell OUTSIDE the iao directory:\ncd ~\nmv ~/dev/projects/iao ~/dev/projects/aho\ncd ~/dev/projects/aho\n./bin/aho --version\n# Expected: aho 0.1.10\n\n# Update any fish abbreviations or shell aliases pointing at the old path\nfunctions -q iao-cd; and functions --erase iao-cd\n# (Kyle to audit and update as needed)\n```\n\n**Status:** W6 INTERRUPT — awaiting Kyle action\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
+printf '**Actions:**\n- All W5 verifications passed - W6 eligible\n- Surfacing capability-gap interrupt for Kyle\n- Project root rename requires human action (shell session cannot rename its own cwd)\n\n**Capability-gap interrupt:**\n\n```fish\n# From a shell OUTSIDE the iao directory:\ncd ~\nmv ~/dev/projects/iao ~/dev/projects/aho\ncd ~/dev/projects/aho\n./bin/aho --version\n# Expected: aho 0.1.10\n\n# Update any fish abbreviations or shell aliases pointing at the old path\nfunctions -q iao-cd; and functions --erase iao-cd\n# (Kyle to audit and update as needed)\n```\n\n**Status:** W6 INTERRUPT - awaiting Kyle action\n\n---\n\n' >> docs/iterations/0.1.10/aho-build-log-0.1.10.md
 ```
 
 ---
 
-## Section D — Post-flight checks
+## Section D - Post-flight checks
 
 ```fish
-# D.1 — All workstream headers present
+# D.1 - All workstream headers present
 command grep -c "^## W[0-9]" docs/iterations/0.1.10/aho-build-log-0.1.10.md
 # Expected: 6 (or 7 if W6 ran)
 
-# D.2 — Bundle present
+# D.2 - Bundle present
 command ls docs/iterations/0.1.10/aho-bundle-0.1.10.md
 
-# D.3 — Run report present
+# D.3 - Run report present
 command ls docs/iterations/0.1.10/aho-run-report-0.1.10.md
 
-# D.4 — Checkpoint state
+# D.4 - Checkpoint state
 jq . .aho-checkpoint.json
 
-# D.5 — Test suite green
+# D.5 - Test suite green
 python3 -m pytest tests/ -v 2>&1 | tail -5
 
-# D.6 — No iao-* contamination
+# D.6 - No iao-* contamination
 command rg '"iao-[a-z-]+"' src/aho/
 # Expected: 0 matches
 
-# D.7 — Project root (post-W6 if it ran)
+# D.7 - Project root (post-W6 if it ran)
 command pwd
 # Expected: /home/kthompson/dev/projects/aho (if W6 ran) OR /home/kthompson/dev/projects/iao (if W6 skipped)
 ```
 
 ---
 
-## Section E — Rollback procedure
+## Section E - Rollback procedure
 
 ```fish
-# E.1 — Restore modified files from backup
+# E.1 - Restore modified files from backup
 set BACKUP_DIR ~/dev/projects/iao.backup-pre-0.1.10
 cp $BACKUP_DIR/src-aho-cli/cli.py src/aho/cli.py
 cp $BACKUP_DIR/src-aho-agents/openclaw.py src/aho/agents/openclaw.py
@@ -536,43 +536,43 @@ cp $BACKUP_DIR/src-aho-postflight/structural_gates.py src/aho/postflight/structu
 cp $BACKUP_DIR/src-aho-artifacts/loop.py src/aho/artifacts/loop.py
 cp -r $BACKUP_DIR/src-aho-bundle/bundle/* src/aho/bundle/
 
-# E.2 — Restore 0.1.9 iao-* filenames if W1 ran and needs reverting
+# E.2 - Restore 0.1.9 iao-* filenames if W1 ran and needs reverting
 if test -f docs/iterations/0.1.9/aho-design-0.1.9.md; and test ! -f docs/iterations/0.1.9/iao-design-0.1.9.md
     git mv docs/iterations/0.1.9/aho-design-0.1.9.md docs/iterations/0.1.9/iao-design-0.1.9.md
     git mv docs/iterations/0.1.9/aho-plan-0.1.9.md docs/iterations/0.1.9/iao-plan-0.1.9.md
     git mv docs/iterations/0.1.9/aho-build-log-0.1.9.md docs/iterations/0.1.9/iao-build-log-0.1.9.md
 end
 
-# E.3 — Revert checkpoint
+# E.3 - Revert checkpoint
 jq '.iteration = "0.1.9"' .aho-checkpoint.json > .aho-checkpoint.json.tmp
 mv .aho-checkpoint.json.tmp .aho-checkpoint.json
 
-# E.4 — Revert version
+# E.4 - Revert version
 sed -i 's/__version__ = "0.1.10"/__version__ = "0.1.9"/' src/aho/cli.py
 sed -i 's/^version = "0.1.10"/version = "0.1.9"/' pyproject.toml
 pip install -e . --break-system-packages --quiet
 
-# E.5 — Mark 0.1.10 incomplete
+# E.5 - Mark 0.1.10 incomplete
 printf '# INCOMPLETE\n\n0.1.10 was attempted %s and rolled back.\nReason: (fill in)\n' (date -u +%Y-%m-%d) > docs/iterations/0.1.10/INCOMPLETE.md
 
-# E.6 — Verify baseline
+# E.6 - Verify baseline
 ./bin/aho --version
 python3 -m pytest tests/ -v
 ```
 
 ---
 
-## Section F — Wall clock estimate
+## Section F - Wall clock estimate
 
 | Workstream | Target | Cumulative |
 |---|---|---|
-| W0 — Environment hygiene | 15 min | 0:15 |
-| W1 — Rename 0.1.9 iao-* files | 20 min | 0:35 |
-| W2 — log_event source_agent sweep | 45 min | 1:20 |
-| W3 — Instrumentation audit + restore | 75 min | 2:35 |
-| W4 — Manual-build-log-first enforcement | 45 min | 3:20 |
-| W5 — Dogfood + close | 60 min | 4:20 |
-| W6 — Project root rename (conditional) | 30 min | 4:50 |
+| W0 - Environment hygiene | 15 min | 0:15 |
+| W1 - Rename 0.1.9 iao-* files | 20 min | 0:35 |
+| W2 - log_event source_agent sweep | 45 min | 1:20 |
+| W3 - Instrumentation audit + restore | 75 min | 2:35 |
+| W4 - Manual-build-log-first enforcement | 45 min | 3:20 |
+| W5 - Dogfood + close | 60 min | 4:20 |
+| W6 - Project root rename (conditional) | 30 min | 4:50 |
 
 **Soft cap:** 4:50
 **Hard cap:** none

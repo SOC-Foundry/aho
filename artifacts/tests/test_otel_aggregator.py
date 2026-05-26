@@ -213,7 +213,7 @@ def test_event_count_aggregation(tmp_path):
 
 
 def test_api_error_and_retries_exhausted_mapping(tmp_path):
-    """0.2.17 W0 Bucket 1 — AF004/AF005 closure.
+    """0.2.17 W0 Bucket 1 - AF004/AF005 closure.
 
     api_error_count counts api_error events (not internal_error).
     api_retries_exhausted_count counts api_retries_exhausted events.
@@ -250,11 +250,11 @@ def test_filters_placeholder_and_wrong_iteration(tmp_path):
         [
             # valid W1 record
             _log_line("0.2.16", "W1", "api_request", "2026-04-23T10:00:00Z"),
-            # unexpanded placeholder — must be skipped
+            # unexpanded placeholder - must be skipped
             _log_line("0.2.16", "${AHO_WORKSTREAM}", "api_request", "2026-04-23T10:00:01Z"),
-            # wrong iteration — must be skipped
+            # wrong iteration - must be skipped
             _log_line("0.2.15", "W1", "api_request", "2026-04-23T10:00:02Z"),
-            # empty workstream — must be skipped
+            # empty workstream - must be skipped
             _log_line("0.2.16", "", "api_request", "2026-04-23T10:00:03Z"),
         ],
     )
@@ -361,7 +361,7 @@ def test_cache_ttl_caches_and_force_busts(tmp_path):
     with logs.open("a") as f:
         f.write(_log_line("0.2.16", "W1", "api_request", "2026-04-23T10:00:01Z") + "\n")
 
-    # Non-forced call should return the cached (old) value — count still 1
+    # Non-forced call should return the cached (old) value - count still 1
     cached = oa.aggregate(iteration="0.2.16", logs_path=logs, metrics_path=metrics)
     assert cached["workstreams"]["W1"]["api_request_count"] == 1
 

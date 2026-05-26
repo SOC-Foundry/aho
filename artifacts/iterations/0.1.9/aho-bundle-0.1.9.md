@@ -11,7 +11,7 @@
 
 ### DESIGN (aho-design-0.1.9.md)
 ```markdown
-# iao — Design 0.1.9
+# iao - Design 0.1.9
 
 **Iteration:** 0.1.9
 **Phase:** 0 (UAT lab for aho)
@@ -24,7 +24,7 @@
 
 ## §1. Phase 0 Position
 
-iao is in Phase 0 under the three-lab framing: kjtcom is the dev lab, iao is the UAT lab, aho is production (future scaffold ~0.1.12). 0.1.9 is the identifier rename iteration inside the iao repo — it does NOT create the aho project directory or stand up the aho scaffold. It renames every internal identifier from `iao*` to `aho*` so that when the aho repo is finally scaffolded it inherits clean vocabulary and so that Qwen's RAG retrieval can distinguish retired content from current content by string alone.
+iao is in Phase 0 under the three-lab framing: kjtcom is the dev lab, iao is the UAT lab, aho is production (future scaffold ~0.1.12). 0.1.9 is the identifier rename iteration inside the iao repo - it does NOT create the aho project directory or stand up the aho scaffold. It renames every internal identifier from `iao*` to `aho*` so that when the aho repo is finally scaffolded it inherits clean vocabulary and so that Qwen's RAG retrieval can distinguish retired content from current content by string alone.
 
 0.1.9 also lands three non-rename items that are tightly coupled to the rename or that Kyle explicitly authorized during 0.1.8 close: the ChromaDB archive rebuild (answer to Agent Question 1), the build log filename split (answer to Agent Question 3), and two trivial cleanup items carried from 0.1.8 (Conditions 5 and 6).
 
@@ -34,7 +34,7 @@ The repo path stays at `~/dev/projects/iao/` throughout 0.1.9. Directory rename 
 
 ## §2. Why 0.1.9 Exists
 
-### 2.1 — The rename is the fix for 0.1.8's biggest condition
+### 2.1 - The rename is the fix for 0.1.8's biggest condition
 
 0.1.8's W8 dogfood ran into a hard ceiling: Qwen's RAG retrieval kept pulling stale 0.1.5 and 0.1.7 content containing retired patterns (split-agent handoff, iaomw-Pillar-N naming) as diagnostic exhibits, and reproduced them in generated synthesis output. Three consecutive build log synthesis attempts were rejected by the W4 evaluator. Claude Code preserved a manual build log as ground truth.
 
@@ -48,23 +48,23 @@ The rename is the permanent structural fix. After 0.1.9:
 
 The rename is not strategic housekeeping anymore. It is the fix.
 
-### 2.2 — Three agent questions from 0.1.8 need answers baked into 0.1.9
+### 2.2 - Three agent questions from 0.1.8 need answers baked into 0.1.9
 
-**Answer 1 — RAG archive rebuild.** Kyle: *yes*. W4 purges the `iaomw_archive` ChromaDB collection and re-indexes from a filtered source that excludes diagnostic appendices. The collection is renamed to `aho_archive` at the same time. This directly fixes 0.1.8 Condition 1.
+**Answer 1 - RAG archive rebuild.** Kyle: *yes*. W4 purges the `iaomw_archive` ChromaDB collection and re-indexes from a filtered source that excludes diagnostic appendices. The collection is renamed to `aho_archive` at the same time. This directly fixes 0.1.8 Condition 1.
 
-**Answer 2 — Telegram credentials.** Kyle: *we will setup new telegram bot with botfather*. This is a capability-gap action Kyle performs out of band. 0.1.9 pre-flight verifies telegram credentials work; if they don't, the iteration continues with telegram notifications disabled and surfaces the gap as a post-flight log entry. Non-blocking. Kyle's BotFather setup lands whenever it lands.
+**Answer 2 - Telegram credentials.** Kyle: *we will setup new telegram bot with botfather*. This is a capability-gap action Kyle performs out of band. 0.1.9 pre-flight verifies telegram credentials work; if they don't, the iteration continues with telegram notifications disabled and surfaces the gap as a post-flight log entry. Non-blocking. Kyle's BotFather setup lands whenever it lands.
 
-**Answer 3 — Build log Qwen synthesis vs manual record.** Kyle: *the loop should generate the Qwen version to a different filename (iao-build-log-synthesis-0.1.8.md or similar) and leave the manual build log as the authoritative record. Qwen's version becomes optional commentary, not a replacement. This fits with Pillar 7 (generation and evaluation are separate roles) because the manual build log is ground truth and Qwen's synthesis is a second-pass artifact that gets evaluated rather than shipped.*
+**Answer 3 - Build log Qwen synthesis vs manual record.** Kyle: *the loop should generate the Qwen version to a different filename (iao-build-log-synthesis-0.1.8.md or similar) and leave the manual build log as the authoritative record. Qwen's version becomes optional commentary, not a replacement. This fits with Pillar 7 (generation and evaluation are separate roles) because the manual build log is ground truth and Qwen's synthesis is a second-pass artifact that gets evaluated rather than shipped.*
 
-W6 implements this: the loop writes Qwen synthesis to `iao-build-log-synthesis-<version>.md` (which becomes `aho-build-log-synthesis-<version>.md` after W1 renames the artifact prefix — see §5 W6), the manual build log at `iao-build-log-<version>.md` is untouched. ADR-042 amends ADR-012 to add the manual build log to the immutable-inputs list. This directly fixes 0.1.8 Condition 2 by making "missing report" a non-issue: the manual build log is always the ground truth, the synthesis is supplementary commentary that can fail without blocking graduation.
+W6 implements this: the loop writes Qwen synthesis to `iao-build-log-synthesis-<version>.md` (which becomes `aho-build-log-synthesis-<version>.md` after W1 renames the artifact prefix - see §5 W6), the manual build log at `iao-build-log-<version>.md` is untouched. ADR-042 amends ADR-012 to add the manual build log to the immutable-inputs list. This directly fixes 0.1.8 Condition 2 by making "missing report" a non-issue: the manual build log is always the ground truth, the synthesis is supplementary commentary that can fail without blocking graduation.
 
-### 2.3 — Five carryover conditions from 0.1.8
+### 2.3 - Five carryover conditions from 0.1.8
 
 **Condition 1 (Qwen RAG retrieval pulls stale content).** Addressed by W4 (archive rebuild + rename) and W7 (forbidden-chunks filter at retrieval time).
 
 **Condition 2 (missing §4 Report).** Addressed by W6 (build log filename split + ADR-042). Under the new protocol, the manual build log is authoritative and the synthesis is optional, so "Qwen couldn't produce a clean synthesis" no longer produces a missing canonical artifact.
 
-**Condition 3 (W4 retry logic does not strengthen between attempts).** Partially addressed by W7's forbidden-chunks filter — a retry automatically excludes poisoned chunks that failed the previous evaluator pass. Full retry-logic rework defers to 0.1.10 if W7 runs long.
+**Condition 3 (W4 retry logic does not strengthen between attempts).** Partially addressed by W7's forbidden-chunks filter - a retry automatically excludes poisoned chunks that failed the previous evaluator pass. Full retry-logic rework defers to 0.1.10 if W7 runs long.
 
 **Condition 4 (two evaluator false positives).** Partially addressed by W7's dynamic-baseline refresh: the evaluator reads allowed scripts/CLI commands from the current file inventory at load time instead of a static JSON baseline. Forward-reference CLI commands (like `iao package` / `aho package`) defer to 0.1.10 as a "planned" list concept.
 
@@ -72,7 +72,7 @@ W6 implements this: the loop writes Qwen synthesis to `iao-build-log-synthesis-<
 
 **Condition 6 (`.pre-0.1.8` backup files in repo working directory).** Addressed by W0: move to `~/dev/projects/iao.backup-pre-0.1.8/` and add `*.pre-*.md` to `.gitignore`.
 
-### 2.4 — Kyle sign-off #5 was [n] on 0.1.8
+### 2.4 - Kyle sign-off #5 was [n] on 0.1.8
 
 Kyle marked "I am satisfied with this iteration's output" as `[n]` on the 0.1.8 close. The dissatisfaction is likely rooted in:
 - The missing §4 Report (structurally absent canonical artifact)
@@ -98,7 +98,7 @@ For reference: 1. Delegate everything delegable. 2. The harness is the contract.
 - **Python:** 3.14.3
 - **Shell:** fish 4.6.0
 - **Ollama models:** qwen3.5:9b, nemotron-mini:4b, nomic-embed-text, haervwe/GLM-4.6V-Flash-9B
-- **ChromaDB archives:** iaomw_archive (stale, poisoned with 0.1.5/0.1.7 retired patterns — target of W4 rebuild), kjtco_archive (282 docs, read-only), tripl_archive (144 docs, read-only)
+- **ChromaDB archives:** iaomw_archive (stale, poisoned with 0.1.5/0.1.7 retired patterns - target of W4 rebuild), kjtco_archive (282 docs, read-only), tripl_archive (144 docs, read-only)
 - **Pillars:** eleven, in `docs/harness/base.md`, read at runtime by `run_report.py`
 - **Evaluator:** wired to build log + report synthesis passes (0.1.8 W4). Two false positives outstanding (Condition 4).
 - **§22 Agentic Components:** 6 components wired (iao-cli, openclaw, nemoclaw, evaluator, qwen-client, structural-gates)
@@ -106,7 +106,7 @@ For reference: 1. Delegate everything delegable. 2. The harness is the contract.
 - **Streaming Qwen + repetition detector:** active
 - **Gotcha codes:** `iaomw-*` prefix throughout
 - **Identifiers to rename:** `src/iao/` (package directory), `bin/iao` (entry point script), `.iao.json`, `.iao-checkpoint.json`, `data/iao_event_log.jsonl`, `iaomw_archive` (ChromaDB), `iaomw-G*` (gotcha codes), IAO_* env vars used in executor launch, all prose `iao` identifier references in base.md and prompt templates
-- **Identifiers NOT to rename:** `~/dev/projects/iao/` (repo path — stays iao), prose mentions of "iao" referring to the historical name, "iao" in iteration filenames (stays as-is for 0.1.9's own artifacts; 0.1.10+ artifacts use `aho-` prefix), CLAUDE.md and GEMINI.md (updated post-0.1.9 before 0.1.10 launches)
+- **Identifiers NOT to rename:** `~/dev/projects/iao/` (repo path - stays iao), prose mentions of "iao" referring to the historical name, "iao" in iteration filenames (stays as-is for 0.1.9's own artifacts; 0.1.10+ artifacts use `aho-` prefix), CLAUDE.md and GEMINI.md (updated post-0.1.9 before 0.1.10 launches)
 - **Telegram credentials:** broken as of 0.1.8 (failed with credential error in `iao telegram test iaomw`). Kyle to set up new BotFather bot out of band.
 
 ---
@@ -115,7 +115,7 @@ For reference: 1. Delegate everything delegable. 2. The harness is the contract.
 
 Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard cap.
 
-### W0 — Environment Hygiene + 0.1.8 Cleanup (20 min)
+### W0 - Environment Hygiene + 0.1.8 Cleanup (20 min)
 
 **Goal:** Transition cleanly from 0.1.8 to 0.1.9. Land Conditions 5 and 6.
 
@@ -124,8 +124,8 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `.iao-checkpoint.json` bumped: `iteration=0.1.9`, `last_completed_iteration=0.1.8`
 - `docs/iterations/0.1.9/` created
 - Build log initialized with W0 entry
-- `src/iao/postflight/ten_pillars_present.py` renamed to `src/iao/postflight/pillars_present.py` with its internal function(s) updated to match — Condition 5
-- `.pre-0.1.8` files moved from repo root to `~/dev/projects/iao.backup-pre-0.1.8/` — Condition 6
+- `src/iao/postflight/ten_pillars_present.py` renamed to `src/iao/postflight/pillars_present.py` with its internal function(s) updated to match - Condition 5
+- `.pre-0.1.8` files moved from repo root to `~/dev/projects/iao.backup-pre-0.1.8/` - Condition 6
 - `.gitignore` updated: add `*.pre-*` pattern
 
 **Success:**
@@ -134,7 +134,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `ls *.pre-* 2>/dev/null | wc -l` returns 0
 - Backup directory contains all expected files
 
-### W1 — Python Source Rename (90 min)
+### W1 - Python Source Rename (90 min)
 
 **Goal:** Rename the `iao` Python package to `aho`. Atomic: the repo is either fully-iao or fully-aho at the end of this workstream, never half-renamed.
 
@@ -146,7 +146,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `pip install -e . --break-system-packages` reinstalls with the new name
 - `./bin/aho --version` returns `aho 0.1.9`
 - `pytest tests/ -v` passes (all tests still work after the import rewrite)
-- `IAO_*` env vars in agent briefs' launch commands stay as-is for 0.1.9 execution — the briefs will be updated post-iteration before 0.1.10
+- `IAO_*` env vars in agent briefs' launch commands stay as-is for 0.1.9 execution - the briefs will be updated post-iteration before 0.1.10
 
 **Success:**
 - `./bin/aho --version` returns `aho 0.1.9`
@@ -155,7 +155,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `pytest tests/ -v` passes
 - `test -d src/aho && ! test -d src/iao` passes
 
-### W2 — Data Files and Paths Rename (45 min)
+### W2 - Data Files and Paths Rename (45 min)
 
 **Goal:** Rename project-state files and their references in Python code. Atomic: either all data files are iao-named or all are aho-named at W2 end.
 
@@ -174,7 +174,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `./bin/aho --version` still returns `aho 0.1.9` (paths module updated correctly)
 - `pytest tests/ -v` passes
 
-### W3 — Gotcha Code Prefix Rename (45 min)
+### W3 - Gotcha Code Prefix Rename (45 min)
 
 **Goal:** Rename gotcha codes from `iaomw-G###` to `aho-G###` across the registry and every file that references them.
 
@@ -190,7 +190,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `pytest tests/ -v` passes
 - `./bin/aho registry query "G001"` returns results referencing `aho-G001`
 
-### W4 — ChromaDB Archive Rebuild and Rename (75 min)
+### W4 - ChromaDB Archive Rebuild and Rename (75 min)
 
 **Goal:** Purge the poisoned `iaomw_archive` collection, re-index from a filtered source that excludes diagnostic appendices, rename the collection to `aho_archive`. This is the primary fix for 0.1.8 Condition 1.
 
@@ -199,9 +199,9 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
   1. Connects to ChromaDB at `data/chroma`
   2. Deletes the `iaomw_archive` collection (after confirming the rebuild source is ready)
   3. Iterates over the source docs directory (`docs/harness/`, `docs/phase-charters/`, `docs/roadmap/`, `docs/iterations/0.1.8/iao-design-0.1.8.md`, `docs/iterations/0.1.8/iao-plan-0.1.8.md`)
-  4. For each doc, strips diagnostic appendices — any section header matching `^## Appendix [A-Z]` or `^## Diagnostic` or `^## Exhibit` is excluded along with all content until the next `## ` header
+  4. For each doc, strips diagnostic appendices - any section header matching `^## Appendix [A-Z]` or `^## Diagnostic` or `^## Exhibit` is excluded along with all content until the next `## ` header
   5. Chunks the filtered content, embeds via `nomic-embed-text`, inserts into a new `aho_archive` collection with metadata `source_iteration`, `source_file`, `chunk_type`
-- 0.1.2 / 0.1.3 / 0.1.4 iteration docs are NOT re-indexed — historical iterations stay out of the fresh archive. If Kyle wants them back, that's a 0.1.10 decision.
+- 0.1.2 / 0.1.3 / 0.1.4 iteration docs are NOT re-indexed - historical iterations stay out of the fresh archive. If Kyle wants them back, that's a 0.1.10 decision.
 - 0.1.5 docs stay out (diagnostic only). 0.1.6 forensic audit stays out. 0.1.7 design Appendix A stays out (the diagnostic corpus).
 - Update `src/aho/rag/archive.py` to query `aho_archive` instead of `iaomw_archive`
 - Update `src/aho/rag/router.py` if it references the collection name
@@ -213,27 +213,27 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - Smoke test query returns zero results containing `iaomw-Pillar-` strings
 - Smoke test query returns zero results containing `split-agent` strings
 
-### W5 — Markdown and Harness Rename Sweep (60 min)
+### W5 - Markdown and Harness Rename Sweep (60 min)
 
 **Goal:** Rename every markdown identifier reference across `docs/harness/base.md`, ADR files, prompt templates, README, CHANGELOG, and the bundle spec module. Skip CLAUDE.md / GEMINI.md (those update post-0.1.9 before 0.1.10).
 
 **Deliverables:**
-- `docs/harness/base.md`: identifier renames — `iao 0.1.9` header → `aho 0.1.9`, ADR references, any `iaomw-*` prose that references identifiers. Historical text about "iao the project" in context stays as-is; only identifier references change.
-- `prompts/*.md.j2`: Jinja templates for design, plan, build log, report, run report, bundle — update any `iao`/`iaomw` identifier references
+- `docs/harness/base.md`: identifier renames - `iao 0.1.9` header → `aho 0.1.9`, ADR references, any `iaomw-*` prose that references identifiers. Historical text about "iao the project" in context stays as-is; only identifier references change.
+- `prompts/*.md.j2`: Jinja templates for design, plan, build log, report, run report, bundle - update any `iao`/`iaomw` identifier references
 - `README.md`: identifier updates only
 - `CHANGELOG.md`: add a `## 0.1.9` entry documenting the rename
 - `src/aho/bundle/__init__.py` and `src/aho/bundle/components_section.py`: any hardcoded `iao`/`iaomw` strings
 - `MANIFEST.json`: update
 - `COMPATIBILITY.md`: update
 
-**Critical distinction:** The word "iao" appears in prose describing the historical name. Those mentions stay. Only uses of "iao" as an identifier (file path, package name, Python import, env var, ChromaDB collection, gotcha code, project code) get renamed. The W5 executor should grep first, review matches, then apply sed selectively — not blanket `sed -i 's/iao/aho/g'`.
+**Critical distinction:** The word "iao" appears in prose describing the historical name. Those mentions stay. Only uses of "iao" as an identifier (file path, package name, Python import, env var, ChromaDB collection, gotcha code, project code) get renamed. The W5 executor should grep first, review matches, then apply sed selectively - not blanket `sed -i 's/iao/aho/g'`.
 
 **Success:**
 - `rg -c "iaomw" docs/ prompts/ src/aho/` returns 0 (or only within historical ADR context like ADR-041)
 - `rg "src/iao/" docs/` returns 0 (paths fully renamed)
 - `./bin/aho --version` still returns `aho 0.1.9`
 
-### W6 — Build Log Synthesis Filename Split + ADR-042 (60 min)
+### W6 - Build Log Synthesis Filename Split + ADR-042 (60 min)
 
 **Goal:** Implement Kyle's answer to Agent Question 3. The artifact loop writes Qwen synthesis to a separate filename so the manual build log is never overwritten. Amend ADR-012 to mark the manual build log as immutable input.
 
@@ -258,7 +258,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - `grep -c "ADR-042" docs/harness/base.md` returns ≥1
 - `pytest tests/test_artifacts_loop.py -v` passes
 
-### W7 — Evaluator Baseline Refresh + Forbidden-Chunks Filter (60 min)
+### W7 - Evaluator Baseline Refresh + Forbidden-Chunks Filter (60 min)
 
 **Goal:** Partial fix for Conditions 3 and 4. Make the evaluator read allowed scripts and CLI commands from the current file inventory at load time. Add a forbidden-chunks filter at RAG retrieval time that skips chunks containing known-hallucination strings.
 
@@ -268,7 +268,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
   - Replace static known-good CLI command list with dynamic computation: import `src/aho/cli.py`, introspect the registered subcommands, include all of them
   - Keep `data/known_hallucinations.json` for hallucination MARKERS (things that should NEVER appear), but compute allowed-thing lists from the live repo state
 - `src/aho/rag/archive.py`:
-  - Add `forbidden_substrings` parameter to `query_archive()` — default to reading from `data/known_hallucinations.json` forbidden-markers list
+  - Add `forbidden_substrings` parameter to `query_archive()` - default to reading from `data/known_hallucinations.json` forbidden-markers list
   - At retrieval time, after getting top-k chunks, filter out any chunk whose content contains any forbidden substring
   - Log how many chunks were filtered via `log_event("rag_chunk_filtered", count=N)`
 - Unit test `tests/test_rag_forbidden_filter.py`:
@@ -286,15 +286,15 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 - Running the evaluator against a known-clean paragraph that mentions `test_evaluator.py` returns clean (no false positive)
 - Running `query_archive("pillar", forbidden_substrings=["iaomw-Pillar-"])` returns zero chunks containing the filtered string
 
-### W8 — Dogfood + Close (60 min)
+### W8 - Dogfood + Close (60 min)
 
 **Goal:** Run the renamed loop against 0.1.9 itself. Verify the rename landed cleanly, the RAG archive is poisoning-free, the build log filename split works, and Kyle-satisfaction criteria can be met.
 
 **Deliverables:**
-- `./bin/aho iteration build-log 0.1.9` — generates `aho-build-log-synthesis-0.1.9.md` via Qwen synthesis (now reading from the fresh aho_archive)
-- `./bin/aho iteration report 0.1.9` — generates report via Qwen synthesis
-- `./bin/aho doctor postflight 0.1.9` — runs structural gates
-- `./bin/aho iteration close` — generates run report and bundle (does NOT --confirm; Kyle does that)
+- `./bin/aho iteration build-log 0.1.9` - generates `aho-build-log-synthesis-0.1.9.md` via Qwen synthesis (now reading from the fresh aho_archive)
+- `./bin/aho iteration report 0.1.9` - generates report via Qwen synthesis
+- `./bin/aho doctor postflight 0.1.9` - runs structural gates
+- `./bin/aho iteration close` - generates run report and bundle (does NOT --confirm; Kyle does that)
 
 **Verification checks (all eight must pass):**
 
@@ -311,7 +311,7 @@ Nine workstreams, W0 through W8. Wall clock target: ~7 hours soft cap, no hard c
 
 K1. §4 Report is present and non-empty (not missing like 0.1.8)
 K2. Qwen synthesis for build log produced evaluator-clean output on first or second attempt (not three rejections like 0.1.8)
-K3. No new regressions — the 0.1.8 carryover conditions are addressed or explicitly deferred with rationale
+K3. No new regressions - the 0.1.8 carryover conditions are addressed or explicitly deferred with rationale
 
 **Success:** All eight verification checks pass AND all three Kyle-satisfaction criteria hold. Iteration state is PENDING REVIEW.
 
@@ -328,7 +328,7 @@ K3. No new regressions — the 0.1.8 carryover conditions are addressed or expli
 3. **Risk: W5 sed-all-the-things rewrites prose mentions of "iao" that should have stayed as historical references.**
    Mitigation: W5 explicitly uses a review-before-apply pattern: run `rg` first, inspect matches, apply sed with specific patterns like `s|src/iao/|src/aho/|g` and `s|\`iao\` CLI|\`aho\` CLI|g`, NOT `s|iao|aho|g`. No blanket replacements.
 
-4. **Risk: W6 build log filename split confuses the executor mid-iteration — it writes to the wrong file and the verification check fails.**
+4. **Risk: W6 build log filename split confuses the executor mid-iteration - it writes to the wrong file and the verification check fails.**
    Mitigation: W6 includes a dedicated smoke test that runs `./bin/aho iteration build-log 0.1.99` in a throwaway directory and inspects which file was written. If the wrong file is written, the bug is in loop.py and gets fixed before W8.
 
 5. **Risk: W4 rebuild purges the iaomw_archive BEFORE the new aho_archive is populated, leaving the loop with no RAG at all if something fails mid-rebuild.**
@@ -342,7 +342,7 @@ K3. No new regressions — the 0.1.8 carryover conditions are addressed or expli
 
 ---
 
-## §7. Scope Boundaries — What 0.1.9 Does NOT Do
+## §7. Scope Boundaries - What 0.1.9 Does NOT Do
 
 - **No repo directory rename.** `~/dev/projects/iao/` stays. 0.1.12 stands up `~/dev/projects/aho/` as a separate scaffolded project.
 - **No CLAUDE.md / GEMINI.md updates during the iteration.** The briefs stay as the post-0.1.7 versions Kyle saved. They update BEFORE 0.1.10 launches, as a separate manual step. This prevents the executor from reading its own updated operating manual mid-execution.
@@ -351,7 +351,7 @@ K3. No new regressions — the 0.1.8 carryover conditions are addressed or expli
 - **No aho scaffold directory.** That's 0.1.12.
 - **No full evaluator retry-logic rework.** Condition 3 gets a partial fix via W7's forbidden-chunks filter. Full retry-logic rework defers to 0.1.10.
 - **No forward-reference CLI command support** (the `iao package` false positive). Defers to 0.1.10's "planned" list concept.
-- **No Telegram bot code changes.** Kyle sets up the new BotFather bot out of band. Credentials update is a config-file edit Kyle does manually. 0.1.9 pre-flight just verifies whether telegram works and logs the result — does not block on failure.
+- **No Telegram bot code changes.** Kyle sets up the new BotFather bot out of band. Credentials update is a config-file edit Kyle does manually. 0.1.9 pre-flight just verifies whether telegram works and logs the result - does not block on failure.
 - **No historical RAG content.** 0.1.2 through 0.1.7 iteration docs do NOT re-enter the fresh `aho_archive`. If Kyle wants historical context back, that's a 0.1.10 decision with explicit filtering.
 - **No modifications to kjtcom or tripledb.** They are separate projects.
 - **No `iao`/`iaomw` references in historical ADRs get rewritten.** ADR-012, ADR-041, etc. stay as-is because they describe historical decisions in their historical context.
@@ -362,11 +362,11 @@ K3. No new regressions — the 0.1.8 carryover conditions are addressed or expli
 
 Two levels: mechanical (verification checks) and satisfaction (Kyle sign-off).
 
-**GRADUATE** — All eight verification checks pass AND all three Kyle-satisfaction criteria hold. Kyle signs off all five boxes including #5. Iteration closes on a clean note.
+**GRADUATE** - All eight verification checks pass AND all three Kyle-satisfaction criteria hold. Kyle signs off all five boxes including #5. Iteration closes on a clean note.
 
-**GRADUATE WITH CONDITIONS** — All eight verification checks pass but one or two Kyle-satisfaction criteria fail. Mechanical pass but dissatisfaction on one dimension (e.g. Qwen synthesis still needed multiple retries, or §4 Report present but thin). Kyle decides whether to sign off #5 based on how close to acceptable the outcome is.
+**GRADUATE WITH CONDITIONS** - All eight verification checks pass but one or two Kyle-satisfaction criteria fail. Mechanical pass but dissatisfaction on one dimension (e.g. Qwen synthesis still needed multiple retries, or §4 Report present but thin). Kyle decides whether to sign off #5 based on how close to acceptable the outcome is.
 
-**DO NOT GRADUATE** — Any verification check fails, or the rename is incomplete (half-renamed repo state), or W4 rebuild left the RAG archive empty or missing, or Conditions 5/6 cleanup did not happen, or `./bin/aho --version` does not return `aho 0.1.9`. Roll back to 0.1.8 state via Section E of the plan doc and re-attempt 0.1.9 in a fresh session.
+**DO NOT GRADUATE** - Any verification check fails, or the rename is incomplete (half-renamed repo state), or W4 rebuild left the RAG archive empty or missing, or Conditions 5/6 cleanup did not happen, or `./bin/aho --version` does not return `aho 0.1.9`. Roll back to 0.1.8 state via Section E of the plan doc and re-attempt 0.1.9 in a fresh session.
 
 ---
 
@@ -388,7 +388,7 @@ Two levels: mechanical (verification checks) and satisfaction (Kyle sign-off).
 
 ### PLAN (aho-plan-0.1.9.md)
 ```markdown
-# iao — Plan 0.1.9
+# iao - Plan 0.1.9
 
 **Iteration:** 0.1.9
 **Phase:** 0 (UAT lab for aho)
@@ -403,58 +403,58 @@ This iteration is a rename plus three non-rename items (RAG archive rebuild, bui
 
 ---
 
-## Section A — Pre-flight checks
+## Section A - Pre-flight checks
 
 Run these in a fresh fish shell before launching any executor. If any fails, STOP and resolve.
 
 ```fish
-# A.0 — Working directory
+# A.0 - Working directory
 cd ~/dev/projects/iao
 command pwd
 # Expected: /home/kthompson/dev/projects/iao
 
-# A.1 — 0.1.8 is closed
+# A.1 - 0.1.8 is closed
 jq .last_completed_iteration .iao-checkpoint.json
 # Expected: "0.1.8"
 
 jq .iteration .iao-checkpoint.json
 # Expected: "0.1.8" (will bump to 0.1.9 in W0)
 
-# A.2 — Design and plan docs present
+# A.2 - Design and plan docs present
 command ls docs/iterations/0.1.9/iao-design-0.1.9.md docs/iterations/0.1.9/iao-plan-0.1.9.md
 # Expected: both files listed
 
-# A.3 — iao binary still works
+# A.3 - iao binary still works
 ./bin/iao --version
 # Expected: iao 0.1.8
 
-# A.4 — Ollama models present
+# A.4 - Ollama models present
 curl -s http://localhost:11434/api/tags | python3 -c "import json, sys; d = json.load(sys.stdin); names = [m['name'] for m in d['models']]; required = ['qwen3.5:9b', 'nemotron-mini:4b', 'nomic-embed-text:latest']; missing = [r for r in required if not any(r in n for n in names)]; print('OK' if not missing else f'MISSING: {missing}')"
 # Expected: OK
 
-# A.5 — Python version
+# A.5 - Python version
 python3 --version
 # Expected: Python 3.14.x
 
-# A.6 — ChromaDB archives present and current state
+# A.6 - ChromaDB archives present and current state
 python3 -c "import chromadb; c = chromadb.PersistentClient(path='data/chroma'); [print(col.name, col.count()) for col in c.list_collections()]"
-# Expected: iaomw_archive (with some count — this is the collection W4 will purge+rebuild), kjtco_archive, tripl_archive
+# Expected: iaomw_archive (with some count - this is the collection W4 will purge+rebuild), kjtco_archive, tripl_archive
 
-# A.7 — Working tree is clean (git status should not show uncommitted changes that could be confused with rename work)
+# A.7 - Working tree is clean (git status should not show uncommitted changes that could be confused with rename work)
 git status --short
 # Expected: empty or only untracked items
 
-# A.8 — 0.1.8 checkpoint is in the expected post-close state
+# A.8 - 0.1.8 checkpoint is in the expected post-close state
 jq . .iao-checkpoint.json
 # Expected: iteration=0.1.8, last_completed_iteration should be 0.1.8 or 0.1.7, workstreams_complete reflects 0.1.8
 
-# A.9 — Telegram credentials (non-blocking check)
-./bin/iao telegram test iaomw 2>&1; or echo "Telegram not configured — non-blocking, will log in post-flight"
+# A.9 - Telegram credentials (non-blocking check)
+./bin/iao telegram test iaomw 2>&1; or echo "Telegram not configured - non-blocking, will log in post-flight"
 
-# A.10 — fish config untouched (Security-G001 — DO NOT CAT)
+# A.10 - fish config untouched (Security-G001 - DO NOT CAT)
 stat ~/.config/fish/config.fish >/dev/null; and echo "fish config exists"; or echo "MISSING"
 
-# A.11 — Event log writable
+# A.11 - Event log writable
 touch data/iao_event_log.jsonl
 command ls -l data/iao_event_log.jsonl
 ```
@@ -463,39 +463,39 @@ If all blocking checks pass (A.0 through A.8, A.10, A.11), launch the executor. 
 
 ---
 
-## Section B — Workstream ordering and dependencies
+## Section B - Workstream ordering and dependencies
 
 ```
 W0 (env hygiene + cleanup)
- └─→ W1 (Python source rename) — depends on W0 backup
-      └─→ W2 (data files and paths rename) — depends on W1 (paths module is renamed)
-           └─→ W3 (gotcha code prefix rename) — depends on W2 (data files renamed)
-                └─→ W4 (ChromaDB rebuild + rename) — depends on W3 (evaluator uses new code prefix)
-                     └─→ W5 (markdown/harness rename sweep) — depends on W4 (archive source docs are stable)
-                          └─→ W6 (build log filename split + ADR-042) — depends on W5 (base.md is stable for ADR append)
-                               └─→ W7 (evaluator baseline refresh + forbidden-chunks filter) — depends on W6
-                                    └─→ W8 (dogfood + close) — depends on all prior
+ └─→ W1 (Python source rename) - depends on W0 backup
+      └─→ W2 (data files and paths rename) - depends on W1 (paths module is renamed)
+           └─→ W3 (gotcha code prefix rename) - depends on W2 (data files renamed)
+                └─→ W4 (ChromaDB rebuild + rename) - depends on W3 (evaluator uses new code prefix)
+                     └─→ W5 (markdown/harness rename sweep) - depends on W4 (archive source docs are stable)
+                          └─→ W6 (build log filename split + ADR-042) - depends on W5 (base.md is stable for ADR append)
+                               └─→ W7 (evaluator baseline refresh + forbidden-chunks filter) - depends on W6
+                                    └─→ W8 (dogfood + close) - depends on all prior
 ```
 
-Strict sequential ordering. W1 through W5 are atomic within themselves — the repo is never half-renamed at the boundary between workstreams.
+Strict sequential ordering. W1 through W5 are atomic within themselves - the repo is never half-renamed at the boundary between workstreams.
 
 ---
 
-## Section C — Per-workstream fish command blocks
+## Section C - Per-workstream fish command blocks
 
-### W0 — Environment Hygiene + 0.1.8 Cleanup (20 min)
+### W0 - Environment Hygiene + 0.1.8 Cleanup (20 min)
 
 ```fish
-# W0.0 — Log W0 start
+# W0.0 - Log W0 start
 set W0_START (date -u +%Y-%m-%dT%H:%M:%SZ)
 mkdir -p docs/iterations/0.1.9
-printf '# Build Log — iao 0.1.9\n\n**Start:** %s\n**Agent:** %s\n**Machine:** NZXTcos\n**Phase:** 0 (UAT lab for aho)\n**Iteration:** 0.1.9\n**Theme:** IAO → AHO rename + RAG archive rebuild + build log filename split\n\n---\n\n## W0 — Environment Hygiene + 0.1.8 Cleanup\n\n**Start:** %s\n\n' "$W0_START" "$IAO_EXECUTOR" "$W0_START" > docs/iterations/0.1.9/iao-build-log-0.1.9.md
+printf '# Build Log - iao 0.1.9\n\n**Start:** %s\n**Agent:** %s\n**Machine:** NZXTcos\n**Phase:** 0 (UAT lab for aho)\n**Iteration:** 0.1.9\n**Theme:** IAO → AHO rename + RAG archive rebuild + build log filename split\n\n---\n\n## W0 - Environment Hygiene + 0.1.8 Cleanup\n\n**Start:** %s\n\n' "$W0_START" "$IAO_EXECUTOR" "$W0_START" > docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W0.1 — Verify location
+# W0.1 - Verify location
 cd ~/dev/projects/iao
 command pwd
 
-# W0.2 — Backup state (comprehensive — this iteration touches many files)
+# W0.2 - Backup state (comprehensive - this iteration touches many files)
 set BACKUP_DIR ~/dev/projects/iao.backup-pre-0.1.9
 mkdir -p $BACKUP_DIR
 cp -r src/iao $BACKUP_DIR/src-iao
@@ -511,18 +511,18 @@ cp GEMINI.md $BACKUP_DIR/GEMINI.md
 command ls $BACKUP_DIR
 # Expected: all listed
 
-# W0.3 — Bump checkpoint iteration
+# W0.3 - Bump checkpoint iteration
 jq '.iteration = "0.1.9" | .last_completed_iteration = "0.1.8"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 jq .iteration .iao-checkpoint.json
 # Expected: "0.1.9"
 
-# W0.4 — Verify design and plan docs present
-test -f docs/iterations/0.1.9/iao-design-0.1.9.md; and echo "design OK"; or echo "design MISSING — STOP"
-test -f docs/iterations/0.1.9/iao-plan-0.1.9.md; and echo "plan OK"; or echo "plan MISSING — STOP"
+# W0.4 - Verify design and plan docs present
+test -f docs/iterations/0.1.9/iao-design-0.1.9.md; and echo "design OK"; or echo "design MISSING - STOP"
+test -f docs/iterations/0.1.9/iao-plan-0.1.9.md; and echo "plan OK"; or echo "plan MISSING - STOP"
 
-# W0.5 — Condition 5: rename ten_pillars_present.py → pillars_present.py
-test -f src/iao/postflight/ten_pillars_present.py; and git mv src/iao/postflight/ten_pillars_present.py src/iao/postflight/pillars_present.py; or echo "ten_pillars_present.py not found — already renamed or gone"
+# W0.5 - Condition 5: rename ten_pillars_present.py → pillars_present.py
+test -f src/iao/postflight/ten_pillars_present.py; and git mv src/iao/postflight/ten_pillars_present.py src/iao/postflight/pillars_present.py; or echo "ten_pillars_present.py not found - already renamed or gone"
 
 # Update internal references (function names, imports, docstrings)
 command rg -l "ten_pillars_present" src/ tests/ | xargs -r sed -i 's/ten_pillars_present/pillars_present/g'
@@ -531,7 +531,7 @@ command rg -l "ten_pillars_present" src/ tests/ | xargs -r sed -i 's/ten_pillars
 command rg -c "ten_pillars_present" src/ tests/
 # Expected: 0
 
-# W0.6 — Condition 6: move .pre-0.1.8 backup files out of repo root
+# W0.6 - Condition 6: move .pre-0.1.8 backup files out of repo root
 mkdir -p ~/dev/projects/iao.backup-pre-0.1.8
 for f in *.pre-0.1.8 docs/harness/*.pre-0.1.8
     if test -f $f
@@ -543,7 +543,7 @@ command ls *.pre-* 2>/dev/null; or echo "no .pre-* files in root"
 # Add .pre-* to .gitignore if not already present
 command grep -q "^\*.pre-\*" .gitignore; or echo '*.pre-*' >> .gitignore
 
-# W0.7 — Append W0 complete
+# W0.7 - Append W0 complete
 printf '**Actions:**\n- Backed up full state tree to %s\n- Bumped checkpoint to 0.1.9\n- Condition 5: renamed ten_pillars_present.py → pillars_present.py + updated references\n- Condition 6: moved .pre-0.1.8 backups to ~/dev/projects/iao.backup-pre-0.1.8/\n- Added *.pre-* to .gitignore\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
@@ -551,58 +551,58 @@ printf '**Actions:**\n- Backed up full state tree to %s\n- Bumped checkpoint to 
 
 ---
 
-### W1 — Python Source Rename (90 min)
+### W1 - Python Source Rename (90 min)
 
 ```fish
-# W1.0 — Log W1 start
-printf '## W1 — Python Source Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W1.0 - Log W1 start
+printf '## W1 - Python Source Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W1.1 — Inventory the rename surface
+# W1.1 - Inventory the rename surface
 command rg -l "^from iao" src/ tests/ | wc -l
 command rg -l "^import iao" src/ tests/ | wc -l
 command rg -l " iao\." src/ tests/ | wc -l
 # These give the scope estimate
 
-# W1.2 — Atomic directory rename via git
+# W1.2 - Atomic directory rename via git
 git mv src/iao src/aho
 command ls src/
 # Expected: aho/ (and no iao/)
 
-# W1.3 — Rewrite Python imports
+# W1.3 - Rewrite Python imports
 command rg -l "^from iao" src/ tests/ scripts/ 2>/dev/null | xargs -r sed -i 's|^from iao|from aho|g'
 command rg -l "^import iao" src/ tests/ scripts/ 2>/dev/null | xargs -r sed -i 's|^import iao\b|import aho|g'
 command rg -l " iao\." src/ tests/ scripts/ 2>/dev/null | xargs -r sed -i 's| iao\.| aho.|g'
 command rg -l "(iao\.cli\|iao\.config\|iao\.feedback\|iao\.artifacts\|iao\.postflight\|iao\.preflight\|iao\.rag\|iao\.agents\|iao\.bundle\|iao\.telegram\|iao\.secrets\|iao\.pipelines\|iao\.data\|iao\.install\|iao\.integrations)" src/ tests/ scripts/ 2>/dev/null | xargs -r sed -i 's|iao\.|aho.|g'
 
-# W1.4 — Update pyproject.toml
+# W1.4 - Update pyproject.toml
 sed -i 's/^name = "iao"/name = "aho"/' pyproject.toml
 sed -i 's|iao = "iao\.cli:main"|aho = "aho.cli:main"|' pyproject.toml
 command grep -n "^name\|\[project\.scripts\]" pyproject.toml
 # Expected: name = "aho", entry point aho = "aho.cli:main"
 
-# W1.5 — Rename bin/iao → bin/aho and update its internals
+# W1.5 - Rename bin/iao → bin/aho and update its internals
 git mv bin/iao bin/aho
 sed -i 's|from iao|from aho|g' bin/aho
 sed -i 's|import iao\b|import aho|g' bin/aho
 command cat bin/aho | head -20
 
-# W1.6 — Reinstall the package under the new name
+# W1.6 - Reinstall the package under the new name
 pip uninstall -y iao 2>/dev/null
 pip install -e . --break-system-packages
 ./bin/aho --version
 # Expected: aho 0.1.9
 
-# W1.7 — Run the full test suite
+# W1.7 - Run the full test suite
 python3 -m pytest tests/ -v 2>&1 | tail -30
 # Expected: all tests pass
 
-# W1.8 — Verify zero lingering iao imports
+# W1.8 - Verify zero lingering iao imports
 command rg -c "^from iao" src/ tests/
 # Expected: 0
 command rg -c "^import iao\b" src/ tests/
 # Expected: 0
 
-# W1.9 — Append W1 complete
+# W1.9 - Append W1 complete
 printf '**Actions:**\n- git mv src/iao src/aho\n- Rewrote all Python imports (from iao → from aho)\n- Updated pyproject.toml name and entry point\n- Renamed bin/iao → bin/aho with internal updates\n- Reinstalled package under new name\n- All tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
@@ -610,27 +610,27 @@ printf '**Actions:**\n- git mv src/iao src/aho\n- Rewrote all Python imports (fr
 
 ---
 
-### W2 — Data Files and Paths Rename (45 min)
+### W2 - Data Files and Paths Rename (45 min)
 
 ```fish
-# W2.0 — Log W2 start
-printf '## W2 — Data Files and Paths Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W2.0 - Log W2 start
+printf '## W2 - Data Files and Paths Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W2.1 — Rename top-level state files
+# W2.1 - Rename top-level state files
 git mv .iao.json .aho.json
 git mv .iao-checkpoint.json .aho-checkpoint.json
 git mv data/iao_event_log.jsonl data/aho_event_log.jsonl
 command ls -la .aho.json .aho-checkpoint.json data/aho_event_log.jsonl
 # Expected: all three exist
 
-# W2.2 — Update all Python references to these paths
+# W2.2 - Update all Python references to these paths
 command rg -l '\.iao\.json\|\.iao-checkpoint\.json\|iao_event_log' src/ tests/ scripts/ 2>/dev/null | xargs -r sed -i -e 's|\.iao\.json|.aho.json|g' -e 's|\.iao-checkpoint\.json|.aho-checkpoint.json|g' -e 's|iao_event_log|aho_event_log|g'
 
 # Verify
 command rg -c '\.iao\.json\|\.iao-checkpoint\.json\|iao_event_log' src/ tests/
 # Expected: 0
 
-# W2.3 — Update env var references: add AHO_* as primary, keep IAO_* as fallback for this iteration
+# W2.3 - Update env var references: add AHO_* as primary, keep IAO_* as fallback for this iteration
 command rg -l "IAO_ITERATION\|IAO_PROJECT_NAME\|IAO_PROJECT_CODE" src/ tests/ | xargs -r python3 -c '
 import sys
 for path in sys.argv[1:]:
@@ -652,36 +652,36 @@ for path in sys.argv[1:]:
     print(f"updated {path}")
 ' ::: $argv
 
-# W2.4 — Reinstall to pick up any paths module changes
+# W2.4 - Reinstall to pick up any paths module changes
 pip install -e . --break-system-packages --quiet
 
-# W2.5 — Verify aho CLI still works with the new state files
+# W2.5 - Verify aho CLI still works with the new state files
 ./bin/aho --version
 # Expected: aho 0.1.9
 
 jq .iteration .aho-checkpoint.json
 # Expected: "0.1.9"
 
-# W2.6 — Run test suite
+# W2.6 - Run test suite
 python3 -m pytest tests/ -v 2>&1 | tail -20
 
-# W2.7 — Append W2 complete
+# W2.7 - Append W2 complete
 printf '**Actions:**\n- Renamed .iao.json → .aho.json\n- Renamed .iao-checkpoint.json → .aho-checkpoint.json\n- Renamed data/iao_event_log.jsonl → data/aho_event_log.jsonl\n- Updated all Python path references\n- Added AHO_* env var lookups with IAO_* fallback\n- Tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
 ---
 
-### W3 — Gotcha Code Prefix Rename (45 min)
+### W3 - Gotcha Code Prefix Rename (45 min)
 
 ```fish
-# W3.0 — Log W3 start
-printf '## W3 — Gotcha Code Prefix Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W3.0 - Log W3 start
+printf '## W3 - Gotcha Code Prefix Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W3.1 — Inventory gotcha code references
+# W3.1 - Inventory gotcha code references
 command rg -c "iaomw-G" data/ src/ docs/ prompts/
-# Expected: some count — this is the surface
+# Expected: some count - this is the surface
 
-# W3.2 — Rewrite gotcha_archive.json codes
+# W3.2 - Rewrite gotcha_archive.json codes
 python3 <<'PYEOF'
 import json
 p = "data/gotcha_archive.json"
@@ -695,7 +695,7 @@ json.dump(d, open(p, "w"), indent=2)
 print(f"Renamed {renamed} gotcha codes")
 PYEOF
 
-# W3.3 — Rewrite all references across source and docs (NOT historical ADR bundles from prior iterations)
+# W3.3 - Rewrite all references across source and docs (NOT historical ADR bundles from prior iterations)
 command rg -l "iaomw-G" src/ docs/harness/ docs/adrs/ prompts/ tests/ 2>/dev/null | xargs -r sed -i 's/iaomw-G/aho-G/g'
 
 # Verify
@@ -706,7 +706,7 @@ command rg -c "iaomw-G" src/ docs/harness/ docs/adrs/ prompts/ tests/
 command rg -c "iaomw-G" docs/iterations/
 # Expected: N > 0 (historical bundles keep their original text)
 
-# W3.4 — Update known_hallucinations.json: add retired iaomw-G* marker
+# W3.4 - Update known_hallucinations.json: add retired iaomw-G* marker
 python3 <<'PYEOF'
 import json
 p = "data/known_hallucinations.json"
@@ -724,22 +724,22 @@ if forbidden_key:
         print(f"Added {marker} to forbidden list")
 PYEOF
 
-# W3.5 — Run test suite
+# W3.5 - Run test suite
 python3 -m pytest tests/ -v 2>&1 | tail -20
 
-# W3.6 — Append W3 complete
+# W3.6 - Append W3 complete
 printf '**Actions:**\n- Renamed all iaomw-G* gotcha codes to aho-G* in data/gotcha_archive.json\n- Updated source, harness docs, ADR files, prompts, tests\n- Historical iteration bundles left unchanged (historical records)\n- Added iaomw-G marker to known_hallucinations forbidden list\n- Tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
 ---
 
-### W4 — ChromaDB Archive Rebuild and Rename (75 min)
+### W4 - ChromaDB Archive Rebuild and Rename (75 min)
 
 ```fish
-# W4.0 — Log W4 start
-printf '## W4 — ChromaDB Archive Rebuild and Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W4.0 - Log W4 start
+printf '## W4 - ChromaDB Archive Rebuild and Rename\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W4.1 — Write the rebuild script
+# W4.1 - Write the rebuild script
 cat > scripts/rebuild_aho_archive.py <<'PYEOF'
 #!/usr/bin/env python3
 """Rebuild the ChromaDB archive as `aho_archive` from a filtered source.
@@ -799,7 +799,7 @@ def strip_diagnostic_appendices(text: str) -> str:
     next_h2 = re.search(r"^##\s+", text[after_start:], re.MULTILINE)
     if next_h2:
         after = text[after_start + next_h2.start() :]
-        # Recurse — there may be more diagnostic sections
+        # Recurse - there may be more diagnostic sections
         return strip_diagnostic_appendices(before + after)
     else:
         return before
@@ -875,15 +875,15 @@ def main():
     # Verify the new collection has content
     count = new_col.count()
     if count == 0:
-        raise SystemExit(f"ERROR: {temp_name} has 0 documents after rebuild — aborting")
+        raise SystemExit(f"ERROR: {temp_name} has 0 documents after rebuild - aborting")
 
     # Smoke-check: query for "pillar" and ensure no result contains iaomw-Pillar-
     results = new_col.query(query_texts=["pillar"], n_results=5)
     for doc in results.get("documents", [[]])[0]:
         if "iaomw-Pillar-" in doc:
-            raise SystemExit(f"ERROR: {temp_name} still contains iaomw-Pillar- in results — rebuild filter failed")
+            raise SystemExit(f"ERROR: {temp_name} still contains iaomw-Pillar- in results - rebuild filter failed")
         if "split-agent" in doc:
-            raise SystemExit(f"ERROR: {temp_name} still contains split-agent in results — rebuild filter failed")
+            raise SystemExit(f"ERROR: {temp_name} still contains split-agent in results - rebuild filter failed")
 
     # Only now delete the old collection and rename temp
     try:
@@ -892,7 +892,7 @@ def main():
     except Exception as e:
         print(f"Warning: could not delete iaomw_archive: {e}")
 
-    # ChromaDB doesn't support rename directly — so we re-create under the final name
+    # ChromaDB doesn't support rename directly - so we re-create under the final name
     final_col = client.create_collection(
         name="aho_archive",
         embedding_function=embedding_fn,
@@ -912,10 +912,10 @@ if __name__ == "__main__":
     main()
 PYEOF
 
-# W4.2 — Run the rebuild script
+# W4.2 - Run the rebuild script
 python3 scripts/rebuild_aho_archive.py
 
-# W4.3 — Verify the new collection exists and old is gone
+# W4.3 - Verify the new collection exists and old is gone
 python3 -c "
 import chromadb
 c = chromadb.PersistentClient(path='data/chroma')
@@ -929,32 +929,32 @@ assert aho.count() > 0, 'aho_archive is empty'
 print('PASS')
 "
 
-# W4.4 — Update Python code to query aho_archive instead of iaomw_archive
+# W4.4 - Update Python code to query aho_archive instead of iaomw_archive
 command rg -l "iaomw_archive" src/aho/ tests/ scripts/ 2>/dev/null | xargs -r sed -i 's/iaomw_archive/aho_archive/g'
 command rg -c "iaomw_archive" src/aho/ tests/ scripts/
 # Expected: 0
 
-# W4.5 — Run test suite
+# W4.5 - Run test suite
 python3 -m pytest tests/ -v 2>&1 | tail -20
 
-# W4.6 — Append W4 complete
+# W4.6 - Append W4 complete
 printf '**Actions:**\n- Wrote scripts/rebuild_aho_archive.py with diagnostic-appendix filter\n- Rebuilt collection as aho_archive from filtered sources (docs/harness, phase-charters, roadmap, adrs, 0.1.8 + 0.1.9 design/plan)\n- Excluded diagnostic appendices, 0.1.5 INCOMPLETE, 0.1.6 precursors, 0.1.7 Appendix A\n- Historical 0.1.2-0.1.4 iteration docs excluded pending 0.1.10 review\n- Verified new collection has non-zero content and no iaomw-Pillar- or split-agent in query results\n- Deleted old iaomw_archive\n- Updated Python references to aho_archive\n- Tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
-**Escalation:** If the rebuild script fails before `aho_archive` is populated, the old `iaomw_archive` is still intact. Do not proceed to W4.3/W4.4 until the new collection exists and has content. If the rebuild truly cannot complete, roll back W4 only (the Python still queries `iaomw_archive` via the W4.4 sed — revert that sed) and mark W4 as partial-ship.
+**Escalation:** If the rebuild script fails before `aho_archive` is populated, the old `iaomw_archive` is still intact. Do not proceed to W4.3/W4.4 until the new collection exists and has content. If the rebuild truly cannot complete, roll back W4 only (the Python still queries `iaomw_archive` via the W4.4 sed - revert that sed) and mark W4 as partial-ship.
 
 ---
 
-### W5 — Markdown and Harness Rename Sweep (60 min)
+### W5 - Markdown and Harness Rename Sweep (60 min)
 
 ```fish
-# W5.0 — Log W5 start
-printf '## W5 — Markdown and Harness Rename Sweep\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W5.0 - Log W5 start
+printf '## W5 - Markdown and Harness Rename Sweep\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W5.1 — Inventory markdown identifier references
+# W5.1 - Inventory markdown identifier references
 command rg -n "iaomw\b" docs/harness/ prompts/ README.md CHANGELOG.md MANIFEST.json COMPATIBILITY.md 2>/dev/null
 
-# W5.2 — base.md: careful, surgical rewrite
+# W5.2 - base.md: careful, surgical rewrite
 # Review before applying:
 command rg -n "iaomw\|src/iao/\|bin/iao\|\.iao\.json" docs/harness/base.md
 
@@ -970,7 +970,7 @@ sed -i 's|iaomw-G|aho-G|g' docs/harness/base.md
 command rg -n "iaomw\|src/iao/\|\.iao\.json" docs/harness/base.md
 # Expected: 0 matches (or only in historical ADR context like ADR-041)
 
-# W5.3 — prompts/*.md.j2: same surgical rewrite
+# W5.3 - prompts/*.md.j2: same surgical rewrite
 for f in prompts/*.md.j2
     sed -i 's|src/iao/|src/aho/|g' $f
     sed -i 's|bin/iao\b|bin/aho|g' $f
@@ -979,7 +979,7 @@ for f in prompts/*.md.j2
     sed -i 's|iaomw-G|aho-G|g' $f
 end
 
-# W5.4 — README.md, CHANGELOG.md, MANIFEST.json, COMPATIBILITY.md
+# W5.4 - README.md, CHANGELOG.md, MANIFEST.json, COMPATIBILITY.md
 for f in README.md CHANGELOG.md COMPATIBILITY.md
     if test -f $f
         sed -i 's|src/iao/|src/aho/|g' $f
@@ -1002,10 +1002,10 @@ if p.exists():
     print("MANIFEST.json updated")
 PYEOF
 
-# W5.5 — Append 0.1.9 entry to CHANGELOG
-printf '\n## 0.1.9 — IAO → AHO Rename\n\n- Renamed Python package iao → aho\n- Renamed CLI bin/iao → bin/aho\n- Renamed state files .iao.json → .aho.json, .iao-checkpoint.json → .aho-checkpoint.json\n- Renamed ChromaDB collection iaomw_archive → aho_archive (rebuilt from filtered source, excluding diagnostic appendices)\n- Renamed gotcha code prefix iaomw-G* → aho-G*\n- Build log filename split: manual build log is authoritative, Qwen synthesis goes to -synthesis suffix (ADR-042)\n- Pillars and eleven-pillar content unchanged\n' >> CHANGELOG.md
+# W5.5 - Append 0.1.9 entry to CHANGELOG
+printf '\n## 0.1.9 - IAO → AHO Rename\n\n- Renamed Python package iao → aho\n- Renamed CLI bin/iao → bin/aho\n- Renamed state files .iao.json → .aho.json, .iao-checkpoint.json → .aho-checkpoint.json\n- Renamed ChromaDB collection iaomw_archive → aho_archive (rebuilt from filtered source, excluding diagnostic appendices)\n- Renamed gotcha code prefix iaomw-G* → aho-G*\n- Build log filename split: manual build log is authoritative, Qwen synthesis goes to -synthesis suffix (ADR-042)\n- Pillars and eleven-pillar content unchanged\n' >> CHANGELOG.md
 
-# W5.6 — Verify
+# W5.6 - Verify
 command rg -c "iaomw\|src/iao/\|bin/iao\b" docs/harness/ prompts/ README.md CHANGELOG.md COMPATIBILITY.md
 # Expected: 0 (or only historical ADR context in base.md)
 
@@ -1014,47 +1014,47 @@ command rg -c "iaomw\|src/iao/\|bin/iao\b" docs/harness/ prompts/ README.md CHAN
 
 python3 -m pytest tests/ -v 2>&1 | tail -10
 
-# W5.7 — Append W5 complete
+# W5.7 - Append W5 complete
 printf '**Actions:**\n- Surgical identifier rename across base.md, prompts/*.md.j2, README, CHANGELOG, MANIFEST, COMPATIBILITY\n- Historical prose mentions of "iao" preserved where they refer to the project by name in context\n- Appended 0.1.9 CHANGELOG entry\n- Tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
 ---
 
-### W6 — Build Log Synthesis Filename Split + ADR-042 (60 min)
+### W6 - Build Log Synthesis Filename Split + ADR-042 (60 min)
 
 ```fish
-# W6.0 — Log W6 start
-printf '## W6 — Build Log Synthesis Filename Split + ADR-042\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W6.0 - Log W6 start
+printf '## W6 - Build Log Synthesis Filename Split + ADR-042\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W6.1 — Find the build log write path in loop.py
+# W6.1 - Find the build log write path in loop.py
 command rg -n "build.log\|build_log" src/aho/artifacts/loop.py
 
-# W6.2 — Edit loop.py to write synthesis to the -synthesis filename
+# W6.2 - Edit loop.py to write synthesis to the -synthesis filename
 # Executor action: use str_replace/Edit to change the write target from
 #   docs/iterations/<version>/aho-build-log-<version>.md
 # to
 #   docs/iterations/<version>/aho-build-log-synthesis-<version>.md
 # Preserve the manual file path as a read input if the synthesis needs to reference it.
 
-# W6.3 — Update build_log_complete postflight check
+# W6.3 - Update build_log_complete postflight check
 command rg -n "build_log_complete\|build.log.complete" src/aho/postflight/
 
 # Executor action: update the postflight check to expect aho-build-log-<version>.md (manual) as primary;
 # aho-build-log-synthesis-<version>.md (synthesis) as optional secondary.
 
-# W6.4 — Update bundle spec to embed both files
+# W6.4 - Update bundle spec to embed both files
 command rg -n "BUNDLE_SPEC\|build_log" src/aho/bundle/__init__.py
 
 # Executor action: in the bundle generator, §3 Build Log should embed the manual file.
 # Either add §3a Build Log Synthesis, or extend §3 with a divider and both files.
 # Recommendation: extend §3, add a subsection header "### Build Log Synthesis (Qwen)" below the manual.
 
-# W6.5 — Append ADR-042 to base.md
+# W6.5 - Append ADR-042 to base.md
 cat >> docs/harness/base.md <<'ADREOF'
 
 ---
 
-## ADR-042 — Manual build log is authoritative; Qwen synthesis is optional commentary
+## ADR-042 - Manual build log is authoritative; Qwen synthesis is optional commentary
 
 **Status:** Accepted
 **Date:** 2026-04-10 (aho 0.1.9 W6)
@@ -1069,8 +1069,8 @@ The root cause is two artifacts sharing one filename. The manual build log (grou
 ### Decision
 
 The manual build log and the Qwen synthesis live in separate files:
-- `docs/iterations/<version>/aho-build-log-<version>.md` — manual ground truth, written by the executor, immutable per ADR-012
-- `docs/iterations/<version>/aho-build-log-synthesis-<version>.md` — Qwen-generated commentary, evaluated by the synthesis evaluator, can fail without blocking graduation
+- `docs/iterations/<version>/aho-build-log-<version>.md` - manual ground truth, written by the executor, immutable per ADR-012
+- `docs/iterations/<version>/aho-build-log-synthesis-<version>.md` - Qwen-generated commentary, evaluated by the synthesis evaluator, can fail without blocking graduation
 
 The manual build log joins the immutable-inputs list in ADR-012 alongside the design and plan documents. The synthesis file is an optional output artifact that may be missing or empty without the iteration being considered incomplete.
 
@@ -1081,14 +1081,14 @@ The bundle §3 Build Log section embeds both files when present: the manual firs
 - "Missing §4 Report" class failures (like 0.1.8) become non-issues because the manual build log is always present as ground truth, and the synthesis can fail without leaving the iteration without a canonical build log.
 - Realizes Pillar 7 (generation and evaluation are separate roles) at the artifact level: the executor writes the manual log (generation role), Qwen writes the synthesis (a different generator), the evaluator checks the synthesis only (evaluation role). Neither generator reviews its own work.
 - The `build_log_complete` postflight check distinguishes primary (manual) from secondary (synthesis) presence.
-- Future iterations should consider extending this pattern to other canonical artifacts — the manual/synthesis split is a generalizable idea.
+- Future iterations should consider extending this pattern to other canonical artifacts - the manual/synthesis split is a generalizable idea.
 
 ADREOF
 
 command grep -c "ADR-042" docs/harness/base.md
 # Expected: 1
 
-# W6.6 — Smoke test the filename split
+# W6.6 - Smoke test the filename split
 mkdir -p /tmp/aho-smoke-w6/docs/iterations/0.1.99
 touch /tmp/aho-smoke-w6/docs/iterations/0.1.99/aho-build-log-0.1.99.md
 cd /tmp/aho-smoke-w6
@@ -1097,32 +1097,32 @@ cd /tmp/aho-smoke-w6
 # aho-build-log-0.1.99.md is NOT overwritten)
 cd ~/dev/projects/iao
 
-# W6.7 — Run test suite
+# W6.7 - Run test suite
 python3 -m pytest tests/ -v 2>&1 | tail -20
 
-# W6.8 — Append W6 complete
+# W6.8 - Append W6 complete
 printf '**Actions:**\n- Updated loop.py to write synthesis to aho-build-log-synthesis-<version>.md\n- Updated build_log_complete postflight check to distinguish manual (primary) vs synthesis (secondary)\n- Updated bundle generator to embed both files in §3\n- Appended ADR-042 to base.md\n- Tests pass\n\n**Discrepancies:** none\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
 ---
 
-### W7 — Evaluator Baseline Refresh + Forbidden-Chunks Filter (60 min)
+### W7 - Evaluator Baseline Refresh + Forbidden-Chunks Filter (60 min)
 
 ```fish
-# W7.0 — Log W7 start
-printf '## W7 — Evaluator Baseline Refresh + Forbidden-Chunks Filter\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W7.0 - Log W7 start
+printf '## W7 - Evaluator Baseline Refresh + Forbidden-Chunks Filter\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W7.1 — Find the static baseline references in evaluator.py
+# W7.1 - Find the static baseline references in evaluator.py
 command rg -n "scripts\|allowed_scripts\|known_good" src/aho/artifacts/evaluator.py
 
-# W7.2 — Add dynamic baseline computation
+# W7.2 - Add dynamic baseline computation
 # Executor action: add a function at evaluator load time that:
 #   - walks scripts/ and collects all .py filenames as allowed_scripts
 #   - imports aho.cli and introspects registered subcommands as allowed_cli_commands
 #   - caches the results in module-level variables
 # Replace any static lists with references to these cached dynamic lists.
 
-# W7.3 — Add forbidden-chunks filter to rag/archive.py
+# W7.3 - Add forbidden-chunks filter to rag/archive.py
 command rg -n "def query_archive" src/aho/rag/archive.py
 
 # Executor action: add a `forbidden_substrings` parameter to query_archive() that defaults to
@@ -1130,7 +1130,7 @@ command rg -n "def query_archive" src/aho/rag/archive.py
 # ChromaDB, filter out any chunk whose content contains any forbidden substring. Log filtered
 # count via log_event("rag_chunk_filtered", count=N).
 
-# W7.4 — Write the RAG filter test
+# W7.4 - Write the RAG filter test
 cat > tests/test_rag_forbidden_filter.py <<'PYEOF'
 """Verify query_archive filters out chunks containing forbidden substrings."""
 import json
@@ -1156,7 +1156,7 @@ def test_forbidden_filter_reads_from_known_hallucinations_by_default():
         assert "iaomw-Pillar-" not in chunk
 PYEOF
 
-# W7.5 — Write the dynamic baseline test
+# W7.5 - Write the dynamic baseline test
 cat > tests/test_evaluator_dynamic_baseline.py <<'PYEOF'
 """Verify evaluator reads allowed scripts and CLI commands from live repo state."""
 from pathlib import Path
@@ -1191,56 +1191,56 @@ def test_allowed_cli_commands_from_introspection():
     assert "registry" in commands
 PYEOF
 
-# W7.6 — Run tests
+# W7.6 - Run tests
 python3 -m pytest tests/test_rag_forbidden_filter.py tests/test_evaluator_dynamic_baseline.py -v
 
-# W7.7 — Append W7 complete
-printf '**Actions:**\n- Evaluator now computes allowed scripts from scripts/ directory at load time\n- Evaluator now computes allowed CLI commands from aho.cli introspection\n- Added forbidden_substrings parameter to query_archive() with default from known_hallucinations.json\n- RAG retrieval filters out chunks containing forbidden substrings\n- Added 2 unit test files (RAG filter, dynamic baseline)\n\n**Discrepancies:** (list any tests that did not pass — this workstream permits partial ship)\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W7.7 - Append W7 complete
+printf '**Actions:**\n- Evaluator now computes allowed scripts from scripts/ directory at load time\n- Evaluator now computes allowed CLI commands from aho.cli introspection\n- Added forbidden_substrings parameter to query_archive() with default from known_hallucinations.json\n- RAG retrieval filters out chunks containing forbidden substrings\n- Added 2 unit test files (RAG filter, dynamic baseline)\n\n**Discrepancies:** (list any tests that did not pass - this workstream permits partial ship)\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
 **Partial-ship criterion:** If the dynamic baseline rewrite breaks existing tests, revert evaluator.py changes and keep only the forbidden-chunks filter. The forbidden-chunks filter is the higher-priority deliverable (it's the Condition 1 secondary fix). Dynamic baseline is nice-to-have. Defer the dynamic baseline to 0.1.10 if needed.
 
 ---
 
-### W8 — Dogfood + Close (60 min)
+### W8 - Dogfood + Close (60 min)
 
 ```fish
-# W8.0 — Log W8 start
-printf '## W8 — Dogfood + Close\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
+# W8.0 - Log W8 start
+printf '## W8 - Dogfood + Close\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# W8.1 — Generate build log synthesis via Qwen (new filename split in effect)
+# W8.1 - Generate build log synthesis via Qwen (new filename split in effect)
 ./bin/aho iteration build-log 0.1.9
 
 # Verify the synthesis file was created at the new path and the manual file is untouched
 test -f docs/iterations/0.1.9/aho-build-log-0.1.9.md; and echo "manual OK"; or echo "manual MISSING"
 test -f docs/iterations/0.1.9/aho-build-log-synthesis-0.1.9.md; and echo "synthesis OK"; or echo "synthesis MISSING"
 
-# W8.2 — Generate report via Qwen
+# W8.2 - Generate report via Qwen
 ./bin/aho iteration report 0.1.9
 
-# W8.3 — Run post-flight validation
+# W8.3 - Run post-flight validation
 ./bin/aho doctor postflight 0.1.9
 
-# W8.4 — Generate run report and bundle (does NOT --confirm)
+# W8.4 - Generate run report and bundle (does NOT --confirm)
 ./bin/aho iteration close
 
-# W8.5 — Verification 1: aho binary version
+# W8.5 - Verification 1: aho binary version
 ./bin/aho --version
 # Expected: aho 0.1.9
 
-# W8.6 — Verification 2: src/iao gone, src/aho present
+# W8.6 - Verification 2: src/iao gone, src/aho present
 test ! -d src/iao; and echo "V2 PASS"; or echo "V2 FAIL"
 test -d src/aho; and echo "V2b PASS"; or echo "V2b FAIL"
 
-# W8.7 — Verification 3: .aho.json present, .iao.json gone
+# W8.7 - Verification 3: .aho.json present, .iao.json gone
 test -f .aho.json; and echo "V3 PASS"; or echo "V3 FAIL"
 test ! -f .iao.json; and echo "V3b PASS"; or echo "V3b FAIL"
 
-# W8.8 — Verification 4: bundle §3 structure (manual + synthesis both embedded if synthesis exists)
+# W8.8 - Verification 4: bundle §3 structure (manual + synthesis both embedded if synthesis exists)
 command grep -c "^## §3" docs/iterations/0.1.9/aho-bundle-0.1.9.md
 # Expected: 1 (single §3 with embedded content)
 
-# W8.9 — Verification 5: bundle §3, §4, §5 do NOT contain iaomw-Pillar- in synthesized content
+# W8.9 - Verification 5: bundle §3, §4, §5 do NOT contain iaomw-Pillar- in synthesized content
 # Extract the build log, report, run report sections and grep
 python3 <<'PYEOF'
 import re
@@ -1262,7 +1262,7 @@ else:
     print("V5 PASS")
 PYEOF
 
-# W8.10 — Verification 6: §22 has ≥6 components with updated naming
+# W8.10 - Verification 6: §22 has ≥6 components with updated naming
 python3 <<'PYEOF'
 import re
 bundle = open("docs/iterations/0.1.9/aho-bundle-0.1.9.md").read()
@@ -1283,15 +1283,15 @@ else:
         print(f"V6 FAIL: expected >=6, got {len(components)}")
 PYEOF
 
-# W8.11 — Verification 7: workstream summary has no unknown agents
+# W8.11 - Verification 7: workstream summary has no unknown agents
 command grep -c "| unknown " docs/iterations/0.1.9/aho-run-report-0.1.9.md
 # Expected: 0
 
-# W8.12 — Verification 8: bundle has 22 sections
+# W8.12 - Verification 8: bundle has 22 sections
 command grep -c "^## §" docs/iterations/0.1.9/aho-bundle-0.1.9.md
 # Expected: 22
 
-# W8.13 — Kyle-satisfaction criterion K1: §4 Report is present and non-empty
+# W8.13 - Kyle-satisfaction criterion K1: §4 Report is present and non-empty
 python3 -c "
 import re
 bundle = open('docs/iterations/0.1.9/aho-bundle-0.1.9.md').read()
@@ -1304,7 +1304,7 @@ else:
     print('K1 PASS')
 "
 
-# W8.14 — Kyle-satisfaction criterion K2: synthesis evaluator reject count ≤ 1 in the event log
+# W8.14 - Kyle-satisfaction criterion K2: synthesis evaluator reject count ≤ 1 in the event log
 python3 -c "
 import json
 rejects = 0
@@ -1322,58 +1322,58 @@ else:
     print(f'K2 FAIL: expected <=1, got {rejects}')
 "
 
-# W8.15 — Send Telegram notification (non-blocking if credentials not yet configured)
-./bin/aho telegram notify "aho 0.1.9 complete — $(date -u +%H:%M) UTC" 2>&1; or echo "Telegram notification failed — non-blocking"
+# W8.15 - Send Telegram notification (non-blocking if credentials not yet configured)
+./bin/aho telegram notify "aho 0.1.9 complete - $(date -u +%H:%M) UTC" 2>&1; or echo "Telegram notification failed - non-blocking"
 
-# W8.16 — Print closing message
-printf '\n================================================\nITERATION 0.1.9 EXECUTION COMPLETE\n================================================\nRun report: docs/iterations/0.1.9/aho-run-report-0.1.9.md\nBundle:     docs/iterations/0.1.9/aho-bundle-0.1.9.md\nWorkstreams: 9/9 complete (or partial — see build log)\n\nNEXT STEPS (Kyle):\n1. Review the bundle\n2. Open the run report, fill in Kyles Notes\n3. Answer any agent questions\n4. Tick 6 sign-off checkboxes\n5. Run: ./bin/aho iteration close --confirm\n\nUntil --confirm, iteration is in PENDING REVIEW state.\n'
+# W8.16 - Print closing message
+printf '\n================================================\nITERATION 0.1.9 EXECUTION COMPLETE\n================================================\nRun report: docs/iterations/0.1.9/aho-run-report-0.1.9.md\nBundle:     docs/iterations/0.1.9/aho-bundle-0.1.9.md\nWorkstreams: 9/9 complete (or partial - see build log)\n\nNEXT STEPS (Kyle):\n1. Review the bundle\n2. Open the run report, fill in Kyles Notes\n3. Answer any agent questions\n4. Tick 6 sign-off checkboxes\n5. Run: ./bin/aho iteration close --confirm\n\nUntil --confirm, iteration is in PENDING REVIEW state.\n'
 
-# W8.17 — Append W8 complete
+# W8.17 - Append W8 complete
 printf '**Actions:**\n- Generated build log synthesis, report, run report, bundle via renamed loop\n- Ran all eight verification checks\n- Evaluated Kyle-satisfaction criteria K1, K2\n- Iteration in PENDING REVIEW state\n\n**Verification results:**\n- V1 aho --version returns aho 0.1.9: (pass/fail)\n- V2 src/iao gone, src/aho exists: (pass/fail)\n- V3 .aho.json present, .iao.json gone: (pass/fail)\n- V4 bundle §3 present: (pass/fail)\n- V5 synthesized sections have no retired-pattern literals: (pass/fail)\n- V6 §22 has >=6 components: (pass/fail)\n- V7 no unknown agents: (pass/fail)\n- V8 22 bundle sections: (pass/fail)\n\n**Kyle-satisfaction criteria:**\n- K1 §4 Report present and non-empty: (pass/fail)\n- K2 synthesis evaluator rejects <=1: (pass/fail)\n- K3 no new regressions: (review manually)\n\n**Discrepancies:** (fill in)\n\n---\n\n' >> docs/iterations/0.1.9/iao-build-log-0.1.9.md
 ```
 
-**Escalation:** If V1-V8 fail, STOP and surface. If K1 fails (report missing or empty), Claude Code writes a minimal manual report from the build log (this is allowed and expected under the new ADR-042 pattern — the manual log is ground truth). If K2 fails (>1 synthesis rejects), log it clearly in the build log as a carryover to 0.1.10 and surface to Kyle's Notes for a graduation decision.
+**Escalation:** If V1-V8 fail, STOP and surface. If K1 fails (report missing or empty), Claude Code writes a minimal manual report from the build log (this is allowed and expected under the new ADR-042 pattern - the manual log is ground truth). If K2 fails (>1 synthesis rejects), log it clearly in the build log as a carryover to 0.1.10 and surface to Kyle's Notes for a graduation decision.
 
 ---
 
-## Section D — Post-flight checks
+## Section D - Post-flight checks
 
 ```fish
-# D.1 — All workstream headers logged
+# D.1 - All workstream headers logged
 command grep -c "^## W[0-8] " docs/iterations/0.1.9/iao-build-log-0.1.9.md
 # Expected: 9
 
-# D.2 — No stray TODOs
+# D.2 - No stray TODOs
 command rg "TODO\|FIXME\|XXX" docs/iterations/0.1.9/iao-build-log-0.1.9.md
 
-# D.3 — Bundle size sanity
+# D.3 - Bundle size sanity
 command du -h docs/iterations/0.1.9/aho-bundle-0.1.9.md
 # Expected: 100KB – 300KB (slightly larger than 0.1.8 due to dual build log)
 
-# D.4 — Checkpoint completion
+# D.4 - Checkpoint completion
 jq '.workstreams_complete' .aho-checkpoint.json
 
-# D.5 — Event log has 0.1.9 entries
+# D.5 - Event log has 0.1.9 entries
 command grep -c '"iteration": "0.1.9"' data/aho_event_log.jsonl
 
-# D.6 — Test suite green
+# D.6 - Test suite green
 python3 -m pytest tests/ -v 2>&1 | tail -5
 
-# D.7 — No lingering retired identifiers in current state (historical iterations stay)
+# D.7 - No lingering retired identifiers in current state (historical iterations stay)
 command rg -c "src/iao/\|bin/iao\b\|\.iao\.json\|iaomw_archive" src/aho/ tests/ docs/harness/ prompts/
 # Expected: 0 (or only historical ADR context in base.md)
 ```
 
 ---
 
-## Section E — Rollback procedure
+## Section E - Rollback procedure
 
 If 0.1.9 fails catastrophically and Kyle needs to revert to 0.1.8 state:
 
 ```fish
-# E.1 — Restore from backup
+# E.1 - Restore from backup
 set BACKUP_DIR ~/dev/projects/iao.backup-pre-0.1.9
-test -d $BACKUP_DIR/src-iao; or echo "ERROR: backup missing — STOP"
+test -d $BACKUP_DIR/src-iao; or echo "ERROR: backup missing - STOP"
 
 rm -rf src/aho
 cp -r $BACKUP_DIR/src-iao src/iao
@@ -1384,26 +1384,26 @@ cp $BACKUP_DIR/.iao-checkpoint.json .iao-checkpoint.json 2>/dev/null
 cp -r $BACKUP_DIR/docs-harness/* docs/harness/
 cp -r $BACKUP_DIR/data/* data/
 
-# E.2 — Remove .aho.* files that shouldn't exist in 0.1.8 state
+# E.2 - Remove .aho.* files that shouldn't exist in 0.1.8 state
 rm -f .aho.json .aho-checkpoint.json data/aho_event_log.jsonl
 
-# E.3 — Reinstall iao under its old name
+# E.3 - Reinstall iao under its old name
 pip uninstall -y aho 2>/dev/null
 pip install -e . --break-system-packages
 
-# E.4 — Verify rollback
+# E.4 - Verify rollback
 ./bin/iao --version
 # Expected: iao 0.1.8
 
-# E.5 — Restore ChromaDB if W4 completed
+# E.5 - Restore ChromaDB if W4 completed
 # If aho_archive exists but iaomw_archive is gone, this is a one-way migration.
 # Rollback means accepting that the old iaomw_archive is lost and the new aho_archive stays.
 # Rename aho_archive back to iaomw_archive if needed (not required; rollback to 0.1.8 with aho_archive is fine).
 
-# E.6 — Mark 0.1.9 incomplete
+# E.6 - Mark 0.1.9 incomplete
 printf '# INCOMPLETE\n\n0.1.9 was attempted %s and rolled back.\nReason: (fill in)\n\nBackup preserved at %s\n' (date -u +%Y-%m-%d) $BACKUP_DIR > docs/iterations/0.1.9/INCOMPLETE.md
 
-# E.7 — Pytest baseline
+# E.7 - Pytest baseline
 python3 -m pytest tests/ -v
 ```
 
@@ -1411,19 +1411,19 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## Section F — Wall clock estimate
+## Section F - Wall clock estimate
 
 | Workstream | Target | Cumulative |
 |---|---|---|
-| W0 — Environment Hygiene + Cleanup | 20 min | 0:20 |
-| W1 — Python Source Rename | 90 min | 1:50 |
-| W2 — Data Files + Paths Rename | 45 min | 2:35 |
-| W3 — Gotcha Code Prefix Rename | 45 min | 3:20 |
-| W4 — ChromaDB Rebuild + Rename | 75 min | 4:35 |
-| W5 — Markdown + Harness Sweep | 60 min | 5:35 |
-| W6 — Build Log Filename Split + ADR-042 | 60 min | 6:35 |
-| W7 — Evaluator Baseline + Forbidden Filter | 60 min | 7:35 |
-| W8 — Dogfood + Close | 60 min | 8:35 |
+| W0 - Environment Hygiene + Cleanup | 20 min | 0:20 |
+| W1 - Python Source Rename | 90 min | 1:50 |
+| W2 - Data Files + Paths Rename | 45 min | 2:35 |
+| W3 - Gotcha Code Prefix Rename | 45 min | 3:20 |
+| W4 - ChromaDB Rebuild + Rename | 75 min | 4:35 |
+| W5 - Markdown + Harness Sweep | 60 min | 5:35 |
+| W6 - Build Log Filename Split + ADR-042 | 60 min | 6:35 |
+| W7 - Evaluator Baseline + Forbidden Filter | 60 min | 7:35 |
+| W8 - Dogfood + Close | 60 min | 8:35 |
 
 **Soft cap:** 8:35
 **Hard cap:** none
@@ -1437,7 +1437,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ### BUILD LOG (MANUAL) (aho-build-log-0.1.9.md)
 ```markdown
-# Build Log — iao 0.1.9
+# Build Log - iao 0.1.9
 
 **Start:** 2026-04-10T14:13:41Z
 **Agent:** Gemini CLI
@@ -1448,7 +1448,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W0 — Environment Hygiene + 0.1.8 Cleanup
+## W0 - Environment Hygiene + 0.1.8 Cleanup
 
 **Start:** 2026-04-10T14:13:41Z
 
@@ -1463,7 +1463,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W1 — Python Source Rename
+## W1 - Python Source Rename
 
 **Actions:**
 - mv src/iao src/aho
@@ -1477,7 +1477,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W2 — Data Files and Paths Rename
+## W2 - Data Files and Paths Rename
 
 **Actions:**
 - Renamed .iao.json → .aho.json
@@ -1491,7 +1491,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W3 — Gotcha Code Prefix Rename
+## W3 - Gotcha Code Prefix Rename
 
 **Actions:**
 - Renamed all iaomw-G* gotcha codes to aho-G* in data/gotcha_archive.json
@@ -1504,7 +1504,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W4 — ChromaDB Archive Rebuild and Rename
+## W4 - ChromaDB Archive Rebuild and Rename
 
 **Actions:**
 - Wrote scripts/rebuild_aho_archive.py with diagnostic-appendix filter
@@ -1520,7 +1520,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W5 — Markdown and Harness Rename Sweep
+## W5 - Markdown and Harness Rename Sweep
 
 **Actions:**
 - Surgical identifier rename across base.md, prompts/*.md.j2, README, CHANGELOG, MANIFEST, COMPATIBILITY
@@ -1532,11 +1532,11 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W6 — Build Log Synthesis Filename Split + ADR-042
+## W6 - Build Log Synthesis Filename Split + ADR-042
 
-## W8 — Dogfood + Close
+## W8 - Dogfood + Close
 
-## W6 — Build Log Synthesis Filename Split + ADR-042
+## W6 - Build Log Synthesis Filename Split + ADR-042
 
 **Actions:**
 - Updated loop.py to write synthesis to -synthesis filename
@@ -1549,7 +1549,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W7 — Evaluator Baseline Refresh + Forbidden-Chunks Filter
+## W7 - Evaluator Baseline Refresh + Forbidden-Chunks Filter
 
 **Actions:**
 - Implemented dynamic CLI command and script discovery in evaluator.py
@@ -1561,7 +1561,7 @@ Partial rollbacks (individual workstream) should be preferred where possible. Fu
 
 ---
 
-## W8 — Dogfood + Close
+## W8 - Dogfood + Close
 
 **Actions:**
 - Renamed 0.1.9 artifacts to aho- prefix
@@ -1622,7 +1622,7 @@ Documentation synchronization. Updated README, CHANGELOG, and API docs to reflec
 
 ## Build Log Synthesis
 
-Execution flow followed the rename-first approach, ensuring all state transitions were durable before proceeding. W0 established the foundation by renaming core artifacts, which enabled subsequent workstreams to operate against the new naming convention. W1 and W2 handled logging and evaluation infrastructure, both dependent on W0's completion. W3's RAG filter implementation required careful attention to the anti-hallucination list—specifically avoiding the retired patterns that appeared in legacy documentation. W4's migration script validated W0's state file changes, creating a checkpoint before W5's database rebuild. W6's import audit confirmed W0's package rename was complete, while W7's CLI updates validated the bin directory changes. W8's documentation work closed the iteration by ensuring external references matched the new naming.
+Execution flow followed the rename-first approach, ensuring all state transitions were durable before proceeding. W0 established the foundation by renaming core artifacts, which enabled subsequent workstreams to operate against the new naming convention. W1 and W2 handled logging and evaluation infrastructure, both dependent on W0's completion. W3's RAG filter implementation required careful attention to the anti-hallucination list-specifically avoiding the retired patterns that appeared in legacy documentation. W4's migration script validated W0's state file changes, creating a checkpoint before W5's database rebuild. W6's import audit confirmed W0's package rename was complete, while W7's CLI updates validated the bin directory changes. W8's documentation work closed the iteration by ensuring external references matched the new naming.
 
 The build log filename split (W1) introduced a pattern that will be reused in future iterations for run isolation. The dynamic evaluator baseline (W2) reduces hardcoding and aligns with Pillar 8's cost delta measurement requirement. The RAG filter (W3) prevents retrieval of deprecated content, supporting Pillar 9's gotcha registry by encoding forbidden patterns directly.
 
@@ -1706,7 +1706,7 @@ Iteration 0.1.9 is complete. All artifacts are versioned and accessible via the 
 
 ### RUN REPORT (aho-run-report-0.1.9.md)
 ```markdown
-# Run Report — aho 0.1.9
+# Run Report - aho 0.1.9
 
 **Generated:** 2026-04-10T15:00:07Z
 **Iteration:** 0.1.9
@@ -1738,7 +1738,7 @@ The report includes a workstream summary, a collection of technical or procedura
 
 ## Agent Questions for Kyle
 
-(none — no questions surfaced during execution)
+(none - no questions surfaced during execution)
 
 ---
 
@@ -1746,7 +1746,7 @@ The report includes a workstream summary, a collection of technical or procedura
 
 ### Verdict: GRADUATE WITH CONDITIONS
 
-The rename arc landed its core: `src/iao/` → `src/aho/`, `bin/iao` → `bin/aho`, `.iao.json` → `.aho.json`, `.iao-checkpoint.json` → `.aho-checkpoint.json`, `data/iao_event_log.jsonl` → `data/aho_event_log.jsonl`. The rebuild script for the ChromaDB archive shipped. `ten_pillars_present.py` was renamed to `pillars_present.py`, resolving an 0.1.8 carryover. All 0.1.8-era tests (test_synthesis_evaluator, test_rag_forbidden_filter, test_evaluator_dynamic_baseline, test_workstream_agent) are on disk. The project root path at `~/dev/projects/iao/` is unchanged, as intended — that rename comes at the end of whichever run closes out the rename arc.
+The rename arc landed its core: `src/iao/` → `src/aho/`, `bin/iao` → `bin/aho`, `.iao.json` → `.aho.json`, `.iao-checkpoint.json` → `.aho-checkpoint.json`, `data/iao_event_log.jsonl` → `data/aho_event_log.jsonl`. The rebuild script for the ChromaDB archive shipped. `ten_pillars_present.py` was renamed to `pillars_present.py`, resolving an 0.1.8 carryover. All 0.1.8-era tests (test_synthesis_evaluator, test_rag_forbidden_filter, test_evaluator_dynamic_baseline, test_workstream_agent) are on disk. The project root path at `~/dev/projects/iao/` is unchanged, as intended - that rename comes at the end of whichever run closes out the rename arc.
 
 Three meaningful problems surfaced, all addressable in the next run. Details below.
 
@@ -1758,61 +1758,61 @@ Confirmed from §20 file inventory:
 - `.aho.json`, `.aho-checkpoint.json` as state files
 - `data/aho_event_log.jsonl` as the event log
 - `scripts/rebuild_aho_archive.py` as the rebuild tool
-- `src/aho/postflight/pillars_present.py` (was `ten_pillars_present.py` in 0.1.8 — Condition 5 resolved)
-- ChromaDB shows three collection directories under `data/chroma/` — assuming one is the rebuilt archive
-- All historical iteration files in `docs/iterations/0.1.2/` through `docs/iterations/0.1.8/` retain their original `iao-*` prefixes (correct — historical records stay as-is)
+- `src/aho/postflight/pillars_present.py` (was `ten_pillars_present.py` in 0.1.8 - Condition 5 resolved)
+- ChromaDB shows three collection directories under `data/chroma/` - assuming one is the rebuilt archive
+- All historical iteration files in `docs/iterations/0.1.2/` through `docs/iterations/0.1.8/` retain their original `iao-*` prefixes (correct - historical records stay as-is)
 
 ### Conditions carried forward
 
-**Condition 1 — Bundle generator cannot locate the manual build log, design, or plan.**
+**Condition 1 - Bundle generator cannot locate the manual build log, design, or plan.**
 
 §1 Design, §2 Plan, and the manual build log all show `(missing)` in the bundle, but §20 File Inventory shows they exist on disk at:
 - `docs/iterations/0.1.9/iao-design-0.1.9.md` (hash `70793d26c4863ad9`)
 - `docs/iterations/0.1.9/iao-plan-0.1.9.md` (hash `17e468b53921ef09`)
 - `docs/iterations/0.1.9/iao-build-log-0.1.9.md` (hash `a19c1c00b3729bfc`)
 
-The bundle generator was updated to look for `aho-*` prefixed files, but these three files were authored before the rename propagated, so they kept the `iao-*` prefix. The generator can't find them and reports `(missing)`. Fix: bundle generator should accept both prefixes during the transition run, OR the files should be renamed on disk as part of the next run's cleanup. The second option is cleaner — once renamed, the generator has a single naming convention to maintain.
+The bundle generator was updated to look for `aho-*` prefixed files, but these three files were authored before the rename propagated, so they kept the `iao-*` prefix. The generator can't find them and reports `(missing)`. Fix: bundle generator should accept both prefixes during the transition run, OR the files should be renamed on disk as part of the next run's cleanup. The second option is cleaner - once renamed, the generator has a single naming convention to maintain.
 
-**Condition 2 — §22 Agentic Components regressed from 6 components to 3.**
+**Condition 2 - §22 Agentic Components regressed from 6 components to 3.**
 
 0.1.8's §22 showed: evaluator, iao-cli, nemoclaw, openclaw, qwen-client, structural-gates.
 0.1.9's §22 shows: evaluator, iao-cli (still named `iao-cli`, not `aho-cli`), qwen-client.
 
 Three components disappeared: nemoclaw, openclaw, structural-gates. And `iao-cli` kept its old name in the `source_agent` field of event log entries, meaning the rename sweep touched file paths and imports but missed string literals in `log_event()` calls. The regression has two causes:
 
-1. **String literals in log_event calls were not swept.** The `source_agent="iao-cli"` (or equivalent) is a string literal, not a path or import — `sed` patterns that matched `src/iao/` and `from iao` didn't touch these. Every `log_event` call site that hardcodes a component name needs an audit.
+1. **String literals in log_event calls were not swept.** The `source_agent="iao-cli"` (or equivalent) is a string literal, not a path or import - `sed` patterns that matched `src/iao/` and `from iao` didn't touch these. Every `log_event` call site that hardcodes a component name needs an audit.
 
 2. **OpenClaw, NemoClaw, structural-gates instrumentation may not be firing at all.** If they were firing with their original `source_agent` strings, they'd still appear in §22 (just under the old name). Their absence means either the code paths weren't executed during 0.1.9 W8 dogfood, or the rename broke the wiring. Needs investigation.
 
 This is a functional regression against 0.1.8's traceability baseline.
 
-**Condition 3 — Qwen synthesis build log describes workstreams that cannot be verified.**
+**Condition 3 - Qwen synthesis build log describes workstreams that cannot be verified.**
 
-§3 Build Log shows only `### BUILD LOG (QWEN SYNTHESIS)` — no `### BUILD LOG (MANUAL)` section. Qwen's synthesis describes W0-W8 with specific claims ("appendix filter applied to exclude deprecated entries", "Query latency improved by 18%", "12,847 documents indexed") that have no ground truth to check against. The ADR-042 pattern was that the manual build log is authoritative and the synthesis is commentary — but if the bundle generator can't find the manual log (Condition 1), then Qwen's hallucinated narrative becomes the only visible build log content.
+§3 Build Log shows only `### BUILD LOG (QWEN SYNTHESIS)` - no `### BUILD LOG (MANUAL)` section. Qwen's synthesis describes W0-W8 with specific claims ("appendix filter applied to exclude deprecated entries", "Query latency improved by 18%", "12,847 documents indexed") that have no ground truth to check against. The ADR-042 pattern was that the manual build log is authoritative and the synthesis is commentary - but if the bundle generator can't find the manual log (Condition 1), then Qwen's hallucinated narrative becomes the only visible build log content.
 
-The W4 synthesis evaluator from 0.1.8 did not reject this output because it doesn't contain retired-pattern markers — it contains plausible-sounding invented content about workstreams that may or may not have happened. The evaluator catches `split-agent` and `iaomw-Pillar-1` but not "Query latency improved by 18%."
+The W4 synthesis evaluator from 0.1.8 did not reject this output because it doesn't contain retired-pattern markers - it contains plausible-sounding invented content about workstreams that may or may not have happened. The evaluator catches `split-agent` and `iaomw-Pillar-1` but not "Query latency improved by 18%."
 
 This is the same class of problem that Kyle's post-0.1.8 Amendment 1 was designed to address: Nemotron-as-evaluator reading the output with reasoning about whether content is verifiable. Worth considering for a future run.
 
-**Condition 4 — `docs/iterations/0.1.99/` garbage file still on disk.**
+**Condition 4 - `docs/iterations/0.1.99/` garbage file still on disk.**
 
 File inventory line 2979 shows `docs/iterations/0.1.99/aho-build-log-synthesis-0.1.99.md` still present. This was a throwaway test directory created erroneously during 0.1.9 execution. Delete as part of the next run's environment hygiene.
 
-**Condition 5 — Run report workstream summary has no wall clock data.**
+**Condition 5 - Run report workstream summary has no wall clock data.**
 
 All 9 workstreams show `-` in the Wall Clock column. Either the checkpoint wasn't tracking wall clock per workstream, or the run report generator isn't reading it. Minor but noted.
 
-**Condition 6 — Report synthesis content does not match actual workstream results.**
+**Condition 6 - Report synthesis content does not match actual workstream results.**
 
-§4 Report's workstream score table shows W0-W7 at 10/10 and "W8 | N/A | Reserved for future iteration" — but the run report workstream summary shows W0-W8 all `pass`. The report is Qwen-synthesized and the run report is mechanical; they disagree about whether W8 ran. Related to Condition 3 (Qwen invents content without ground truth).
+§4 Report's workstream score table shows W0-W7 at 10/10 and "W8 | N/A | Reserved for future iteration" - but the run report workstream summary shows W0-W8 all `pass`. The report is Qwen-synthesized and the run report is mechanical; they disagree about whether W8 ran. Related to Condition 3 (Qwen invents content without ground truth).
 
 ### Direction for next run
 
 Next run (0.1.10) should be scoped narrowly to fix the regressions and complete what 0.1.9 started:
 
-1. Rename the three `iao-*` files in `docs/iterations/0.1.9/` to `aho-*` on disk, OR update the bundle generator to accept both prefixes — one approach, not both
+1. Rename the three `iao-*` files in `docs/iterations/0.1.9/` to `aho-*` on disk, OR update the bundle generator to accept both prefixes - one approach, not both
 2. Sweep `log_event()` source_agent strings across `src/aho/` and rename `iao-cli` → `aho-cli` (plus any other hardcoded component names that kept old naming)
-3. Audit OpenClaw, NemoClaw, structural-gates instrumentation — confirm they fire during a run, confirm they log under `aho-*` names
+3. Audit OpenClaw, NemoClaw, structural-gates instrumentation - confirm they fire during a run, confirm they log under `aho-*` names
 4. Delete `docs/iterations/0.1.99/`
 5. Restore the manual-build-log-first protocol: the loop should fail loudly if synthesis is requested without a manual build log present, not silently ship hallucinated content as the only record
 6. Dogfood and verify all six conditions above are resolved
@@ -1835,14 +1835,14 @@ The Qwen RAG archive rebuild appears to have happened (the synthesis didn't trig
 
 1. **Delegate everything delegable.** The paid orchestrator is the most expensive resource in the system. Any task that can run on a free local model must run on a free local model. The orchestrator decides; it does not execute. Drafting, classification, retrieval, validation, grading, routing all belong to the local fleet. The orchestrator's minutes are spent on judgment, scope, and novelty.
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context. Projects run against their own harness overlays on top of a shared base.
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 5. **Three octets, three meanings: phase, iteration, run.** Phase is strategic scope. Iteration is tactical scope. Run is execution instance. Every artifact carries the full phase.iteration.run label.
 6. **Transitions are durable.** Moving between phases, iterations, or runs writes state to a durable artifact before the transition is considered complete. Every gate is a write point. No implicit state.
 7. **Generation and evaluation are separate roles.** The model that produced an artifact is never the model that grades it. Drafter and reviewer are different agents behind different wrappers with different prompts and ideally different underlying weights.
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio (fraction of decisions that never reached the orchestrator), and output quality signal. Numbers ship with the run report.
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
 ---
@@ -1869,7 +1869,7 @@ The Qwen RAG archive rebuild appears to have happened (the synthesis didn't trig
 # iao - Base Harness
 
 **Version:** 0.1.8
-**Last updated:** 2026-04-10 (iao 0.1.8 W1 — pillar rewrite)
+**Last updated:** 2026-04-10 (iao 0.1.8 W1 - pillar rewrite)
 **Scope:** Universal iao methodology. Extended by project harnesses.
 **Status:** iaomw - inviolable
 
@@ -1881,7 +1881,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context. Projects run against their own harness overlays on top of a shared base.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -1893,9 +1893,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio (fraction of decisions that never reached the orchestrator), and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -2002,11 +2002,11 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 **Goal:** Define binary readiness for standalone repo extraction.
 
 Standalone extraction (Phase B) requires all 5 criteria to be PASS at closing:
-1. **Duplication Eliminated** — `iao-middleware/lib/` deleted, shims only in `scripts/`.
-2. **Doctor Unified** — `pre_flight.py`, `post_flight.py`, and `iao` CLI use shared `doctor.run_all`.
-3. **CLI Stable** — `iao --version` returns 0.1.0, entry points verified.
-4. **Installer Idempotent** — `install.fish` marker block check passes.
-5. **Manifest/Compat Frozen** — Integrity check clean, all required compatibility checks pass.
+1. **Duplication Eliminated** - `iao-middleware/lib/` deleted, shims only in `scripts/`.
+2. **Doctor Unified** - `pre_flight.py`, `post_flight.py`, and `iao` CLI use shared `doctor.run_all`.
+3. **CLI Stable** - `iao --version` returns 0.1.0, entry points verified.
+4. **Installer Idempotent** - `install.fish` marker block check passes.
+5. **Manifest/Compat Frozen** - Integrity check clean, all required compatibility checks pass.
 
 ### iaomw-ADR-027: Doctor Unification
 
@@ -2168,7 +2168,7 @@ When Qwen Tier 1 fell through on synthesis ratio, Gemini Flash Tier 2 produced s
 
 ---
 
-## ADRs (continued — iao 0.1.3)
+## ADRs (continued - iao 0.1.3)
 
 ### iaomw-ADR-028: Universal Bundle Specification
 
@@ -2229,16 +2229,16 @@ Design and plan are immutable inputs from W0 onward. The Qwen artifact loop prod
 **Goal:** Provide a reusable 10-phase pipeline scaffold for all iao consumer projects.
 
 Every iao consumer project that processes data follows the same 10-phase pattern:
-1. Extract — acquire raw data
-2. Transform — convert to intermediate format
-3. Normalize — apply schema
-4. Enrich — add derived data from external sources
-5. Production Run — full pipeline at scale
-6. Frontend — consumer-facing interface
-7. Production Load — load into production storage
-8. Hardening — gap filling, schema upgrades
-9. Optimization — performance, cost, monitoring
-10. Retrospective — lessons, ADRs, next phase plan
+1. Extract - acquire raw data
+2. Transform - convert to intermediate format
+3. Normalize - apply schema
+4. Enrich - add derived data from external sources
+5. Production Run - full pipeline at scale
+6. Frontend - consumer-facing interface
+7. Production Load - load into production storage
+8. Hardening - gap filling, schema upgrades
+9. Optimization - performance, cost, monitoring
+10. Retrospective - lessons, ADRs, next phase plan
 
 `iao pipeline init <name>` scaffolds this structure. `iao pipeline validate <name>` verifies completeness.
 
@@ -2319,13 +2319,13 @@ BUNDLE_SPEC expanded from 21 to 22 sections. Component Checklist added as §22. 
 **Decision:** `scripts/query_registry.py` is a 6-line Python shim wrapping `iao.registry.main`. It is tracked by `src/aho/doctor.py` at line 70 as an expected shim alongside `scripts/build_context_bundle.py`. It is a legitimate iao file and may be referenced in artifacts without flagging.
 
 **Consequences:**
-- The stale Pillar 3 phrasing was fixed in 0.1.8 W1 (the pillar rewrite). Canonical invocation under the retired naming was `iao registry query "<topic>"`. Under the new eleven pillars, Pillar 3 is "Everything is artifacts" — no diligence-invocation command.
+- The stale Pillar 3 phrasing was fixed in 0.1.8 W1 (the pillar rewrite). Canonical invocation under the retired naming was `iao registry query "<topic>"`. Under the new eleven pillars, Pillar 3 is "Everything is artifacts" - no diligence-invocation command.
 - `data/known_hallucinations.json` was updated in 0.1.8 W3 to remove `query_registry.py` from the forbidden list.
 - Agent briefs `CLAUDE.md` and `GEMINI.md` were updated post-0.1.7 to list `scripts/query_registry.py` as a known shim.
 
 ---
 
-## ADR-042 — Manual build log is authoritative; Qwen synthesis is optional commentary
+## ADR-042 - Manual build log is authoritative; Qwen synthesis is optional commentary
 
 **Status:** Accepted
 **Date:** 2026-04-10 (aho 0.1.9 W6)
@@ -2340,8 +2340,8 @@ The root cause is two artifacts sharing one filename. The manual build log (grou
 ### Decision
 
 The manual build log and the Qwen synthesis live in separate files:
-- `docs/iterations/<version>/aho-build-log-<version>.md` — manual ground truth, written by the executor, immutable per ADR-012
-- `docs/iterations/<version>/aho-build-log-synthesis-<version>.md` — Qwen-generated commentary, evaluated by the synthesis evaluator, can fail without blocking graduation
+- `docs/iterations/<version>/aho-build-log-<version>.md` - manual ground truth, written by the executor, immutable per ADR-012
+- `docs/iterations/<version>/aho-build-log-synthesis-<version>.md` - Qwen-generated commentary, evaluated by the synthesis evaluator, can fail without blocking graduation
 
 The manual build log joins the immutable-inputs list in ADR-012 alongside the design and plan documents. The synthesis file is an optional output artifact that may be missing or empty without the iteration being considered incomplete.
 
@@ -2352,7 +2352,7 @@ The bundle §3 Build Log section embeds both files when present: the manual firs
 - "Missing §4 Report" class failures (like 0.1.8) become non-issues because the manual build log is always present as ground truth, and the synthesis can fail without leaving the iteration without a canonical build log.
 - Realizes Pillar 7 (generation and evaluation are separate roles) at the artifact level: the executor writes the manual log (generation role), Qwen writes the synthesis (a different generator), the evaluator checks the synthesis only (evaluation role). Neither generator reviews its own work.
 - The `build_log_complete` postflight check distinguishes primary (manual) from secondary (synthesis) presence.
-- Future iterations should consider extending this pattern to other canonical artifacts — the manual/synthesis split is a generalizable idea.
+- Future iterations should consider extending this pattern to other canonical artifacts - the manual/synthesis split is a generalizable idea.
 ```
 
 ## §7. README
@@ -2361,9 +2361,9 @@ The bundle §3 Build Log section embeds both files when present: the manual firs
 ```markdown
 # iao
 
-**Iterative Agentic Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Iterative Agentic Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-iao treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology was developed inside [kjtcom](https://kylejeromethompson.com), a location-intelligence platform, and graduated to a standalone Python package during kjtcom Phase 10. A junior engineer reading this should know that iao is a *system for getting LLM agents to ship working software without supervision*.
+iao treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology was developed inside [kjtcom](https://kylejeromethompson.com), a location-intelligence platform, and graduated to a standalone Python package during kjtcom Phase 10. A junior engineer reading this should know that iao is a *system for getting LLM agents to ship working software without supervision*.
 
 **Phase 0 (NZXT-only authoring)** | **Iteration 0.1.4** | **Status: Model fleet integration + kjtcom migration + Telegram foundations + Gemini-primary**
 
@@ -2397,13 +2397,13 @@ graph BT
 
 iao provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§21 spec (ADR-028 amended).
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern (`iao pipeline init`) reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 3).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§21 spec (ADR-028 amended).
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern (`iao pipeline init`) reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 3).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
 
 ---
 
@@ -2457,7 +2457,7 @@ iao/
 
 ## Phase 0 Status
 
-**Phase:** 0 — NZXT-only authoring
+**Phase:** 0 - NZXT-only authoring
 **Charter:** [docs/phase-charters/iao-phase-0.md](docs/phase-charters/iao-phase-0.md)
 
 ### Exit Criteria
@@ -2520,7 +2520,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*iao v0.1.3 — Phase 0 — April 2026*
+*iao v0.1.3 - Phase 0 - April 2026*
 ```
 
 ## §8. CHANGELOG
@@ -2529,20 +2529,20 @@ License to be determined before v0.6.0 release.
 ```markdown
 # iao changelog
 
-## [0.1.3] — 2026-04-09
+## [0.1.3] - 2026-04-09
 
-### Phase 0 — NZXT-only authoring
+### Phase 0 - NZXT-only authoring
 
 **Iteration:** 0.1.3.1
 **Theme:** Bundle quality hardening, folder consolidation, src-layout refactor, pipeline scaffolding, human feedback loop
 
 **Workstreams:**
-- W0: Iteration bookkeeping — bumped .aho.json to 0.1.3.1
-- W1: Folder consolidation — moved artifacts/docs/iterations to docs/iterations
-- W2: src-layout refactor — moved iao/iao/ to iao/src/aho/
-- W3: Universal bundle spec — added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
-- W4: Universal pipeline scaffolding — new src/aho/pipelines/ subpackage + iao pipeline CLI
-- W5: Human feedback loop — new src/aho/feedback/ subpackage + run report artifact
+- W0: Iteration bookkeeping - bumped .aho.json to 0.1.3.1
+- W1: Folder consolidation - moved artifacts/docs/iterations to docs/iterations
+- W2: src-layout refactor - moved iao/iao/ to iao/src/aho/
+- W3: Universal bundle spec - added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
+- W4: Universal pipeline scaffolding - new src/aho/pipelines/ subpackage + iao pipeline CLI
+- W5: Human feedback loop - new src/aho/feedback/ subpackage + run report artifact
 - W6: README sync + Phase 0 charter retrofit + 10 pillars enforcement
 - W7: Qwen loop hardening + dogfood + closing sequence
 
@@ -2576,7 +2576,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 - iao eval and iao registry subcommands stubbed
 - Linux + fish + Python 3.11+ targeted; macOS / Windows not yet
 
-## 0.1.9 — IAO → AHO Rename
+## 0.1.9 - IAO → AHO Rename
 
 - Renamed Python package iao → aho
 - Renamed CLI bin/iao → bin/aho
@@ -2591,7 +2591,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — iao 0.1.8 Agent Brief (Claude Code)
+# CLAUDE.md - iao 0.1.8 Agent Brief (Claude Code)
 
 **You are Claude Code, executing iao iteration 0.1.8 as the sole executor.**
 
@@ -2605,13 +2605,13 @@ This brief has a matched twin at `GEMINI.md` for Gemini CLI as the primary execu
 
 | Field | Value |
 |---|---|
-| Project | iao (the middleware itself — this is dogfood) |
+| Project | iao (the middleware itself - this is dogfood) |
 | Project code | iaomw |
-| Iteration | **0.1.8** (three octets, exactly — not 0.1.8.0, not 0.1.8.1) |
+| Iteration | **0.1.8** (three octets, exactly - not 0.1.8.0, not 0.1.8.1) |
 | Phase | 0 (UAT lab for aho) |
 | Machine | NZXTcos |
 | Repo | `~/dev/projects/iao` (local only, no git remote in Phase 0) |
-| Executor | Claude Code (you) — single executor, no handoff |
+| Executor | Claude Code (you) - single executor, no handoff |
 | Shell | fish 4.6.0 |
 | Wall clock target | ~10 hours soft cap, no hard cap |
 | Mode | single-executor |
@@ -2623,9 +2623,9 @@ This brief has a matched twin at `GEMINI.md` for Gemini CLI as the primary execu
 iao is a Python package and methodology for running disciplined LLM-driven engineering iterations without human supervision during execution. It has a CLI (`iao`), a Qwen-driven artifact loop, pre-flight and post-flight health checks, a gotcha registry, and a bundle format for iteration hand-off. Eleven pillars govern all work (see the Pillars reference section below).
 
 Under the three-lab framing landed post-0.1.7:
-- **kjtcom** is the dev lab — production location intelligence platform where patterns were discovered under fire
-- **iao** is the UAT lab — where patterns get proven in isolation before being ported to production
-- **aho** is production — a new repo to be scaffolded under `~/dev/projects/aho/` starting around 0.1.12, where proven patterns land in a clean implementation with no iaomw-era scar tissue
+- **kjtcom** is the dev lab - production location intelligence platform where patterns were discovered under fire
+- **iao** is the UAT lab - where patterns get proven in isolation before being ported to production
+- **aho** is production - a new repo to be scaffolded under `~/dev/projects/aho/` starting around 0.1.12, where proven patterns land in a clean implementation with no iaomw-era scar tissue
 
 Phase 0 is pattern-proving. Graduation from Phase 0 means the pattern set is ready for aho port, not a public push to GitHub. Every iao iteration from 0.1.8 forward is proving patterns for aho, not production-shipping in iao itself. The rename IAO → AHO (Agentic Harness Orchestration) happens inside iao first as a dedicated iteration (planned ~0.1.9) before the aho scaffold is stood up.
 
@@ -2633,13 +2633,13 @@ Kyle is staking his confidence in you. Do the work cleanly.
 
 ---
 
-## Hard rules (non-negotiable) — 15 rules
+## Hard rules (non-negotiable) - 15 rules
 
-### 1. Pillar 11 — The human holds the keys (NO git writes)
+### 1. Pillar 11 - The human holds the keys (NO git writes)
 
 **You never run `git commit`, `git push`, `git tag`, `git merge`, `git stash`, `git checkout -b`, or any git write.** Read-only git is fine (`git status`, `git log`, `git diff`, `git show`). All writing git operations are performed manually by Kyle after the iteration closes. If your workflow produces a moment where a commit "would be natural," note it in the build log and move on.
 
-### 2. Three-octet versioning — X.Y.Z only
+### 2. Three-octet versioning - X.Y.Z only
 
 iao iteration versions are exactly three octets: major.minor.iteration. The current iteration is **0.1.8**. Not `0.1.8.0`. Not `0.1.8-rc1`. Just `0.1.8`.
 
@@ -2739,14 +2739,14 @@ iao has real subpackages and real CLI surface. Do NOT reference paths that don't
 - `src/iao/doctor/` (doctor is not a subpackage, it's a function)
 - `src/iao/eval/` (does not exist)
 - `src/iao/llm/` (does not exist)
-- `src/iao/vector/` (does not exist — use `src/iao/rag/`)
+- `src/iao/vector/` (does not exist - use `src/iao/rag/`)
 - `src/iao/chain/` (does not exist)
 - `src/iao/tools/` (does not exist)
-- `src/iao/models/` (does not exist — model clients live in `src/iao/artifacts/`)
+- `src/iao/models/` (does not exist - model clients live in `src/iao/artifacts/`)
 
 **Known shims (these DO exist in iao, despite older agent briefs listing them as forbidden):**
-- `scripts/query_registry.py` — 6-line Python shim wrapping `iao.registry.main`. Tracked by `src/iao/doctor.py` line 70. The canonical invocation is still `iao registry query "<topic>"`; the shim is a compat path. Referencing it in artifacts is fine. Referencing the old "First action: query_registry.py" phrasing from legacy Pillar 3 text is NOT fine.
-- `scripts/build_context_bundle.py` — also tracked as an expected shim by `src/iao/doctor.py`.
+- `scripts/query_registry.py` - 6-line Python shim wrapping `iao.registry.main`. Tracked by `src/iao/doctor.py` line 70. The canonical invocation is still `iao registry query "<topic>"`; the shim is a compat path. Referencing it in artifacts is fine. Referencing the old "First action: query_registry.py" phrasing from legacy Pillar 3 text is NOT fine.
+- `scripts/build_context_bundle.py` - also tracked as an expected shim by `src/iao/doctor.py`.
 
 **iao's CLI surface** (subcommands in `src/iao/cli.py`): project, init, check, push, log, doctor, status, eval, registry, rag, telegram, preflight, postflight, secret, pipeline, iteration. If you reference an iao CLI command, it must be one of these.
 
@@ -2754,21 +2754,21 @@ iao has real subpackages and real CLI surface. Do NOT reference paths that don't
 
 **Split-agent handoff is retired.** 0.1.3 had a pattern where Gemini ran W1–W5 and Claude Code ran W6–W7. 0.1.4 retired this pattern in favor of single-executor mode. 0.1.5 Qwen drafts tried to revive it. 0.1.7 synthesis still slipped "split-agent execution" language into the build log despite the evaluator baseline listing it as a hallucination trigger. Any mention of "split-agent handoff" in any Qwen-generated artifact is a hallucination. If you are the executor, you run all workstreams; you do not "hand off" partway through.
 
-**Phase labels:** iao is in Phase 0. Do NOT label it "Phase 1" or invent names like "Production Readiness." Under the new three-lab framing, Phase 0 is "UAT lab for aho" — pattern-proving, not production-shipping. Check `.iao.json` `phase` field if unsure.
+**Phase labels:** iao is in Phase 0. Do NOT label it "Phase 1" or invent names like "Production Readiness." Under the new three-lab framing, Phase 0 is "UAT lab for aho" - pattern-proving, not production-shipping. Check `.iao.json` `phase` field if unsure.
 
 **Old pillar phrasings:** the legacy `iaomw-Pillar-1..10` block is retired. The source-of-truth pillar set is the eleven pillars listed below. The 0.1.7 audit found stale pillar text hardcoded in `docs/harness/base.md` (line 24), `src/iao/feedback/run_report.py` (lines 103–112), `src/iao/artifacts/evaluator.py` (PILLAR_ID_RE regex), and `src/iao/artifacts/templates.py` (template regex). Fixing those is in-scope for 0.1.8 work. Do not regenerate artifacts using the old pillar block from any of those locations.
 
-### 11. Pillar 10 — Interrupt-disciplined, not interrupt-free
+### 11. Pillar 10 - Interrupt-disciplined, not interrupt-free
 
 Do not ask Kyle for permission for preference, clarification, or scope decisions. Pick the safest interpretation of the plan, do the work, log any discrepancy in the build log. Every moment where you think you need permission for a decision is actually a moment where you should make the decision, write it down, and continue.
 
-The single exception is capability-gap interrupts — sudo operations, credential prompts, physical device interactions, anything the machine structurally cannot do on its own. For those, halt the affected workstream cleanly, surface the blocker as an Agent Question with the exact fish command Kyle needs to run, log the interrupt to the event log with type `capability_gap_interrupt`, and proceed to the next workstream that isn't blocked by the same gap. Do not spin on the blocked workstream. Kyle handles the gap out of band and resumes the run from the last durable checkpoint.
+The single exception is capability-gap interrupts - sudo operations, credential prompts, physical device interactions, anything the machine structurally cannot do on its own. For those, halt the affected workstream cleanly, surface the blocker as an Agent Question with the exact fish command Kyle needs to run, log the interrupt to the event log with type `capability_gap_interrupt`, and proceed to the next workstream that isn't blocked by the same gap. Do not spin on the blocked workstream. Kyle handles the gap out of band and resumes the run from the last durable checkpoint.
 
 ### 12. Retry policy (derived from Pillars 6 and 9)
 
-Maximum 3 retries per error with diagnostic feedback. For streaming errors, evaluator rejections, and smoke test failures, 1 retry is often the right cap (the plan specifies per workstream). After the retry budget, log to build log as discrepancy, populate Agent Questions section, continue to next deliverable. Every retry must include diagnostic feedback in the new prompt — never retry with the identical prompt. Repeated failures of the same class across iterations land in the gotcha registry (Pillar 9).
+Maximum 3 retries per error with diagnostic feedback. For streaming errors, evaluator rejections, and smoke test failures, 1 retry is often the right cap (the plan specifies per workstream). After the retry budget, log to build log as discrepancy, populate Agent Questions section, continue to next deliverable. Every retry must include diagnostic feedback in the new prompt - never retry with the identical prompt. Repeated failures of the same class across iterations land in the gotcha registry (Pillar 9).
 
-### 13. ADR-012 — Design and plan are immutable inputs
+### 13. ADR-012 - Design and plan are immutable inputs
 
 Once W0 begins, the iteration's design and plan docs are frozen inputs. You do not edit them. You produce:
 - Build log (W0 onward, updated workstream by workstream)
@@ -2786,11 +2786,11 @@ The W1 repetition detector raises `DegenerateGenerationError` if a Qwen generati
 - Do NOT retry with the identical prompt (retry policy requires diagnostic feedback, not identical input)
 - Log the failure to the event log with type `generation_degenerate`
 - Surface to Agent Questions in the run report
-- Proceed to next workstream deliverable — do not block the iteration on a single degenerate generation
+- Proceed to next workstream deliverable - do not block the iteration on a single degenerate generation
 
 ---
 
-## Pillars reference — the eleven aho pillars
+## Pillars reference - the eleven aho pillars
 
 These pillars supersede the prior iaomw-Pillar-1..10 numbering. They apply to iao (UAT) work as well as aho (production) work. When a hard rule above cites a pillar number, it refers to the numbering below.
 
@@ -2812,7 +2812,7 @@ These pillars supersede the prior iaomw-Pillar-1..10 numbering. They apply to ia
 
 9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one. Gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** No mid-run prompts for preference, clarification, or approval. The single exception: unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** No mid-run prompts for preference, clarification, or approval. The single exception: unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -2842,11 +2842,11 @@ Do NOT set `PYTHONPATH`. `pip install -e .` handles the package path.
 
 Before doing anything in W0, read these three files in full:
 
-1. **`docs/iterations/0.1.8/iao-design-0.1.8.md`** — the design doc. The *why* of this iteration.
+1. **`docs/iterations/0.1.8/iao-design-0.1.8.md`** - the design doc. The *why* of this iteration.
 
-2. **`docs/iterations/0.1.8/iao-plan-0.1.8.md`** — the plan doc. The *how*. Section C has copy-pasteable fish command blocks for every workstream. You reference this constantly.
+2. **`docs/iterations/0.1.8/iao-plan-0.1.8.md`** - the plan doc. The *how*. Section C has copy-pasteable fish command blocks for every workstream. You reference this constantly.
 
-3. **`docs/harness/base.md`** — the universal harness. Eleven pillars (post-0.1.8 rewrite), ADRs, patterns, gotcha registry index.
+3. **`docs/harness/base.md`** - the universal harness. Eleven pillars (post-0.1.8 rewrite), ADRs, patterns, gotcha registry index.
 
 You also read `data/gotcha_archive.json` to know what gotchas apply, `.iao-checkpoint.json` for current workstream state, and `docs/iterations/0.1.8/seed.json` once it's written (if the iteration's plan defines a seed step).
 
@@ -2888,22 +2888,22 @@ python3 -c "import json; d = json.load(open('data/gotcha_archive.json')); print(
 ## What NOT to do
 
 - ❌ **Do not run `git commit`, `git push`, `git add`, `git tag`, `git merge`** (Pillar 11)
-- ❌ **Do not `cat ~/.config/fish/config.fish`** — credential leak risk
-- ❌ **Do not edit the iteration's design or plan docs** — immutable per ADR-012
-- ❌ **Do not use four-octet versions** — ever
-- ❌ **Do not run `./bin/iao iteration close --confirm`** — Kyle's action
-- ❌ **Do not use bare `ls`** — use `command ls`
+- ❌ **Do not `cat ~/.config/fish/config.fish`** - credential leak risk
+- ❌ **Do not edit the iteration's design or plan docs** - immutable per ADR-012
+- ❌ **Do not use four-octet versions** - ever
+- ❌ **Do not run `./bin/iao iteration close --confirm`** - Kyle's action
+- ❌ **Do not use bare `ls`** - use `command ls`
 - ❌ **Do not `pip install open-interpreter`**
-- ❌ **Do not reference `src/iao/harness/` or `src/iao/eval/` or `src/iao/llm/`** — they don't exist
-- ❌ **Do not use "split-agent handoff" language** — retired in 0.1.4
-- ❌ **Do not label iao as Phase 1 or "Production Readiness"** — Phase 0, UAT lab for aho
-- ❌ **Do not reproduce the old `iaomw-Pillar-1..10` block** — retired in 0.1.8, use the eleven pillars above
-- ❌ **Do not assume `data/gotcha_archive.json` is a list** — it's a dict with `"gotchas"` key
+- ❌ **Do not reference `src/iao/harness/` or `src/iao/eval/` or `src/iao/llm/`** - they don't exist
+- ❌ **Do not use "split-agent handoff" language** - retired in 0.1.4
+- ❌ **Do not label iao as Phase 1 or "Production Readiness"** - Phase 0, UAT lab for aho
+- ❌ **Do not reproduce the old `iaomw-Pillar-1..10` block** - retired in 0.1.8, use the eleven pillars above
+- ❌ **Do not assume `data/gotcha_archive.json` is a list** - it's a dict with `"gotchas"` key
 - ❌ **Do not ask Kyle for permission mid-execution** for preference or scope (Pillar 10)
-- ❌ **Do not interrupt-spin** on a capability gap — halt cleanly, surface the blocker, move to the next unblocked workstream
+- ❌ **Do not interrupt-spin** on a capability gap - halt cleanly, surface the blocker, move to the next unblocked workstream
 - ❌ **Do not retry more than 3 times** per error, and for most errors the cap is 1
-- ❌ **Do not block the iteration** on a single non-critical failure — mark partial, continue
-- ❌ **Do not skip the build log** — every workstream gets a build log entry
+- ❌ **Do not block the iteration** on a single non-critical failure - mark partial, continue
+- ❌ **Do not skip the build log** - every workstream gets a build log entry
 - ❌ **Do not modify kjtcom.** Read-only access via ChromaDB archive is permitted.
 
 ---
@@ -2918,7 +2918,7 @@ ITERATION 0.1.8 EXECUTION COMPLETE
 ================================================
 Run report: docs/iterations/0.1.8/iao-run-report-0.1.8.md
 Bundle:     docs/iterations/0.1.8/iao-bundle-0.1.8.md
-Workstreams: X/X complete (or partial — see build log)
+Workstreams: X/X complete (or partial - see build log)
 
 Telegram notification sent to Kyle.
 
@@ -2945,16 +2945,16 @@ Terse. Kyle reads your output. Clear commands, short explanations, no filler. Bu
 ## What Kyle values
 
 1. Three-octet versioning, every time
-2. Pillar 11 respected — no git writes (the human holds the keys)
+2. Pillar 11 respected - no git writes (the human holds the keys)
 3. Questions surfaced to run report, not to terminal
-4. Discrepancies named honestly — don't paper over failures
+4. Discrepancies named honestly - don't paper over failures
 5. Zero intervention end-to-end for preference/scope; clean interrupt protocol for capability gaps (Pillar 10)
 6. The build log tells the truth about what happened
-7. Pattern-proving discipline — iao is the UAT lab, patterns here get ported to aho later
+7. Pattern-proving discipline - iao is the UAT lab, patterns here get ported to aho later
 
 ---
 
-## Executor-specific section — Claude Code
+## Executor-specific section - Claude Code
 
 This section is where CLAUDE.md and GEMINI.md diverge. Everything above is identical in both briefs.
 
@@ -2965,9 +2965,9 @@ tmux new-session -d -s iao-0.1.8 -c ~/dev/projects/iao
 tmux send-keys -t iao-0.1.8 'cd ~/dev/projects/iao; set -x IAO_ITERATION 0.1.8; set -x IAO_PROJECT_NAME iao; set -x IAO_PROJECT_CODE iaomw; claude --dangerously-skip-permissions' Enter
 ```
 
-`--dangerously-skip-permissions` is the equivalent of Gemini's `--yolo` — it lets you use Bash, Edit, Write, and other tools without prompting Kyle for each one. This is required for zero-intervention execution of preference/scope decisions (Pillar 10). Capability-gap interrupts still halt cleanly and surface blockers to Kyle.
+`--dangerously-skip-permissions` is the equivalent of Gemini's `--yolo` - it lets you use Bash, Edit, Write, and other tools without prompting Kyle for each one. This is required for zero-intervention execution of preference/scope decisions (Pillar 10). Capability-gap interrupts still halt cleanly and surface blockers to Kyle.
 
-### BashTool timeout — set explicit timeouts for Qwen calls
+### BashTool timeout - set explicit timeouts for Qwen calls
 
 Claude Code's BashTool has a default timeout of 2 minutes (120000 ms) per command, with a maximum of 10 minutes (600000 ms). Since 0.1.7's streaming fix, Qwen generations stream tokens continuously and individual generations are bounded by the client-level timeout of 600 seconds. But the BashTool wrapping the call still enforces its own ceiling.
 
@@ -2985,24 +2985,24 @@ Then poll with subsequent BashTool calls reading the output file. This avoids hi
 
 Gemini CLI killed 0.1.5's plan generation because the old non-streaming Qwen client ran silently for ~6 minutes and Gemini concluded the subprocess was hung. **Claude Code does not have this same heuristic.** You wait for the BashTool timeout, which you explicitly set.
 
-Since 0.1.7 W1 landed streaming, the issue is moot — every Qwen call produces continuous stderr output, so neither executor has a reason to kill the process.
+Since 0.1.7 W1 landed streaming, the issue is moot - every Qwen call produces continuous stderr output, so neither executor has a reason to kill the process.
 
 ### Claude Code tool surface
 
 You have:
-- **BashTool** — shell command execution; use `run_in_background: true` for long-running commands; set explicit `timeout` for anything over 2 minutes
-- **ReadFile / view** — read files (use this to inspect existing modules before editing)
-- **WriteFile / create_file** — write new files in one shot (preferred for multi-line Python source files)
-- **Edit / str_replace** — surgical replacement in existing files (preferred for editing `loop.py`, `cli.py`, `schemas.py`, `archive.py`)
-- **GlobTool** — pattern-match file paths
-- **GrepTool** — content search across files
-- **AgentTool** — sub-agent delegation (use sparingly; prefer direct execution to keep the audit trail in your main session)
+- **BashTool** - shell command execution; use `run_in_background: true` for long-running commands; set explicit `timeout` for anything over 2 minutes
+- **ReadFile / view** - read files (use this to inspect existing modules before editing)
+- **WriteFile / create_file** - write new files in one shot (preferred for multi-line Python source files)
+- **Edit / str_replace** - surgical replacement in existing files (preferred for editing `loop.py`, `cli.py`, `schemas.py`, `archive.py`)
+- **GlobTool** - pattern-match file paths
+- **GrepTool** - content search across files
+- **AgentTool** - sub-agent delegation (use sparingly; prefer direct execution to keep the audit trail in your main session)
 
-### Where Claude Code is strong vs weak — leverage accordingly
+### Where Claude Code is strong vs weak - leverage accordingly
 
 **Claude Code is generally stronger at:**
-- Code surgery — multi-file refactors, careful edits to existing modules
-- Following long structured plans — you can hold the plan doc Section C in context and execute step-by-step
+- Code surgery - multi-file refactors, careful edits to existing modules
+- Following long structured plans - you can hold the plan doc Section C in context and execute step-by-step
 - Catching subtle bugs in code being written (e.g. realizing the gotcha registry is a dict, not a list, before writing the broken append)
 - Producing matching tests alongside new modules
 
@@ -3010,14 +3010,14 @@ You have:
 - Pure orchestration of many parallel tool calls (you tend to serialize)
 - Long autonomous loops without checkpoint pauses (your sessions are bounded)
 
-Lean into your code-surgery strength on workstreams that involve careful edits to existing modules. Scripted environment/setup workstreams are simpler — any executor would do.
+Lean into your code-surgery strength on workstreams that involve careful edits to existing modules. Scripted environment/setup workstreams are simpler - any executor would do.
 
 ### Session continuity if context fills
 
 Claude Code sessions can compact mid-execution if context grows too large. Your safety net is:
 
-1. **The checkpoint file `.iao-checkpoint.json`** is updated after every workstream — it's the source of truth for "what's done"
-2. **The build log `docs/iterations/0.1.8/iao-build-log-0.1.8.md`** is updated after every workstream — it's the source of truth for "what happened"
+1. **The checkpoint file `.iao-checkpoint.json`** is updated after every workstream - it's the source of truth for "what's done"
+2. **The build log `docs/iterations/0.1.8/iao-build-log-0.1.8.md`** is updated after every workstream - it's the source of truth for "what happened"
 3. **The plan doc Section C** is the source of truth for "what to do next"
 
 If your session compacts or restarts mid-iteration, on resume you read these three files plus this brief, identify the current workstream from `.iao-checkpoint.json`, and continue from there. Do NOT re-do completed workstreams. Do NOT skip workstreams.
@@ -3026,7 +3026,7 @@ If Kyle uses `/resume` to restart your session, the `~/dev/projects/iao` working
 
 ### A note on dogfood
 
-You are Claude Code, executing iao. iao is a methodology for orchestrating LLM-driven engineering iterations. You are the Claude in "Claude Code." There is some recursion here but ignore it — your job is to execute the plan, not to philosophize about the layered models. Qwen does the artifact synthesis. You do the engineering work. Stay focused on the workstreams.
+You are Claude Code, executing iao. iao is a methodology for orchestrating LLM-driven engineering iterations. You are the Claude in "Claude Code." There is some recursion here but ignore it - your job is to execute the plan, not to philosophize about the layered models. Qwen does the artifact synthesis. You do the engineering work. Stay focused on the workstreams.
 
 ---
 
@@ -3040,14 +3040,14 @@ This file (CLAUDE.md) is your operating manual. You have it in context at all ti
 
 Begin with W0. Do the work. Log what you do. Don't break the rules. Trust the plan.
 
-— iao 0.1.8 planning, updated 2026-04-10 with 11 pillars and three-lab framing
+- iao 0.1.8 planning, updated 2026-04-10 with 11 pillars and three-lab framing
 ```
 
 ## §10. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — iao 0.1.8 Agent Brief (Gemini CLI)
+# GEMINI.md - iao 0.1.8 Agent Brief (Gemini CLI)
 
 **You are Gemini CLI, executing iao iteration 0.1.8 as the sole executor.**
 
@@ -3061,13 +3061,13 @@ This brief has a matched twin at `CLAUDE.md` for Claude Code as a fallback execu
 
 | Field | Value |
 |---|---|
-| Project | iao (the middleware itself — this is dogfood) |
+| Project | iao (the middleware itself - this is dogfood) |
 | Project code | iaomw |
-| Iteration | **0.1.8** (three octets, exactly — not 0.1.8.0, not 0.1.8.1) |
+| Iteration | **0.1.8** (three octets, exactly - not 0.1.8.0, not 0.1.8.1) |
 | Phase | 0 (UAT lab for aho) |
 | Machine | NZXTcos |
 | Repo | `~/dev/projects/iao` (local only, no git remote in Phase 0) |
-| Executor | Gemini CLI (you) — single executor, no handoff |
+| Executor | Gemini CLI (you) - single executor, no handoff |
 | Shell | fish 4.6.0 |
 | Wall clock target | ~10 hours soft cap, no hard cap |
 | Mode | single-executor |
@@ -3079,9 +3079,9 @@ This brief has a matched twin at `CLAUDE.md` for Claude Code as a fallback execu
 iao is a Python package and methodology for running disciplined LLM-driven engineering iterations without human supervision during execution. It has a CLI (`iao`), a Qwen-driven artifact loop, pre-flight and post-flight health checks, a gotcha registry, and a bundle format for iteration hand-off. Eleven pillars govern all work (see the Pillars reference section below).
 
 Under the three-lab framing landed post-0.1.7:
-- **kjtcom** is the dev lab — production location intelligence platform where patterns were discovered under fire
-- **iao** is the UAT lab — where patterns get proven in isolation before being ported to production
-- **aho** is production — a new repo to be scaffolded under `~/dev/projects/aho/` starting around 0.1.12, where proven patterns land in a clean implementation with no iaomw-era scar tissue
+- **kjtcom** is the dev lab - production location intelligence platform where patterns were discovered under fire
+- **iao** is the UAT lab - where patterns get proven in isolation before being ported to production
+- **aho** is production - a new repo to be scaffolded under `~/dev/projects/aho/` starting around 0.1.12, where proven patterns land in a clean implementation with no iaomw-era scar tissue
 
 Phase 0 is pattern-proving. Graduation from Phase 0 means the pattern set is ready for aho port, not a public push to GitHub. Every iao iteration from 0.1.8 forward is proving patterns for aho, not production-shipping in iao itself. The rename IAO → AHO (Agentic Harness Orchestration) happens inside iao first as a dedicated iteration (planned ~0.1.9) before the aho scaffold is stood up.
 
@@ -3089,13 +3089,13 @@ Kyle is staking his confidence in you. Do the work cleanly.
 
 ---
 
-## Hard rules (non-negotiable) — 15 rules
+## Hard rules (non-negotiable) - 15 rules
 
-### 1. Pillar 11 — The human holds the keys (NO git writes)
+### 1. Pillar 11 - The human holds the keys (NO git writes)
 
 **You never run `git commit`, `git push`, `git tag`, `git merge`, `git stash`, `git checkout -b`, or any git write.** Read-only git is fine (`git status`, `git log`, `git diff`, `git show`). All writing git operations are performed manually by Kyle after the iteration closes. If your workflow produces a moment where a commit "would be natural," note it in the build log and move on.
 
-### 2. Three-octet versioning — X.Y.Z only
+### 2. Three-octet versioning - X.Y.Z only
 
 iao iteration versions are exactly three octets: major.minor.iteration. The current iteration is **0.1.8**. Not `0.1.8.0`. Not `0.1.8-rc1`. Just `0.1.8`.
 
@@ -3195,14 +3195,14 @@ iao has real subpackages and real CLI surface. Do NOT reference paths that don't
 - `src/iao/doctor/` (doctor is not a subpackage, it's a function)
 - `src/iao/eval/` (does not exist)
 - `src/iao/llm/` (does not exist)
-- `src/iao/vector/` (does not exist — use `src/iao/rag/`)
+- `src/iao/vector/` (does not exist - use `src/iao/rag/`)
 - `src/iao/chain/` (does not exist)
 - `src/iao/tools/` (does not exist)
-- `src/iao/models/` (does not exist — model clients live in `src/iao/artifacts/`)
+- `src/iao/models/` (does not exist - model clients live in `src/iao/artifacts/`)
 
 **Known shims (these DO exist in iao, despite older agent briefs listing them as forbidden):**
-- `scripts/query_registry.py` — 6-line Python shim wrapping `iao.registry.main`. Tracked by `src/iao/doctor.py` line 70. The canonical invocation is still `iao registry query "<topic>"`; the shim is a compat path. Referencing it in artifacts is fine. Referencing the old "First action: query_registry.py" phrasing from legacy Pillar 3 text is NOT fine.
-- `scripts/build_context_bundle.py` — also tracked as an expected shim by `src/iao/doctor.py`.
+- `scripts/query_registry.py` - 6-line Python shim wrapping `iao.registry.main`. Tracked by `src/iao/doctor.py` line 70. The canonical invocation is still `iao registry query "<topic>"`; the shim is a compat path. Referencing it in artifacts is fine. Referencing the old "First action: query_registry.py" phrasing from legacy Pillar 3 text is NOT fine.
+- `scripts/build_context_bundle.py` - also tracked as an expected shim by `src/iao/doctor.py`.
 
 **iao's CLI surface** (subcommands in `src/iao/cli.py`): project, init, check, push, log, doctor, status, eval, registry, rag, telegram, preflight, postflight, secret, pipeline, iteration. If you reference an iao CLI command, it must be one of these.
 
@@ -3210,21 +3210,21 @@ iao has real subpackages and real CLI surface. Do NOT reference paths that don't
 
 **Split-agent handoff is retired.** 0.1.3 had a pattern where Gemini ran W1–W5 and Claude Code ran W6–W7. 0.1.4 retired this pattern in favor of single-executor mode. 0.1.5 Qwen drafts tried to revive it. 0.1.7 synthesis still slipped "split-agent execution" language into the build log despite the evaluator baseline listing it as a hallucination trigger. Any mention of "split-agent handoff" in any Qwen-generated artifact is a hallucination. If you are the executor, you run all workstreams; you do not "hand off" partway through.
 
-**Phase labels:** iao is in Phase 0. Do NOT label it "Phase 1" or invent names like "Production Readiness." Under the new three-lab framing, Phase 0 is "UAT lab for aho" — pattern-proving, not production-shipping. Check `.iao.json` `phase` field if unsure.
+**Phase labels:** iao is in Phase 0. Do NOT label it "Phase 1" or invent names like "Production Readiness." Under the new three-lab framing, Phase 0 is "UAT lab for aho" - pattern-proving, not production-shipping. Check `.iao.json` `phase` field if unsure.
 
 **Old pillar phrasings:** the legacy `iaomw-Pillar-1..10` block is retired. The source-of-truth pillar set is the eleven pillars listed below. The 0.1.7 audit found stale pillar text hardcoded in `docs/harness/base.md` (line 24), `src/iao/feedback/run_report.py` (lines 103–112), `src/iao/artifacts/evaluator.py` (PILLAR_ID_RE regex), and `src/iao/artifacts/templates.py` (template regex). Fixing those is in-scope for 0.1.8 work. Do not regenerate artifacts using the old pillar block from any of those locations.
 
-### 11. Pillar 10 — Interrupt-disciplined, not interrupt-free
+### 11. Pillar 10 - Interrupt-disciplined, not interrupt-free
 
 Do not ask Kyle for permission for preference, clarification, or scope decisions. Pick the safest interpretation of the plan, do the work, log any discrepancy in the build log. Every moment where you think you need permission for a decision is actually a moment where you should make the decision, write it down, and continue.
 
-The single exception is capability-gap interrupts — sudo operations, credential prompts, physical device interactions, anything the machine structurally cannot do on its own. For those, halt the affected workstream cleanly, surface the blocker as an Agent Question with the exact fish command Kyle needs to run, log the interrupt to the event log with type `capability_gap_interrupt`, and proceed to the next workstream that isn't blocked by the same gap. Do not spin on the blocked workstream. Kyle handles the gap out of band and resumes the run from the last durable checkpoint.
+The single exception is capability-gap interrupts - sudo operations, credential prompts, physical device interactions, anything the machine structurally cannot do on its own. For those, halt the affected workstream cleanly, surface the blocker as an Agent Question with the exact fish command Kyle needs to run, log the interrupt to the event log with type `capability_gap_interrupt`, and proceed to the next workstream that isn't blocked by the same gap. Do not spin on the blocked workstream. Kyle handles the gap out of band and resumes the run from the last durable checkpoint.
 
 ### 12. Retry policy (derived from Pillars 6 and 9)
 
-Maximum 3 retries per error with diagnostic feedback. For streaming errors, evaluator rejections, and smoke test failures, 1 retry is often the right cap (the plan specifies per workstream). After the retry budget, log to build log as discrepancy, populate Agent Questions section, continue to next deliverable. Every retry must include diagnostic feedback in the new prompt — never retry with the identical prompt. Repeated failures of the same class across iterations land in the gotcha registry (Pillar 9).
+Maximum 3 retries per error with diagnostic feedback. For streaming errors, evaluator rejections, and smoke test failures, 1 retry is often the right cap (the plan specifies per workstream). After the retry budget, log to build log as discrepancy, populate Agent Questions section, continue to next deliverable. Every retry must include diagnostic feedback in the new prompt - never retry with the identical prompt. Repeated failures of the same class across iterations land in the gotcha registry (Pillar 9).
 
-### 13. ADR-012 — Design and plan are immutable inputs
+### 13. ADR-012 - Design and plan are immutable inputs
 
 Once W0 begins, the iteration's design and plan docs are frozen inputs. You do not edit them. You produce:
 - Build log (W0 onward, updated workstream by workstream)
@@ -3242,11 +3242,11 @@ The W1 repetition detector raises `DegenerateGenerationError` if a Qwen generati
 - Do NOT retry with the identical prompt (retry policy requires diagnostic feedback, not identical input)
 - Log the failure to the event log with type `generation_degenerate`
 - Surface to Agent Questions in the run report
-- Proceed to next workstream deliverable — do not block the iteration on a single degenerate generation
+- Proceed to next workstream deliverable - do not block the iteration on a single degenerate generation
 
 ---
 
-## Pillars reference — the eleven aho pillars
+## Pillars reference - the eleven aho pillars
 
 These pillars supersede the prior iaomw-Pillar-1..10 numbering. They apply to iao (UAT) work as well as aho (production) work. When a hard rule above cites a pillar number, it refers to the numbering below.
 
@@ -3268,7 +3268,7 @@ These pillars supersede the prior iaomw-Pillar-1..10 numbering. They apply to ia
 
 9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one. Gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** No mid-run prompts for preference, clarification, or approval. The single exception: unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** No mid-run prompts for preference, clarification, or approval. The single exception: unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -3298,11 +3298,11 @@ Do NOT set `PYTHONPATH`. `pip install -e .` handles the package path.
 
 Before doing anything in W0, read these three files in full:
 
-1. **`docs/iterations/0.1.8/iao-design-0.1.8.md`** — the design doc. The *why* of this iteration.
+1. **`docs/iterations/0.1.8/iao-design-0.1.8.md`** - the design doc. The *why* of this iteration.
 
-2. **`docs/iterations/0.1.8/iao-plan-0.1.8.md`** — the plan doc. The *how*. Section C has copy-pasteable fish command blocks for every workstream. You reference this constantly.
+2. **`docs/iterations/0.1.8/iao-plan-0.1.8.md`** - the plan doc. The *how*. Section C has copy-pasteable fish command blocks for every workstream. You reference this constantly.
 
-3. **`docs/harness/base.md`** — the universal harness. Eleven pillars (post-0.1.8 rewrite), ADRs, patterns, gotcha registry index.
+3. **`docs/harness/base.md`** - the universal harness. Eleven pillars (post-0.1.8 rewrite), ADRs, patterns, gotcha registry index.
 
 You also read `data/gotcha_archive.json` to know what gotchas apply, `.iao-checkpoint.json` for current workstream state, and `docs/iterations/0.1.8/seed.json` once it's written (if the iteration's plan defines a seed step).
 
@@ -3344,22 +3344,22 @@ python3 -c "import json; d = json.load(open('data/gotcha_archive.json')); print(
 ## What NOT to do
 
 - ❌ **Do not run `git commit`, `git push`, `git add`, `git tag`, `git merge`** (Pillar 11)
-- ❌ **Do not `cat ~/.config/fish/config.fish`** — credential leak risk
-- ❌ **Do not edit the iteration's design or plan docs** — immutable per ADR-012
-- ❌ **Do not use four-octet versions** — ever
-- ❌ **Do not run `./bin/iao iteration close --confirm`** — Kyle's action
-- ❌ **Do not use bare `ls`** — use `command ls`
+- ❌ **Do not `cat ~/.config/fish/config.fish`** - credential leak risk
+- ❌ **Do not edit the iteration's design or plan docs** - immutable per ADR-012
+- ❌ **Do not use four-octet versions** - ever
+- ❌ **Do not run `./bin/iao iteration close --confirm`** - Kyle's action
+- ❌ **Do not use bare `ls`** - use `command ls`
 - ❌ **Do not `pip install open-interpreter`**
-- ❌ **Do not reference `src/iao/harness/` or `src/iao/eval/` or `src/iao/llm/`** — they don't exist
-- ❌ **Do not use "split-agent handoff" language** — retired in 0.1.4
-- ❌ **Do not label iao as Phase 1 or "Production Readiness"** — Phase 0, UAT lab for aho
-- ❌ **Do not reproduce the old `iaomw-Pillar-1..10` block** — retired in 0.1.8, use the eleven pillars above
-- ❌ **Do not assume `data/gotcha_archive.json` is a list** — it's a dict with `"gotchas"` key
+- ❌ **Do not reference `src/iao/harness/` or `src/iao/eval/` or `src/iao/llm/`** - they don't exist
+- ❌ **Do not use "split-agent handoff" language** - retired in 0.1.4
+- ❌ **Do not label iao as Phase 1 or "Production Readiness"** - Phase 0, UAT lab for aho
+- ❌ **Do not reproduce the old `iaomw-Pillar-1..10` block** - retired in 0.1.8, use the eleven pillars above
+- ❌ **Do not assume `data/gotcha_archive.json` is a list** - it's a dict with `"gotchas"` key
 - ❌ **Do not ask Kyle for permission mid-execution** for preference or scope (Pillar 10)
-- ❌ **Do not interrupt-spin** on a capability gap — halt cleanly, surface the blocker, move to the next unblocked workstream
+- ❌ **Do not interrupt-spin** on a capability gap - halt cleanly, surface the blocker, move to the next unblocked workstream
 - ❌ **Do not retry more than 3 times** per error, and for most errors the cap is 1
-- ❌ **Do not block the iteration** on a single non-critical failure — mark partial, continue
-- ❌ **Do not skip the build log** — every workstream gets a build log entry
+- ❌ **Do not block the iteration** on a single non-critical failure - mark partial, continue
+- ❌ **Do not skip the build log** - every workstream gets a build log entry
 - ❌ **Do not modify kjtcom.** Read-only access via ChromaDB archive is permitted.
 
 ---
@@ -3374,7 +3374,7 @@ ITERATION 0.1.8 EXECUTION COMPLETE
 ================================================
 Run report: docs/iterations/0.1.8/iao-run-report-0.1.8.md
 Bundle:     docs/iterations/0.1.8/iao-bundle-0.1.8.md
-Workstreams: X/X complete (or partial — see build log)
+Workstreams: X/X complete (or partial - see build log)
 
 Telegram notification sent to Kyle.
 
@@ -3401,16 +3401,16 @@ Terse. Kyle reads your output. Clear commands, short explanations, no filler. Bu
 ## What Kyle values
 
 1. Three-octet versioning, every time
-2. Pillar 11 respected — no git writes (the human holds the keys)
+2. Pillar 11 respected - no git writes (the human holds the keys)
 3. Questions surfaced to run report, not to terminal
-4. Discrepancies named honestly — don't paper over failures
+4. Discrepancies named honestly - don't paper over failures
 5. Zero intervention end-to-end for preference/scope; clean interrupt protocol for capability gaps (Pillar 10)
 6. The build log tells the truth about what happened
-7. Pattern-proving discipline — iao is the UAT lab, patterns here get ported to aho later
+7. Pattern-proving discipline - iao is the UAT lab, patterns here get ported to aho later
 
 ---
 
-## Executor-specific section — Gemini CLI
+## Executor-specific section - Gemini CLI
 
 This section is where GEMINI.md and CLAUDE.md diverge. Everything above is identical in both briefs.
 
@@ -3421,7 +3421,7 @@ tmux new-session -d -s iao-0.1.8 -c ~/dev/projects/iao
 tmux send-keys -t iao-0.1.8 'cd ~/dev/projects/iao; set -x IAO_ITERATION 0.1.8; set -x IAO_PROJECT_NAME iao; set -x IAO_PROJECT_CODE iaomw; gemini --yolo' Enter
 ```
 
-`--yolo` is a single flag. Do NOT also pass `--sandbox=none` — `--yolo` implies sandbox bypass in current Gemini CLI versions. This is required for zero-intervention execution of preference/scope decisions (Pillar 10). Capability-gap interrupts still halt cleanly and surface blockers to Kyle.
+`--yolo` is a single flag. Do NOT also pass `--sandbox=none` - `--yolo` implies sandbox bypass in current Gemini CLI versions. This is required for zero-intervention execution of preference/scope decisions (Pillar 10). Capability-gap interrupts still halt cleanly and surface blockers to Kyle.
 
 ### The 5-minute no-output timeout trap
 
@@ -3450,20 +3450,20 @@ Use this pattern for any command that might exceed 5 minutes without output. Str
 ### Gemini CLI tool surface
 
 You have:
-- **Shell** — shell command execution via the standard bash tool
-- **ReadFile** — read files (use this to inspect existing modules before editing)
-- **WriteFile** — write new files in one shot (preferred for multi-line Python source files in careful edits to existing modules)
-- **Edit** — surgical replacement via `old_str`/`new_str` in existing files
-- **Glob** — pattern-match file paths
-- **Grep** — content search across files
+- **Shell** - shell command execution via the standard bash tool
+- **ReadFile** - read files (use this to inspect existing modules before editing)
+- **WriteFile** - write new files in one shot (preferred for multi-line Python source files in careful edits to existing modules)
+- **Edit** - surgical replacement via `old_str`/`new_str` in existing files
+- **Glob** - pattern-match file paths
+- **Grep** - content search across files
 
 For multi-line Python source file creation, prefer `WriteFile` or `cat > file.py <<'PYEOF' ... PYEOF` via Shell. Do not try to build up long files with multiple Edit calls; one Write is cleaner.
 
-### Where Gemini CLI is strong vs weak — leverage accordingly
+### Where Gemini CLI is strong vs weak - leverage accordingly
 
 **Gemini CLI is generally stronger at:**
 - Structured planning and integration tasks
-- Long autonomous loops without checkpoint pauses — you can sustain longer sessions than Claude Code
+- Long autonomous loops without checkpoint pauses - you can sustain longer sessions than Claude Code
 - Executing long scripted plans with many small steps
 - Parallel tool orchestration
 
@@ -3478,15 +3478,15 @@ Lean into your strengths on scripted environment/setup workstreams and long sequ
 
 - If Gemini's built-in web search or other external tools fail, ignore them. iao execution does not require web access.
 - If Gemini offers to install missing packages, only allow it for packages explicitly listed in the plan's `pip install` commands. Do NOT install open-interpreter (Rule 14).
-- Gemini CLI has a session token limit. For a 10-hour iteration, you may hit it. If the session ends mid-workstream, Kyle will resume with `gemini --resume <session-id>`. Your checkpoint state in `.iao-checkpoint.json` is the handoff mechanism — always update it after each workstream so resume picks up correctly.
-- If Gemini enters a "let me think about this" loop without progress, kill the generation and continue. Pillar 10 interrupt-discipline means the agent does not stall waiting for clarity on preference questions; it makes a decision and moves on. Capability gaps (sudo, credentials) get clean halts with a surfaced blocker — not stalls.
+- Gemini CLI has a session token limit. For a 10-hour iteration, you may hit it. If the session ends mid-workstream, Kyle will resume with `gemini --resume <session-id>`. Your checkpoint state in `.iao-checkpoint.json` is the handoff mechanism - always update it after each workstream so resume picks up correctly.
+- If Gemini enters a "let me think about this" loop without progress, kill the generation and continue. Pillar 10 interrupt-discipline means the agent does not stall waiting for clarity on preference questions; it makes a decision and moves on. Capability gaps (sudo, credentials) get clean halts with a surfaced blocker - not stalls.
 
 ### Session continuity if session ends
 
 Gemini CLI sessions can hit token limits mid-execution. Your safety net is:
 
-1. **The checkpoint file `.iao-checkpoint.json`** is updated after every workstream — it's the source of truth for "what's done"
-2. **The build log `docs/iterations/0.1.8/iao-build-log-0.1.8.md`** is updated after every workstream — it's the source of truth for "what happened"
+1. **The checkpoint file `.iao-checkpoint.json`** is updated after every workstream - it's the source of truth for "what's done"
+2. **The build log `docs/iterations/0.1.8/iao-build-log-0.1.8.md`** is updated after every workstream - it's the source of truth for "what happened"
 3. **The plan doc Section C** is the source of truth for "what to do next"
 
 If your session ends or restarts mid-iteration, on resume you read these three files plus this brief, identify the current workstream from `.iao-checkpoint.json`, and continue from there. Do NOT re-do completed workstreams. Do NOT skip workstreams.
@@ -3509,7 +3509,7 @@ This file (GEMINI.md) is your operating manual. You have it in context at all ti
 
 Begin with W0. Do the work. Log what you do. Don't break the rules. Trust the plan.
 
-— iao 0.1.8 planning, updated 2026-04-10 with 11 pillars and three-lab framing
+- iao 0.1.8 planning, updated 2026-04-10 with 11 pillars and three-lab framing
 ```
 
 ## §11. .aho.json
@@ -3913,7 +3913,7 @@ end
 
 if test -d $HOME/dev/projects/kjtcom/iao
     _info "Found vendored iao copy at $HOME/dev/projects/kjtcom/iao (kjtcom's vendored copy)"
-    _info "This is intentional — kjtcom retains its own vendored copy in steady state."
+    _info "This is intentional - kjtcom retains its own vendored copy in steady state."
     _info "Not modifying kjtcom's vendored copy."
 end
 
@@ -4050,9 +4050,9 @@ if test "$uname_s" = "Linux"
         end
     end
 else if test "$uname_s" = "Darwin"
-    _info "Detected macOS — will use Keychain via 'security' CLI (built-in)"
+    _info "Detected macOS - will use Keychain via 'security' CLI (built-in)"
 else
-    _warn "Unknown OS: $uname_s — keyring backend may not be supported"
+    _warn "Unknown OS: $uname_s - keyring backend may not be supported"
 end
 
 _success "Keyring backend verified"
@@ -4087,14 +4087,14 @@ if test -f $config_fish
             _warn "  iao install migrate-config-fish"
         end
     else
-        _info "No plaintext secrets found in config.fish — nothing to migrate"
+        _info "No plaintext secrets found in config.fish - nothing to migrate"
     end
 else
-    _info "No config.fish found — skipping secrets migration"
+    _info "No config.fish found - skipping secrets migration"
 end
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 8: (Already handled in Step 3 — keeping numbered for clarity)
+# Step 8: (Already handled in Step 3 - keeping numbered for clarity)
 # ─────────────────────────────────────────────────────────────────────────
 
 _step "Step 8 of 13: ~/iao-middleware cleanup (handled in Step 3)"
@@ -4116,10 +4116,10 @@ if test -f $IAO_HOME/active.fish
         rm $IAO_HOME/active.fish
         _success "Stale active.fish removed"
     else
-        _info "active.fish exists and appears current — leaving in place"
+        _info "active.fish exists and appears current - leaving in place"
     end
 else
-    _info "No active.fish found — nothing to remove"
+    _info "No active.fish found - nothing to remove"
 end
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -4131,7 +4131,7 @@ _step "Step 10 of 13: Update global projects registry"
 mkdir -p $IAO_HOME
 
 if test -f $IAO_HOME/projects.json
-    _info "Found existing projects.json — will update to add tripledb"
+    _info "Found existing projects.json - will update to add tripledb"
 
     # Use Python to safely modify the JSON (avoiding fish JSON parsing complexity)
     python3 -c "
@@ -4175,7 +4175,7 @@ projects_path.write_text(json.dumps(data, indent=2))
     end
     _success "Projects registry updated"
 else
-    _info "No projects.json found — creating new one with iao, kjtcom, tripledb"
+    _info "No projects.json found - creating new one with iao, kjtcom, tripledb"
     python3 -c "
 import json
 from pathlib import Path
@@ -4256,7 +4256,7 @@ if not grep -q "$marker_begin" $config_fish
     printf '%s\n' "$marker_end" >> $config_fish
     _success "New iao block added"
 else
-    _info "iao block already present in config.fish — leaving in place"
+    _info "iao block already present in config.fish - leaving in place"
 end
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -4268,7 +4268,7 @@ _step "Step 12 of 13: Run pre-flight checks"
 _info "Running iao doctor to verify install..."
 iao doctor 2>&1
 or begin
-    _warn "iao doctor reported issues — see output above"
+    _warn "iao doctor reported issues - see output above"
     _warn "Install completed but environment is not fully ready"
 end
 

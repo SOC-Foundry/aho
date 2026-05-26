@@ -13,7 +13,7 @@
    P3 skips Telegram inbound daemon entirely for 0.2.9. NZXTcos stays
    the only machine running the inbound bridge. P3 may run outbound-
    only if needed. getUpdates cannot race between two daemons on one
-   bot — Telegram locks the stream to one consumer. 0.2.11 solves
+   bot - Telegram locks the stream to one consumer. 0.2.11 solves
    multi-machine properly.
 
 3. P3 COLD STATE

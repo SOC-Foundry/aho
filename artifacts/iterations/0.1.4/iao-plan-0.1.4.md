@@ -1,17 +1,17 @@
-# iao — Plan 0.1.4
+# iao - Plan 0.1.4
 
-**Iteration:** 0.1.4 (three octets, locked — do not add a fourth)
+**Iteration:** 0.1.4 (three octets, locked - do not add a fourth)
 **Phase:** 0 (NZXT-only authoring)
 **Date:** April 09, 2026
 **Machine:** NZXTcos
 **Repo:** ~/dev/projects/iao
 **Wall clock target:** ~8 hours soft cap (no hard cap)
-**Run mode:** Single executor — Gemini CLI
+**Run mode:** Single executor - Gemini CLI
 **Status:** Planning
 
 This plan operationalizes `iao-design-0.1.4.md`. Read the design first if you haven't. The design defines *what* and *why*; this plan defines *how* and *in what order*, in commands Gemini can paste and run.
 
-Every command block in this plan is fish-shell compatible and copy-pasteable. Commands are grouped by workstream. Each workstream block is atomic — Gemini runs all commands in the block, then updates the checkpoint and moves on. If a command fails, Gemini retries up to 3 times (Pillar 7), then surfaces to the build log as a discrepancy and continues to the next workstream unless the failure is blocking.
+Every command block in this plan is fish-shell compatible and copy-pasteable. Commands are grouped by workstream. Each workstream block is atomic - Gemini runs all commands in the block, then updates the checkpoint and moves on. If a command fails, Gemini retries up to 3 times (Pillar 7), then surfaces to the build log as a discrepancy and continues to the next workstream unless the failure is blocking.
 
 ---
 
@@ -21,9 +21,9 @@ iao is the methodology and Python package for running disciplined LLM-driven eng
 
 ---
 
-## Section A — Pre-flight
+## Section A - Pre-flight
 
-### A.0 — Working directory and shell state
+### A.0 - Working directory and shell state
 
 ```fish
 cd ~/dev/projects/iao
@@ -36,7 +36,7 @@ command ls -la .iao.json VERSION pyproject.toml
 
 **Failure remediation:** If any file missing, wrong directory. Restore from `~/dev/projects/iao.backup-pre-0.1.3` or Kyle's latest backup.
 
-### A.1 — Create 0.1.4 backup
+### A.1 - Create 0.1.4 backup
 
 ```fish
 test -d ~/dev/projects/iao.backup-pre-0.1.4
@@ -50,7 +50,7 @@ du -sh ~/dev/projects/iao.backup-pre-0.1.4
 # Expected: matches current project size
 ```
 
-### A.2 — Git state clean (if git-tracked)
+### A.2 - Git state clean (if git-tracked)
 
 ```fish
 cd ~/dev/projects/iao
@@ -61,7 +61,7 @@ test -d .git; and git status --porcelain
 
 **Failure remediation:** If git is dirty, Kyle commits or stashes manually. Per Pillar 0, Gemini does not run `git commit`.
 
-### A.3 — Python environment
+### A.3 - Python environment
 
 ```fish
 python3 --version
@@ -77,7 +77,7 @@ which iao
 # Expected: ~/.local/bin/iao
 ```
 
-### A.4 — iao package functional
+### A.4 - iao package functional
 
 ```fish
 iao --version
@@ -88,10 +88,10 @@ python3 -c "import iao; print(iao.__file__)"
 
 iao doctor quick 2>&1 | head -20
 # Expected: may fail because doctor CLI is missing (that's a W1 fix)
-# If it fails, note in build log and continue — does not block launch
+# If it fails, note in build log and continue - does not block launch
 ```
 
-### A.5 — Ollama daemon and models
+### A.5 - Ollama daemon and models
 
 ```fish
 curl -s http://localhost:11434/api/tags | python3 -c "import sys, json; d=json.load(sys.stdin); print('\n'.join(m['name'] for m in d['models']))"
@@ -104,14 +104,14 @@ curl -s http://localhost:11434/api/tags | python3 -c "import sys, json; d=json.l
 
 **Failure remediation:** If Ollama not running, `systemctl --user start ollama`. If any model missing, `ollama pull <model_name>`.
 
-### A.6 — Disk space
+### A.6 - Disk space
 
 ```fish
 df -h ~/dev/projects/iao | tail -1
 # Expected: at least 10G free (ChromaDB seeding needs headroom)
 ```
 
-### A.7 — Sleep/suspend masked
+### A.7 - Sleep/suspend masked
 
 ```fish
 systemctl status sleep.target 2>&1 | grep -E "Loaded|Active"
@@ -120,7 +120,7 @@ systemctl status sleep.target 2>&1 | grep -E "Loaded|Active"
 
 **Failure remediation:** `sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target`
 
-### A.8 — `.iao.json` reflects 0.1.3 close state
+### A.8 - `.iao.json` reflects 0.1.3 close state
 
 ```fish
 jq .current_iteration .iao.json
@@ -133,14 +133,14 @@ jq .phase .iao.json
 # Expected: 0
 ```
 
-### A.9 — No conflicting tmux session
+### A.9 - No conflicting tmux session
 
 ```fish
 tmux ls 2>/dev/null | grep "iao-0.1.4"
 # Expected: no output
 ```
 
-### A.10 — Required tools present (age may be missing — W1 installs)
+### A.10 - Required tools present (age may be missing - W1 installs)
 
 ```fish
 which git python3 pip ollama jq keyctl
@@ -153,7 +153,7 @@ npm list -g @google/gemini-cli 2>/dev/null
 # Expected: shows gemini-cli version
 ```
 
-### A.11 — Pre-flight summary printed
+### A.11 - Pre-flight summary printed
 
 ```fish
 echo "PRE-FLIGHT COMPLETE
@@ -169,9 +169,9 @@ READY TO LAUNCH iao 0.1.4"
 
 ---
 
-## Section B — Launch Protocol
+## Section B - Launch Protocol
 
-### B.1 — Open tmux session
+### B.1 - Open tmux session
 
 ```fish
 tmux new-session -d -s iao-0.1.4 -c ~/dev/projects/iao
@@ -180,7 +180,7 @@ tmux send-keys -t iao-0.1.4 'set -x IAO_ITERATION 0.1.4' Enter
 tmux send-keys -t iao-0.1.4 'set -x IAO_PROJECT_NAME iao' Enter
 ```
 
-### B.2 — Initialize checkpoint
+### B.2 - Initialize checkpoint
 
 ```fish
 set ts (date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -207,7 +207,7 @@ cat .iao-checkpoint.json | jq .iteration
 # Expected: "0.1.4"
 ```
 
-### B.3 — Launch Gemini CLI
+### B.3 - Launch Gemini CLI
 
 ```fish
 tmux send-keys -t iao-0.1.4 'gemini --yolo' Enter
@@ -215,19 +215,19 @@ tmux send-keys -t iao-0.1.4 'gemini --yolo' Enter
 
 Gemini reads `GEMINI.md` at session start. GEMINI.md references this plan doc for per-workstream execution detail. Gemini executes W0 through W7 sequentially, pausing only at W3 for Kyle's AMBIGUOUS review and at W7 for Kyle's final review.
 
-### B.4 — Monitor progress
+### B.4 - Monitor progress
 
 Kyle attaches occasionally to observe. The iteration runs in the background. Expected wall clock: 8 hours. Telegram notifications (once W4 completes and W6 is wired) will ping Kyle at iteration close.
 
-### B.5 — Iteration close
+### B.5 - Iteration close
 
 When Gemini completes W7, the iteration is in review pending state. Run report is at `docs/iterations/0.1.4/iao-run-report-0.1.4.md`. Kyle reviews, fills in notes, ticks sign-off boxes, runs `iao iteration close --confirm`.
 
 ---
 
-## Section C — Workstream Execution Details
+## Section C - Workstream Execution Details
 
-### W0 — Iteration Bookkeeping
+### W0 - Iteration Bookkeeping
 
 **Executor:** Gemini CLI
 **Wall clock target:** 10 min
@@ -266,7 +266,7 @@ iao --version
 
 # Append to build log
 mkdir -p docs/iterations/0.1.4
-printf '# Build Log — iao 0.1.4\n\n**Start:** %s\n**Executor:** gemini-cli\n**Machine:** NZXTcos\n**Phase:** 0\n**Iteration:** 0.1.4\n**Theme:** Model fleet integration, kjtcom harness migration, Telegram/OpenClaw foundations, Gemini-primary refactor, 0.1.3 cleanup\n\n---\n\n## W0 — Iteration Bookkeeping\n\n**Status:** COMPLETE\n**Wall clock:** ~5 min\n\nActions:\n- .iao.json current_iteration → 0.1.4 (three octets, no suffix)\n- VERSION → 0.1.4\n- pyproject.toml version → 0.1.4\n- cli.py version string → iao 0.1.4\n- Reinstalled via pip install -e .\n- iao --version returns 0.1.4\n\n---\n\n' (date -u +%Y-%m-%dT%H:%M:%SZ) > docs/iterations/0.1.4/iao-build-log-0.1.4.md
+printf '# Build Log - iao 0.1.4\n\n**Start:** %s\n**Executor:** gemini-cli\n**Machine:** NZXTcos\n**Phase:** 0\n**Iteration:** 0.1.4\n**Theme:** Model fleet integration, kjtcom harness migration, Telegram/OpenClaw foundations, Gemini-primary refactor, 0.1.3 cleanup\n\n---\n\n## W0 - Iteration Bookkeeping\n\n**Status:** COMPLETE\n**Wall clock:** ~5 min\n\nActions:\n- .iao.json current_iteration → 0.1.4 (three octets, no suffix)\n- VERSION → 0.1.4\n- pyproject.toml version → 0.1.4\n- cli.py version string → iao 0.1.4\n- Reinstalled via pip install -e .\n- iao --version returns 0.1.4\n\n---\n\n' (date -u +%Y-%m-%dT%H:%M:%SZ) > docs/iterations/0.1.4/iao-build-log-0.1.4.md
 
 # Mark W0 complete in checkpoint
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W0.status = "complete" | .workstreams.W0.completed_at = $ts | .current_workstream = "W1"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
@@ -281,14 +281,14 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W1 — 0.1.3 Cleanup
+### W1 - 0.1.3 Cleanup
 
 **Executor:** Gemini CLI
 **Wall clock target:** 90 min
 
 This workstream has 8 sub-deliverables. Gemini executes each in order, verifies each, then updates the checkpoint.
 
-#### W1.1 — Fix run report checkpoint-read bug
+#### W1.1 - Fix run report checkpoint-read bug
 
 ```fish
 # Read current run_report.py
@@ -321,9 +321,9 @@ print('W0 status in checkpoint:', checkpoint['workstreams']['W0']['status'])
 # Expected: W0 status in checkpoint: complete
 ```
 
-Gemini edits `src/iao/feedback/run_report.py` directly via the Edit tool. The fix is small — move the checkpoint read to the render function entry point.
+Gemini edits `src/iao/feedback/run_report.py` directly via the Edit tool. The fix is small - move the checkpoint read to the render function entry point.
 
-#### W1.2 — Question extraction from build log
+#### W1.2 - Question extraction from build log
 
 ```fish
 # Create the extraction module
@@ -385,8 +385,8 @@ def collect_all_questions(iteration: str, build_log_path: Path, event_log_path: 
     return combined
 PYEOF
 
-# Wire into run_report.py — Gemini edits run_report.py to call collect_all_questions
-# and populate the Agent Questions section with the result (or "(none — no questions
+# Wire into run_report.py - Gemini edits run_report.py to call collect_all_questions
+# and populate the Agent Questions section with the result (or "(none - no questions
 # surfaced during execution)" if empty)
 
 # Verify the module imports
@@ -394,7 +394,7 @@ python3 -c "from iao.feedback.questions import collect_all_questions; print('ok'
 # Expected: ok
 ```
 
-#### W1.3 — Run report quality gate
+#### W1.3 - Run report quality gate
 
 ```fish
 cat > src/iao/postflight/run_report_quality.py <<'PYEOF'
@@ -424,7 +424,7 @@ def check(version: str = None) -> dict:
     if size_bytes < 1500:
         errors.append(f"Run report size {size_bytes} < 1500 bytes minimum")
 
-    # Workstream summary table — check for table rows
+    # Workstream summary table - check for table rows
     if "| W0 |" not in content:
         errors.append("Workstream summary table missing W0 row")
     # Count workstream rows
@@ -453,7 +453,7 @@ python3 -c "from iao.postflight.run_report_quality import check; print(check.__d
 # Expected: Validate run report quality.
 ```
 
-#### W1.4 — Bundle spec expansion to 21 sections
+#### W1.4 - Bundle spec expansion to 21 sections
 
 ```fish
 # Read current bundle.py
@@ -483,7 +483,7 @@ sed -i 's/if len(BUNDLE_SPEC) != 20/if len(BUNDLE_SPEC) != 21/' src/iao/postflig
 grep "21" src/iao/postflight/bundle_quality.py | head -3
 ```
 
-#### W1.5 — `iao doctor` CLI subcommand wired
+#### W1.5 - `iao doctor` CLI subcommand wired
 
 ```fish
 # Inspect current cli.py
@@ -513,7 +513,7 @@ iao doctor --help 2>&1
 # Expected: shows quick/preflight/postflight/full subcommands
 ```
 
-#### W1.6 — `iao log workstream-complete` signature reconciliation
+#### W1.6 - `iao log workstream-complete` signature reconciliation
 
 ```fish
 # Inspect current signature
@@ -528,7 +528,7 @@ iao log workstream-complete --help 2>&1
 # Expected: shows 3 positional args
 
 # Update GEMINI.md (produced by chat) and CLAUDE.md (demoted to pointer in W6) to use correct signature
-# Not fixing in this workstream — GEMINI.md is authored in chat, will already have correct signature
+# Not fixing in this workstream - GEMINI.md is authored in chat, will already have correct signature
 # CLAUDE.md is pointer-ified in W6
 
 # Add a convenience alias for common case: treat 2-arg invocation as "pass" status
@@ -536,7 +536,7 @@ iao log workstream-complete --help 2>&1
 # if only 2 args supplied. This is a UX improvement, not required.
 ```
 
-#### W1.7 — Versioning regex validator
+#### W1.7 - Versioning regex validator
 
 ```fish
 # Check if config.py exists
@@ -608,7 +608,7 @@ print('G107 added')
 "
 ```
 
-#### W1.8 — `age` binary installation
+#### W1.8 - `age` binary installation
 
 ```fish
 which age 2>/dev/null
@@ -635,7 +635,7 @@ grep -rEn "[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+" src/ prompts/ 2>/dev/null
 # Expected: zero matches
 
 # Append to build log
-printf '\n## W1 — 0.1.3 Cleanup\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W1.1: Fixed run_report.py checkpoint-read bug (render-time read)\n- W1.2: Created src/iao/feedback/questions.py for build log + event log extraction\n- W1.3: Created src/iao/postflight/run_report_quality.py (1500 byte minimum, workstream table rows, sign-off checkboxes)\n- W1.4: Expanded BUNDLE_SPEC to 21 sections with Run Report as §5; updated ADR-028 in base.md\n- W1.5: Wired iao doctor CLI subcommand with quick/preflight/postflight/full levels\n- W1.6: Reconciled iao log workstream-complete 3-arg signature documentation\n- W1.7: Added three-octet versioning regex validator in src/iao/config.py; added iaomw-G107 to gotcha registry\n- W1.8: Installed age 1.3.x via pacman\n- All tests pass\n\n---\n\n' >> docs/iterations/0.1.4/iao-build-log-0.1.4.md
+printf '\n## W1 - 0.1.3 Cleanup\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W1.1: Fixed run_report.py checkpoint-read bug (render-time read)\n- W1.2: Created src/iao/feedback/questions.py for build log + event log extraction\n- W1.3: Created src/iao/postflight/run_report_quality.py (1500 byte minimum, workstream table rows, sign-off checkboxes)\n- W1.4: Expanded BUNDLE_SPEC to 21 sections with Run Report as §5; updated ADR-028 in base.md\n- W1.5: Wired iao doctor CLI subcommand with quick/preflight/postflight/full levels\n- W1.6: Reconciled iao log workstream-complete 3-arg signature documentation\n- W1.7: Added three-octet versioning regex validator in src/iao/config.py; added iaomw-G107 to gotcha registry\n- W1.8: Installed age 1.3.x via pacman\n- All tests pass\n\n---\n\n' >> docs/iterations/0.1.4/iao-build-log-0.1.4.md
 
 # Checkpoint update
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W1.status = "complete" | .workstreams.W1.completed_at = $ts | .current_workstream = "W2"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
@@ -652,12 +652,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W2 — Model Fleet Integration
+### W2 - Model Fleet Integration
 
 **Executor:** Gemini CLI
 **Wall clock target:** 120 min
 
-#### W2.1 — ChromaDB archive seeding
+#### W2.1 - ChromaDB archive seeding
 
 ```fish
 # Check ChromaDB is available
@@ -815,7 +815,7 @@ for name, count in list_archives().items():
 "
 ```
 
-#### W2.2 — `nemotron_client.py`
+#### W2.2 - `nemotron_client.py`
 
 ```fish
 cat > src/iao/artifacts/nemotron_client.py <<'PYEOF'
@@ -935,7 +935,7 @@ print(f'Classification: {result}')
 # Expected: Classification: greeting
 ```
 
-#### W2.3 — `glm_client.py`
+#### W2.3 - `glm_client.py`
 
 ```fish
 cat > src/iao/artifacts/glm_client.py <<'PYEOF'
@@ -1021,7 +1021,7 @@ print(f'GLM evaluation: {result}')
 # Expected: dict with score and rationale
 ```
 
-#### W2.4 — ChromaDB context enrichment
+#### W2.4 - ChromaDB context enrichment
 
 ```fish
 cat > src/iao/artifacts/context.py <<'PYEOF'
@@ -1068,11 +1068,11 @@ def build_context_for_artifact(
         if word_budget <= 0:
             break
 
-    header = f"## In-Context Examples\n\nThe following are past {artifact_type} documents from {project_code} that may serve as structural and stylistic references. Use them as inspiration, not templates — your iteration has its own events and outcomes.\n\n"
+    header = f"## In-Context Examples\n\nThe following are past {artifact_type} documents from {project_code} that may serve as structural and stylistic references. Use them as inspiration, not templates - your iteration has its own events and outcomes.\n\n"
     return header + "\n---\n\n".join(blocks)
 PYEOF
 
-# Wire into loop.py — Gemini edits src/iao/artifacts/loop.py to call
+# Wire into loop.py - Gemini edits src/iao/artifacts/loop.py to call
 # build_context_for_artifact() before each Qwen generation and prepend
 # the returned string to the system prompt.
 
@@ -1085,7 +1085,7 @@ print(ctx[:500])
 "
 ```
 
-#### W2.5 — Model fleet benchmark
+#### W2.5 - Model fleet benchmark
 
 ```fish
 cat > scripts/benchmark_fleet.py <<'PYEOF'
@@ -1159,7 +1159,7 @@ if __name__ == "__main__":
     results = run_benchmark()
     output_path = Path("docs/harness/model-fleet-benchmark-0.1.4.md")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    lines = ["# Model Fleet Benchmark — 0.1.4\n", "", "| Task | Model | Elapsed | Words | Matched |", "|---|---|---|---|---|"]
+    lines = ["# Model Fleet Benchmark - 0.1.4\n", "", "| Task | Model | Elapsed | Words | Matched |", "|---|---|---|---|---|"]
     for r in results:
         if "error" in r:
             lines.append(f"| {r['task']} | {r['model']} | ERROR | - | - |")
@@ -1173,11 +1173,11 @@ python3 scripts/benchmark_fleet.py
 # Expected: runs to completion and writes docs/harness/model-fleet-benchmark-0.1.4.md
 ```
 
-#### W2.6 — `docs/harness/model-fleet.md`
+#### W2.6 - `docs/harness/model-fleet.md`
 
 Gemini authors this document following the design §6 W2.6 outline. Target ≥ 1500 words. Novice-operability check: Luke should be able to read this cold.
 
-#### W2.7 — Base.md ADR-035
+#### W2.7 - Base.md ADR-035
 
 ```fish
 printf '\n### iaomw-ADR-035: Model Fleet Integration\n\n- **Context:** Qwen3.5:9b on CPU hits a ~1700-word ceiling per decode, and iao is blocked by the ceiling if Qwen is the only model in the loop. Nemotron-mini:4b and GLM-4.6V-Flash-9B are installed but unused. ChromaDB was migrated in 0.1.2 W5 but never integrated.\n- **Decision:** Wire the full fleet: Qwen (long-form generation), Nemotron (classification/extraction/tagging/summarization), GLM (vision + tier-2 text evaluator fallback), ChromaDB + nomic-embed-text (semantic retrieval of past artifacts for in-context enrichment).\n- **Rationale:** ADR-014 (context-over-constraint) says Qwen quality is a function of context richness. ChromaDB retrieval lets Qwen see three relevant past artifacts as few-shot examples rather than writing cold. Nemotron absorbs narrow tasks that would waste Qwen tokens. GLM unlocks vision and serves as evaluator fallback.\n- **Consequences:**\n  - src/iao/artifacts/nemotron_client.py, glm_client.py, context.py added in 0.1.4 W2\n  - src/iao/rag/archive.py seeds ChromaDB collections per project\n  - Loop.py prepends ChromaDB context before Qwen generation\n  - scripts/benchmark_fleet.py establishes baseline metrics\n  - docs/harness/model-fleet.md documents fleet roles for operators\n' >> docs/harness/base.md
@@ -1186,7 +1186,7 @@ printf '\n### iaomw-ADR-035: Model Fleet Integration\n\n- **Context:** Qwen3.5:9
 #### W2 checkpoint update
 
 ```fish
-printf '\n## W2 — Model Fleet Integration\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W2.1: ChromaDB archive collections seeded (iaomw, kjtco, tripl if exists)\n- W2.2: nemotron_client.py with classify/extract/tag/summarize\n- W2.3: glm_client.py with evaluate/describe_image/validate_diagram\n- W2.4: context.py with build_context_for_artifact, wired into loop.py\n- W2.5: scripts/benchmark_fleet.py run, output at docs/harness/model-fleet-benchmark-0.1.4.md\n- W2.6: docs/harness/model-fleet.md (≥ 1500 words)\n- W2.7: iaomw-ADR-035 in base.md\n\n---\n\n' >> docs/iterations/0.1.4/iao-build-log-0.1.4.md
+printf '\n## W2 - Model Fleet Integration\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W2.1: ChromaDB archive collections seeded (iaomw, kjtco, tripl if exists)\n- W2.2: nemotron_client.py with classify/extract/tag/summarize\n- W2.3: glm_client.py with evaluate/describe_image/validate_diagram\n- W2.4: context.py with build_context_for_artifact, wired into loop.py\n- W2.5: scripts/benchmark_fleet.py run, output at docs/harness/model-fleet-benchmark-0.1.4.md\n- W2.6: docs/harness/model-fleet.md (≥ 1500 words)\n- W2.7: iaomw-ADR-035 in base.md\n\n---\n\n' >> docs/iterations/0.1.4/iao-build-log-0.1.4.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W2.status = "complete" | .workstreams.W2.completed_at = $ts | .current_workstream = "W3"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1194,12 +1194,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W3 — kjtcom Harness Migration
+### W3 - kjtcom Harness Migration
 
 **Executor:** Gemini CLI (pauses mid-workstream for Kyle's review)
 **Wall clock target:** 90 min (excluding Kyle's review time)
 
-#### W3.1 — Gotcha registry migration with Nemotron classification
+#### W3.1 - Gotcha registry migration with Nemotron classification
 
 ```fish
 # Verify kjtcom's registry exists
@@ -1275,7 +1275,7 @@ print(f"AMBIGUOUS (pending review): {len(ambiguous_pile)}")
 # Write ambiguous pile to review file
 if ambiguous_pile:
     review_path = Path("/tmp/iao-0.1.4-ambiguous-gotchas.md")
-    lines = ["# Ambiguous Gotchas Review — iao 0.1.4 W3\n", ""]
+    lines = ["# Ambiguous Gotchas Review - iao 0.1.4 W3\n", ""]
     lines.append(f"Nemotron classified {len(ambiguous_pile)} kjtcom gotchas as AMBIGUOUS. Kyle must rule on each: UNIVERSAL (migrate) or KJTCOM-SPECIFIC (skip).\n")
     lines.append("")
     for i, g in enumerate(ambiguous_pile, 1):
@@ -1311,23 +1311,23 @@ iao iteration resume W3
 
 Which reads the rulings and completes W3.
 
-#### W3.2 — Script registry migration
+#### W3.2 - Script registry migration
 
 Similar flow to W3.1 but reading kjtcom's script registry and scripts directory.
 
-#### W3.3 — ADR promotion audit
+#### W3.3 - ADR promotion audit
 
 Cross-reference kjtcom's project-layer ADRs against iao's base.md. Nemotron classifies; universals get promoted.
 
-#### W3.4 — Pattern catalog migration
+#### W3.4 - Pattern catalog migration
 
 Same as W3.3 for patterns.
 
-#### W3.5 — Migration map document
+#### W3.5 - Migration map document
 
 Gemini writes `docs/harness/kjtcom-migration-map.md` with four tables populated from the per-entry classifications logged above.
 
-#### W3.6 — ADR-036 appended to base.md
+#### W3.6 - ADR-036 appended to base.md
 
 ```fish
 printf '\n### iaomw-ADR-036: kjtcom Harness Artifact Migration\n\n- **Context:** iao 0.1.2 W5 migrated kjtcom methodology code (RAG, logger, data modules) but did not migrate registry artifacts (gotchas, scripts, ADRs, patterns). iao entered 0.1.4 with 6 gotchas while kjtcom had 60+ accumulated lessons.\n- **Decision:** 0.1.4 W3 migrates universal kjtcom registry entries into iao using Nemotron for auto-classification, with a mid-iteration human review step for ambiguous cases.\n- **Rationale:** The gotcha registry is institutional memory. Without migration, Pillar 3 (Diligence) has nothing to query against.\n- **Consequences:** docs/harness/kjtcom-migration-map.md is the audit trail. Migrated entries preserve provenance via kjtcom_source_id field. Future kjtcom iterations may surface new universal lessons; a similar migration pass should follow.\n' >> docs/harness/base.md
@@ -1342,7 +1342,7 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W4 — Telegram Framework Generalization
+### W4 - Telegram Framework Generalization
 
 **Executor:** Gemini CLI
 **Wall clock target:** 75 min
@@ -1386,7 +1386,7 @@ printf '\n### iaomw-ADR-037: Telegram Framework\n\n- **Context:** kjtcom has a 6
 
 ---
 
-### W5 — OpenClaw + NemoClaw Foundations
+### W5 - OpenClaw + NemoClaw Foundations
 
 **Executor:** Gemini CLI
 **Wall clock target:** 90 min
@@ -1416,7 +1416,7 @@ Checkpoint update pattern.
 
 ---
 
-### W6 — Notification Hook + Gemini-Primary Sync
+### W6 - Notification Hook + Gemini-Primary Sync
 
 **Executor:** Gemini CLI
 **Wall clock target:** 60 min
@@ -1436,7 +1436,7 @@ cat > CLAUDE.md <<'MDEOF'
 
 This file is preserved for Claude Code compatibility. The canonical agent brief for iao 0.1.4 and forward is **GEMINI.md** at the same location.
 
-Claude Code operators should read GEMINI.md — the instructions are executor-agnostic and apply to both Gemini CLI and Claude Code.
+Claude Code operators should read GEMINI.md - the instructions are executor-agnostic and apply to both Gemini CLI and Claude Code.
 
 iao 0.1.4 is the first iteration where Gemini CLI is the sole executor. Claude Code remains supported but is no longer the primary.
 
@@ -1448,7 +1448,7 @@ Checkpoint update pattern.
 
 ---
 
-### W7 — Dogfood + Closing Sequence
+### W7 - Dogfood + Closing Sequence
 
 **Executor:** Gemini CLI
 **Wall clock target:** 75 min
@@ -1476,7 +1476,7 @@ cat docs/iterations/0.1.4/iao-run-report-0.1.4.md | head -50
 # Manual inspection:
 # - Workstream table shows all 8 W rows with complete status and wall clock (Bug 1 fixed)
 # - Agent Questions section populated OR explicit "(none ...)" message (Bug 2 fixed)
-# - File size ≥ 1500 bytes (Bug 3 fixed — run_report_quality gate enforces)
+# - File size ≥ 1500 bytes (Bug 3 fixed - run_report_quality gate enforces)
 
 wc -c docs/iterations/0.1.4/iao-run-report-0.1.4.md
 # Expected: ≥ 1500 bytes
@@ -1530,9 +1530,9 @@ Until --confirm, iteration is in PENDING REVIEW state.
 
 ---
 
-## Section D — Post-flight (After Kyle's `--confirm`)
+## Section D - Post-flight (After Kyle's `--confirm`)
 
-### D.1 — Validate sign-off
+### D.1 - Validate sign-off
 
 ```fish
 iao iteration close --confirm
@@ -1541,14 +1541,14 @@ iao iteration close --confirm
 # If yes: updates .iao.json, marks iteration complete, bumps to next draft
 ```
 
-### D.2 — Final post-flight
+### D.2 - Final post-flight
 
 ```fish
 iao doctor postflight
 # Expected: all checks pass
 ```
 
-### D.3 — Seed next iteration
+### D.3 - Seed next iteration
 
 ```fish
 iao iteration seed
@@ -1556,7 +1556,7 @@ iao iteration seed
 # Writes docs/iterations/0.1.5/seed.json as input for 0.1.5 design generation
 ```
 
-### D.4 — Final state verification
+### D.4 - Final state verification
 
 ```fish
 jq .current_iteration .iao.json
@@ -1570,7 +1570,7 @@ command ls docs/iterations/0.1.4/
 #           iao-report-0.1.4.md, iao-run-report-0.1.4.md, iao-bundle-0.1.4.md
 ```
 
-### D.5 — Manual git commit (Kyle, per Pillar 0)
+### D.5 - Manual git commit (Kyle, per Pillar 0)
 
 ```fish
 git status
@@ -1580,7 +1580,7 @@ git commit -m "iao 0.1.4: model fleet, kjtcom migration, telegram, openclaw foun
 
 ---
 
-## Section E — Rollback Procedure
+## Section E - Rollback Procedure
 
 ```fish
 tmux kill-session -t iao-0.1.4 2>/dev/null
@@ -1598,7 +1598,7 @@ iao --version
 
 ---
 
-## Section F — Wall Clock Targets
+## Section F - Wall Clock Targets
 
 | Workstream | Target | Cumulative |
 |---|---|---|
@@ -1612,14 +1612,14 @@ iao --version
 | W6 Notification + Gemini sync | 60 min | 9:10 |
 | W7 Dogfood + closing | 75 min | 10:25 |
 
-Soft cap is 8 hours; estimate runs 10 hours. Acceptable — no hard cap.
+Soft cap is 8 hours; estimate runs 10 hours. Acceptable - no hard cap.
 
 ---
 
-## Section G — Sign-off
+## Section G - Sign-off
 
 This plan is the operational instruction set for iao 0.1.4. Gemini CLI is the sole executor. GEMINI.md (produced in chat alongside this plan) is the agent brief Gemini reads at session start.
 
 The plan is immutable per ADR-012 once W0 begins. The build log records what actually happened. The report grades it. The run report is where Kyle's voice enters the loop at close.
 
-— iao 0.1.4 planning chat, 2026-04-09
+- iao 0.1.4 planning chat, 2026-04-09

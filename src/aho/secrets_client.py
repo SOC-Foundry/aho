@@ -1,4 +1,4 @@
-"""secrets_client — container-side client for the host secrets broker.
+"""secrets_client - container-side client for the host secrets broker.
 
 Connects to the host-mounted unix socket at AHO_SECRETS_SOCKET (default
 /run/host-services/aho-secrets.sock). Sends a single JSON-line request,

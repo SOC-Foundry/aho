@@ -1,4 +1,4 @@
-"""W4 D5 — pre-base-container materiality baseline extractor.
+"""W4 D5 - pre-base-container materiality baseline extractor.
 
 Reads sealed 0.2.16 audit archives (`artifacts/iterations/0.2.16/audit/W*.json`)
 and reconstructs a normalized materiality state in the four-bucket protocol
@@ -13,9 +13,9 @@ not a list-of-dicts. This module flattens both shapes to the canonical
 Buckets we can populate from 0.2.16 archives:
 
   - **caught_by_auditor** (mapped to the dashboard's ``caught_by_llama``
-    bucket label as the protocol-canonical "auditor caught it" count) —
+    bucket label as the protocol-canonical "auditor caught it" count) -
     sum of all findings across audited workstreams, grouped by severity.
-  - **carry_forward_resolution** — best-effort count from the iteration's
+  - **carry_forward_resolution** - best-effort count from the iteration's
     `carry-forwards-*.md` file when present. Counted as the number of
     entries marked "closed" or "resolved" in the file body. Falls
     through to 0 when the file is unparseable, which is honest data
@@ -23,15 +23,15 @@ Buckets we can populate from 0.2.16 archives:
 
 Buckets we cannot populate from 0.2.16:
 
-  - **caught_by_drafter** — 0.2.16 archives don't separately record
+  - **caught_by_drafter** - 0.2.16 archives don't separately record
     drafter-vs-auditor catch attribution. Stays 0; comparison surface
     notes the limitation.
-  - **escaped** — 0.2.16 didn't have the escaped counter wired. Stays 0.
+  - **escaped** - 0.2.16 didn't have the escaped counter wired. Stays 0.
 
 Honesty rule: if a counter cannot be reconstructed, it stays 0 and the
 comparison surface explicitly annotates which fields are reconstructed
 vs unknown. Halt-and-surface fires (D5 acceptance gate) when extraction
-produces obviously-wrong numbers — the test suite verifies the math
+produces obviously-wrong numbers - the test suite verifies the math
 against the actual archive contents.
 """
 from __future__ import annotations
@@ -108,7 +108,7 @@ def extract_caught_by_auditor(
     """Walk audit/W*.json under ``audit_dir`` and sum findings into the
     caught_by_auditor bucket. Returns (bucket_dict, sources_list).
 
-    The sources list is the ordered set of audit archives consumed —
+    The sources list is the ordered set of audit archives consumed -
     surfaced in the comparison surface for falsifiability.
     """
     bucket = _empty_bucket()
@@ -144,7 +144,7 @@ def extract_carry_forward_resolution_count(
 ) -> int:
     """Best-effort count of "closed" / "resolved" carry-forward entries
     in the iteration's carry-forwards markdown file. Returns 0 when the
-    file is missing — caller surfaces that explicitly in the comparison.
+    file is missing - caller surfaces that explicitly in the comparison.
     """
     if carry_forwards_path is None or not carry_forwards_path.exists():
         return 0

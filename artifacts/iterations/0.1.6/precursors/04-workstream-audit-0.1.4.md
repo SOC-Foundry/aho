@@ -1,4 +1,4 @@
-# Investigation 4 — Workstream Audit of 0.1.4
+# Investigation 4 - Workstream Audit of 0.1.4
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
@@ -11,19 +11,19 @@
 
 ---
 
-## W0 — Iteration Bookkeeping (Claimed: Complete)
+## W0 - Iteration Bookkeeping (Claimed: Complete)
 
 | Deliverable | Evidence | Verdict |
 |---|---|---|
 | Version bumped to 0.1.4 | `pyproject.toml` version, `./bin/iao --version` returns 0.1.4 | **Shipped** |
-| `.iao.json` updated | `current_iteration: "0.1.4"` present, but `last_completed_iteration` still `"0.1.3"` | **Partial** — iteration tracked but never formally closed |
+| `.iao.json` updated | `current_iteration: "0.1.4"` present, but `last_completed_iteration` still `"0.1.3"` | **Partial** - iteration tracked but never formally closed |
 | Checkpoint initialized | `.iao-checkpoint.json` exists with full workstream tracking | **Shipped** |
 
 **Verdict: Shipped (with caveat that formal close never ran)**
 
 ---
 
-## W1 — 0.1.3 Cleanup (Claimed: Complete)
+## W1 - 0.1.3 Cleanup (Claimed: Complete)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
@@ -36,11 +36,11 @@
 | **W1.7** Version regex validator | `validate_iteration_version('0.1.4.0')` raises `ValueError` with correct message about three-octet format | **Shipped** |
 | **W1.8** age binary | `which age` → `/usr/bin/age`, `age --version` → `1.3.1` | **Shipped** |
 
-**Verdict: SHIPPED — all 8 sub-deliverables verified**
+**Verdict: SHIPPED - all 8 sub-deliverables verified**
 
 ---
 
-## W2 — Model Fleet Integration (Claimed: Complete)
+## W2 - Model Fleet Integration (Claimed: Complete)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
@@ -53,11 +53,11 @@
 | iaomw-ADR-035 in base.md | Present at line 412 | **Shipped** |
 | ChromaDB archives populated | 3 collections: iaomw (17), tripl (144), kjtco (282) | **Shipped** |
 
-**Verdict: Mostly shipped — fleet functional, but benchmark results not captured and model-fleet.md is undersized**
+**Verdict: Mostly shipped - fleet functional, but benchmark results not captured and model-fleet.md is undersized**
 
 ---
 
-## W3 — kjtcom Harness Migration (Claimed: Paused)
+## W3 - kjtcom Harness Migration (Claimed: Paused)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
@@ -67,42 +67,42 @@
 | iaomw-ADR-036 in base.md | Not found | **Missing** |
 | `iao iteration resume` CLI command | Not found in `cli.py` | **Missing** |
 
-**Verdict: PARTIAL — migration ran partially (8 entries ported) but pause mechanism never fired. See Investigation 5.**
+**Verdict: PARTIAL - migration ran partially (8 entries ported) but pause mechanism never fired. See Investigation 5.**
 
 ---
 
-## W4 — Telegram Framework (Claimed: Partial)
+## W4 - Telegram Framework (Claimed: Partial)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
 | `src/iao/telegram/` subpackage | Exists: `__init__.py` (129B), `notifications.py` (1958B) | **Partial** |
-| `TelegramBotFramework` class | Does not exist — only `send_message` and `send_iteration_complete` functions | **Missing** |
+| `TelegramBotFramework` class | Does not exist - only `send_message` and `send_iteration_complete` functions | **Missing** |
 | `iao telegram init/test/status` | Only `test` subcommand available | **Partial** |
 | Telegram credentials in secrets | `./bin/iao secret list` shows `kjtco:TELEGRAM_BOT_TOKEN` | **Shipped** |
 | iaomw-ADR-037 in base.md | Not found | **Missing** |
 | python-telegram-bot installed | `import telegram` → version 22.7 | **Shipped** |
 
-**Verdict: PARTIAL — notification plumbing works, but no bot framework, no init/status commands, no ADR**
+**Verdict: PARTIAL - notification plumbing works, but no bot framework, no init/status commands, no ADR**
 
 ---
 
-## W5 — OpenClaw + NemoClaw Foundations (Claimed: Partial)
+## W5 - OpenClaw + NemoClaw Foundations (Claimed: Partial)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
 | `src/iao/agents/` subpackage | Exists with `openclaw.py`, `nemoclaw.py`, `roles/` | **Stub only** |
-| `OpenClawSession` / `OpenClaw` class | `OpenClaw` exists but `chat()` raises `NotImplementedError` — "open-interpreter failed to install" | **Stub** |
+| `OpenClawSession` / `OpenClaw` class | `OpenClaw` exists but `chat()` raises `NotImplementedError` - "open-interpreter failed to install" | **Stub** |
 | `NemoClawOrchestrator` class | Exists but delegates to broken `OpenClaw` | **Stub** |
 | `open-interpreter` installed | `import interpreter` works but version is "unknown" | **Partial** |
 | `scripts/smoke_nemoclaw.py` | Does not exist | **Missing** |
 | `docs/harness/agents-architecture.md` | Does not exist | **Missing** |
 | iaomw-ADR-038 in base.md | Not found | **Missing** |
 
-**Verdict: STUB — files exist as scaffolding but nothing is functional. open-interpreter's broken install (Python 3.14 / missing Rust for tiktoken) blocked real implementation.**
+**Verdict: STUB - files exist as scaffolding but nothing is functional. open-interpreter's broken install (Python 3.14 / missing Rust for tiktoken) blocked real implementation.**
 
 ---
 
-## W6 — Gemini-Primary Sync (Claimed: Complete)
+## W6 - Gemini-Primary Sync (Claimed: Complete)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
@@ -116,7 +116,7 @@
 
 ---
 
-## W7 — Dogfood + Closing Sequence (Claimed: Active → later Complete)
+## W7 - Dogfood + Closing Sequence (Claimed: Active → later Complete)
 
 | Sub-deliverable | Evidence | Verdict |
 |---|---|---|
@@ -125,7 +125,7 @@
 | `iao-run-report-0.1.4.md` | Exists, 70 lines, 3.0KB, Kyle signed off all 5 boxes | **Shipped** |
 | `iao-bundle-0.1.4.md` | Exists, 5731 lines, 277KB, 39 `## §` headers | **Shipped** |
 
-**Verdict: SHIPPED — all 4 closing artifacts present and substantial**
+**Verdict: SHIPPED - all 4 closing artifacts present and substantial**
 
 ---
 
@@ -133,7 +133,7 @@
 
 | Workstream | Claimed | Actual | Delta |
 |---|---|---|---|
-| W0 | Complete | Shipped (close never finalized) | Minor — `.iao.json` not bumped |
+| W0 | Complete | Shipped (close never finalized) | Minor - `.iao.json` not bumped |
 | W1 | Complete | **SHIPPED** (8/8 sub-deliverables) | None |
 | W2 | Complete | Mostly shipped (benchmark missing, fleet-doc undersized) | Minor |
 | W3 | Paused | Partial (8 entries migrated, pause mechanism never fired) | Significant |
@@ -148,9 +148,9 @@
 
 The delta between declared and actual state produces this debt list:
 
-1. **W3 gotcha migration** — 8 of N entries ported, no ambiguous pile review, no migration map, no ADR-036, no resume mechanism
-2. **W5 OpenClaw/NemoClaw** — stubs only, blocked by open-interpreter install failure, no architecture doc, no smoke test, no ADR-038
-3. **W4 Telegram framework** — notifications work but no bot framework, no init/status commands, no ADR-037
-4. **W2 benchmark** — fleet works but benchmark results never captured to docs
-5. **W0 iteration close** — `.iao.json` never formally bumped, `completed_at` is null
-6. **Missing ADRs** — ADR-036, ADR-037, ADR-038 never written
+1. **W3 gotcha migration** - 8 of N entries ported, no ambiguous pile review, no migration map, no ADR-036, no resume mechanism
+2. **W5 OpenClaw/NemoClaw** - stubs only, blocked by open-interpreter install failure, no architecture doc, no smoke test, no ADR-038
+3. **W4 Telegram framework** - notifications work but no bot framework, no init/status commands, no ADR-037
+4. **W2 benchmark** - fleet works but benchmark results never captured to docs
+5. **W0 iteration close** - `.iao.json` never formally bumped, `completed_at` is null
+6. **Missing ADRs** - ADR-036, ADR-037, ADR-038 never written

@@ -1,6 +1,6 @@
-# aho Run Report — 0.2.12
+# aho Run Report - 0.2.12
 **Iteration:** 0.2.12
-**Theme:** Council activation — discovery, visibility, design, measurement
+**Theme:** Council activation - discovery, visibility, design, measurement
 **Primary executor:** gemini-cli
 **Status:** Closed pending Kyle sign-off
 ---

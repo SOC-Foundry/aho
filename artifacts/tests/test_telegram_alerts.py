@@ -1,6 +1,6 @@
 """Unit tests for aho.alerts.telegram_alerts (0.2.16 W3).
 
-All tests use mocked Telegram API responses and patched secrets — no live
+All tests use mocked Telegram API responses and patched secrets - no live
 network calls and no real Telegram credentials. Live engine wire-up is
 deferred (see pillar-11-monitoring-notes.md §"Deferred verification"); the
 end-to-end synthetic delivery test (W3 bucket 5) is also deferred until the
@@ -330,7 +330,7 @@ def test_webhook_handler_telegram_failure_aborts_before_log(monkeypatch, tmp_pat
     with pytest.raises(ta.TelegramAPIError):
         ta.webhook_handler(_alertmanager_payload(_alert()))
 
-    # Log must be empty — Telegram failed, so we must not have appended.
+    # Log must be empty - Telegram failed, so we must not have appended.
     assert not log_file.exists() or log_file.read_text() == ""
 
 
@@ -348,7 +348,7 @@ def test_webhook_handler_secret_missing_propagates(monkeypatch, tmp_path):
 def test_webhook_handler_session_locked_propagates(monkeypatch, tmp_path):
     """If the secret store session is locked, get_secret raises RuntimeError.
 
-    The bridge must NOT swallow it (G083 — no except Exception). The
+    The bridge must NOT swallow it (G083 - no except Exception). The
     RuntimeError propagates and the engine sees an HTTP 500.
     """
     log_file = tmp_path / "events.jsonl"

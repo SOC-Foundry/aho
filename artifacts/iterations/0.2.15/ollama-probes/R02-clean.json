@@ -1,7 +1,7 @@
 {
   "probe_id": "R02-clean",
   "requirement": "R2 LRU eviction predictability (clean-state retest)",
-  "context": "Post sudo systemctl restart ollama. W1 correction — retesting R2 after Kyle identified contaminated baseline in initial W1 probes.",
+  "context": "Post sudo systemctl restart ollama. W1 correction - retesting R2 after Kyle identified contaminated baseline in initial W1 probes.",
   "gpu": "NVIDIA GeForce RTX 2080 SUPER 8192 MiB",
   "ollama_version": "0.20.2",
   "timestamp": "2026-04-13T18:44:00Z",
@@ -37,7 +37,7 @@
       ],
       "model_count": 2,
       "load_result": {"status": 200, "elapsed_s": 2.35, "response": "OK"},
-      "note": "Qwen evicted (LRU). Nemotron reappeared — auto-load behavior."
+      "note": "Qwen evicted (LRU). Nemotron reappeared - auto-load behavior."
     },
     {
       "label": "Step 3: GLM load attempt (full GPU, 41 layers)",
@@ -97,6 +97,6 @@
     "behavior": "Nemotron reappears after Ollama restart and when VRAM becomes available after other model eviction. keep_alive:0 does not permanently suppress.",
     "journalctl_evidence": "Multiple /api/generate POST calls appear in logs immediately after restart and after model evictions, loading Nemotron."
   },
-  "evidence_summary": "R2 stays partial. LRU eviction is predictable for the 3 fully-loadable models. GLM cannot load with full GPU offload on 8GB VRAM — confirmed on clean state with crash root cause identified (CUDA OOM). GLM is loadable with partial offload (num_gpu=30) as a workaround. Nemotron auto-load adds unpredictability to VRAM management.",
-  "correction_vs_initial_w1": "Initial W1 misattributed GLM failure to '3362 MiB Ollama base overhead' — that figure was Nemotron model weights + Ollama runtime, not base. Kyle's post-W1 diagnostic correctly identified contaminated state (orphan runners) but the hardware constraint is real even on clean state. GLM loads for Kyle potentially due to fewer desktop GPU processes or different Ollama internal state."
+  "evidence_summary": "R2 stays partial. LRU eviction is predictable for the 3 fully-loadable models. GLM cannot load with full GPU offload on 8GB VRAM - confirmed on clean state with crash root cause identified (CUDA OOM). GLM is loadable with partial offload (num_gpu=30) as a workaround. Nemotron auto-load adds unpredictability to VRAM management.",
+  "correction_vs_initial_w1": "Initial W1 misattributed GLM failure to '3362 MiB Ollama base overhead' - that figure was Nemotron model weights + Ollama runtime, not base. Kyle's post-W1 diagnostic correctly identified contaminated state (orphan runners) but the hardware constraint is real even on clean state. GLM loads for Kyle potentially due to fewer desktop GPU processes or different Ollama internal state."
 }

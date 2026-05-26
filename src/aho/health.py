@@ -1,10 +1,10 @@
-"""health — /healthz and /readyz endpoints on AHO_HEALTH_PORT (default 8080).
+"""health - /healthz and /readyz endpoints on AHO_HEALTH_PORT (default 8080).
 
 /healthz: 200 if the process is alive (unconditional once handler is registered).
 /readyz: 200 only after each registered readiness probe returns True. 503 otherwise.
 
 Probes register via add_readiness_probe(name, callable). The callable returns
-bool — True = ready, False = not yet. Default state during startup is 503.
+bool - True = ready, False = not yet. Default state during startup is 503.
 """
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ class _Handler(BaseHTTPRequestHandler):
     server_version = "aho-health/0.2.18"
 
     def log_message(self, format, *args):  # noqa: A002, ARG002
-        # Quiet stdlib's per-request stderr line — we route via aho.logger if needed.
+        # Quiet stdlib's per-request stderr line - we route via aho.logger if needed.
         return
 
     def _write_json(self, code: int, body: dict) -> None:

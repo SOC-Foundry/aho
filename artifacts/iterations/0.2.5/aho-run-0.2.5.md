@@ -1,4 +1,4 @@
-# aho Run Report — 0.2.5
+# aho Run Report - 0.2.5
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 5
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
@@ -73,7 +73,7 @@ Swept: CLAUDE.md, GEMINI.md, phase charter, global-deployment.md, doctor.py, MAN
 
 ## Kyle's Notes
 
-_(empty — Kyle fills in post-review)_
+_(empty - Kyle fills in post-review)_
 
 ---
 

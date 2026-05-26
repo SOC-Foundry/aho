@@ -1,9 +1,9 @@
 """Dashboard HTTP server.
 
 Serves:
-  /api/state  — full aggregated dashboard JSON
-  /api/health — legacy health endpoint (traces tail)
-  /           — static files from web/claw3d/build/web/ (Flutter app)
+  /api/state  - full aggregated dashboard JSON
+  /api/health - legacy health endpoint (traces tail)
+  /           - static files from web/claw3d/build/web/ (Flutter app)
 
 Binds to 127.0.0.1 only. No auth. Polling-friendly with 2s cache.
 """
@@ -73,10 +73,10 @@ def create_handler(project_root: Path):
                 self.end_headers()
                 self.wfile.write(body)
             elif self.path == "/api/substrate":
-                # W1 D5 of 0.3.1 — 13-fact substrate-freshness panel.
+                # W1 D5 of 0.3.1 - 13-fact substrate-freshness panel.
                 self._json_response(get_substrate_state())
             elif self.path == "/substrate":
-                # W1 D5 of 0.3.1 — HTML brick grid renderer.
+                # W1 D5 of 0.3.1 - HTML brick grid renderer.
                 body = render_substrate_html().encode("utf-8")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -96,7 +96,7 @@ def create_handler(project_root: Path):
             else:
                 # SPA fallback: serve index.html for unknown non-API, non-asset paths
                 # so Flutter's client-side router takes over on reload/deep-link.
-                # (0.2.18 W4 — fix for "Error response 404 File not found" when
+                # (0.2.18 W4 - fix for "Error response 404 File not found" when
                 # user loads any URL other than /.)
                 requested_path = self.path.split('?')[0].split('#')[0].lstrip('/')
                 candidate = Path(serve_dir) / requested_path
@@ -105,10 +105,10 @@ def create_handler(project_root: Path):
                 elif self.path.startswith('/api/'):
                     self.send_error(404, f"Unknown API endpoint: {self.path}")
                 elif requested_path and '.' in requested_path.split('/')[-1]:
-                    # asset-like request (has extension) — real 404, not SPA fallback
+                    # asset-like request (has extension) - real 404, not SPA fallback
                     self.send_error(404)
                 else:
-                    # SPA route — serve index.html via client-side router
+                    # SPA route - serve index.html via client-side router
                     self.path = '/'
                     super().do_GET()
 

@@ -111,7 +111,7 @@ def check_qwen_artifacts_present():
         
         missing = []
         # build-log is now manual (ADR-042), we check for -synthesis as optional
-        # report/run are alternates — either satisfies the report requirement
+        # report/run are alternates - either satisfies the report requirement
         _ARTIFACT_ALTERNATES = {
             "report": ["report", "run"],
         }

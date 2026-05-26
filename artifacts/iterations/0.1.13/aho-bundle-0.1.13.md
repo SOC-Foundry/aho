@@ -11,7 +11,7 @@
 
 ### DESIGN (aho-design-0.1.13.md)
 ```markdown
-# aho 0.1.13 — Design
+# aho 0.1.13 - Design
 
 **Phase:** 0
 **Iteration:** 0.1.13
@@ -45,16 +45,16 @@
 
 ## Workstreams
 
-### W0 — Environment hygiene + backup
+### W0 - Environment hygiene + backup
 Bump `.aho.json` and `.aho-checkpoint.json` to 0.1.13. Tarball current repo state to `~/dev/backups/aho-pre-0.1.13.tar.gz`. Mask sleep/suspend. Verify Ollama models loaded. Verify ChromaDB `aho_archive` collection intact.
 
-### W1 — Phase 0 rewrite (CLAUDE.md + GEMINI.md + README)
+### W1 - Phase 0 rewrite (CLAUDE.md + GEMINI.md + README)
 Rewrite `CLAUDE.md` and `GEMINI.md` from scratch as universal Phase 0 agent instructions. New objective (clone-to-deploy on P3). Eleven Pillars verbatim from `base.md`. Split-agent model documented. Gotcha registry query-first enforced. Purge every iao reference. Sync README Phase 0 section and exit criteria to match new objective. README stays at repo root.
 
-### W2 — Harness + ADR prose sweep
+### W2 - Harness + ADR prose sweep
 Grep sweep across current `docs/**/*.md` for stale iao narrative (case-insensitive, prose not code). Surgical rewrites on `agents-architecture.md` body (opening paragraph, P3 Diligence section, footer), `adrs/0001-phase-a-externalization.md` (full rewrite, status stays Accepted), plus any other hits. Headers and version labels bump to 0.1.13. Do not touch historical iteration artifacts 0.1.2–0.1.8.
 
-### W3 — Folder reorg (execution)
+### W3 - Folder reorg (execution)
 Execute the collapse. New layout:
 
 ```
@@ -85,13 +85,13 @@ Execute the collapse. New layout:
 
 Update `src/aho/paths.py` (or equivalent resolver) to use new artifact roots. Update every Python import referencing `scripts/`, `templates/`, `prompts/`, `tests/`. Update `pyproject.toml` test paths. Update `install.fish`. Update every doc cross-reference. Run full test suite after moves; zero regressions gate.
 
-### W4 — `/bin` wrapper scaffolding
+### W4 - `/bin` wrapper scaffolding
 Write `artifacts/harness/bin-wrapper-pattern.md`: what a wrapper is (Pillar 4), required instrumentation hooks (event log call, input capture for replay, exit code propagation), fish syntax constraints, capability-gap interrupt contract. Produce `bin/wrapper-template.fish`. Produce reference implementation `bin/openclaw` showing the full shape. Wrapper surfaces must never expose `git commit` or `git push` (Pillar 11).
 
-### W5 — Global deployment prep
-Design XDG layout: `~/.local/bin/aho-*` (wrapper symlinks), `~/.config/aho/` (credentials, model fleet config), `~/.local/share/aho/` (event log, ChromaDB on deployed hosts). Write `bin/aho-install` skeleton — idempotent fish installer that clones/updates, creates XDG dirs, symlinks wrappers, runs `iao doctor` equivalent. Credential template in `artifacts/templates/credentials.example.fish`. Document capability-gap interrupts Kyle will need to handle manually on P3 (sudo package installs, Ollama service enable, ChromaDB init). Do NOT attempt any sudo operations on NZXTcos during this run — design only.
+### W5 - Global deployment prep
+Design XDG layout: `~/.local/bin/aho-*` (wrapper symlinks), `~/.config/aho/` (credentials, model fleet config), `~/.local/share/aho/` (event log, ChromaDB on deployed hosts). Write `bin/aho-install` skeleton - idempotent fish installer that clones/updates, creates XDG dirs, symlinks wrappers, runs `iao doctor` equivalent. Credential template in `artifacts/templates/credentials.example.fish`. Document capability-gap interrupts Kyle will need to handle manually on P3 (sudo package installs, Ollama service enable, ChromaDB init). Do NOT attempt any sudo operations on NZXTcos during this run - design only.
 
-### W6 — Dogfood + close
+### W6 - Dogfood + close
 Full test suite. `aho doctor`. Regenerate bundle. Verify §1–§21 spec. Verify §22 component checklist unchanged at 6. Run postflight gates. Populate run file. Hand off to Kyle.
 
 ## Risks
@@ -99,7 +99,7 @@ Full test suite. `aho doctor`. Regenerate bundle. Verify §1–§21 spec. Verify
 - **Folder reorg surface area.** Touches every import and every doc cross-reference. Mitigation: W0 backup, test suite as regression gate, `rg` sweep post-move for missed references.
 - **Prose sweep false negatives.** `rg -i "iao"` will hit code strings and historical filenames. Mitigation: scope to narrative prose only, whitelist 0.1.2–0.1.8 iteration dirs, whitelist code identifiers.
 - **Qwen synthesis budget.** 6-workstream run with heavy doc generation. Mitigation: manual build log is authoritative (ADR-042), synthesis is optional commentary.
-- **CLAUDE.md / GEMINI.md rewrite getting bundled into per-run artifacts.** Mitigation: explicit note in W1 — these files are per-phase, Kyle has overruled the per-run restriction for this specific run only.
+- **CLAUDE.md / GEMINI.md rewrite getting bundled into per-run artifacts.** Mitigation: explicit note in W1 - these files are per-phase, Kyle has overruled the per-run restriction for this specific run only.
 
 ## Success criteria
 
@@ -115,7 +115,7 @@ Full test suite. `aho doctor`. Regenerate bundle. Verify §1–§21 spec. Verify
 
 ### PLAN (aho-plan-0.1.13.md)
 ```markdown
-# aho 0.1.13 — Plan
+# aho 0.1.13 - Plan
 
 **Phase:** 0 | **Iteration:** 0.1.13 | **Primary:** Gemini CLI | **Closer:** Claude Code
 
@@ -128,7 +128,7 @@ tmux new-session -d -s aho-0.1.13 -c ~/dev/projects/aho
 tmux send-keys -t aho-0.1.13 'cd ~/dev/projects/aho; set -x AHO_EXECUTOR gemini-cli; gemini --yolo' Enter
 ```
 
-## W0 — Environment hygiene + backup
+## W0 - Environment hygiene + backup
 
 ```fish
 cd ~/dev/projects/aho
@@ -142,7 +142,7 @@ python -c "import chromadb; c=chromadb.PersistentClient(path='data/chroma'); pri
 
 **Gate:** backup exists, Ollama models present, ChromaDB count > 0.
 
-## W1 — Phase 0 rewrite (CLAUDE.md + GEMINI.md + README)
+## W1 - Phase 0 rewrite (CLAUDE.md + GEMINI.md + README)
 
 1. Read `artifacts/harness/base.md` (post-W3 path; pre-W3 it's at `docs/harness/base.md`) for Eleven Pillars source of truth.
 2. Rewrite `CLAUDE.md` from scratch. Sections: Phase 0 Objective, Role, Eleven Pillars (verbatim), Split-agent model, Gotcha query-first rule, Sign-off format, What NOT to do, First actions checklist.
@@ -152,29 +152,29 @@ python -c "import chromadb; c=chromadb.PersistentClient(path='data/chroma'); pri
 
 **Gate:** three files rewritten, zero iao narrative prose.
 
-## W2 — Harness + ADR prose sweep
+## W2 - Harness + ADR prose sweep
 
 ```fish
 rg -l -i "\biao\b" docs/harness/ docs/adrs/ docs/roadmap/ > /tmp/aho-stale-prose.txt
 command cat /tmp/aho-stale-prose.txt
 ```
 
-1. Rewrite `docs/harness/agents-architecture.md` body — opening paragraph ("Iteration 0.1.7 introduces a complete rebuild of the iao agentic foundations" → 0.1.13 language), P3 Diligence section (`iao.logger.log_event` → `aho.logger.log_event`), footer (remove "iao 0.1.7 W8" credit, replace with 0.1.13 rewrite note).
+1. Rewrite `docs/harness/agents-architecture.md` body - opening paragraph ("Iteration 0.1.7 introduces a complete rebuild of the iao agentic foundations" → 0.1.13 language), P3 Diligence section (`iao.logger.log_event` → `aho.logger.log_event`), footer (remove "iao 0.1.7 W8" credit, replace with 0.1.13 rewrite note).
 2. Rewrite `docs/adrs/0001-phase-a-externalization.md` end-to-end. Status stays Accepted. All `iao` → `aho`, all code examples updated, `from iao import` → `from aho import`, `pip install -e` references updated.
 3. Bump all `docs/harness/*.md` headers to 0.1.13. Body rewrites only where narrative drift exists.
-4. Whitelist: `docs/iterations/0.1.2/` through `docs/iterations/0.1.8/` — DO NOT touch (historical).
-5. Whitelist: `docs/phase-charters/iao-phase-0.md` — DO NOT rename or rewrite content, filename is historical artifact.
+4. Whitelist: `docs/iterations/0.1.2/` through `docs/iterations/0.1.8/` - DO NOT touch (historical).
+5. Whitelist: `docs/phase-charters/iao-phase-0.md` - DO NOT rename or rewrite content, filename is historical artifact.
 
 **Gate:** `rg -i "\biao\b" docs/harness/ docs/adrs/` returns only whitelisted hits.
 
-## W3 — Folder reorg execution
+## W3 - Folder reorg execution
 
 **Order matters.** Do in this sequence:
 
 ```fish
 cd ~/dev/projects/aho
 mkdir -p artifacts app pipeline
-git mv docs artifacts/_docs_tmp  # NO — use plain mv, Pillar 11
+git mv docs artifacts/_docs_tmp  # NO - use plain mv, Pillar 11
 mv docs/harness artifacts/harness
 mv docs/adrs artifacts/adrs
 mv docs/iterations artifacts/iterations
@@ -189,15 +189,15 @@ mv tests artifacts/tests
 
 **Then update code:**
 
-1. `src/aho/paths.py` — add `ARTIFACTS_ROOT`, `HARNESS_DIR`, `ADRS_DIR`, `ITERATIONS_DIR`, `PROMPTS_DIR`, `TEMPLATES_DIR`, `SCRIPTS_DIR`, `TESTS_DIR`. All resolved from project root + `artifacts/`.
+1. `src/aho/paths.py` - add `ARTIFACTS_ROOT`, `HARNESS_DIR`, `ADRS_DIR`, `ITERATIONS_DIR`, `PROMPTS_DIR`, `TEMPLATES_DIR`, `SCRIPTS_DIR`, `TESTS_DIR`. All resolved from project root + `artifacts/`.
 2. Grep for every hardcoded `docs/`, `scripts/`, `templates/`, `prompts/`, `tests/` in `src/aho/`:
    ```fish
    rg -l '"(docs|scripts|templates|prompts|tests)/' src/aho/ bin/
    ```
    Update each to use the new path constants.
-3. `pyproject.toml` — update `[tool.pytest.ini_options] testpaths = ["artifacts/tests"]`. Update any package data globs.
-4. `install.fish` — update any `docs/`, `scripts/`, `prompts/` references.
-5. Create `app/README.md` and `pipeline/README.md` as scaffolds ("Reserved for Phase 1+ — consumer application and pipeline mount points").
+3. `pyproject.toml` - update `[tool.pytest.ini_options] testpaths = ["artifacts/tests"]`. Update any package data globs.
+4. `install.fish` - update any `docs/`, `scripts/`, `prompts/` references.
+5. Create `app/README.md` and `pipeline/README.md` as scaffolds ("Reserved for Phase 1+ - consumer application and pipeline mount points").
 6. Cross-reference sweep:
    ```fish
    rg -l '\]\(docs/|\]\(scripts/|\]\(templates/|\]\(prompts/|\]\(tests/' artifacts/ CLAUDE.md GEMINI.md README.md
@@ -211,7 +211,7 @@ mv tests artifacts/tests
 
 **Gate:** test suite green, zero broken imports, `rg '"docs/' src/aho/` empty.
 
-## W4 — `/bin` wrapper scaffolding
+## W4 - `/bin` wrapper scaffolding
 
 1. Write `artifacts/harness/bin-wrapper-pattern.md` (~400 words): Pillar 4 statement, required instrumentation hooks (event log call via `aho.logger.log_event`, input capture to `data/replay/{uuid}.json`, exit code propagation, capability-gap interrupt contract via OpenClaw notification channel), fish syntax constraints, prohibited surfaces (`git commit`, `git push`, secret reads).
 2. Write `bin/wrapper-template.fish` with stub functions for instrumentation hooks and a TODO marker for the actual tool invocation.
@@ -225,16 +225,16 @@ mv tests artifacts/tests
 
 **Gate:** wrapper executes, event log entry written, replay JSON captured.
 
-## W5 — Global deployment prep (design only, no sudo on NZXT)
+## W5 - Global deployment prep (design only, no sudo on NZXT)
 
 1. Write `artifacts/harness/global-deployment.md`: XDG layout, install flow, capability-gap interrupt list for P3.
-2. Write `bin/aho-install` skeleton — idempotent fish installer. Sections: detect platform, clone/update repo, create XDG dirs (`~/.local/bin/`, `~/.config/aho/`, `~/.local/share/aho/`), symlink wrappers, emit capability-gap instructions for Kyle to run manually (sudo package installs, Ollama service enable).
-3. Write `artifacts/templates/credentials.example.fish` — credential template with placeholders, comments pointing to `aho secret` CLI.
-4. Write `artifacts/harness/p3-deployment-runbook.md` — step-by-step for Kyle on P3: prerequisites, clone command, install command, verification steps, expected capability-gap interrupts.
+2. Write `bin/aho-install` skeleton - idempotent fish installer. Sections: detect platform, clone/update repo, create XDG dirs (`~/.local/bin/`, `~/.config/aho/`, `~/.local/share/aho/`), symlink wrappers, emit capability-gap instructions for Kyle to run manually (sudo package installs, Ollama service enable).
+3. Write `artifacts/templates/credentials.example.fish` - credential template with placeholders, comments pointing to `aho secret` CLI.
+4. Write `artifacts/harness/p3-deployment-runbook.md` - step-by-step for Kyle on P3: prerequisites, clone command, install command, verification steps, expected capability-gap interrupts.
 
 **Gate:** four files written, zero execution of sudo commands on NZXT.
 
-## W6 — Dogfood + close (Claude Code)
+## W6 - Dogfood + close (Claude Code)
 
 Handoff checkpoint: `.aho-checkpoint.json` reflects W5 complete. Claude Code resumes:
 
@@ -245,7 +245,7 @@ tmux send-keys -t aho-0.1.13-close 'claude --dangerously-skip-permissions' Enter
 ```
 
 1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates green.
+2. `aho doctor` - all gates green.
 3. Bundle generation: verify §1–§21 spec, verify §22 component checklist = 6.
 4. Postflight gates: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
 5. Populate `artifacts/iterations/0.1.13/aho-run-0.1.13.md` with workstream summary, agent questions, empty Kyle's Notes.
@@ -291,7 +291,7 @@ tmux send-keys -t aho-0.1.13-close 'claude --dangerously-skip-permissions' Enter
 
 ### RUN REPORT (aho-run-0.1.13.md)
 ```markdown
-# Run File — aho 0.1.13
+# Run File - aho 0.1.13
 
 **Generated:** 2026-04-10
 **Iteration:** 0.1.13
@@ -322,9 +322,9 @@ This run file is a canonical iteration artifact produced during the W6 close seq
 
 Claude Code discovered and fixed stale `docs/` path references missed by W3:
 
-1. **`test_doctor.py`**: asserted `iao_json` key instead of `aho_json` — updated.
-2. **`bundle/__init__.py`**: `DOCS_DIR` still pointed to `PROJECT_DIR / "docs"` — updated to use `get_artifacts_root()`.
-3. **Six postflight modules** (`run_complete.py`, `bundle_quality.py`, `run_quality.py`, `pillars_present.py`, `build_log_complete.py`, `iteration_complete.py`): all had hardcoded `root / "docs" / "iterations"` — updated to `root / "artifacts" / "iterations"`.
+1. **`test_doctor.py`**: asserted `iao_json` key instead of `aho_json` - updated.
+2. **`bundle/__init__.py`**: `DOCS_DIR` still pointed to `PROJECT_DIR / "docs"` - updated to use `get_artifacts_root()`.
+3. **Six postflight modules** (`run_complete.py`, `bundle_quality.py`, `run_quality.py`, `pillars_present.py`, `build_log_complete.py`, `iteration_complete.py`): all had hardcoded `root / "docs" / "iterations"` - updated to `root / "artifacts" / "iterations"`.
 
 These were W3 reorg misses that would have broken bundle generation and postflight gates on any subsequent run.
 
@@ -382,7 +382,7 @@ These were W3 reorg misses that would have broken bundle generation and postflig
 # aho - Base Harness
 
 **Version:** 0.1.13
-**Last updated:** 2026-04-10 (aho 0.1.13 W2 — name transition)
+**Last updated:** 2026-04-10 (aho 0.1.13 W2 - name transition)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -394,7 +394,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -406,9 +406,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -509,9 +509,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
+aho treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
 **Phase 0 (Clone-to-Deploy)** | **Iteration 0.1.13** | **Status: Phase 0 realignment + Folder Reorg + Wrapper Scaffolding**
 
@@ -545,13 +545,13 @@ graph BT
 
 aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 9).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
 
 ---
 
@@ -580,7 +580,7 @@ aho/
 
 ## Phase 0 Status
 
-**Phase:** 0 — Clone-to-Deploy
+**Phase:** 0 - Clone-to-Deploy
 **Charter:** artifacts/phase-charters/iao-phase-0.md
 
 ### Exit Criteria
@@ -617,7 +617,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.1.13 — Phase 0 — April 2026*
+*aho v0.1.13 - Phase 0 - April 2026*
 ```
 
 ## §8. CHANGELOG
@@ -626,20 +626,20 @@ License to be determined before v0.6.0 release.
 ```markdown
 # iao changelog
 
-## [0.1.3] — 2026-04-09
+## [0.1.3] - 2026-04-09
 
-### Phase 0 — NZXT-only authoring
+### Phase 0 - NZXT-only authoring
 
 **Iteration:** 0.1.3.1
 **Theme:** Bundle quality hardening, folder consolidation, src-layout refactor, pipeline scaffolding, human feedback loop
 
 **Workstreams:**
-- W0: Iteration bookkeeping — bumped .aho.json to 0.1.3.1
-- W1: Folder consolidation — moved artifacts/docs/iterations to docs/iterations
-- W2: src-layout refactor — moved iao/iao/ to iao/src/aho/
-- W3: Universal bundle spec — added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
-- W4: Universal pipeline scaffolding — new src/aho/pipelines/ subpackage + iao pipeline CLI
-- W5: Human feedback loop — new src/aho/feedback/ subpackage + run report artifact
+- W0: Iteration bookkeeping - bumped .aho.json to 0.1.3.1
+- W1: Folder consolidation - moved artifacts/docs/iterations to docs/iterations
+- W2: src-layout refactor - moved iao/iao/ to iao/src/aho/
+- W3: Universal bundle spec - added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
+- W4: Universal pipeline scaffolding - new src/aho/pipelines/ subpackage + iao pipeline CLI
+- W5: Human feedback loop - new src/aho/feedback/ subpackage + run report artifact
 - W6: README sync + Phase 0 charter retrofit + 10 pillars enforcement
 - W7: Qwen loop hardening + dogfood + closing sequence
 
@@ -673,7 +673,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 - iao eval and iao registry subcommands stubbed
 - Linux + fish + Python 3.11+ targeted; macOS / Windows not yet
 
-## 0.1.9 — IAO → AHO Rename
+## 0.1.9 - IAO → AHO Rename
 
 - Renamed Python package iao → aho
 - Renamed CLI bin/iao → bin/aho
@@ -688,7 +688,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — aho Phase 0
+# CLAUDE.md - aho Phase 0
 
 **Scope:** Universal agent instructions for Claude Code executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -728,14 +728,14 @@ Split-agent model: Gemini CLI runs W0–W5 (bulk execution); you run W6 close (d
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. If closing a run: read the manual build log first (authoritative per ADR-042), synthesis second.
 
-## Gotcha Registry — Query First
+## Gotcha Registry - Query First
 
 Before any novel action, query the gotcha registry. Known Phase 0 gotchas include:
 - **aho-G001 (printf not heredoc):** Use `printf '...\n' > file` not heredocs in fish.
 - **aho-G022 (command ls):** Use `command ls` to strip color codes from agent output.
 - **aho-G060:** Evaluator baseline must reload per call, not at init (fixed 0.1.12).
 - **aho-G061:** Smoke instrumentation reads iteration from checkpoint at script start.
-- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` — leaks API keys.
+- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` - leaks API keys.
 
 ## Sign-off Format
 
@@ -743,7 +743,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
 
 ## What NOT to Do
 
@@ -761,27 +761,27 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 ## Close Sequence (W6 pattern)
 
 1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates.
+2. `aho doctor` - all gates.
 3. Bundle: validate §1–§21 spec, §22 component checklist = 6.
 4. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
-5. Populate `aho-run-{iteration}.md` — workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
+5. Populate `aho-run-{iteration}.md` - workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
 6. Generate `aho-bundle-{iteration}.md`.
 7. Write checkpoint state = closed. Notify Kyle.
 
 ## Communication Style
 
-Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout — no bashisms.
+Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout - no bashisms.
 
 ---
 
-*CLAUDE.md for aho Phase 0 — rewritten during 0.1.13 W1. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 - rewritten during 0.1.13 W1. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §10. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — aho Phase 0
+# GEMINI.md - aho Phase 0
 
 **Scope:** Universal agent instructions for Gemini CLI executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -797,7 +797,7 @@ Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux 
 
 You are Gemini CLI operating inside an aho iteration. You are the primary bulk executor for Phase 0 runs, handling workstreams W0 through W5 in the split-agent model. Claude Code handles W6 close. You execute workstreams defined by the run's plan doc. You do not design scope, invent amendments, or produce artifacts Kyle has not explicitly requested.
 
-You are launched with `gemini --yolo` which implies sandbox bypass — single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
+You are launched with `gemini --yolo` which implies sandbox bypass - single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
 
 ## The Eleven Pillars
 
@@ -821,7 +821,7 @@ You are launched with `gemini --yolo` which implies sandbox bypass — single fl
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. Write first event to `data/aho_event_log.jsonl` marking workstream start.
 
-## Gotcha Registry — Phase 0 Critical List
+## Gotcha Registry - Phase 0 Critical List
 
 - **aho-G001 (printf not heredoc):** Fish heredocs break on nested quotes. Use `printf '...\n' > file`.
 - **aho-G022 (command ls):** Bare `ls` injects color escape codes into agent output. Use `command ls`.
@@ -848,7 +848,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
 
 ## What NOT to Do
 
@@ -882,7 +882,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — rewritten during 0.1.13 W1. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 - rewritten during 0.1.13 W1. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §11. .aho.json

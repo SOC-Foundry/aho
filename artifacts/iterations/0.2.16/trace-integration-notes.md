@@ -1,4 +1,4 @@
-# 0.2.16 W2 — Trace Integration Notes
+# 0.2.16 W2 - Trace Integration Notes
 
 Design decisions, observed behavior, and posture notes captured during W2
 implementation of W3C `TRACEPARENT` propagation across
@@ -9,7 +9,7 @@ implementation of W3C `TRACEPARENT` propagation across
 `_resolve_span_parent_context()` (present in both dispatcher and router)
 resolves the parent context with this precedence:
 
-1. If a span is already active in the Python OTEL context, return `None` —
+1. If a span is already active in the Python OTEL context, return `None` -
    `start_as_current_span` uses the active context as parent. This makes
    `dispatch()` nest correctly under `aho.route.classify` when invoked from
    inside `classify_task`.
@@ -30,7 +30,7 @@ when the stack includes multiple aho entries.
 1000` on success paths, and from `(time.monotonic() - span_start) * 1000`
 on typed-error paths. Using the result dict's wall-clock on the happy path
 guarantees the span attribute matches the same timing that flows into the
-event log and stage artifacts — no drift between two measurement sites.
+event log and stage artifacts - no drift between two measurement sites.
 Probe confirmed: `dispatch.internal_timing_ms=7430.11` → span attr
 `dispatch.duration_ms=7430`.
 
@@ -46,10 +46,10 @@ additive.
 ## Input Excerpt Truncation (Router)
 
 `router.INPUT_EXCERPT_MAX_CHARS = 200`. `aho.input_excerpt` span attr is
-`task[:INPUT_EXCERPT_MAX_CHARS]`. Trace payloads stay lean — the excerpt is
+`task[:INPUT_EXCERPT_MAX_CHARS]`. Trace payloads stay lean - the excerpt is
 a debug breadcrumb, not a full record of classifier input.
 
-## Truncation — `OTEL_LOG_TOOL_CONTENT=1` Posture
+## Truncation - `OTEL_LOG_TOOL_CONTENT=1` Posture
 
 The published behavior is: `OTEL_LOG_TOOL_CONTENT=1` enables tool
 call/result content logging; content above ~60KB is truncated. Observation
@@ -80,14 +80,14 @@ truncation markers beyond that; customers using the file sink will see
 the sink directory.
 
 This is a posture observation, not a failure. No test asserts the
-truncation point — the pipeline configuration determines where the cut
+truncation point - the pipeline configuration determines where the cut
 materializes.
 
 ## Backward Compatibility
 
 Existing dispatcher tests (`test_dispatcher_hardening.py`,
 `test_dispatcher_chat_api.py`, `test_dispatcher_template_leak.py`) and
-router tests (`test_pipeline_router.py`) — **83/83 pass unchanged** with
+router tests (`test_pipeline_router.py`) - **83/83 pass unchanged** with
 no `TRACEPARENT` present. The `_tracer is None` fallback path is exercised
 whenever the OTEL SDK can't import or the tracer provider was never set.
 
@@ -97,6 +97,6 @@ See `artifacts/adrs/0005-gemini-otel-asymmetry.md` (next sequential aho-
 internal ADR number at W2 execution time, per `command ls artifacts/adrs/`). Gemini CLI has no
 first-class OTEL support; harness-watcher event wrappers capture
 wall-clock only. Audit cost attribution remains drafter-only in the
-Pillar 8 dashboard. No timing-wrapper half-measures — partial
+Pillar 8 dashboard. No timing-wrapper half-measures - partial
 observability that looks like coverage it isn't is worse than clear
 documented asymmetry.

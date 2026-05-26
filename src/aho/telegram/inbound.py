@@ -1,4 +1,4 @@
-"""Telegram inbound bridge — long-polls getUpdates, routes commands and free-text.
+"""Telegram inbound bridge - long-polls getUpdates, routes commands and free-text.
 
 Architecture:
 - Runs as a thread inside the existing aho-telegram.service daemon
@@ -241,14 +241,14 @@ def _handle_ws_last() -> str:
 # Command dispatch table
 _HELP_TEXT = (
     "aho harness bot. Commands:\n"
-    "/status — system health\n"
-    "/iteration — current iteration\n"
-    "/last — same as /iteration\n"
-    "/ws status — workstream state\n"
-    "/ws pause — pause at next WS boundary\n"
-    "/ws proceed — resume execution\n"
-    "/ws last — last completed workstream\n"
-    "/help — this message\n\n"
+    "/status - system health\n"
+    "/iteration - current iteration\n"
+    "/last - same as /iteration\n"
+    "/ws status - workstream state\n"
+    "/ws pause - pause at next WS boundary\n"
+    "/ws proceed - resume execution\n"
+    "/ws last - last completed workstream\n"
+    "/help - this message\n\n"
     "Free text → dispatched to openclaw."
 )
 

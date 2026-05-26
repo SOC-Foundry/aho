@@ -1,4 +1,4 @@
-"""workstream_gate.py — Agent-side pause/proceed handshake.
+"""workstream_gate.py - Agent-side pause/proceed handshake.
 
 Called at workstream boundaries before emitting workstream_start.
 Polls .aho-checkpoint.json every 5 seconds until proceed_awaited is false.

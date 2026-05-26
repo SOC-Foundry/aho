@@ -1,4 +1,4 @@
-"""Pipeline scaffolding — `aho pipeline init <name>`."""
+"""Pipeline scaffolding - `aho pipeline init <name>`."""
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,7 +18,7 @@ def scaffold_pipeline(name: str, target_dir: Path = None) -> Path:
     for phase_name, description in PHASE_DESCRIPTIONS.items():
         phase_file = pipeline_dir / f"{phase_name}.py"
         phase_file.write_text(
-            f'"""{name} — {phase_name.replace("_", " ").title()}.\n\n'
+            f'"""{name} - {phase_name.replace("_", " ").title()}.\n\n'
             f"{description}. Project-specific implementation\n"
             f'replaces the TODO block.\n"""\n'
             f"import json\n"

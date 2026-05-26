@@ -1,4 +1,4 @@
-"""W4 D3 — materiality four-bucket surface acceptance tests.
+"""W4 D3 - materiality four-bucket surface acceptance tests.
 
 Verifies:
   - normalize_materiality_state coerces partial / malformed input
@@ -182,5 +182,5 @@ def test_materiality_state_from_otel_counters_maps_canonical_names():
         "info": 2, "important": 5, "critical": 3,
     }
     assert state["buckets"]["escaped"]["count"] == 1
-    # Unknown counter is ignored — buckets fill normally.
+    # Unknown counter is ignored - buckets fill normally.
     assert "unrelated" not in state["buckets"]

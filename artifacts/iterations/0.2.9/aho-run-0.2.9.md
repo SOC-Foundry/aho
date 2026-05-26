@@ -1,4 +1,4 @@
-# aho Run Report — 0.2.9
+# aho Run Report - 0.2.9
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 9
 **Theme:** Remote operability plumbing + persona 3 discovery + install surface architecture
@@ -27,17 +27,17 @@
 
 | WS | mcp_used | Justification (if none) |
 |---|---|---|
-| W0 | none | bump workstream — no technology-specific work requiring MCP |
-| W1 | none | template substitution + fish scripting — no technology-specific MCP domain |
-| W2 | none | grep/audit workstream — no technology-specific MCP domain |
-| W3 | none | Python event module + CLI wiring — no technology-specific MCP domain |
+| W0 | none | bump workstream - no technology-specific work requiring MCP |
+| W1 | none | template substitution + fish scripting - no technology-specific MCP domain |
+| W2 | none | grep/audit workstream - no technology-specific MCP domain |
+| W3 | none | Python event module + CLI wiring - no technology-specific MCP domain |
 | W4 | mcp__context7__resolve-library-id, mcp__context7__query-docs | Telegram Bot API sendMessage docs via context7-mcp |
-| W5 | none | Python polling helper + CLI wiring — no technology-specific MCP domain |
-| W6 | none | documentation pass — no technology-specific MCP domain |
-| W7 | none | ADR drafting — no technology-specific MCP domain |
-| W8 | none | persona validation — openclaw chat/execute are existing tools, no MCP domain |
-| W8.5 | none | architecture documentation — no technology-specific MCP domain |
-| W9 | none | close workstream — tests, doctor, bundle generation, no technology-specific MCP domain |
+| W5 | none | Python polling helper + CLI wiring - no technology-specific MCP domain |
+| W6 | none | documentation pass - no technology-specific MCP domain |
+| W7 | none | ADR drafting - no technology-specific MCP domain |
+| W8 | none | persona validation - openclaw chat/execute are existing tools, no MCP domain |
+| W8.5 | none | architecture documentation - no technology-specific MCP domain |
+| W9 | none | close workstream - tests, doctor, bundle generation, no technology-specific MCP domain |
 
 ## Metrics
 
@@ -77,7 +77,7 @@ iterations. Cheap trade.
 
 /ws Telegram streaming works end-to-end from phone. Kyle tested
 /ws pause mid-W4 by accident, confirmed round-trip. W3+W4+W5
-decomposition into three small workstreams was the right call —
+decomposition into three small workstreams was the right call -
 each earned its place and the composition produced better
 behavior than a monolith would have.
 

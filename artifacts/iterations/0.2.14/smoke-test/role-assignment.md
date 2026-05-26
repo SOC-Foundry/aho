@@ -1,4 +1,4 @@
-# Smoke Test Role Assignment — 0.2.14 W1
+# Smoke Test Role Assignment - 0.2.14 W1
 
 ## Assignment: Qwen-solo
 
@@ -17,7 +17,7 @@
 This smoke test violates Pillar 7: all five roles (including drafter and reviewer) are bound to the same model (Qwen 3.5:9B). This is acknowledged and acceptable for the following reasons:
 
 1. **Vetting outcome:** Only Qwen 3.5:9B is viable for structured output. Nemotron-mini:4b (80% feature-bias) and GLM-4.6V-Flash-9B (80% timeout, wrong JSON schema) cannot produce usable analytical output.
-2. **Smoke test purpose:** Proves cascade works mechanically — stages execute, handoffs emit, trace completes. Model quality per role is 0.2.15's matrix-testing concern.
+2. **Smoke test purpose:** Proves cascade works mechanically - stages execute, handoffs emit, trace completes. Model quality per role is 0.2.15's matrix-testing concern.
 3. **Pillar 7 restoration path:** 0.2.15 matrix testing with heavier quantization (Q8_0), alternative models, or architectural pivot will inform viable multi-model assignment.
 
 ## Document

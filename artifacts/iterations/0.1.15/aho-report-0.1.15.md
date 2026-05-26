@@ -1,4 +1,4 @@
-# Report — aho 0.1.15
+# Report - aho 0.1.15
 
 **Generated:** 2026-04-11T13:15:32Z
 **Iteration:** 0.1.15
@@ -127,7 +127,7 @@ install.fish: install.fish syntax OK
 Artifacts: Missing artifacts: design.md, plan.md, report.md, bundle.md |
 | manifest_current | ok | all 69 file hashes current |
 | pillars_present | fail | 1 errors: Design doc not found: aho-design-0.1.15.md |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-11T05:05:15.899436+00:00 < iteration start 2026-04-11T06:00:00Z |
 | run_complete | warn | Run report not yet generated |
 | run_quality | deferred | Run file does not exist at /home/kthompson/dev/projects/aho/artifacts/iterations/0.1.15/aho-run-0.1.15.md |
@@ -154,17 +154,17 @@ Artifacts: Missing artifacts: design.md, plan.md, report.md, bundle.md |
 
 From 0.1.14 Kyle's Notes:
 
-0.1.14 graduated. Stub generator worked exactly as designed — §3 populated mechanically, no `(missing)` placeholder. Postflight layout variant detection landed clean. W6 caught three real bugs that would have broken 0.1.15 close. Split-agent model continues to validate.
+0.1.14 graduated. Stub generator worked exactly as designed - §3 populated mechanically, no `(missing)` placeholder. Postflight layout variant detection landed clean. W6 caught three real bugs that would have broken 0.1.15 close. Split-agent model continues to validate.
 
 **Phase 0 exit roadmap (3 iterations + ship gauntlet):**
 
-- **0.1.15** — Foundation. Report repair (mechanical builder, ground-truth-driven), component manifest system (visible openclaw/nemoclaw/telegram entries), OTEL instrumentation, /app Flutter scaffold, hygiene + Phase 0 charter rewrite. No soc-foundry, no P3 — pure foundation.
-- **0.1.16** — Cleanup + first soc-foundry push (run 1) + openclaw/nemoclaw global wrappers + telegram bridge real implementation + P3 clone attempt.
-- **0.1.17** — claw3d scaffold, integration polish, fresh-clone P3 dogfood pass.
-- **0.18.x** — multi-run ship gauntlet, third octet becomes crucial.
+- **0.1.15** - Foundation. Report repair (mechanical builder, ground-truth-driven), component manifest system (visible openclaw/nemoclaw/telegram entries), OTEL instrumentation, /app Flutter scaffold, hygiene + Phase 0 charter rewrite. No soc-foundry, no P3 - pure foundation.
+- **0.1.16** - Cleanup + first soc-foundry push (run 1) + openclaw/nemoclaw global wrappers + telegram bridge real implementation + P3 clone attempt.
+- **0.1.17** - claw3d scaffold, integration polish, fresh-clone P3 dogfood pass.
+- **0.18.x** - multi-run ship gauntlet, third octet becomes crucial.
 - **Phase 1 opens** when P3 + Alex validation lands clean.
 
-**Component visibility — non-negotiable from 0.1.15 forward.** I have been asking for component info in run reports for several iterations and not getting it. The pattern of openclaw being installed as an ephemeral Python function during kjtcom instead of globally, and Telegram being deferred since the original 0.1.4 charter, ends now. 0.1.15 W1 makes openclaw, nemoclaw, and telegram first-class entries in `components.yaml` with status=stub and explicit `next_iteration: 0.1.16`. They become visible in every run report from 0.1.15 forward. Invisible deferrals are over.
+**Component visibility - non-negotiable from 0.1.15 forward.** I have been asking for component info in run reports for several iterations and not getting it. The pattern of openclaw being installed as an ephemeral Python function during kjtcom instead of globally, and Telegram being deferred since the original 0.1.4 charter, ends now. 0.1.15 W1 makes openclaw, nemoclaw, and telegram first-class entries in `components.yaml` with status=stub and explicit `next_iteration: 0.1.16`. They become visible in every run report from 0.1.15 forward. Invisible deferrals are over.
 
 **Today's window:** ~8 hours wall clock (morning + evening blocks, family time mid-afternoon). Multiple runs possible. 0.1.15 should be a sharp ~2-hour run, not a 12-hour sprawl. soc-foundry push and P3 clone happen in 0.1.16+, not today.
 

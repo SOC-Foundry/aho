@@ -1,13 +1,13 @@
-# iao — Plan 0.1.7
+# iao - Plan 0.1.7
 
-**Iteration:** 0.1.7 (three octets, locked — do not add a fourth)
+**Iteration:** 0.1.7 (three octets, locked - do not add a fourth)
 **Phase:** 0 (NZXT-only authoring)
 **Theme:** Let Qwen Cook
 **Date:** April 09, 2026
 **Machine:** NZXTcos
 **Repo:** ~/dev/projects/iao
 **Wall clock target:** ~10 hours soft cap (no hard cap)
-**Run mode:** Single executor — Gemini CLI primary, Claude Code fallback
+**Run mode:** Single executor - Gemini CLI primary, Claude Code fallback
 **Iteration counter jump:** 0.1.4 → 0.1.7 directly (0.1.5 marked INCOMPLETE, 0.1.6 was forensic audit only)
 **Status:** Planning (immutable once W0 begins)
 
@@ -21,9 +21,9 @@ iao is the methodology and Python package for running disciplined LLM-driven eng
 
 ---
 
-## Section A — Pre-flight
+## Section A - Pre-flight
 
-### A.0 — Working directory and shell state
+### A.0 - Working directory and shell state
 
 ```fish
 cd ~/dev/projects/iao
@@ -38,7 +38,7 @@ which iao
 ./bin/iao --version
 ```
 
-### A.1 — Backup
+### A.1 - Backup
 
 ```fish
 test -d ~/dev/projects/iao.backup-pre-0.1.7
@@ -49,14 +49,14 @@ test -d ~/dev/projects/iao.backup-pre-0.1.7
 # Expected: succeeds
 ```
 
-### A.2 — Current iao state verification
+### A.2 - Current iao state verification
 
 ```fish
 jq .current_iteration .iao.json
 # Expected: "0.1.4"
 
 jq .last_completed_iteration .iao.json
-# Expected: "0.1.4" (or "0.1.3" — W0 will set it to "0.1.4")
+# Expected: "0.1.4" (or "0.1.3" - W0 will set it to "0.1.4")
 
 test -d docs/iterations/0.1.5
 # Expected: succeeds (drafts exist from abandoned attempt)
@@ -71,7 +71,7 @@ test -d docs/iterations/0.1.7
 # Expected: succeeds (this iteration's folder, contains this plan doc)
 ```
 
-### A.3 — Ollama and model fleet
+### A.3 - Ollama and model fleet
 
 ```fish
 curl -s http://localhost:11434/api/tags | python3 -c "import sys, json; d=json.load(sys.stdin); print('\n'.join(m['name'] for m in d['models']))"
@@ -82,7 +82,7 @@ curl -s http://localhost:11434/api/tags | python3 -c "import sys, json; d=json.l
 #   nomic-embed-text:latest
 ```
 
-### A.4 — Python environment
+### A.4 - Python environment
 
 ```fish
 python3 --version
@@ -92,7 +92,7 @@ pip show iao | grep -E "Version|Location|Editable"
 # Expected: Version 0.1.4, editable project location = ~/dev/projects/iao
 ```
 
-### A.5 — ChromaDB archives exist
+### A.5 - ChromaDB archives exist
 
 ```fish
 python3 -c "
@@ -107,21 +107,21 @@ for name, count in archives.items():
 #   tripl_archive: 144
 ```
 
-### A.6 — No conflicting tmux session
+### A.6 - No conflicting tmux session
 
 ```fish
 tmux ls 2>/dev/null | grep "iao-0.1.7"
 # Expected: no output
 ```
 
-### A.7 — Sleep/suspend masked
+### A.7 - Sleep/suspend masked
 
 ```fish
 systemctl status sleep.target 2>&1 | grep -E "Loaded|Active"
 # Expected: "masked"
 ```
 
-### A.8 — Gotcha registry schema sanity check (G108 — new)
+### A.8 - Gotcha registry schema sanity check (G108 - new)
 
 ```fish
 python3 -c "
@@ -141,7 +141,7 @@ if isinstance(d, dict) and 'gotchas' in d:
 
 This is a **critical sanity check**. If anything in W0-W9 modifies the gotcha registry, it MUST use `d["gotchas"].append(...)`, not `d.append(...)`. The 0.1.4 W3 session crashed because it assumed the file was a list. It is a dict with a `gotchas` key.
 
-### A.9 — Pre-flight summary
+### A.9 - Pre-flight summary
 
 ```fish
 echo "
@@ -159,9 +159,9 @@ READY TO LAUNCH iao 0.1.7
 
 ---
 
-## Section B — Launch Protocol
+## Section B - Launch Protocol
 
-### B.1 — Open tmux session
+### B.1 - Open tmux session
 
 ```fish
 tmux new-session -d -s iao-0.1.7 -c ~/dev/projects/iao
@@ -171,7 +171,7 @@ tmux send-keys -t iao-0.1.7 'set -x IAO_PROJECT_NAME iao' Enter
 tmux send-keys -t iao-0.1.7 'set -x IAO_PROJECT_CODE iaomw' Enter
 ```
 
-### B.2 — Initialize checkpoint
+### B.2 - Initialize checkpoint
 
 ```fish
 set ts (date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -200,7 +200,7 @@ jq .iteration .iao-checkpoint.json
 # Expected: "0.1.7"
 ```
 
-### B.3 — Launch executor
+### B.3 - Launch executor
 
 **Gemini CLI:**
 ```fish
@@ -214,20 +214,20 @@ tmux send-keys -t iao-0.1.7 'claude --dangerously-skip-permissions' Enter
 
 Both read their respective brief (GEMINI.md or CLAUDE.md) at session start. Both reference this plan doc Section C for execution detail. Both run W0 through W9 sequentially.
 
-### B.4 — Monitor and close
+### B.4 - Monitor and close
 
 Kyle attaches occasionally via `tmux attach -t iao-0.1.7`. When W9 completes, the executor stops in PENDING REVIEW state. Kyle reviews, fills Kyle's Notes in the run report, ticks sign-off boxes, runs `./bin/iao iteration close --confirm`.
 
 ---
 
-## Section C — Workstream Execution
+## Section C - Workstream Execution
 
-### W0 — Environment Hygiene
+### W0 - Environment Hygiene
 
 **Executor:** Gemini CLI
 **Wall clock target:** 15 min
 
-#### W0.1 — Fix PATH: remove stale global iao
+#### W0.1 - Fix PATH: remove stale global iao
 
 ```fish
 which iao
@@ -243,7 +243,7 @@ grep -rn "iao-middleware" ~/.config/fish/conf.d/ ~/.config/fish/functions/ 2>/de
 
 # Gemini identifies the file and line, then edits via the Edit tool
 # Remove the offending line (likely: `fish_add_path ~/iao-middleware/bin` or `set -x PATH ~/iao-middleware/bin $PATH`)
-# DO NOT delete the fish config entirely — only remove the iao-middleware line
+# DO NOT delete the fish config entirely - only remove the iao-middleware line
 
 # Verify in a fresh fish session (new shell picks up the change)
 fish -c "which iao"
@@ -252,7 +252,7 @@ fish -c "which iao"
 
 If the fresh fish session still returns the old path, hash -r may be needed, or the change may only take effect on the next login. For the purpose of this iteration, use `./bin/iao` explicitly throughout execution and rely on the PATH fix taking effect for future sessions.
 
-#### W0.2 — Delete stale .pyc files
+#### W0.2 - Delete stale .pyc files
 
 ```fish
 cd ~/dev/projects/iao
@@ -269,7 +269,7 @@ command ls src/iao/postflight/__pycache__/ | grep -E "(claw3d|flutter|map_tab|fi
 # Expected: no output
 ```
 
-#### W0.3 — Close 0.1.4 formally in .iao.json
+#### W0.3 - Close 0.1.4 formally in .iao.json
 
 ```fish
 jq '.last_completed_iteration = "0.1.4" | .current_iteration = "0.1.7"' .iao.json > .iao.json.tmp
@@ -282,7 +282,7 @@ jq .last_completed_iteration .iao.json
 # Expected: "0.1.4"
 ```
 
-#### W0.4 — Update VERSION, pyproject, cli.py
+#### W0.4 - Update VERSION, pyproject, cli.py
 
 ```fish
 echo "0.1.7" > VERSION
@@ -309,10 +309,10 @@ iao --version
 # These should now be identical (PATH fix in W0.1 + pip reinstall)
 ```
 
-#### W0.5 — Create 0.1.5 INCOMPLETE marker
+#### W0.5 - Create 0.1.5 INCOMPLETE marker
 
 ```fish
-printf '# INCOMPLETE — iao 0.1.5
+printf '# INCOMPLETE - iao 0.1.5
 
 **Status:** Drafted but never executed.
 **Date marked incomplete:** 2026-04-09 (during 0.1.7 W0)
@@ -347,14 +347,14 @@ iao 0.1.7 executes the repairs informed by the 0.1.5 failure modes. Streaming, r
 
 Both files are immutable historical record. Do not regenerate, do not edit, do not delete.
 
-— iao 0.1.7 W0, 2026-04-09
+- iao 0.1.7 W0, 2026-04-09
 ' > docs/iterations/0.1.5/INCOMPLETE.md
 
 test -f docs/iterations/0.1.5/INCOMPLETE.md
 # Expected: passes
 ```
 
-#### W0.6 — Verify 0.1.7 directory has the canonical inputs
+#### W0.6 - Verify 0.1.7 directory has the canonical inputs
 
 ```fish
 command ls docs/iterations/0.1.7/
@@ -369,21 +369,21 @@ wc -c docs/iterations/0.1.7/iao-design-0.1.7.md
 # Expected: roughly 70-80 KB
 ```
 
-#### W0.7 — Initialize build log
+#### W0.7 - Initialize build log
 
 ```fish
-printf '# Build Log — iao 0.1.7
+printf '# Build Log - iao 0.1.7
 
 **Start:** %s
 **Executor:** gemini-cli
 **Machine:** NZXTcos
 **Phase:** 0
 **Iteration:** 0.1.7
-**Theme:** Let Qwen Cook — repair the artifact loop
+**Theme:** Let Qwen Cook - repair the artifact loop
 
 ---
 
-## W0 — Environment Hygiene
+## W0 - Environment Hygiene
 
 **Status:** COMPLETE
 **Wall clock:** ~10 min
@@ -404,7 +404,7 @@ Discrepancies: none
 ' (date -u +%Y-%m-%dT%H:%M:%SZ) > docs/iterations/0.1.7/iao-build-log-0.1.7.md
 ```
 
-#### W0.8 — Mark W0 complete in checkpoint
+#### W0.8 - Mark W0 complete in checkpoint
 
 ```fish
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W0.status = "complete" | .workstreams.W0.completed_at = $ts | .current_workstream = "W1"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
@@ -419,12 +419,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W1 — Stream + Heartbeat + Repetition Detection
+### W1 - Stream + Heartbeat + Repetition Detection
 
 **Executor:** Gemini CLI
 **Wall clock target:** 90 min
 
-#### W1.1 — Streaming QwenClient
+#### W1.1 - Streaming QwenClient
 
 Read current implementation:
 
@@ -579,7 +579,7 @@ class QwenClient:
 PYEOF
 ```
 
-#### W1.2 — Repetition detector module
+#### W1.2 - Repetition detector module
 
 ```fish
 cat > src/iao/artifacts/repetition_detector.py <<'PYEOF'
@@ -652,7 +652,7 @@ class RepetitionDetector:
 PYEOF
 ```
 
-#### W1.3 — Loop handles DegenerateGenerationError
+#### W1.3 - Loop handles DegenerateGenerationError
 
 ```fish
 # Gemini reads current loop.py
@@ -666,7 +666,7 @@ Gemini edits `src/iao/artifacts/loop.py` to:
 
 The exact location depends on current code structure. Gemini inspects before editing.
 
-#### W1.4 — Smoke test
+#### W1.4 - Smoke test
 
 ```fish
 cat > scripts/smoke_streaming_qwen.py <<'PYEOF'
@@ -715,10 +715,10 @@ python3 scripts/smoke_streaming_qwen.py
 # Expected: both tests pass, degenerate detector fires on the repetition prompt
 ```
 
-#### W1.5 — Build log update and checkpoint
+#### W1.5 - Build log update and checkpoint
 
 ```fish
-printf '\n## W1 — Stream + Heartbeat + Repetition Detection\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W1.1: Rewrote src/iao/artifacts/qwen_client.py with streaming, heartbeat, repetition detection\n- W1.2: Created src/iao/artifacts/repetition_detector.py with rolling-window SequenceMatcher\n- W1.3: Wired DegenerateGenerationError handling into loop.py\n- W1.4: Smoke test scripts/smoke_streaming_qwen.py passes both normal and degenerate cases\n- Timeout reduced 1800s → 600s, num_ctx bumped 8192 → 16384\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W1 - Stream + Heartbeat + Repetition Detection\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W1.1: Rewrote src/iao/artifacts/qwen_client.py with streaming, heartbeat, repetition detection\n- W1.2: Created src/iao/artifacts/repetition_detector.py with rolling-window SequenceMatcher\n- W1.3: Wired DegenerateGenerationError handling into loop.py\n- W1.4: Smoke test scripts/smoke_streaming_qwen.py passes both normal and degenerate cases\n- Timeout reduced 1800s → 600s, num_ctx bumped 8192 → 16384\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W1.status = "complete" | .workstreams.W1.completed_at = $ts | .current_workstream = "W2"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -732,12 +732,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W2 — Word Count Inversion + Structural Gates
+### W2 - Word Count Inversion + Structural Gates
 
 **Executor:** Gemini CLI
 **Wall clock target:** 60 min
 
-#### W2.1 — Invert schemas.py thresholds
+#### W2.1 - Invert schemas.py thresholds
 
 ```fish
 cat src/iao/artifacts/schemas.py
@@ -779,7 +779,7 @@ SCHEMAS = {
         "required_terms": ["workstream", "executor"],
     },
     "build-log": {
-        "max_words": 1500,  # was min 1500 — explicit max now
+        "max_words": 1500,  # was min 1500 - explicit max now
         "required_sections": ["# Build Log", "## W0"],
         "required_terms": ["Start:"],
     },
@@ -810,7 +810,7 @@ print(f'design required_sections: {len(SCHEMAS[\"design\"][\"required_sections\"
 # Expected: design 3000, plan 2500, 11 required sections for design
 ```
 
-#### W2.2 — Update loop.py validation
+#### W2.2 - Update loop.py validation
 
 Gemini reads `src/iao/artifacts/loop.py` and updates the post-generation validation logic:
 
@@ -818,7 +818,7 @@ Gemini reads `src/iao/artifacts/loop.py` and updates the post-generation validat
 - Add a max-words warning log (not a retry)
 - Add required_sections check: grep the generated text for each required section header; if missing, retry ONCE with a corrective prompt that lists the missing sections
 
-#### W2.3 — Structural gate post-flight check
+#### W2.3 - Structural gate post-flight check
 
 ```fish
 cat > src/iao/postflight/structural_gates.py <<'PYEOF'
@@ -910,7 +910,7 @@ print(f'0.1.5 design: {r[\"status\"]}')
 "
 ```
 
-#### W2.4 — Update prompt templates
+#### W2.4 - Update prompt templates
 
 Gemini edits `prompts/design.md.j2`, `prompts/plan.md.j2`, `prompts/build-log.md.j2`, `prompts/report.md.j2` to:
 - List required sections explicitly
@@ -925,10 +925,10 @@ cat prompts/design.md.j2
 # Gemini edits to add the new instructions
 ```
 
-#### W2.5 — Build log and checkpoint
+#### W2.5 - Build log and checkpoint
 
 ```fish
-printf '\n## W2 — Word Count Inversion + Structural Gates\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W2.1: schemas.py rewritten — max_words instead of min_words, required_sections added\n- W2.2: loop.py validation updated — no min-words retry, max warning, required_sections check\n- W2.3: src/iao/postflight/structural_gates.py created\n- W2.4: Prompt templates updated with required sections list and no-padding instruction\n- Validated against 0.1.4 design (passes) and 0.1.5 design (known failure)\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W2 - Word Count Inversion + Structural Gates\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W2.1: schemas.py rewritten - max_words instead of min_words, required_sections added\n- W2.2: loop.py validation updated - no min-words retry, max warning, required_sections check\n- W2.3: src/iao/postflight/structural_gates.py created\n- W2.4: Prompt templates updated with required sections list and no-padding instruction\n- Validated against 0.1.4 design (passes) and 0.1.5 design (known failure)\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W2.status = "complete" | .workstreams.W2.completed_at = $ts | .current_workstream = "W3"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -936,12 +936,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W3 — Anti-Hallucination Evaluator
+### W3 - Anti-Hallucination Evaluator
 
 **Executor:** Gemini CLI
 **Wall clock target:** 75 min
 
-#### W3.1 — Evaluator module
+#### W3.1 - Evaluator module
 
 ```fish
 cat > src/iao/artifacts/evaluator.py <<'PYEOF'
@@ -1052,7 +1052,7 @@ def validate_references(refs: dict, project_root: Path, seed: dict = None) -> di
     anti = seed.get("anti_hallucination_list", [])
     # Also check the global known_hallucinations file
     for bad_phrase in anti + known.get("retired_patterns", []) + known.get("kjtcom_references_that_look_like_iao", []):
-        # Rebuild the original text isn't practical here — caller should pass full text
+        # Rebuild the original text isn't practical here - caller should pass full text
         pass
 
     # Severity
@@ -1061,7 +1061,7 @@ def validate_references(refs: dict, project_root: Path, seed: dict = None) -> di
     elif len(errors) <= 3:
         return {"severity": "warn", "errors": errors, "message": f"{len(errors)} minor hallucinations"}
     else:
-        return {"severity": "reject", "errors": errors, "message": f"{len(errors)} hallucinations — artifact rejected"}
+        return {"severity": "reject", "errors": errors, "message": f"{len(errors)} hallucinations - artifact rejected"}
 
 
 def evaluate_text(text: str, project_root: Path = None, seed: dict = None) -> dict:
@@ -1095,7 +1095,7 @@ def evaluate_text(text: str, project_root: Path = None, seed: dict = None) -> di
 PYEOF
 ```
 
-#### W3.2 — Known hallucinations baseline
+#### W3.2 - Known hallucinations baseline
 
 ```fish
 mkdir -p data
@@ -1125,7 +1125,7 @@ cat > data/known_hallucinations.json <<'JSONEOF'
 JSONEOF
 ```
 
-#### W3.3 — Wire evaluator into loop.py
+#### W3.3 - Wire evaluator into loop.py
 
 Gemini edits `src/iao/artifacts/loop.py` to:
 - After Qwen generates an artifact, call `evaluate_text(generated_text, project_root=Path.cwd(), seed=seed)`
@@ -1133,7 +1133,7 @@ Gemini edits `src/iao/artifacts/loop.py` to:
 - Max 1 retry per artifact (total 2 generations max)
 - Log result to event log with type `evaluator_result`
 
-#### W3.4 — Test harness
+#### W3.4 - Test harness
 
 ```fish
 cat > tests/test_evaluator.py <<'PYEOF'
@@ -1188,10 +1188,10 @@ pytest tests/test_evaluator.py -v
 # Expected: 4 tests pass (or skip gracefully if 0.1.4/0.1.5 files don't exist)
 ```
 
-#### W3.5 — Build log and checkpoint
+#### W3.5 - Build log and checkpoint
 
 ```fish
-printf '\n## W3 — Anti-Hallucination Evaluator\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W3.1: Created src/iao/artifacts/evaluator.py with extract_references, validate_references, evaluate_text\n- W3.2: Created data/known_hallucinations.json baseline from 0.1.5 diagnostic corpus\n- W3.3: Wired evaluator into loop.py — 1 retry with corrective prompt on reject\n- W3.4: Created tests/test_evaluator.py — passes against 0.1.4 (clean) and 0.1.5 (reject)\n- Evaluator catches query_registry.py, split-agent, Phase 1, infinite file list hallucinations\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W3 - Anti-Hallucination Evaluator\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W3.1: Created src/iao/artifacts/evaluator.py with extract_references, validate_references, evaluate_text\n- W3.2: Created data/known_hallucinations.json baseline from 0.1.5 diagnostic corpus\n- W3.3: Wired evaluator into loop.py - 1 retry with corrective prompt on reject\n- W3.4: Created tests/test_evaluator.py - passes against 0.1.4 (clean) and 0.1.5 (reject)\n- Evaluator catches query_registry.py, split-agent, Phase 1, infinite file list hallucinations\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W3.status = "complete" | .workstreams.W3.completed_at = $ts | .current_workstream = "W4"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1199,12 +1199,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W4 — Rich Structured Seed
+### W4 - Rich Structured Seed
 
 **Executor:** Gemini CLI
 **Wall clock target:** 60 min
 
-#### W4.1 — Updated seed module
+#### W4.1 - Updated seed module
 
 ```fish
 # Inspect current seed.py
@@ -1213,11 +1213,11 @@ cat src/iao/feedback/seed.py 2>/dev/null
 
 Gemini rewrites `src/iao/feedback/seed.py` to produce the structured JSON per design §6 W4.1. Key functions:
 
-- `extract_carryover_debts(previous_run_report_path)` — parses workstream summary table, returns list of debts
-- `build_seed(source_iteration, target_iteration)` — assembles the full structured seed
-- `write_seed(target_iteration, seed)` — writes to `docs/iterations/{target}/seed.json`
+- `extract_carryover_debts(previous_run_report_path)` - parses workstream summary table, returns list of debts
+- `build_seed(source_iteration, target_iteration)` - assembles the full structured seed
+- `write_seed(target_iteration, seed)` - writes to `docs/iterations/{target}/seed.json`
 
-#### W4.2 — `iao iteration seed --edit` CLI flag
+#### W4.2 - `iao iteration seed --edit` CLI flag
 
 Gemini edits `src/iao/cli.py` to add `--edit` flag to the `iteration seed` subcommand. Flag behavior:
 - Writes seed JSON to a temp file
@@ -1226,14 +1226,14 @@ Gemini edits `src/iao/cli.py` to add `--edit` flag to the `iteration seed` subco
 - Validates JSON well-formed
 - Writes back to `docs/iterations/{target}/seed.json`
 
-#### W4.3 — Seed consumed as system prompt
+#### W4.3 - Seed consumed as system prompt
 
 Gemini edits `src/iao/artifacts/loop.py` to:
 - Before each Qwen generation, load `docs/iterations/{version}/seed.json` if present
 - Convert to a markdown "Ground Truth" section
 - Prepend to the system prompt passed to QwenClient
 
-#### W4.4 — Write 0.1.7's own seed (dogfood prep)
+#### W4.4 - Write 0.1.7's own seed (dogfood prep)
 
 ```fish
 ./bin/iao iteration seed
@@ -1251,13 +1251,13 @@ seed = {
     "source_iteration": "0.1.4",
     "target_iteration": "0.1.7",
     "phase": 0,
-    "iteration_theme": "Let Qwen Cook — repair the artifact loop supporting Qwen",
+    "iteration_theme": "Let Qwen Cook - repair the artifact loop supporting Qwen",
     "kyles_notes": "From 0.1.4 run report: component checklist per run, deploy openclaw/nemoclaw (claw3d is kjtcom).",
     "agent_questions": [],
     "carryover_debts": [
         {"source": "0.1.4 W5", "description": "OpenClaw/NemoClaw non-functional stubs (NotImplementedError)", "severity": "blocking"},
         {"source": "0.1.4 W3", "description": "Ambiguous pile pause mechanism never fired; 8 kjtcom gotchas migrated without classification", "severity": "partial-doc"},
-        {"source": "0.1.5", "description": "Artifact loop produces degenerate output — see INCOMPLETE.md", "severity": "blocking"}
+        {"source": "0.1.5", "description": "Artifact loop produces degenerate output - see INCOMPLETE.md", "severity": "blocking"}
     ],
     "scope_hints": "10 workstreams W0-W9. W1-W5 repair Qwen loop (streaming, structural gates, evaluator, rich seed, RAG recency). W6 experimental two-pass behind flag. W7 component checklist BUNDLE_SPEC §22. W8 OpenClaw Ollama-native rebuild bypassing open-interpreter/tiktoken. W9 dogfood.",
     "anti_hallucination_list": [
@@ -1310,10 +1310,10 @@ print(f"Seed written: {len(seed)} fields")
 PYEOF
 ```
 
-#### W4.5 — Build log and checkpoint
+#### W4.5 - Build log and checkpoint
 
 ```fish
-printf '\n## W4 — Rich Structured Seed\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W4.1: Rewrote src/iao/feedback/seed.py to produce structured JSON\n- W4.2: Added --edit flag to iao iteration seed CLI\n- W4.3: Wired seed loading into loop.py as Ground Truth section in system prompt\n- W4.4: Wrote docs/iterations/0.1.7/seed.json with full carryover debts and anti_hallucination_list\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W4 - Rich Structured Seed\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W4.1: Rewrote src/iao/feedback/seed.py to produce structured JSON\n- W4.2: Added --edit flag to iao iteration seed CLI\n- W4.3: Wired seed loading into loop.py as Ground Truth section in system prompt\n- W4.4: Wrote docs/iterations/0.1.7/seed.json with full carryover debts and anti_hallucination_list\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W4.status = "complete" | .workstreams.W4.completed_at = $ts | .current_workstream = "W5"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1321,12 +1321,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W5 — RAG Freshness Weighting
+### W5 - RAG Freshness Weighting
 
 **Executor:** Gemini CLI
 **Wall clock target:** 45 min
 
-#### W5.1 — Verify iteration metadata present
+#### W5.1 - Verify iteration metadata present
 
 ```fish
 python3 -c "
@@ -1348,7 +1348,7 @@ for name in ['iaomw_archive', 'kjtco_archive', 'tripl_archive']:
 
 If any archive is missing iteration metadata, re-seed it (the archive.py module handles this).
 
-#### W5.2 — Freshness-weighted query
+#### W5.2 - Freshness-weighted query
 
 Gemini edits `src/iao/rag/archive.py` to add `prefer_recent` parameter:
 
@@ -1398,11 +1398,11 @@ def _recency_score(iteration: str) -> float:
     return _RECENCY_MAP.get(iteration, 0.30)
 ```
 
-#### W5.3 — Context module uses recency
+#### W5.3 - Context module uses recency
 
 Gemini edits `src/iao/artifacts/context.py` `build_context_for_artifact()` to call `query_archive(..., prefer_recent=True)` by default.
 
-#### W5.4 — Smoke test
+#### W5.4 - Smoke test
 
 ```fish
 cat > scripts/test_rag_recency.py <<'PYEOF'
@@ -1426,10 +1426,10 @@ python3 scripts/test_rag_recency.py
 # Expected: recency-preferred list shows 0.1.4 content higher than 0.1.2 content
 ```
 
-#### W5.5 — Build log and checkpoint
+#### W5.5 - Build log and checkpoint
 
 ```fish
-printf '\n## W5 — RAG Freshness Weighting\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W5.1: Verified all 3 archives have iteration metadata\n- W5.2: Added prefer_recent parameter and _recency_score to archive.py\n- W5.3: context.py uses prefer_recent=True by default\n- W5.4: scripts/test_rag_recency.py confirms 0.1.4 content promoted over 0.1.2\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W5 - RAG Freshness Weighting\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W5.1: Verified all 3 archives have iteration metadata\n- W5.2: Added prefer_recent parameter and _recency_score to archive.py\n- W5.3: context.py uses prefer_recent=True by default\n- W5.4: scripts/test_rag_recency.py confirms 0.1.4 content promoted over 0.1.2\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W5.status = "complete" | .workstreams.W5.completed_at = $ts | .current_workstream = "W6"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1437,12 +1437,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W6 — Two-Pass Generation (Experimental Flag)
+### W6 - Two-Pass Generation (Experimental Flag)
 
 **Executor:** Gemini CLI
 **Wall clock target:** 90 min (partial ship acceptable)
 
-#### W6.1 — Outline generator
+#### W6.1 - Outline generator
 
 Gemini creates a new function `generate_outline(artifact_type, seed, context)` in `src/iao/artifacts/loop.py`:
 
@@ -1450,7 +1450,7 @@ Gemini creates a new function `generate_outline(artifact_type, seed, context)` i
 - Prompt: "Produce an outline for a {artifact_type} document with JSON schema: {sections: [{id, title, summary, target_words}, ...]}"
 - Returns parsed outline dict
 
-#### W6.2 — Section generator
+#### W6.2 - Section generator
 
 New function `generate_section(section, seed, context, artifact_type)`:
 
@@ -1458,15 +1458,15 @@ New function `generate_section(section, seed, context, artifact_type)`:
 - Retrieves RAG context filtered to the section's topic
 - Calls QwenClient with `max_tokens` enforcing the section's target_words × ~1.3
 
-#### W6.3 — Assembly function
+#### W6.3 - Assembly function
 
 `assemble_from_sections(sections_text, artifact_type, metadata)` concatenates with proper headers.
 
-#### W6.4 — CLI `--two-pass` flag
+#### W6.4 - CLI `--two-pass` flag
 
 Gemini edits `src/iao/cli.py` to add `--two-pass` flag to `iteration design` and `iteration plan` subcommands. Single-pass stays default.
 
-#### W6.5 — Smoke test
+#### W6.5 - Smoke test
 
 ```fish
 cat > scripts/smoke_two_pass.py <<'PYEOF'
@@ -1480,7 +1480,7 @@ try:
     for s in outline.get('sections', [])[:3]:
         print(f"  {s.get('id')}: {s.get('title')}")
 except NotImplementedError:
-    print("Two-pass is partial ship (outline only) — OK")
+    print("Two-pass is partial ship (outline only) - OK")
 PYEOF
 
 python3 scripts/smoke_two_pass.py
@@ -1489,7 +1489,7 @@ python3 scripts/smoke_two_pass.py
 **Partial ship criterion:** If W6 is blowing past 75 min, ship only the outline generator + CLI flag, leave section generation as `NotImplementedError`. Mark W6 status `partial` in checkpoint.
 
 ```fish
-printf '\n## W6 — Two-Pass Generation (Experimental)\n\n**Status:** COMPLETE (or PARTIAL)\n**Wall clock:** ~XX min\n\nActions:\n- W6.1: generate_outline function in loop.py\n- W6.2: generate_section function in loop.py\n- W6.3: assemble_from_sections function in loop.py\n- W6.4: --two-pass flag added to iao iteration design/plan\n- W6.5: Smoke test scripts/smoke_two_pass.py\n- Flag behind experimental; single-pass remains default\n\nDiscrepancies: (if partial, note what was deferred)\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W6 - Two-Pass Generation (Experimental)\n\n**Status:** COMPLETE (or PARTIAL)\n**Wall clock:** ~XX min\n\nActions:\n- W6.1: generate_outline function in loop.py\n- W6.2: generate_section function in loop.py\n- W6.3: assemble_from_sections function in loop.py\n- W6.4: --two-pass flag added to iao iteration design/plan\n- W6.5: Smoke test scripts/smoke_two_pass.py\n- Flag behind experimental; single-pass remains default\n\nDiscrepancies: (if partial, note what was deferred)\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W6.status = "complete" | .workstreams.W6.completed_at = $ts | .current_workstream = "W7"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1497,12 +1497,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W7 — Component Checklist (BUNDLE_SPEC §22)
+### W7 - Component Checklist (BUNDLE_SPEC §22)
 
 **Executor:** Gemini CLI
 **Wall clock target:** 60 min
 
-#### W7.1 — Event log instrumentation audit
+#### W7.1 - Event log instrumentation audit
 
 ```fish
 # Find all places where model calls, CLI commands, tool calls happen
@@ -1533,7 +1533,7 @@ def log_event(event_type: str, component: str, task: str, status: str, **kwargs)
 
 Add this helper to `src/iao/logger.py` or equivalent and call at each instrumented site.
 
-#### W7.2 — Components section generator
+#### W7.2 - Components section generator
 
 ```fish
 mkdir -p src/iao/bundle
@@ -1599,7 +1599,7 @@ def generate_components_section(iteration: str, event_log_path: Path = None) -> 
 PYEOF
 ```
 
-#### W7.3 — BUNDLE_SPEC expansion to 22 sections
+#### W7.3 - BUNDLE_SPEC expansion to 22 sections
 
 ```fish
 # Read current bundle.py
@@ -1616,16 +1616,16 @@ Gemini edits `src/iao/bundle.py` to:
 sed -i 's/len(BUNDLE_SPEC) != 21/len(BUNDLE_SPEC) != 22/' src/iao/postflight/bundle_quality.py 2>/dev/null
 ```
 
-#### W7.4 — ADR amendment
+#### W7.4 - ADR amendment
 
 ```fish
 printf '\n### iaomw-ADR-028 Amendment (0.1.7)\n\nBUNDLE_SPEC expanded from 21 to 22 sections. §22 "Agentic Components" auto-generated from the iao event log at iteration close. Provides per-run audit trail of every model call, agent interaction, CLI command, and tool invocation. Addresses Kyle 0.1.4 run report note #1 about component traceability.\n' >> docs/harness/base.md
 ```
 
-#### W7.5 — Build log and checkpoint
+#### W7.5 - Build log and checkpoint
 
 ```fish
-printf '\n## W7 — Component Checklist (BUNDLE_SPEC §22)\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W7.1: Added log_event helper, instrumented model/CLI/tool call sites\n- W7.2: Created src/iao/bundle/components_section.py\n- W7.3: BUNDLE_SPEC expanded to 22 sections\n- W7.4: ADR-028 amendment in base.md\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W7 - Component Checklist (BUNDLE_SPEC §22)\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W7.1: Added log_event helper, instrumented model/CLI/tool call sites\n- W7.2: Created src/iao/bundle/components_section.py\n- W7.3: BUNDLE_SPEC expanded to 22 sections\n- W7.4: ADR-028 amendment in base.md\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W7.status = "complete" | .workstreams.W7.completed_at = $ts | .current_workstream = "W8"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1633,19 +1633,19 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W8 — OpenClaw + NemoClaw Ollama-Native Rebuild
+### W8 - OpenClaw + NemoClaw Ollama-Native Rebuild
 
 **Executor:** Gemini CLI
 **Wall clock target:** 120 min
 
-#### W8.1 — OpenClaw rebuild
+#### W8.1 - OpenClaw rebuild
 
 ```fish
 # DELETE the old stub
 rm src/iao/agents/openclaw.py
 
 cat > src/iao/agents/openclaw.py <<'PYEOF'
-"""OpenClaw — Qwen/Ollama-native execution primitive.
+"""OpenClaw - Qwen/Ollama-native execution primitive.
 
 iao 0.1.7 W8 rebuild. NO dependency on open-interpreter, tiktoken, or Rust.
 Pure Python stdlib + iao's existing QwenClient.
@@ -1724,13 +1724,13 @@ class OpenClawSession:
 PYEOF
 ```
 
-#### W8.2 — NemoClaw rebuild
+#### W8.2 - NemoClaw rebuild
 
 ```fish
 rm src/iao/agents/nemoclaw.py
 
 cat > src/iao/agents/nemoclaw.py <<'PYEOF'
-"""NemoClaw — Nemotron-driven orchestrator for OpenClaw sessions.
+"""NemoClaw - Nemotron-driven orchestrator for OpenClaw sessions.
 
 iao 0.1.7 W8 rebuild. Routes tasks to OpenClaw sessions by role using
 Nemotron classification. Replaces the 0.1.4 stub that raised NotImplementedError.
@@ -1772,7 +1772,7 @@ class NemoClawOrchestrator:
 PYEOF
 ```
 
-#### W8.3 — Role definitions
+#### W8.3 - Role definitions
 
 ```fish
 cat > src/iao/agents/roles/base_role.py <<'PYEOF'
@@ -1788,7 +1788,7 @@ class AgentRole:
 PYEOF
 
 cat > src/iao/agents/roles/assistant.py <<'PYEOF'
-"""Assistant — general-purpose helper role."""
+"""Assistant - general-purpose helper role."""
 from iao.agents.roles.base_role import AgentRole
 
 
@@ -1800,7 +1800,7 @@ ASSISTANT_ROLE = AgentRole(
 PYEOF
 
 cat > src/iao/agents/roles/code_runner.py <<'PYEOF'
-"""Code runner — role for code execution tasks."""
+"""Code runner - role for code execution tasks."""
 from iao.agents.roles.base_role import AgentRole
 
 
@@ -1812,7 +1812,7 @@ CODE_RUNNER_ROLE = AgentRole(
 PYEOF
 
 cat > src/iao/agents/roles/reviewer.py <<'PYEOF'
-"""Reviewer — role for reviewing iao artifacts (full implementation deferred to 0.1.8)."""
+"""Reviewer - role for reviewing iao artifacts (full implementation deferred to 0.1.8)."""
 from iao.agents.roles.base_role import AgentRole
 
 
@@ -1824,11 +1824,11 @@ REVIEWER_ROLE = AgentRole(
 PYEOF
 ```
 
-#### W8.4 — Smoke tests
+#### W8.4 - Smoke tests
 
 ```fish
 cat > scripts/smoke_openclaw.py <<'PYEOF'
-"""Smoke test OpenClaw — Ollama-native, no open-interpreter."""
+"""Smoke test OpenClaw - Ollama-native, no open-interpreter."""
 import sys
 from iao.agents.openclaw import OpenClawSession
 
@@ -1865,7 +1865,7 @@ if __name__ == "__main__":
 PYEOF
 
 cat > scripts/smoke_nemoclaw.py <<'PYEOF'
-"""Smoke test NemoClaw — orchestration via Nemotron."""
+"""Smoke test NemoClaw - orchestration via Nemotron."""
 import sys
 from iao.agents.nemoclaw import NemoClawOrchestrator
 
@@ -1901,7 +1901,7 @@ python3 scripts/smoke_nemoclaw.py
 # Expected: PASS on dispatch test
 ```
 
-#### W8.5 — Architecture docs
+#### W8.5 - Architecture docs
 
 Gemini creates `docs/harness/agents-architecture.md` ≥1500 words documenting:
 - OpenClaw as execution primitive (Qwen + subprocess sandbox, NO open-interpreter)
@@ -1914,16 +1914,16 @@ Gemini creates `docs/harness/agents-architecture.md` ≥1500 words documenting:
 # Gemini writes the file directly via its Write tool
 ```
 
-#### W8.6 — ADR-040
+#### W8.6 - ADR-040
 
 ```fish
 printf '\n### iaomw-ADR-040: OpenClaw/NemoClaw Ollama-Native Rebuild\n\n- **Context:** iao 0.1.4 W5 shipped OpenClaw and NemoClaw as stubs blocked by open-interpreter dependency on tiktoken which requires Rust to build on Python 3.14.\n- **Decision:** 0.1.7 W8 rebuilds both as Qwen/Ollama-native. OpenClaw uses QwenClient + subprocess sandbox. NemoClaw uses Nemotron classification for task routing. No open-interpreter, no tiktoken, no Rust.\n- **Rationale:** iao already has the streaming QwenClient (0.1.7 W1). Subprocess sandboxing is adequate for Phase 0. Nemotron classification is proven (0.1.4 W2).\n- **Consequences:** src/iao/agents/ now functional. Smoke tests pass. Review agent role and telegram bridge deferred to 0.1.8.\n' >> docs/harness/base.md
 ```
 
-#### W8.7 — Build log and checkpoint
+#### W8.7 - Build log and checkpoint
 
 ```fish
-printf '\n## W8 — OpenClaw/NemoClaw Ollama-Native Rebuild\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W8.1: Rewrote src/iao/agents/openclaw.py with QwenClient + subprocess sandbox\n- W8.2: Rewrote src/iao/agents/nemoclaw.py with Nemotron classification\n- W8.3: Role definitions (assistant, code_runner, reviewer stub)\n- W8.4: scripts/smoke_openclaw.py and smoke_nemoclaw.py pass\n- W8.5: docs/harness/agents-architecture.md created (≥1500 words)\n- W8.6: iaomw-ADR-040 in base.md\n- No open-interpreter dependency anywhere (verified via grep)\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
+printf '\n## W8 - OpenClaw/NemoClaw Ollama-Native Rebuild\n\n**Status:** COMPLETE\n**Wall clock:** ~XX min\n\nActions:\n- W8.1: Rewrote src/iao/agents/openclaw.py with QwenClient + subprocess sandbox\n- W8.2: Rewrote src/iao/agents/nemoclaw.py with Nemotron classification\n- W8.3: Role definitions (assistant, code_runner, reviewer stub)\n- W8.4: scripts/smoke_openclaw.py and smoke_nemoclaw.py pass\n- W8.5: docs/harness/agents-architecture.md created (≥1500 words)\n- W8.6: iaomw-ADR-040 in base.md\n- No open-interpreter dependency anywhere (verified via grep)\n\nDiscrepancies: none\n\n---\n\n' >> docs/iterations/0.1.7/iao-build-log-0.1.7.md
 
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W8.status = "complete" | .workstreams.W8.completed_at = $ts | .current_workstream = "W9"' .iao-checkpoint.json > .iao-checkpoint.json.tmp
 mv .iao-checkpoint.json.tmp .iao-checkpoint.json
@@ -1931,12 +1931,12 @@ mv .iao-checkpoint.json.tmp .iao-checkpoint.json
 
 ---
 
-### W9 — Dogfood + Closing Sequence
+### W9 - Dogfood + Closing Sequence
 
 **Executor:** Gemini CLI
 **Wall clock target:** 75 min
 
-#### W9.1 — Build log generation (Qwen via repaired loop)
+#### W9.1 - Build log generation (Qwen via repaired loop)
 
 ```fish
 ./bin/iao iteration build-log 0.1.7
@@ -1952,7 +1952,7 @@ wc -w docs/iterations/0.1.7/iao-build-log-0.1.7.md
 # Expected: ≤1500 words (target), ≥500 words (substantive)
 ```
 
-#### W9.2 — Report generation
+#### W9.2 - Report generation
 
 ```fish
 ./bin/iao iteration report 0.1.7
@@ -1962,14 +1962,14 @@ wc -w docs/iterations/0.1.7/iao-report-0.1.7.md
 # Expected: ≤1000 words
 ```
 
-#### W9.3 — Post-flight validation
+#### W9.3 - Post-flight validation
 
 ```fish
 ./bin/iao doctor postflight
 # Expected: PASS for bundle_quality (22 sections), run_report_quality, structural_gates, gemini_compat, ten_pillars_present, readme_current
 ```
 
-#### W9.4 — Iteration close
+#### W9.4 - Iteration close
 
 ```fish
 ./bin/iao iteration close
@@ -1979,7 +1979,7 @@ wc -w docs/iterations/0.1.7/iao-report-0.1.7.md
 # Exits without --confirm (Kyle's action)
 ```
 
-#### W9.5 — Bug fix validation
+#### W9.5 - Bug fix validation
 
 Manually inspect generated artifacts:
 
@@ -2002,7 +2002,7 @@ wc -c docs/iterations/0.1.7/iao-bundle-0.1.7.md
 # Expected: ≥100 KB
 ```
 
-#### W9.6 — Evaluator dogfood check
+#### W9.6 - Evaluator dogfood check
 
 ```fish
 # Run the evaluator against our own generated artifacts
@@ -2023,11 +2023,11 @@ for artifact_name in ['iao-build-log-0.1.7.md', 'iao-report-0.1.7.md']:
 # Expected: clean or warn (not reject)
 ```
 
-#### W9.7 — CHANGELOG
+#### W9.7 - CHANGELOG
 
 Gemini appends 0.1.7 entry summarizing all 10 workstreams.
 
-#### W9.8 — Stop in review pending state
+#### W9.8 - Stop in review pending state
 
 ```fish
 jq --arg ts (date -u +%Y-%m-%dT%H:%M:%SZ) '.workstreams.W9.status = "complete" | .workstreams.W9.completed_at = $ts | .current_workstream = "review_pending" | .completed_at = $ts' .iao-checkpoint.json > .iao-checkpoint.json.tmp
@@ -2039,7 +2039,7 @@ ITERATION 0.1.7 EXECUTION COMPLETE
 ================================================
 Run report: docs/iterations/0.1.7/iao-run-report-0.1.7.md
 Bundle:     docs/iterations/0.1.7/iao-bundle-0.1.7.md (22 sections)
-Workstreams: 10/10 complete (or partial — see build log)
+Workstreams: 10/10 complete (or partial - see build log)
 
 Telegram notification sent to Kyle.
 
@@ -2058,7 +2058,7 @@ Until --confirm, iteration is in PENDING REVIEW state.
 
 ---
 
-## Section D — Post-flight (after Kyle's --confirm)
+## Section D - Post-flight (after Kyle's --confirm)
 
 ```fish
 ./bin/iao iteration close --confirm
@@ -2076,12 +2076,12 @@ Kyle then manually commits (Pillar 0):
 ```fish
 git status  # if git-tracked at this point
 # git add -A
-# git commit -m "iao 0.1.7: Let Qwen Cook — loop repair, evaluator, component checklist, OpenClaw rebuild"
+# git commit -m "iao 0.1.7: Let Qwen Cook - loop repair, evaluator, component checklist, OpenClaw rebuild"
 ```
 
 ---
 
-## Section E — Rollback
+## Section E - Rollback
 
 ```fish
 tmux kill-session -t iao-0.1.7 2>/dev/null
@@ -2099,7 +2099,7 @@ Do NOT rollback for: partial W6 (expected), OpenClaw smoke test flakiness (accep
 
 ---
 
-## Section F — Wall clock targets
+## Section F - Wall clock targets
 
 | Workstream | Target | Cumulative |
 |---|---|---|
@@ -2119,8 +2119,8 @@ Soft cap 10 hours, estimate 11:45. No hard cap. W6 is the primary partial-ship c
 
 ---
 
-## Section G — Sign-off
+## Section G - Sign-off
 
 This plan is immutable once W0 begins. GEMINI.md and CLAUDE.md are the executor briefs; both reference this plan's Section C for execution detail. Either executor can run 0.1.7.
 
-— iao 0.1.7 planning chat, 2026-04-09
+- iao 0.1.7 planning chat, 2026-04-09

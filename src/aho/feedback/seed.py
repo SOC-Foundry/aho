@@ -1,4 +1,4 @@
-"""Seed extraction — reads Kyle's notes and debts to seed the next iteration.
+"""Seed extraction - reads Kyle's notes and debts to seed the next iteration.
 
 aho 0.1.13: updated to use new artifact paths.
 """

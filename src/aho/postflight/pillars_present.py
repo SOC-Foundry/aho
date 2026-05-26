@@ -33,7 +33,7 @@ def _check_trident(content: str) -> list[CheckResult]:
             ("trident_classdef_prong", "classDef prong"),
             ("trident_edges", "edge arrows"),
         ]:
-            checks.append(CheckResult(name=name, status="fail", message=f"Skipped — Trident heading missing"))
+            checks.append(CheckResult(name=name, status="fail", message=f"Skipped - Trident heading missing"))
         return checks
 
     # Extract §3 content (from heading to next §)
@@ -53,7 +53,7 @@ def _check_trident(content: str) -> list[CheckResult]:
     checks.append(CheckResult(
         name="trident_graph_bt",
         status="ok" if has_graph_bt else "fail",
-        message="graph BT direction present" if has_graph_bt else "graph BT missing — Trident must be bottom-to-top",
+        message="graph BT direction present" if has_graph_bt else "graph BT missing - Trident must be bottom-to-top",
     ))
 
     # Check 4: classDef shaft
@@ -129,7 +129,7 @@ def check():
                 message=f"Design doc not found: {design_path.name}",
             ))
 
-        # Check README — all 11 pillars required
+        # Check README - all 11 pillars required
         readme_path = root / "README.md"
         if readme_path.exists():
             readme_content = readme_path.read_text()

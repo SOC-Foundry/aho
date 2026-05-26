@@ -1,4 +1,4 @@
-# Report — aho 0.2.10
+# Report - aho 0.2.10
 
 **Generated:** 2026-04-12T05:45:27Z
 **Iteration:** 0.2.10
@@ -156,7 +156,7 @@ Artifacts: Missing artifacts: report.md |
 | mcp_canonical_registry_verify | ok | all 9 MCP packages registry-verified |
 | mcp_sources_aligned | ok | MCP sources aligned: 9 entries match |
 | pillars_present | fail | 1 errors: Design doc missing §3 (Trident) |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-12T05:45:18.210776+00:00 < iteration start 2026-04-12T07:00:00Z |
 | run_complete | deferred | Sign-off incomplete: No Sign-off section found in run report |
 | run_quality | fail | 2 quality check failures |

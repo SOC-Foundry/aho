@@ -1,4 +1,4 @@
-"""Tests for gate verbosity — per-check CheckResult detail.
+"""Tests for gate verbosity - per-check CheckResult detail.
 
 Minimum 5 cases per W4 plan:
 1. run_quality emits per-check results

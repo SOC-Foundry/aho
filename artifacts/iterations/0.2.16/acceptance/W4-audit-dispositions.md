@@ -1,4 +1,4 @@
-# W4 Audit Dispositions — 0.2.16
+# W4 Audit Dispositions - 0.2.16
 
 Audit archive: `artifacts/iterations/0.2.16/audit/W4.json`
 Audit result: `pass`
@@ -17,14 +17,14 @@ with the sealed archive so the record is self-describing at W4 close.
 
 ## Dispositions (verbatim)
 
-- **AF001** (Deviation count coherence — `W4.json` documents 7 deviations
-  from brief, drafter recap said 6) — accepted. Disposition: Acknowledged.
+- **AF001** (Deviation count coherence - `W4.json` documents 7 deviations
+  from brief, drafter recap said 6) - accepted. Disposition: Acknowledged.
   Drafter recap was approximate; archive count is canonical. No action;
   archive is sealed; no carry-forward needed. Severity: info.
 
-- **AF002** (CLI gap on `pending_audit` state — Pattern C state machine
+- **AF002** (CLI gap on `pending_audit` state - Pattern C state machine
   includes `pending_audit` but `aho iteration workstream` lacks an explicit
-  subcommand) — accepted as carry-forward. Target: 0.2.x cleanup (specific
+  subcommand) - accepted as carry-forward. Target: 0.2.x cleanup (specific
   iteration TBD; possibly 0.2.17 if it surfaces in containerization work,
   possibly its own future iteration). Future ADR candidate. Severity: info.
   Pairs with the analogous iteration-level CLI gap surfaced during 0.2.16

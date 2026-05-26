@@ -1,0 +1,15 @@
+#!/usr/bin/env fish
+# aho-install-tier-manifest - detect VRAM, classify tier, write
+# ~/.config/aho/tier.json (0.3.1 W2 D6; closes F-0.2.18-W2-003).
+#
+# Usage:
+#   aho-install-tier-manifest          Write the manifest.
+#   aho-install-tier-manifest --print  Print what would be written; no write.
+#
+# Pillar 4: wrappers are the tool surface. Delegates to aho.tier_manifest,
+# which builds on aho.tier_detect for VRAM probing + classification.
+
+set -g project_root (dirname (dirname (realpath (status filename))))
+cd $project_root
+set -x PYTHONPATH "$project_root/src" $PYTHONPATH
+exec python3 -m aho.tier_manifest $argv

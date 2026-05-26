@@ -1,4 +1,4 @@
-"""W4 D4 — role-collapse trip-wire brick acceptance tests.
+"""W4 D4 - role-collapse trip-wire brick acceptance tests.
 
 Verifies:
   - tripwire_fired_count > 0 → red, with role_pair_snapshot surfaced

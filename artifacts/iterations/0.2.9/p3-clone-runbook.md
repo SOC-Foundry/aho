@@ -1,4 +1,4 @@
-# P3 Clone Runbook — aho 0.2.9 W8
+# P3 Clone Runbook - aho 0.2.9 W8
 
 **Date:** 2026-04-11
 **Target machine:** tsP3-cos (ThinkStation P3, Arch Linux)
@@ -72,17 +72,17 @@ ls bin/
 
 | Step | What | Expected outcome on P3 |
 |---|---|---|
-| 1 | Platform check | PASS — Arch Linux + fish |
-| 2 | Resolve project root | PASS — ~/Development/Projects/aho |
-| 3 | Create XDG dirs | PASS — idempotent mkdir |
-| 4 | Generate .mcp.json from template | PASS — .mcp.json.tpl → .mcp.json with P3 path |
+| 1 | Platform check | PASS - Arch Linux + fish |
+| 2 | Resolve project root | PASS - ~/Development/Projects/aho |
+| 3 | Create XDG dirs | PASS - idempotent mkdir |
+| 4 | Generate .mcp.json from template | PASS - .mcp.json.tpl → .mcp.json with P3 path |
 | 5 | Age key | PASS if age installed, CAPABILITY GAP if not |
 | 6 | pip install | PASS if python + pip present |
 | 7 | Symlink bin wrappers | PASS |
-| 8 | MCP server fleet (npm) | May FAIL on missing npm packages — expected |
+| 8 | MCP server fleet (npm) | May FAIL on missing npm packages - expected |
 | 9 | Systemd user services | PASS if templates exist |
 | 10 | Verify linger | CAPABILITY GAP if linger not enabled |
-| 11 | Fish config marker | PASS — adds AHO_PROJECT_ROOT block |
+| 11 | Fish config marker | PASS - adds AHO_PROJECT_ROOT block |
 | 12 | Summary | Reached only if all above pass |
 
 **Expected capability gaps (not failures):**
@@ -111,7 +111,7 @@ cat .mcp.json | python -m json.tool | grep args
 | 2 aur | bin/aho-aur install | Likely no-op (aur-packages.txt is empty). |
 | 3 python | bin/aho-python install | pip install -e . Should pass. |
 | 4 models | bin/aho-models install | Pulls 4 Ollama models (~15GB). Requires ollama running. May take 10+ min on first run. |
-| 5 secrets | bin/aho-secrets-init | CAPABILITY GAP — fernet store not initialized. Expected halt point. |
+| 5 secrets | bin/aho-secrets-init | CAPABILITY GAP - fernet store not initialized. Expected halt point. |
 | 6 mcp | bin/aho-mcp install | npm install for 8 MCP server packages. |
 | 7 systemd | bin/aho-systemd install | Installs 4 user services. P3 SKIPS telegram inbound per W0 decision 2. |
 | 8 symlinks | inline | Links bin/ wrappers to ~/.local/bin/ |
@@ -119,16 +119,16 @@ cat .mcp.json | python -m json.tool | grep args
 
 **Secrets gap resolution (if you want to proceed past step 5):**
 ```fish
-# Unlock with a new passphrase (remember it — needed after reboots)
+# Unlock with a new passphrase (remember it - needed after reboots)
 aho secret unlock
 
 # Set minimum secrets for outbound-only operation
 aho secret set ahomw telegram_bot_token "TOKEN"
 aho secret set ahomw telegram_chat_id "CHAT_ID"
-# Or skip telegram entirely — secrets-init will halt but install.fish
+# Or skip telegram entirely - secrets-init will halt but install.fish
 # resumes from step 5 on re-run
 
-# Re-run install.fish — resumes from last failed step
+# Re-run install.fish - resumes from last failed step
 ./install.fish
 ```
 
@@ -137,7 +137,7 @@ P3 must NOT run the telegram inbound daemon. getUpdates cannot race between two 
 ```fish
 systemctl --user stop aho-telegram
 systemctl --user disable aho-telegram
-# Or: leave it enabled but don't set telegram secrets — daemon will
+# Or: leave it enabled but don't set telegram secrets - daemon will
 # print "missing credentials" and idle harmlessly
 ```
 

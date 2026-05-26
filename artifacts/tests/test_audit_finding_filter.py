@@ -1,10 +1,10 @@
-"""W4 D1 — deterministic post-hoc filter on RAG-aware audit findings.
+"""W4 D1 - deterministic post-hoc filter on RAG-aware audit findings.
 
 Acceptance gates from the W4 plan doc:
 
 1. Suppresses the F-0.2.17-W1-003 fake-ID finding from the W2 self-audit-rag
    sealed artifact (registered anchor + fake-ID phrase).
-2. Does NOT over-suppress the W3 self-audit (sealed) — three findings
+2. Does NOT over-suppress the W3 self-audit (sealed) - three findings
    present, none have a fake-ID phrase, all stay active.
 3. Synthetic positive: registered anchor + fake-ID phrase → suppress with
    the right structured record.
@@ -59,7 +59,7 @@ W3_SELF_AUDIT_PATH = (
 
 
 # ---------------------------------------------------------------------------
-# Acceptance gate 1 — W2 self-audit-rag fake-ID finding suppresses
+# Acceptance gate 1 - W2 self-audit-rag fake-ID finding suppresses
 # ---------------------------------------------------------------------------
 
 def test_filter_suppresses_w2_self_audit_rag_fake_id_finding():
@@ -68,7 +68,7 @@ def test_filter_suppresses_w2_self_audit_rag_fake_id_finding():
     suppress because:
       - F-0.2.17-W1-003 appears as `registered` in rag_enrichment.references
       - The description contains 'does not look real' and 'matches naming
-        conventions' — both fake-ID phrases.
+        conventions' - both fake-ID phrases.
     """
     payload = json.loads(W2_SELF_AUDIT_RAG_PATH.read_text())
     findings = payload["findings"]
@@ -94,7 +94,7 @@ def test_filter_suppresses_w2_self_audit_rag_fake_id_finding():
 
 
 # ---------------------------------------------------------------------------
-# Acceptance gate 2 — W3 self-audit findings are NOT over-suppressed
+# Acceptance gate 2 - W3 self-audit findings are NOT over-suppressed
 # ---------------------------------------------------------------------------
 
 def test_filter_does_not_oversuppress_w3_self_audit():
@@ -121,7 +121,7 @@ def test_filter_does_not_oversuppress_w3_self_audit():
 
 
 # ---------------------------------------------------------------------------
-# Acceptance gate 3 — synthetic positive (registered + fake-ID phrase)
+# Acceptance gate 3 - synthetic positive (registered + fake-ID phrase)
 # ---------------------------------------------------------------------------
 
 def test_filter_suppresses_synthetic_registered_plus_fake_phrase():
@@ -155,13 +155,13 @@ def test_filter_suppresses_synthetic_registered_plus_fake_phrase():
 
 
 # ---------------------------------------------------------------------------
-# Acceptance gate 4 — synthetic negative (unverified + fake-ID phrase)
+# Acceptance gate 4 - synthetic negative (unverified + fake-ID phrase)
 # ---------------------------------------------------------------------------
 
 def test_filter_does_not_suppress_unverified_anchor_with_fake_phrase():
     """Inject {id: AF-1, description: 'F-0.2.17-W9-999 cannot be
     corroborated'} against context where F-0.2.17-W9-999 is NOT in
-    registered-references. Filter must NOT suppress — auditor's flag of an
+    registered-references. Filter must NOT suppress - auditor's flag of an
     unverified ID is legitimate."""
     finding = {
         "id": "AF-1",
@@ -190,7 +190,7 @@ def test_filter_does_not_suppress_unverified_anchor_with_fake_phrase():
 
 def test_filter_keeps_finding_when_phrase_matches_but_no_anchor_in_description():
     """Fake-ID phrase present but description has no anchor token at all.
-    Must NOT suppress — there's no registered anchor being flagged."""
+    Must NOT suppress - there's no registered anchor being flagged."""
     finding = {
         "id": "AF-1",
         "severity": "info",
@@ -209,7 +209,7 @@ def test_filter_keeps_finding_when_phrase_matches_but_no_anchor_in_description()
 
 def test_filter_keeps_finding_when_anchor_registered_but_no_fake_phrase():
     """Registered anchor present in description but no fake-ID phrase.
-    Must NOT suppress — the auditor is flagging something else about a
+    Must NOT suppress - the auditor is flagging something else about a
     known ID, which is legitimate."""
     finding = {
         "id": "G081",
@@ -351,7 +351,7 @@ def test_audit_integration_filter_bypasses_structural_pre_checks(monkeypatch):
 
     assert result["finding_filter"]["suppressed_count"] == 1
     # AUDIT-PILLAR11 from structural pre-check (regex-grounded) is NOT
-    # filtered — it flows through.
+    # filtered - it flows through.
     pillar11_ids = [f["id"] for f in result["findings"]]
     assert "AUDIT-PILLAR11" in pillar11_ids
 

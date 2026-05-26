@@ -242,7 +242,7 @@ def build_bundle(iteration):
     lines += ["## §11. .aho.json", ""]
     lines += _embed(".aho.json", PROJECT_DIR / ".aho.json", lang="json")
 
-    # §12 Sidecars — walk iteration dir for .md files not used by §1-§5
+    # §12 Sidecars - walk iteration dir for .md files not used by §1-§5
     lines += ["## §12. Sidecars", ""]
     canonical_prefixes = {"design", "plan", "build-log", "report", "run", "bundle"}
     iter_dir_path = DOCS_DIR / "iterations" / version

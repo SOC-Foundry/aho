@@ -31,6 +31,6 @@
       "note": "New request succeeds. Server is healthy. Response empty due to Qwen thinking-mode with low num_predict."
     }
   ],
-  "evidence_summary": "Client-side timeout triggers cleanly (exactly at specified 3s). No zombie inference — Ollama aborts server-side processing when client disconnects and unloads the model. Server remains healthy for new requests. Behavior is better than required: not only no zombie, but active cleanup.",
+  "evidence_summary": "Client-side timeout triggers cleanly (exactly at specified 3s). No zombie inference - Ollama aborts server-side processing when client disconnects and unloads the model. Server remains healthy for new requests. Behavior is better than required: not only no zombie, but active cleanup.",
   "server_side_cleanup": "Ollama unloads model from VRAM on client disconnect. This is aggressive but prevents resource leaks."
 }

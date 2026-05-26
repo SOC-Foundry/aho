@@ -21,9 +21,9 @@
       "total_wall_clock_s": 49.39,
       "sequential_sum_s": 76.13,
       "parallelism_ratio": 0.65,
-      "note": "Ratio 0.65 indicates partial overlap — Ollama processes concurrent requests with some degree of parallelism rather than strict serial queuing. Both requests completed successfully."
+      "note": "Ratio 0.65 indicates partial overlap - Ollama processes concurrent requests with some degree of parallelism rather than strict serial queuing. Both requests completed successfully."
     }
   ],
-  "evidence_summary": "Ollama handles concurrent requests gracefully — no 503, no rejection. Both requests complete successfully. Behavior is partially parallel (ratio 0.65), not purely sequential. Server remains stable under concurrent load.",
+  "evidence_summary": "Ollama handles concurrent requests gracefully - no 503, no rejection. Both requests complete successfully. Behavior is partially parallel (ratio 0.65), not purely sequential. Server remains stable under concurrent load.",
   "empty_response_note": "Both responses returned empty content due to Qwen 3.5 thinking-mode consuming num_predict budget (500 tokens). This is a Qwen-specific issue, not a queuing issue."
 }

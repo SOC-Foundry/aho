@@ -28,7 +28,7 @@
       "template_leak": false,
       "done_reason": "stop",
       "elapsed_s": 11.54,
-      "note": "Empty output — begin_of_box stop token fired immediately, cutting off all visible content. GLM wraps output in <|begin_of_box|>...<|end_of_box|>, so the begin token fires before content starts.",
+      "note": "Empty output - begin_of_box stop token fired immediately, cutting off all visible content. GLM wraps output in <|begin_of_box|>...<|end_of_box|>, so the begin token fires before content starts.",
       "thinking_present": true,
       "thinking_language": "English",
       "thinking_preview": "Got it, let's see. The user wants to classify..."
@@ -66,13 +66,13 @@
     "stop_tokens": ["<|end_of_box|>"],
     "post_processing": "Strip '<|begin_of_box|>' prefix from message.content",
     "dispatcher_change": "Add GLM family to model-family stop token lookup table. Add response post-processor for GLM.",
-    "feasibility": "Confirmed feasible. Probe 4 demonstrates the fix path works — clean content after prefix strip."
+    "feasibility": "Confirmed feasible. Probe 4 demonstrates the fix path works - clean content after prefix strip."
   },
   "thinking_field_findings": {
     "field_name": "thinking",
     "present_in_api": true,
     "language_behavior": "Chinese for identity/simple prompts. English for classification tasks. Language selection appears task-dependent.",
-    "w4_cascade_impact": "If GLM serves as Auditor, thinking field reasoning is in Chinese — not visible in cascade artifacts unless explicitly captured. Content field is in English."
+    "w4_cascade_impact": "If GLM serves as Auditor, thinking field reasoning is in Chinese - not visible in cascade artifacts unless explicitly captured. Content field is in English."
   },
-  "evidence_summary": "GLM template leak is stop-token fixable. W2 dispatcher adds <|end_of_box|> to GLM stop tokens and strips <|begin_of_box|> from response. GLM's thinking field is present in /api/chat responses (new vs W0 — either Ollama 0.20.2 added it or it was missed). Thinking language is Chinese for identity probes, English for classification. Template leak is NOT structural — it's a known GLM output pattern that Ollama doesn't handle by default."
+  "evidence_summary": "GLM template leak is stop-token fixable. W2 dispatcher adds <|end_of_box|> to GLM stop tokens and strips <|begin_of_box|> from response. GLM's thinking field is present in /api/chat responses (new vs W0 - either Ollama 0.20.2 added it or it was missed). Thinking language is Chinese for identity probes, English for classification. Template leak is NOT structural - it's a known GLM output pattern that Ollama doesn't handle by default."
 }

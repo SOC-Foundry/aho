@@ -31,7 +31,7 @@
     {
       "name": "D5: v10.66 bundle",
       "passed": true,
-      "notes": "artifacts/iterations/0.2.14/aho-bundle-0.2.14.md. 54KB — below 300-500KB target. Iteration produced fewer/smaller artifacts than 0.2.3 (637KB). All 11 sections present. Full embedded artifacts for: design, plan, acceptance archives, audit archives, vetting results, dispatch decision, smoke test traces, pipeline code, council models, council inventory, stage artifacts (summarized with key quotes)."
+      "notes": "artifacts/iterations/0.2.14/aho-bundle-0.2.14.md. 54KB - below 300-500KB target. Iteration produced fewer/smaller artifacts than 0.2.3 (637KB). All 11 sections present. Full embedded artifacts for: design, plan, acceptance archives, audit archives, vetting results, dispatch decision, smoke test traces, pipeline code, council models, council inventory, stage artifacts (summarized with key quotes)."
     },
     {
       "name": "D6: Sign-off sheet",
@@ -46,7 +46,7 @@
     {
       "name": "baseline_regression_check status",
       "passed": true,
-      "notes": "W1.5 baseline carried forward: 12 failures, 302 passed, 0 new. W2 is artifacts-only close — no code changes. Test suite hangs on daemon-dependent tests during W2 session (Ollama busy). W1.5 baseline authoritative."
+      "notes": "W1.5 baseline carried forward: 12 failures, 302 passed, 0 new. W2 is artifacts-only close - no code changes. Test suite hangs on daemon-dependent tests during W2 session (Ollama busy). W1.5 baseline authoritative."
     },
     {
       "name": "No git operations",
@@ -56,7 +56,7 @@
     {
       "name": "Gotcha registry consulted",
       "passed": true,
-      "notes": "No canonical registry file. Gotchas referenced from CLAUDE.md: G070 (no __pycache__ touch — W2 is artifacts-only), G071 (no daemon restart needed), G075/G082 (canonical paths), G079 (baseline backstop — W1.5 data carried), G081 (no celebratory framing), G083 (no new code)."
+      "notes": "No canonical registry file. Gotchas referenced from CLAUDE.md: G070 (no __pycache__ touch - W2 is artifacts-only), G071 (no daemon restart needed), G075/G082 (canonical paths), G079 (baseline backstop - W1.5 data carried), G081 (no celebratory framing), G083 (no new code)."
     },
     {
       "name": "No celebratory framing (G081)",
@@ -71,10 +71,10 @@
   ],
   "findings": [
     "Bundle at 54KB, below 300-500KB spec target. 0.2.14 was a 4-workstream wiring iteration with less code output than 0.2.3 (6 workstreams, 637KB). All substance present; size gap is structural (fewer artifacts, not missing content).",
-    "Council health formula returns 35.3/100 — same as 0.2.12 and 0.2.13. Formula uses inventory declared status, not W1 vetting results (which found 12/16 operational). Formula revision is a carry-forward.",
+    "Council health formula returns 35.3/100 - same as 0.2.12 and 0.2.13. Formula uses inventory declared status, not W1 vetting results (which found 12/16 operational). Formula revision is a carry-forward.",
     "Checkpoint corrupted with test-suite artifacts (W_V3_TEST, W_V1_COMPAT, etc.) from test_workstream_events.py not mocking find_project_root. Real workstream states (W0, W1, W1.5) are correct in checkpoint despite corruption. Cleanup is carry-forward.",
-    "W1.5 workstream_complete not yet emitted in event log (terminal event requires fresh session per protocol). W2 proceeded on Gemini's W1.5 audit pass authorization. Protocol compliance: the checkpoint shows W1.5 as pending_audit, which is technically correct — the terminal event emission was authorized but hasn't been fired. This is a minor protocol debt, not a blocking issue.",
-    "Test suite hangs during W2 session — likely daemon-dependent tests blocking on Ollama (which may be loaded with Qwen from prior smoke tests). W1.5 baseline (12 failures, 302 passed, 0 new) carried forward as authoritative. No code changes in W2."
+    "W1.5 workstream_complete not yet emitted in event log (terminal event requires fresh session per protocol). W2 proceeded on Gemini's W1.5 audit pass authorization. Protocol compliance: the checkpoint shows W1.5 as pending_audit, which is technically correct - the terminal event emission was authorized but hasn't been fired. This is a minor protocol debt, not a blocking issue.",
+    "Test suite hangs during W2 session - likely daemon-dependent tests blocking on Ollama (which may be loaded with Qwen from prior smoke tests). W1.5 baseline (12 failures, 302 passed, 0 new) carried forward as authoritative. No code changes in W2."
   ],
   "deliverables": {
     "council_health": "35.3/100 (stale formula)",

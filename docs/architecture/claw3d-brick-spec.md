@@ -9,16 +9,16 @@
 
 ## What claw3d is
 
-claw3d is aho's per-component dashboard surface. Each component renders as a single brick — green when healthy, red when a fault predicate matches, unknown when the component has no signal in the observation window. The brick layer reads aggregated OTEL state via `aho.dashboard.otel_aggregator`; no brick polls Ollama, ChromaDB, systemd, or any external surface directly.
+claw3d is aho's per-component dashboard surface. Each component renders as a single brick - green when healthy, red when a fault predicate matches, unknown when the component has no signal in the observation window. The brick layer reads aggregated OTEL state via `aho.dashboard.otel_aggregator`; no brick polls Ollama, ChromaDB, systemd, or any external surface directly.
 
-Brick predicates are pure functions over a `signal_state: dict` shape (`{counters, presence, flags}`). Predicates are deliberately small — anything fancier moves into the aggregator so brick logic stays inspectable. The canonical synthetic state fixture (`bricks.synthetic_signal_state(healthy=...)`) drives tests, probes, and dashboard demonstrations without requiring a live OTEL collector.
+Brick predicates are pure functions over a `signal_state: dict` shape (`{counters, presence, flags}`). Predicates are deliberately small - anything fancier moves into the aggregator so brick logic stays inspectable. The canonical synthetic state fixture (`bricks.synthetic_signal_state(healthy=...)`) drives tests, probes, and dashboard demonstrations without requiring a live OTEL collector.
 
 The W4 D2 plan-doc fixed coverage at ten components. Three additional surfaces sit alongside the per-component grid:
 
-- **Materiality dashboard surfaces** (W4 D3) — four-bucket render of the ADR-0010 protocol counters.
-- **Materiality comparison surface** (W4 D5) — iteration-over-iteration comparison of the same four buckets.
-- **Role-collapse trip-wire brick** (W4 D4) — single dedicated brick rendering the Pillar 7 invariant, parallel to the per-component grid's `aho.adversarial` brick.
-- **Anti-rubber-stamp dashboard** (W4 D6) — four-surface verification dashboard.
+- **Materiality dashboard surfaces** (W4 D3) - four-bucket render of the ADR-0010 protocol counters.
+- **Materiality comparison surface** (W4 D5) - iteration-over-iteration comparison of the same four buckets.
+- **Role-collapse trip-wire brick** (W4 D4) - single dedicated brick rendering the Pillar 7 invariant, parallel to the per-component grid's `aho.adversarial` brick.
+- **Anti-rubber-stamp dashboard** (W4 D6) - four-surface verification dashboard.
 
 ---
 
@@ -28,7 +28,7 @@ Source: `src/aho/dashboard/lego/bricks.py` (W4-close sha256 `35cbb6c1a7ba24762e8
 
 Color rule (canonical): **red wins over green; if neither predicate matches, brick is unknown.** A brick that cannot decide is not green.
 
-### 1. `aho.dispatcher` — pipeline dispatcher
+### 1. `aho.dispatcher` - pipeline dispatcher
 
 Local model dispatch wrapper. Reads OTEL counters emitted by `src/aho/pipeline/dispatcher.py`.
 
@@ -39,7 +39,7 @@ Local model dispatch wrapper. Reads OTEL counters emitted by `src/aho/pipeline/d
 | Green predicate | `invocation_count > 0 AND error_count == 0` |
 | Unknown | no dispatcher activity in window |
 
-### 2. `aho.adversarial` — Adversarial Authorship dispatch (role-collapse trip-wire)
+### 2. `aho.adversarial` - Adversarial Authorship dispatch (role-collapse trip-wire)
 
 The role-collapse trip-wire surface. Same signal source as the dedicated W4 D4 trip-wire brick; this one wraps it for the per-component grid view.
 
@@ -48,9 +48,9 @@ The role-collapse trip-wire surface. Same signal source as the dedicated W4 D4 t
 | Signal keys | `aho.council.dispatch.role_collapse_tripwire_fired`, `aho.council.dispatch.invocation_count` |
 | Red predicate | `role_collapse_tripwire_fired > 0` |
 | Green predicate | `invocation_count > 0 AND role_collapse_tripwire_fired == 0` |
-| Unknown | no dispatch activity in window — invariant inactive, not violated |
+| Unknown | no dispatch activity in window - invariant inactive, not violated |
 
-### 3. `aho.workstream` — workstream events / checkpoint emit
+### 3. `aho.workstream` - workstream events / checkpoint emit
 
 Reads counters emitted by `src/aho/workstream_events.py` for state-machine event emission and checkpoint-write health.
 
@@ -61,7 +61,7 @@ Reads counters emitted by `src/aho/workstream_events.py` for state-machine event
 | Green predicate | `event_count > 0 AND checkpoint_write_error_count == 0` |
 | Unknown | no workstream events in window |
 
-### 4. `aho.secrets_client` — read-only host ↔ container bridge
+### 4. `aho.secrets_client` - read-only host ↔ container bridge
 
 Read-only counters from `src/aho/secrets_client.py`. The broker boundary's container-side liveness surface per ADR-0009.
 
@@ -72,7 +72,7 @@ Read-only counters from `src/aho/secrets_client.py`. The broker boundary's conta
 | Green predicate | `read_count > 0 AND error_count == 0` |
 | Unknown | no broker reads in window |
 
-### 5. `aho.otel` — OTEL exporter liveness
+### 5. `aho.otel` - OTEL exporter liveness
 
 Reads health of the OTEL pipeline itself: did `logs.jsonl` and `metrics.jsonl` get emit signals.
 
@@ -83,7 +83,7 @@ Reads health of the OTEL pipeline itself: did `logs.jsonl` and `metrics.jsonl` g
 | Green predicate | `logs_emitted_count > 0 AND metrics_emitted_count > 0` |
 | Unknown | OTEL pipeline silent (collector not started, host degraded) |
 
-### 6. `aho.health` — periodic /healthz + /readyz probes
+### 6. `aho.health` - periodic /healthz + /readyz probes
 
 Container-side health primitive (`src/aho/health.py`). Emits success / failure counts as the readiness probe stack runs.
 
@@ -94,7 +94,7 @@ Container-side health primitive (`src/aho/health.py`). Emits success / failure c
 | Green predicate | `probe_success_count > 0 AND probe_failure_count == 0` |
 | Unknown | no health activity in window |
 
-### 7. `aho.signal` — telegram + halt-and-surface
+### 7. `aho.signal` - telegram + halt-and-surface
 
 Signal / alert subsystem (`src/aho/signal.py`). Tracks alert emission and error count.
 
@@ -105,7 +105,7 @@ Signal / alert subsystem (`src/aho/signal.py`). Tracks alert emission and error 
 | Green predicate | `emit_count > 0 AND error_count == 0` |
 | Unknown | no signal activity in window |
 
-### 8. `aho.council.audit` — auditor seat (llama3.2 + RAG + post-hoc filter)
+### 8. `aho.council.audit` - auditor seat (llama3.2 + RAG + post-hoc filter)
 
 The auditor seat's per-component brick. The W4 update extends the brick with a filter-activity drill-down (`extra_render`) that exposes the deterministic post-hoc filter's eligibility and suppression counts alongside the brick color.
 
@@ -117,7 +117,7 @@ The auditor seat's per-component brick. The W4 update extends the brick with a f
 | Extra render | `filter_eligible_count`, `filter_suppressed_count`, `audit_count`, `audit_error_count` |
 | Unknown | no audit activity in window |
 
-### 9. `aho.council.triage` — triage seat (nemotron-mini)
+### 9. `aho.council.triage` - triage seat (nemotron-mini)
 
 Triage seat's classification health. Red on malformed-output count (G083 hardening fired), which is the architecturally-load-bearing failure mode for triage.
 
@@ -128,7 +128,7 @@ Triage seat's classification health. Red on malformed-output count (G083 hardeni
 | Green predicate | `invocation_count > 0 AND malformed_count == 0` |
 | Unknown | no triage activity in window |
 
-### 10. `aho.council.embed+aho.rag` — embed + RAG retrieval (combined)
+### 10. `aho.council.embed+aho.rag` - embed + RAG retrieval (combined)
 
 Combined brick covering the embed seat (`aho.council.embed`) and the RAG layer (`aho.rag`). They share a contract: retrieve into the audit-prompt's `## Registered references` section and provide query liveness for triage.
 
@@ -157,7 +157,7 @@ The four buckets correspond directly to the [ADR-0010](../../artifacts/adrs/0010
 |---|---|---|
 | `caught_by_llama` | `aho.materiality.claim_vs_artifact_mismatches.caught_by_llama` | Claim/artifact mismatches surfaced by the llama auditor seat. |
 | `caught_by_drafter` | `aho.materiality.claim_vs_artifact_mismatches.caught_by_drafter` | Mismatches surfaced by the drafter (gap-net) after auditor passed the artifact. |
-| `escaped` | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Mismatches surfaced retrospectively — escaped a sealed iteration. |
+| `escaped` | `aho.materiality.claim_vs_artifact_mismatches.escaped` | Mismatches surfaced retrospectively - escaped a sealed iteration. |
 | `carry_forward_resolution` | `aho.materiality.carry_forward_resolution_rate` | Carry-forwards explicitly closed by reference in a workstream output. |
 
 Overview surface composition: `OverviewSurface.catch_rate_components` carries the three catch-rate buckets (`caught_by_llama`, `caught_by_drafter`, `escaped`) so the dashboard can render the at-a-glance "is the auditor doing useful work?" view that the protocol is designed to surface. `carry_forward_resolution_count` renders separately as the loop-closure metric.
@@ -178,7 +178,7 @@ Per ADR-0010, the falsifiability threshold is exercised at N≥8 iterations:
 - Non-zero `caught_by_llama` and `caught_by_drafter` across the protocol window.
 - Carry-forward resolution rate ≥60% within 2 iterations of flagging.
 
-The comparison surface is the dashboard rendering of the threshold's exercise — at 0.2.17 close, with N=4, the comparison surface renders qualified-validation state, not full validation. Comparison rows are tagged with the iteration label and acceptance-archive sha for cross-reference to the sealed evidence.
+The comparison surface is the dashboard rendering of the threshold's exercise - at 0.2.17 close, with N=4, the comparison surface renders qualified-validation state, not full validation. Comparison rows are tagged with the iteration label and acceptance-archive sha for cross-reference to the sealed evidence.
 
 ---
 
@@ -196,10 +196,10 @@ Distinct from the per-component grid's `aho.adversarial` brick: D2's `aho.advers
 | Signal keys | `aho.council.dispatch.role_collapse_tripwire_fired`, `aho.council.dispatch.invocation_count` |
 | Red predicate | `tripwire_fired_count > 0` |
 | Green predicate | `dispatch_invocation_count > 0 AND tripwire_fired_count == 0` |
-| Unknown | no dispatch activity in window — invariant inactive, not violated |
-| Drill-down | `role_pair_snapshot` from `flags` — captures which (drafter, auditor) family pair would have collapsed when the trip-wire fires |
+| Unknown | no dispatch activity in window - invariant inactive, not violated |
+| Drill-down | `role_pair_snapshot` from `flags` - captures which (drafter, auditor) family pair would have collapsed when the trip-wire fires |
 
-Pillar 7 falsifiability surface: a green brick is positive evidence the invariant held; a red brick is positive evidence of a violation; an unknown brick is positive evidence of no exercise (which is honest — the invariant is only meaningful when dispatch ran).
+Pillar 7 falsifiability surface: a green brick is positive evidence the invariant held; a red brick is positive evidence of a violation; an unknown brick is positive evidence of no exercise (which is honest - the invariant is only meaningful when dispatch ran).
 
 ---
 
@@ -207,7 +207,7 @@ Pillar 7 falsifiability surface: a green brick is positive evidence the invarian
 
 Source: `src/aho/dashboard/lego/anti_rubber_stamp_dashboard.py` (W4-close sha256 `04748ce6fac719c776d6a2b66d66db534d025ac3a7aba415ff37044e70e3774c`).
 
-**Four-surface version (W4 D6 update — was three-surface pre-W4).** The fourth surface is the deterministic post-hoc filter, added when W4 D1 closed the fake-ID-on-registered-anchor failure mode structurally.
+**Four-surface version (W4 D6 update - was three-surface pre-W4).** The fourth surface is the deterministic post-hoc filter, added when W4 D1 closed the fake-ID-on-registered-anchor failure mode structurally.
 
 Surface ids:
 
@@ -220,29 +220,29 @@ SURFACE_IDS = (
 )
 ```
 
-### Surface 1 — `nemotron_raise_on_malformed`
+### Surface 1 - `nemotron_raise_on_malformed`
 
 Nemotron triage out-of-rubric protection (G083). Hardening raises `CouncilTriageMalformedError`; this surface counts how often the hardening fired vs how many triage invocations succeeded.
 
 | Field | Value |
 |---|---|
 | Signal keys | `aho.council.triage.invocation_count`, `aho.council.triage.malformed_count` |
-| Red | `malformed_count > 0` (hardening fired — out-of-rubric output emitted) |
+| Red | `malformed_count > 0` (hardening fired - out-of-rubric output emitted) |
 | Green | `invocation_count > 0 AND malformed_count == 0` |
 | Unknown | no triage activity in window |
 
-### Surface 2 — `llama_confidence_floor_lock`
+### Surface 2 - `llama_confidence_floor_lock`
 
 Llama audit confidence-floor lock. Hardening rewrites `clean+low-confidence` dispositions to `surface_to_drafter`; this surface counts lock firings.
 
 | Field | Value |
 |---|---|
 | Signal keys | `aho.council.audit.invocation_count`, `aho.council.audit.confidence_floor_lock_count` |
-| Red | `confidence_floor_lock_count > 0` (lock fired — would-be `clean` rewritten to `surface_to_drafter`) |
+| Red | `confidence_floor_lock_count > 0` (lock fired - would-be `clean` rewritten to `surface_to_drafter`) |
 | Green | `invocation_count > 0 AND confidence_floor_lock_count == 0` |
 | Unknown | no audit activity in window |
 
-### Surface 3 — `role_collapse_tripwire`
+### Surface 3 - `role_collapse_tripwire`
 
 Drafter/auditor role-collapse trip-wire. Same signal as the dedicated W4 D4 brick; rendered here as part of the anti-rubber-stamp posture for at-a-glance verification across all four hardenings.
 
@@ -253,14 +253,14 @@ Drafter/auditor role-collapse trip-wire. Same signal as the dedicated W4 D4 bric
 | Green | `invocation_count > 0 AND role_collapse_tripwire_fired == 0` |
 | Unknown | no dispatch activity |
 
-### Surface 4 — `deterministic_post_hoc_filter` (W4 D6 addition)
+### Surface 4 - `deterministic_post_hoc_filter` (W4 D6 addition)
 
 W4 D1 deterministic post-hoc filter on RAG-aware audit findings. Suppresses findings where BOTH a registered anchor AND a fake-ID phrase appear in the description. Suppressed findings are recorded structurally for drafter / operator inspection (not silently dropped).
 
 | Field | Value |
 |---|---|
 | Signal keys | `aho.council.audit.finding_filter.eligible_count`, `aho.council.audit.finding_filter.suppressed_count`, `aho.council.audit.finding_filter.over_suppression_invariant_failures` |
-| Red | `over_suppression_invariant_failures > 0` (filter over-suppressed — narrowness invariant broken) |
+| Red | `over_suppression_invariant_failures > 0` (filter over-suppressed - narrowness invariant broken) |
 | Green | `eligible_count > 0 AND no over-suppression failures` |
 | Unknown | filter not eligible (no registered anchors in prompt context) |
 
@@ -268,7 +268,7 @@ The drill-down detail records the per-suppression record so drafters can inspect
 
 ### Overview surface
 
-`evaluate_overview(surfaces)` produces a single SurfaceState rendering the worst-color across the four surfaces — red if any red, green if all green, unknown if all unknown. The overview is the at-a-glance answer to "is the anti-rubber-stamp posture intact this iteration?"
+`evaluate_overview(surfaces)` produces a single SurfaceState rendering the worst-color across the four surfaces - red if any red, green if all green, unknown if all unknown. The overview is the at-a-glance answer to "is the anti-rubber-stamp posture intact this iteration?"
 
 ---
 
@@ -276,21 +276,21 @@ The drill-down detail records the per-suppression record so drafters can inspect
 
 `bricks.synthetic_signal_state(healthy=...)` produces a counter dict consistent with a 5-minute synthetic load test:
 
-- `healthy=True` — every brick evaluates green. Every counter has positive activity, every error counter is zero.
-- `healthy=False` — one fault per component so every brick evaluates red. The fixture is exhaustive: one demonstrable red predicate match per brick, plus a role-collapse trip-wire fire, plus an OTEL exporter error.
+- `healthy=True` - every brick evaluates green. Every counter has positive activity, every error counter is zero.
+- `healthy=False` - one fault per component so every brick evaluates red. The fixture is exhaustive: one demonstrable red predicate match per brick, plus a role-collapse trip-wire fire, plus an OTEL exporter error.
 
 Tests at `artifacts/tests/test_lego_bricks.py` and `test_role_collapse_brick.py` exercise both fixtures end-to-end and assert color outcomes.
 
-The fixture exists explicitly so dashboards rendering claw3d on a host with no live OTEL collector — operator reviewing artifact archives offline, drafter inspecting brick rendering during plan-doc authoring — get a faithful preview of brick semantics without needing live signal.
+The fixture exists explicitly so dashboards rendering claw3d on a host with no live OTEL collector - operator reviewing artifact archives offline, drafter inspecting brick rendering during plan-doc authoring - get a faithful preview of brick semantics without needing live signal.
 
 ---
 
-## Color rules — canonical
+## Color rules - canonical
 
 These rules apply uniformly across all per-component bricks, the role-collapse trip-wire brick, the materiality bucket surfaces, and the four anti-rubber-stamp surfaces:
 
 1. **Red wins over green.** A red predicate match always overrides a green predicate match. The fault has fired; the brick reds.
-2. **Unknown is honest.** A brick that cannot decide between red and green is not green. Insufficient signal in the observation window produces `unknown` — the dashboard does not paint optimistic green over silence.
+2. **Unknown is honest.** A brick that cannot decide between red and green is not green. Insufficient signal in the observation window produces `unknown` - the dashboard does not paint optimistic green over silence.
 3. **Predicates are pure functions.** Same input → same output. No I/O, no time-based heuristics, no clock skew dependencies. The aggregator is the only path that touches I/O.
 4. **Suppressed findings are recorded structurally.** The deterministic post-hoc filter does not silently drop findings; suppressions are emitted as structured records so drafters can inspect what was suppressed.
 

@@ -1,4 +1,4 @@
-# Kyle's Decisions — 0.2.10
+# Kyle's Decisions - 0.2.10
 
 **Date:** 2026-04-11
 **Context:** Pre-W0 decisions for install surface implementation iteration

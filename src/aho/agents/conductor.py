@@ -1,4 +1,4 @@
-"""Conductor — orchestrator pattern for three-agent role split.
+"""Conductor - orchestrator pattern for three-agent role split.
 
 0.2.3 W2: Reads plan, dispatches via NemoClaw to workstream agent,
 evaluator reviews, harness agent observes. Claude/Gemini demoted

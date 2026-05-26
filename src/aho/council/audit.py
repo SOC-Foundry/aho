@@ -1,19 +1,19 @@
-"""council.audit — real implementation (W2).
+"""council.audit - real implementation (W2).
 
 Calls llama3.2:3b via host Ollama for structural spot-check audits.
 Combines deterministic pre-checks (G081 banned-phrase scan, three-octet
 versioning detection, git-op-reference scan) with a model-driven spot
-check, then enforces a confidence floor of 0.85 — disposition `clean` is
+check, then enforces a confidence floor of 0.85 - disposition `clean` is
 structurally unreachable below the floor (overrides to `surface_to_drafter`).
 
 This is the primitive Adversarial Authorship at base tier sits on. It must
-fail loud — never silently rubber-stamp.
+fail loud - never silently rubber-stamp.
 
 Wire-up env:
-- OLLAMA_BASE_URL — default http://localhost:11434
-- AHO_COUNCIL_AUDIT_MODEL — default llama3.2:3b
-- AHO_COUNCIL_AUDIT_TIMEOUT_S — default 180
-- AHO_COUNCIL_AUDIT_CONFIDENCE_FLOOR — default 0.85
+- OLLAMA_BASE_URL - default http://localhost:11434
+- AHO_COUNCIL_AUDIT_MODEL - default llama3.2:3b
+- AHO_COUNCIL_AUDIT_TIMEOUT_S - default 180
+- AHO_COUNCIL_AUDIT_CONFIDENCE_FLOOR - default 0.85
 """
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ DEFAULT_CONFIDENCE_FLOOR = 0.85
 # ID + kind + top-1 snippet ≈ 250 chars; 30 entries fits comfortably under
 # the 5K-token RAG section budget called out in the W3 plan doc.
 DEFAULT_MAX_ENRICHMENT_REFS = 30
-# Hard ceiling on the constructed prompt — system + enrichment + user
+# Hard ceiling on the constructed prompt - system + enrichment + user
 # blocks. Plan budget is 28K tokens (4K headroom in 32K ctx); chars-per-
 # token for dense JSON-heavy archives runs ~3, so 84K chars is the
 # conservative ceiling guard.
@@ -57,7 +57,7 @@ PROMPT_CHAR_CEILING = 84_000
 DISPOSITIONS = ("clean", "halt", "surface_to_drafter")
 
 # Canonical severity values + an explicit synonym table. The synonym map
-# is NOT a categories[-1] fallback — it's a documented, exhaustive
+# is NOT a categories[-1] fallback - it's a documented, exhaustive
 # normalisation. Unknown severity strings still raise
 # CouncilAuditMalformedError. The map exists because llama3.2:3b
 # frequently mirrors source-artifact vocabulary (e.g. "moderate" from
@@ -84,7 +84,7 @@ SEVERITY_SYNONYMS = {
 
 def normalise_severity(sev: str) -> str:
     """Map sev to canonical {info, important, critical}. Raises
-    CouncilAuditMalformedError on unknown values — synonym table is
+    CouncilAuditMalformedError on unknown values - synonym table is
     exhaustive and explicit, not an open-ended fallback (G083).
     """
     if not isinstance(sev, str):
@@ -100,7 +100,7 @@ def normalise_severity(sev: str) -> str:
         f"severity {sev!r} not in {SEVERITIES} and not in known synonym table"
     )
 
-# G081 — banned celebratory framing. Patterns are case-insensitive,
+# G081 - banned celebratory framing. Patterns are case-insensitive,
 # anchored on whitespace/punctuation to avoid sub-string false positives
 # (e.g. "shipping" should not match "shipped"). Documented in CLAUDE.md.
 _BANNED_PHRASE_PATTERNS = [
@@ -111,7 +111,7 @@ _BANNED_PHRASE_PATTERNS = [
 ]
 
 # Patterns suggesting agent-side git operations (Pillar 11 violation).
-# Conservative — flagged for human review, not auto-fail.
+# Conservative - flagged for human review, not auto-fail.
 _GIT_OP_PATTERNS = [
     re.compile(r"\bgit[\s-]+(commit|push|merge|add|reset|rebase|cherry[\s-]?pick)\b", re.IGNORECASE),
     re.compile(r"\bgh[\s]+pr[\s]+(create|merge|close)\b", re.IGNORECASE),
@@ -123,7 +123,7 @@ _GIT_OP_PATTERNS = [
 # 0.2.18 W0 false-positive shape: an acceptance archive narrating the
 # Pillar 11 invariant ("No `git commit`, `git push`, ... from this
 # session") tripped the pre-check on its own enforcement language. The
-# pre-check is a fast-path heuristic — model + post-hoc filter remain the
+# pre-check is a fast-path heuristic - model + post-hoc filter remain the
 # substantive defenses against actual violations.
 _GIT_OP_ENFORCEMENT_SENTINELS = re.compile(
     r"(?:"
@@ -141,7 +141,7 @@ _GIT_OP_ENFORCEMENT_SENTINELS = re.compile(
 )
 _GIT_OP_SENTINEL_WINDOW = 150
 
-# Three-octet versioning — phase.iteration.run.
+# Three-octet versioning - phase.iteration.run.
 _THREE_OCTET_PATTERN = re.compile(r"\b\d+\.\d+\.\d+\b")
 
 
@@ -207,7 +207,7 @@ def _scan_git_ops(text: str) -> List[str]:
     enforcement narration. A hit is suppressed if any
     `_GIT_OP_ENFORCEMENT_SENTINELS` token matches within ±
     `_GIT_OP_SENTINEL_WINDOW` chars of the hit span. Suppression is fast-
-    path only — model spot-check still sees the artifact and can flag
+    path only - model spot-check still sees the artifact and can flag
     semantic violations that slip the regex.
     """
     hits: List[str] = []
@@ -226,7 +226,7 @@ def _scan_three_octet(text: str) -> List[str]:
 
 
 def _structural_pre_checks(artifact: str) -> Dict[str, Any]:
-    """Deterministic checks — no model involvement. Findings here are
+    """Deterministic checks - no model involvement. Findings here are
     high-confidence (regex-grounded) and feed into the final disposition.
     """
     banned = _scan_banned_phrases(artifact)
@@ -277,7 +277,7 @@ Respond with a JSON object containing exactly these keys:
   where id is the deliverable / section / claim ID you are flagging
   (e.g. "D7", "F-0.2.17-W1-003", "B2.5"), severity is info / important /
   critical, and description is a SPECIFIC sentence about THIS artifact
-  (NOT placeholder text — name the actual claim or section).
+  (NOT placeholder text - name the actual claim or section).
 - evidence_traces (array of strings): each is a verbatim short phrase
   COPIED from the audit target itself (NOT from this prompt). If you
   cannot cite a phrase from the target, the spot-check failed and you
@@ -285,12 +285,12 @@ Respond with a JSON object containing exactly these keys:
 
 Rules:
 - Pick ONE disposition string from the allowed list. Never write
-  "clean | halt | surface_to_drafter" — that is the menu, not the answer.
+  "clean | halt | surface_to_drafter" - that is the menu, not the answer.
 - NEVER use "AF-1", "concise sentence", or "short phrase quoted from the
-  artifact" — those are illustrative tokens. Use IDs and quotes from the
+  artifact" - those are illustrative tokens. Use IDs and quotes from the
   ACTUAL artifact you are auditing.
 - Confidence MUST reflect your actual certainty. If you would not stake
-  your audit chair on the disposition, set confidence below 0.85 — the
+  your audit chair on the disposition, set confidence below 0.85 - the
   harness will then route to surface_to_drafter automatically.
 - If the findings list is empty, evidence_traces must still cite at least
   one phrase from the artifact you spot-checked.
@@ -298,9 +298,9 @@ Rules:
   context" section, treat it as authoritative ground truth on which IDs are
   real. Before flagging any reference ID as 'not real,' 'placeholder,' 'not
   corroborated,' or 'fake,' check that section. If the ID is listed with
-  status `registered`, do NOT flag it — its definition exists in another
+  status `registered`, do NOT flag it - its definition exists in another
   archive (the snippet shows where). If the ID is listed with status
-  `unverified`, flag for verification rather than as fake — the ID may be
+  `unverified`, flag for verification rather than as fake - the ID may be
   newly introduced in this archive itself, which is normal.
 - Return JSON only. No markdown, no narrative outside the JSON object.
 """
@@ -363,7 +363,7 @@ def _validate_disposition_payload(payload: Any) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# RAG enrichment — registered-references context section (W3)
+# RAG enrichment - registered-references context section (W3)
 # ---------------------------------------------------------------------------
 
 ENRICHMENT_SECTION_HEADER = "## Registered references retrieved from project context"
@@ -401,7 +401,7 @@ def _format_enrichment_section(
         kind = result.get("kind")
         status = result.get("status")
         retrievals = result.get("retrievals") or []
-        lines.append(f"- **{ident}** ({kind}) — status: `{status}`")
+        lines.append(f"- **{ident}** ({kind}) - status: `{status}`")
         if retrievals:
             top = retrievals[0]
             path = top.get("source_artifact_path") or "<unknown>"
@@ -463,7 +463,7 @@ def _build_enrichment(
 
 
 # ---------------------------------------------------------------------------
-# Confidence floor — STRUCTURALLY ENFORCED
+# Confidence floor - STRUCTURALLY ENFORCED
 # ---------------------------------------------------------------------------
 
 def enforce_confidence_floor(
@@ -527,7 +527,7 @@ def _emit_span(
                 "aho.council.audit.finding_filter.eligible",
                 filter_eligible,
             )
-            # Materiality — count audits that surface findings vs not.
+            # Materiality - count audits that surface findings vs not.
             span.set_attribute(
                 "aho.materiality.bucket",
                 "claim_vs_artifact_mismatch_caught_by_llama"
@@ -565,7 +565,7 @@ def audit(
     section in the prompt between system and audit-target blocks.
     Disable to reproduce the W2 (non-RAG) auditor for cross-comparison.
 
-    Confidence floor is structurally enforced — if model returns
+    Confidence floor is structurally enforced - if model returns
     `clean` at low confidence, the disposition is locked to
     `surface_to_drafter` post-validation.
     """
@@ -599,7 +599,7 @@ def audit(
             )
         except RefExtractError as exc:
             # Detection should never fail on a non-empty string artifact, but
-            # surface clearly if it does — silent fall-through would weaken
+            # surface clearly if it does - silent fall-through would weaken
             # the load-bearing fix from F-0.2.17-W2-006.
             raise CouncilAuditInputError(
                 f"reference detection failed: {exc}"
@@ -699,7 +699,7 @@ def audit(
         ],
     }
 
-    # W4 D1 — deterministic post-hoc filter on RAG-aware findings. Drops
+    # W4 D1 - deterministic post-hoc filter on RAG-aware findings. Drops
     # only findings where BOTH a registered anchor appears in the
     # description AND a fake-ID phrase matches. Structurally narrow.
     filter_outcome = filter_findings(validated["findings"], rag_summary)
@@ -707,7 +707,7 @@ def audit(
     suppressed_findings: List[Dict[str, Any]] = filter_outcome["suppressed_findings"]
 
     # Merge structural pre-check findings into the disposition. Pre-check
-    # findings are regex-grounded and high-confidence — they are NOT
+    # findings are regex-grounded and high-confidence - they are NOT
     # subject to the post-hoc filter (the filter is scoped to the small-
     # model false-positive shape, not regex-driven structural defects).
     extra_findings: List[Dict[str, Any]] = []
@@ -733,7 +733,7 @@ def audit(
     final_findings = model_findings_active + extra_findings
 
     # If structural checks surfaced critical/important issues, the model's
-    # `clean` disposition is overridden — structural pre-checks are
+    # `clean` disposition is overridden - structural pre-checks are
     # higher-confidence than model semantic analysis.
     final_disposition = floor_decision["disposition"]
     structural_override = False
@@ -742,11 +742,11 @@ def audit(
         final_disposition = "surface_to_drafter"
         structural_override = True
 
-    # 0.2.18 W0 / F-0.2.18-W0-007 — unsupported-halt downgrade. If the
+    # 0.2.18 W0 / F-0.2.18-W0-007 - unsupported-halt downgrade. If the
     # model returned `halt` but the post-hoc filter suppressed every
     # active model finding AND no deterministic pre-check fired, the halt
     # is materially unsupported. Downgrade to `surface_to_drafter` (NEVER
-    # `clean`) — the model still emitted a halt signal, so drafter/operator
+    # `clean`) - the model still emitted a halt signal, so drafter/operator
     # arbitration is the right backstop. This is structurally narrow:
     # any active finding (model or pre-check) keeps the halt.
     if (
@@ -768,7 +768,7 @@ def audit(
         suppressed_count=len(suppressed_findings),
         filter_eligible=filter_outcome["filter_eligible"],
     )
-    # Materiality counter — one increment per finding so severity rollups
+    # Materiality counter - one increment per finding so severity rollups
     # are honest (heavy audits don't disappear into a single bump).
     if final_findings:
         try:
@@ -778,7 +778,7 @@ def audit(
                     severity=str(finding.get("severity", "info"))
                 )
         except Exception:
-            # Materiality is observability — never block the audit return.
+            # Materiality is observability - never block the audit return.
             pass
     return {
         "disposition": final_disposition,

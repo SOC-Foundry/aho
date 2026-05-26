@@ -15,21 +15,21 @@
     "grep 'score.*8|ship.*True' src/aho/agents/roles/evaluator_agent.py"
   ],
   "outputs_produced": [
-    "src/aho/agents/roles/evaluator_agent.py — GLMParseError class added (line 23), _strip_markdown_fences() helper added (line 30), json.loads() now operates on fence-stripped text, parse failure raises GLMParseError instead of returning hardcoded {score:8, ship} defaults",
-    "artifacts/tests/test_glm_parser.py — 3 new W1 test cases (clean JSON, markdown-wrapped, malformed)",
-    "artifacts/tests/test_evaluator_agent_score.py — test_malformed_json_uses_defaults renamed to test_malformed_json_raises_glm_parse_error, now expects GLMParseError",
-    "artifacts/tests/test_role_evaluator_agent.py — test_evaluator_agent_handles_non_json renamed to test_evaluator_agent_raises_on_non_json, now expects GLMParseError"
+    "src/aho/agents/roles/evaluator_agent.py - GLMParseError class added (line 23), _strip_markdown_fences() helper added (line 30), json.loads() now operates on fence-stripped text, parse failure raises GLMParseError instead of returning hardcoded {score:8, ship} defaults",
+    "artifacts/tests/test_glm_parser.py - 3 new W1 test cases (clean JSON, markdown-wrapped, malformed)",
+    "artifacts/tests/test_evaluator_agent_score.py - test_malformed_json_uses_defaults renamed to test_malformed_json_raises_glm_parse_error, now expects GLMParseError",
+    "artifacts/tests/test_role_evaluator_agent.py - test_evaluator_agent_handles_non_json renamed to test_evaluator_agent_raises_on_non_json, now expects GLMParseError"
   ],
   "baseline_regression_status": "stable",
   "baseline_known_failures": 13,
   "baseline_new_failures": 0,
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ touch",
-    "G071 — no daemon imports evaluator_agent at load time; no restart needed",
-    "G079 — baseline_regression_check is the backstop, not regex counts; ran full suite",
-    "G081 — no celebratory framing in this archive",
-    "G082 — canonical paths only; used grep to locate evaluator, not hardcoded",
-    "G083 — zero except Exception in new code; zero hardcoded positive fallbacks; verified via grep"
+    "G070 - cleared __pycache__ after src/aho/ touch",
+    "G071 - no daemon imports evaluator_agent at load time; no restart needed",
+    "G079 - baseline_regression_check is the backstop, not regex counts; ran full suite",
+    "G081 - no celebratory framing in this archive",
+    "G082 - canonical paths only; used grep to locate evaluator, not hardcoded",
+    "G083 - zero except Exception in new code; zero hardcoded positive fallbacks; verified via grep"
   ],
   "audit_status": "pending_audit",
   "findings": {
@@ -39,11 +39,11 @@
     },
     "d2_glm_parse_error": {
       "status": "complete",
-      "detail": "GLMParseError(Exception) added at evaluator_agent.py:23. Follows project pattern (DegenerateGenerationError in repetition_detector.py). Carries raw_response attribute for caller diagnostics. Raised from json.JSONDecodeError/TypeError — chains original exception."
+      "detail": "GLMParseError(Exception) added at evaluator_agent.py:23. Follows project pattern (DegenerateGenerationError in repetition_detector.py). Carries raw_response attribute for caller diagnostics. Raised from json.JSONDecodeError/TypeError - chains original exception."
     },
     "d3_hardcoded_fallback_removed": {
       "status": "complete",
-      "detail": "Removed the pre-initialized result dict with score:8, recommendation:'ship', issues:[]. Parse result now populates result dict directly from parsed JSON. If parse fails, GLMParseError propagates to caller (conductor.py:44). Caller decides — parser does not mask failures."
+      "detail": "Removed the pre-initialized result dict with score:8, recommendation:'ship', issues:[]. Parse result now populates result dict directly from parsed JSON. If parse fails, GLMParseError propagates to caller (conductor.py:44). Caller decides - parser does not mask failures."
     },
     "d4_test_cases": {
       "status": "complete",

@@ -1,4 +1,4 @@
-# Build Log — aho 0.1.12
+# Build Log - aho 0.1.12
 
 **Start:** 2026-04-11T02:36:42Z
 **Agent:** Claude Code
@@ -8,7 +8,7 @@
 
 ---
 
-## W0 — Environment hygiene
+## W0 - Environment hygiene
 
 **Actions:**
 - Confirmed pwd, version, tests green
@@ -18,19 +18,19 @@
 
 ---
 
-## W1 — Evaluator baseline reload (aho-G060)
+## W1 - Evaluator baseline reload (aho-G060)
 
 **Actions:**
 - Removed global caches _ALLOWED_CLI_COMMANDS and _ALLOWED_SCRIPTS from evaluator.py
 - get_allowed_scripts() and get_allowed_cli_commands() now compute fresh each call (~10ms overhead)
 - Registered aho-G060 in gotcha_archive.json
-- Added regression test tests/test_evaluator_reload.py — PASSED
+- Added regression test tests/test_evaluator_reload.py - PASSED
 
 **Discrepancies:** none
 
 ---
 
-## W2 — smoke_instrumentation checkpoint-awareness (aho-G061)
+## W2 - smoke_instrumentation checkpoint-awareness (aho-G061)
 
 **Actions:**
 - Added checkpoint-read at script start before aho imports (sets AHO_ITERATION env var)
@@ -42,7 +42,7 @@
 
 ---
 
-## W3 — model-fleet.md cleanup
+## W3 - model-fleet.md cleanup
 
 **Actions:**
 - Updated model-fleet.md: title, version 0.1.4→0.1.12, all IAO identifier refs→aho
@@ -55,7 +55,7 @@
 
 ---
 
-## W4 — Dogfood + close
+## W4 - Dogfood + close
 
 **Actions:**
 - First build-log attempt: killed degenerate Qwen thinking loop (gotcha ID validation bug)
@@ -76,7 +76,7 @@
 - V7 tests green: PASS (56 passed, 1 skipped)
 
 **Discrepancies:**
-- Qwen thinking-token degeneration required qwen_client.py fix (thinking_detector added) — beyond original 0.1.12 scope but necessary for W4 completion
+- Qwen thinking-token degeneration required qwen_client.py fix (thinking_detector added) - beyond original 0.1.12 scope but necessary for W4 completion
 - Gotcha archive field inconsistency (id vs code) required evaluator fix
 
 ---

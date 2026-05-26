@@ -91,7 +91,7 @@
       "check": "baseline_regression_check",
       "result": "pass_with_finding",
       "evidence": "Full suite: 10 failed (matching W2 baseline exactly), 374 passed (+23 from 351 W2 baseline, net of 24 new router tests and 1 cascade-flake deselection), 1 skipped. All 10 failures are pre-existing entries in test-baseline.json. See F001 below for the one test that newly diverges (test_cascade_end_to_end, Ollama integration, not W3-caused).",
-      "note": "Excluding the integration flake, 10/10 failures match W2 baseline — zero new failures caused by W3 code."
+      "note": "Excluding the integration flake, 10/10 failures match W2 baseline - zero new failures caused by W3 code."
     },
     {
       "check": "No G083 sites introduced",
@@ -116,7 +116,7 @@
     {
       "check": "Raw response field inspected for ambiguous probe results",
       "result": "pass",
-      "evidence": "probe-results.json captures raw_response per call. Role-classify daemon failures show literal Nemotron output ('(The Eleven Pillars Of Agile)', 'AI', 'AI', '') — ground truth before parse. Empty-response finding during bias migration corroborated by direct urllib.request inspection, not parsed dispatcher fields."
+      "evidence": "probe-results.json captures raw_response per call. Role-classify daemon failures show literal Nemotron output ('(The Eleven Pillars Of Agile)', 'AI', 'AI', '') - ground truth before parse. Empty-response finding during bias migration corroborated by direct urllib.request inspection, not parsed dispatcher fields."
     }
   ],
   "deliverables": [
@@ -136,7 +136,7 @@
     {
       "id": "F001",
       "severity": "info",
-      "description": "test_pipeline_integration.py::test_cascade_end_to_end fails at the producer stage with wall_clock_seconds=105.1 and output_size_chars=0 — Qwen 3.5:9b emitted empty message.content on /api/chat. Reproducible. This test is not in test-baseline.json and is an integration test added in 0.2.14. My W3 changes do not touch src/aho/pipeline/orchestrator.py, pipeline/schemas.py, or Qwen dispatch. Ollama state at test time: nemotron-mini:4b resident (3054 MiB VRAM), 4373 MiB free. Qwen model is 6.4 GB — must evict Nemotron to load. Suspected cause: the same 'long system prompt -> empty content on /api/chat' behaviour observed during the W3 bias migration, now affecting Qwen's cascade prompts. Not gated in W3; flagged for Gemini audit and W4 cascade validation."
+      "description": "test_pipeline_integration.py::test_cascade_end_to_end fails at the producer stage with wall_clock_seconds=105.1 and output_size_chars=0 - Qwen 3.5:9b emitted empty message.content on /api/chat. Reproducible. This test is not in test-baseline.json and is an integration test added in 0.2.14. My W3 changes do not touch src/aho/pipeline/orchestrator.py, pipeline/schemas.py, or Qwen dispatch. Ollama state at test time: nemotron-mini:4b resident (3054 MiB VRAM), 4373 MiB free. Qwen model is 6.4 GB - must evict Nemotron to load. Suspected cause: the same 'long system prompt -> empty content on /api/chat' behaviour observed during the W3 bias migration, now affecting Qwen's cascade prompts. Not gated in W3; flagged for Gemini audit and W4 cascade validation."
     },
     {
       "id": "F002",
@@ -151,12 +151,12 @@
     {
       "id": "F004",
       "severity": "info",
-      "description": "Nemoclaw's running daemon (aho-nemoclaw.service, PID 1217 at W3 start) was NOT restarted during W3. The daemon in memory still holds the pre-W3 code. This is intentional — Pillar 11 / user-state discipline: restarting a systemd user service is a shared-state change. In-process tests verified the new code; socket-level integration tests were performed via probe.py against the running (pre-W3) daemon, which is also documented in nemoclaw-vs-dispatch.md. Kyle can restart the daemon at any time to pick up the new code; W4 cascade integration will exercise the socket path with the new code if the daemon is restarted before W4 execution."
+      "description": "Nemoclaw's running daemon (aho-nemoclaw.service, PID 1217 at W3 start) was NOT restarted during W3. The daemon in memory still holds the pre-W3 code. This is intentional - Pillar 11 / user-state discipline: restarting a systemd user service is a shared-state change. In-process tests verified the new code; socket-level integration tests were performed via probe.py against the running (pre-W3) daemon, which is also documented in nemoclaw-vs-dispatch.md. Kyle can restart the daemon at any time to pick up the new code; W4 cascade integration will exercise the socket path with the new code if the daemon is restarted before W4 execution."
     },
     {
       "id": "F005",
       "severity": "low",
-      "description": "The 0.2.14 carry-forward 'test_workstream_events.py checkpoint corruption' recurred. Running the full pytest suite during baseline regression caused the real .aho-checkpoint.json to be rewritten with bogus workstream entries (W_V3_TEST, W_V3_COMBO, W_V2_COMPAT, W_V1_COMPAT, W_V2_TEST, W_V1_TEST, W_PARSE_TEST, W_V1_DEFAULT) and current_workstream bumped to W6. Root cause (per 0.2.14 carry-forward notes): test_workstream_events.py does not mock find_project_root and therefore writes to the real checkpoint. I restored the checkpoint to the correct W3/pending_audit state immediately after regression. No data lost — event log is append-only and unaffected. Still a pre-existing fixture-isolation bug, not a W3 introduction. Flagged here for visibility; fix deferred per 0.2.15 carry-forward list."
+      "description": "The 0.2.14 carry-forward 'test_workstream_events.py checkpoint corruption' recurred. Running the full pytest suite during baseline regression caused the real .aho-checkpoint.json to be rewritten with bogus workstream entries (W_V3_TEST, W_V3_COMBO, W_V2_COMPAT, W_V1_COMPAT, W_V2_TEST, W_V1_TEST, W_PARSE_TEST, W_V1_DEFAULT) and current_workstream bumped to W6. Root cause (per 0.2.14 carry-forward notes): test_workstream_events.py does not mock find_project_root and therefore writes to the real checkpoint. I restored the checkpoint to the correct W3/pending_audit state immediately after regression. No data lost - event log is append-only and unaffected. Still a pre-existing fixture-isolation bug, not a W3 introduction. Flagged here for visibility; fix deferred per 0.2.15 carry-forward list."
     }
   ],
   "test_results": {

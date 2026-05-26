@@ -1,4 +1,4 @@
-# iao 0.1.2 — Build Log
+# iao 0.1.2 - Build Log
 
 **Iteration:** 0.1.2
 **Project:** iao (code: iaomw)

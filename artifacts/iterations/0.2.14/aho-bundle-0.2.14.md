@@ -1,4 +1,4 @@
-# aho — Bundle 0.2.14
+# aho - Bundle 0.2.14
 
 **Generated:** 2026-04-13T14:52:00Z
 **Iteration:** 0.2.14
@@ -19,7 +19,7 @@
 
 **Context:** 0.2.13 closed with parsers honest but W2.5 surfacing model-output compromise. The council as a wired system had never been verified end-to-end. Zero iterations of "Producer → Indexer → Auditor → Indexer → Assessor cascade actually runs." 0.2.14 verifies wiring. No measurement, no architecture decisions, no matrix. Wire it, prove the wire works, sign off, hand to 0.2.15 for measurement.
 
-**Pipeline roles (5 slots):** Indexer-in → Producer → Auditor → Indexer-out → Assessor. Malleable role assignment — roles bind to models per-run.
+**Pipeline roles (5 slots):** Indexer-in → Producer → Auditor → Indexer-out → Assessor. Malleable role assignment - roles bind to models per-run.
 
 **Hard Gates:** Gate 1 (vetting before wiring), Gate 2 (cascade end-to-end), Gate 3 (Kyle sign-off on wiring completeness: a/b/c).
 
@@ -31,13 +31,13 @@
 
 ### aho-plan-0.2.14.md
 
-**W0 — Setup + Hygiene + Model Docs + Council Inventory** (Session 1)
+**W0 - Setup + Hygiene + Model Docs + Council Inventory** (Session 1)
 9 scope items: verify 0.2.13 close state, initialize 0.2.14, root cleanup proposal, README/CHANGELOG append, Pattern C protocol patches, emit_workstream_complete side-effect fix, model docs review (4 models), council inventory (16 members), NoSQL manual staging.
 
-**W1 — Council Vet + Cascade Wire + NoSQL Smoke Test** (Session 1→2)
+**W1 - Council Vet + Cascade Wire + NoSQL Smoke Test** (Session 1→2)
 3 sub-phases: 1.A council vetting (Gate 1), 1.B pipeline schemas + cascade orchestrator build, 1.C NoSQL smoke test (Gate 2). Two internal hard gates.
 
-**W2 — Sign-off + Close** (Session 2)
+**W2 - Sign-off + Close** (Session 2)
 6 deliverables: council health rerun, wiring sign-off package, retrospective, carry-forwards, bundle, sign-off sheet.
 
 **Total:** 3 planned workstreams. 4 delivered (W1.5 added mid-iteration).
@@ -51,19 +51,19 @@
 - **Status:** pass
 - **Checks:** 9/9 pass
 - **Key items:** 6 version stamps updated, root cleanup proposal written (not executed), README/CHANGELOG appended, Pattern C protocol patched, emit_workstream_complete patched with sibling-preservation test, council models doc (4 models), council inventory (16 members), NoSQL manual staged (201 pages, 247K chars)
-- **Findings:** Baseline at 14 (2 predicted transients from 0.2.13). emit_workstream_start corruption confirmed live — sibling states corrupted. Gotcha registry file not found. workstream_start logged with MISSING_ENV_VAR (pre-version-bump).
+- **Findings:** Baseline at 14 (2 predicted transients from 0.2.13). emit_workstream_start corruption confirmed live - sibling states corrupted. Gotcha registry file not found. workstream_start logged with MISSING_ENV_VAR (pre-version-bump).
 
 ### W1 Acceptance (artifacts/iterations/0.2.14/acceptance/W1.json)
 
 - **Status:** pass
 - **Checks:** 12/12 pass
 - **Key items:** 29 files moved (root cleanup executed), vetting table complete (16 members: 12 operational, 2 substrate-compromised, 1 configured-incomplete, 1 gap), pipeline schemas + orchestrator built, integration test on dummy doc, NoSQL smoke test run-1 complete (5/5 stages, 1885s, 0 exceptions)
-- **Findings:** CRITICAL — Ollama context_length 4096 (not 256K). Producer generated Chinese customer-service response. Auditor partially Chinese. Template token leakage. Pillar 7 violated (Qwen-solo). test_workstream_events.py corrupts real checkpoint (3 resets during W1).
+- **Findings:** CRITICAL - Ollama context_length 4096 (not 256K). Producer generated Chinese customer-service response. Auditor partially Chinese. Template token leakage. Pillar 7 violated (Qwen-solo). test_workstream_events.py corrupts real checkpoint (3 resets during W1).
 
 ### W1.5 Acceptance (artifacts/iterations/0.2.14/acceptance/W1_5.json)
 
 - **Status:** pass (6 hard gates, 6 unit tests)
-- **Theme:** Substrate repair — dispatcher /api/chat migration + re-smoke
+- **Theme:** Substrate repair - dispatcher /api/chat migration + re-smoke
 - **Dispatcher changes:** /api/generate → /api/chat, num_ctx: 32768, stop tokens, messages array, response extraction from message.content
 - **Run-2 hard gates (6/6 pass):** Zero template tokens, no multi-turn simulation, producer on-topic English (3908 chars), auditor single JSON, all stages complete, no 60-min cap hit
 - **Run comparison:** Total output 6901 → 14725 chars (+113%). Producer 222 → 3908 chars.
@@ -86,7 +86,7 @@
 - **Result:** pass_with_findings
 - **Duration:** 42 min
 - **Spot checks:** Root cleanup count, vetting table integrity, Nemoclaw investigation, dispatcher code review, smoke test raw artifact analysis
-- **Drift findings:** (1) Claude characterized indexer_out as "honest empty response" — raw artifact shows turn-simulation leakage and truncation. (2) Smoke test quality issues attributed to context truncation; audit identifies dispatcher stop-token/template-handling as major secondary cause.
+- **Drift findings:** (1) Claude characterized indexer_out as "honest empty response" - raw artifact shows turn-simulation leakage and truncation. (2) Smoke test quality issues attributed to context truncation; audit identifies dispatcher stop-token/template-handling as major secondary cause.
 - **Dispatcher bugs identified:** num_ctx defaults to 4096, /api/generate without stop tokens or template handling
 - **Recommendation:** Pass with findings. Substrate issues warrant dedicated W1.5 substrate repair before W2 close.
 
@@ -111,17 +111,17 @@ No audit archive located at `artifacts/iterations/0.2.14/audit/W0.json`. W0 acce
 
 **§2 What was delivered:** 4 workstreams (W0, W1, W1.5, W2). W1.5 added after W1 audit surfaced dispatcher bugs.
 
-**§3 W1 substrate findings (the headline):** Two compounding dispatcher bugs — num_ctx defaulted to 4096 (truncating 247K doc to ~4K tokens) and /api/generate leaking chat template tokens. Not model-quality issues. Dispatcher configuration issues contaminating all measurements. Run-1 to run-2: producer 222-char Chinese → 3908-char English purely from dispatcher fix.
+**§3 W1 substrate findings (the headline):** Two compounding dispatcher bugs - num_ctx defaulted to 4096 (truncating 247K doc to ~4K tokens) and /api/generate leaking chat template tokens. Not model-quality issues. Dispatcher configuration issues contaminating all measurements. Run-1 to run-2: producer 222-char Chinese → 3908-char English purely from dispatcher fix.
 
-**§4 Cascade architecture is real:** Five stages execute end-to-end on 247K-char document. Cross-stage coherence validated — auditor findings flow to indexer_out deltas flow to assessor validations. Actual handoff, not parallel hallucination.
+**§4 Cascade architecture is real:** Five stages execute end-to-end on 247K-char document. Cross-stage coherence validated - auditor findings flow to indexer_out deltas flow to assessor validations. Actual handoff, not parallel hallucination.
 
 **§5 Pillar 7 violation persists:** Qwen-solo across all 5 roles. Only viable option per vetting. Path: 0.2.15 matrix with expanded roster (Llama 3.2 3B + DeepSeek + Mistral-Nemo + Gemma 2).
 
 **§6 Council composition reframing:** Current composition inherited, never revisited. Effectively Qwen-solo since 0.2.12. Review now carry-forward with 4 specific candidates.
 
-**§7 Pattern C trial (second iteration data):** State-machine discipline held. Gemini W1 audit caught dispatcher bugs — highest-value audit in Pattern C history. W1's "smoke test passed" framing was based on parsed JSON not raw response inspection (protocol gap). Auditor rubber-stamp pattern surfaced.
+**§7 Pattern C trial (second iteration data):** State-machine discipline held. Gemini W1 audit caught dispatcher bugs - highest-value audit in Pattern C history. W1's "smoke test passed" framing was based on parsed JSON not raw response inspection (protocol gap). Auditor rubber-stamp pattern surfaced.
 
-**§8 Honest read:** Council is real-but-thin. Cascade works mechanically. One operational LLM. Pillar 7 violated. Auditor structural critique bifurcated. Not failure — substrate truth. 0.2.15 matrix answers what gets thicker.
+**§8 Honest read:** Council is real-but-thin. Cascade works mechanically. One operational LLM. Pillar 7 violated. Auditor structural critique bifurcated. Not failure - substrate truth. 0.2.15 matrix answers what gets thicker.
 
 ---
 
@@ -129,7 +129,7 @@ No audit archive located at `artifacts/iterations/0.2.14/audit/W0.json`. W0 acce
 
 **Count:** 18 items across 4 categories.
 
-**To 0.2.15 — Measurement + Roster:**
+**To 0.2.15 - Measurement + Roster:**
 - Council composition expansion (Llama 3.2 3B on disk; pull DeepSeek-Coder-V2 Q4_K_M, Mistral-Nemo, Gemma 2 9B)
 - Capability-routed vs role-assigned cascade design decision
 - Dispatcher choice revisitation (direct-Ollama vs Nemoclaw vs new wrapper)
@@ -138,7 +138,7 @@ No audit archive located at `artifacts/iterations/0.2.14/audit/W0.json`. W0 acce
 - GLM + Nemotron substrate decisions (re-test on repaired dispatcher)
 - OpenClaw status decision (deprecate/keep/repurpose)
 
-**To 0.2.15 — Harness + Infrastructure:**
+**To 0.2.15 - Harness + Infrastructure:**
 - emit_workstream_start ordering issue
 - emit_workstream_complete root cause unresolved
 - Gotcha registry location
@@ -146,7 +146,7 @@ No audit archive located at `artifacts/iterations/0.2.14/audit/W0.json`. W0 acce
 - Checkpoint corruption cleanup
 - MCP fleet resolution (5 unknown/incomplete)
 
-**To 0.2.15 — Architecture Candidates:**
+**To 0.2.15 - Architecture Candidates:**
 - Executor-as-outer-loop-judge (Critic + Arbiter two-tier evaluator)
 - Capability-routed cascade
 
@@ -174,7 +174,7 @@ For cascade: only Qwen 3.5:9B viable for structured analytical output.
 
 ## §8. Dispatch Decision (artifacts/iterations/0.2.14/dispatch-decision.md)
 
-**Nemoclaw investigation:** Classification B — explicit role routing supported, model_id routing needs ~20 lines.
+**Nemoclaw investigation:** Classification B - explicit role routing supported, model_id routing needs ~20 lines.
 
 **Decision:** Direct Ollama dispatch. Nemoclaw adds 18.5s latency, no model_id routing, indirection provides no value for Qwen-solo smoke test.
 
@@ -184,7 +184,7 @@ For cascade: only Qwen 3.5:9B viable for structured analytical output.
 
 ## §9. Smoke Test Results
 
-### Run-1 (W1 — dispatcher bugs present)
+### Run-1 (W1 - dispatcher bugs present)
 
 **Pipeline run:** 2a39cb516c61
 **Document:** NoSQL manual (247,275 chars, 201 pages)
@@ -201,7 +201,7 @@ For cascade: only Qwen 3.5:9B viable for structured analytical output.
 
 **Total:** 1,885.3s (31.4 min). 0 exceptions. **Root cause:** num_ctx 4096 + /api/generate template leakage.
 
-### Run-2 (W1.5 — dispatcher repaired)
+### Run-2 (W1.5 - dispatcher repaired)
 
 **Pipeline run:** 3d0ffba3dbec
 **Dispatch:** Ollama /api/chat, num_ctx 32768, stop tokens
@@ -230,13 +230,13 @@ For cascade: only Qwen 3.5:9B viable for structured analytical output.
 
 ## §10. Wiring Sign-off Package (artifacts/iterations/0.2.14/wiring-signoff.md)
 
-**For Kyle — Hard Gate 3 decision.**
+**For Kyle - Hard Gate 3 decision.**
 
 **Vetting:** 12/16 operational, 2 substrate-compromised, 1 configured-incomplete, 1 gap.
 
 **Cascade:** Architecture validated end-to-end. Five stages execute on 247K-char document. Cross-stage coherence confirmed. Dispatcher honest after W1.5 fix.
 
-**Role assignment:** Qwen-solo (Pillar 7 violated — only viable option).
+**Role assignment:** Qwen-solo (Pillar 7 violated - only viable option).
 
 **Ready for 0.2.15:** Qwen (proven), Llama 3.2 3B (on disk, awaiting integration).
 
@@ -253,7 +253,7 @@ For cascade: only Qwen 3.5:9B viable for structured analytical output.
 - **When:** 2026-04-13, post W1.5 completion
 - **Where:** NZXTcos
 - **Model:** llama3.2:3b (~2GB)
-- **Intent:** 0.2.15 matrix roster — Triage Officer candidate
+- **Intent:** 0.2.15 matrix roster - Triage Officer candidate
 - **Status:** On disk, not loaded, not integrated
 
 ### Council Models Doc (artifacts/council-models-0.2.14.md)
@@ -262,24 +262,24 @@ For cascade: only Qwen 3.5:9B viable for structured analytical output.
 
 ### Pipeline Code
 
-- `src/aho/pipeline/schemas.py` — RoleAssignment, PipelineTrace, HandoffEvent, DeltaItem, DeltaProposal, DeltaValidation
-- `src/aho/pipeline/dispatcher.py` — Ollama HTTP wrapper (/api/chat, num_ctx 32768, stop tokens)
-- `src/aho/pipeline/orchestrator.py` — 5-stage cascade flow with trace events
-- `artifacts/tests/test_pipeline_schemas.py` — 9 tests
-- `artifacts/tests/test_dispatcher_chat_api.py` — 6 tests
-- `artifacts/tests/test_pipeline_integration.py` — integration test
+- `src/aho/pipeline/schemas.py` - RoleAssignment, PipelineTrace, HandoffEvent, DeltaItem, DeltaProposal, DeltaValidation
+- `src/aho/pipeline/dispatcher.py` - Ollama HTTP wrapper (/api/chat, num_ctx 32768, stop tokens)
+- `src/aho/pipeline/orchestrator.py` - 5-stage cascade flow with trace events
+- `artifacts/tests/test_pipeline_schemas.py` - 9 tests
+- `artifacts/tests/test_dispatcher_chat_api.py` - 6 tests
+- `artifacts/tests/test_pipeline_integration.py` - integration test
 
 ### Event Log (0.2.14 workstream events)
 
 ```
-2026-04-13T11:27:53Z workstream_start W0 (iteration=MISSING_ENV_VAR — pre-bump)
+2026-04-13T11:27:53Z workstream_start W0 (iteration=MISSING_ENV_VAR - pre-bump)
 2026-04-13T11:57:44Z workstream_start W1
 2026-04-13T13:16:05Z workstream_start W1.5
 2026-04-13T14:10:43Z pending_audit W1.5
 2026-04-13T14:38:50Z workstream_start W2
 ```
 
-W0 and W1 workstream_complete events emitted in prior sessions (checkpoint updated). W1.5 workstream_complete pending (audit passed, terminal event to be emitted in fresh session per protocol — but W2 was authorized to proceed).
+W0 and W1 workstream_complete events emitted in prior sessions (checkpoint updated). W1.5 workstream_complete pending (audit passed, terminal event to be emitted in fresh session per protocol - but W2 was authorized to proceed).
 
 ### Gotcha Registry
 
@@ -304,7 +304,7 @@ The following sections contain the complete text of all primary artifacts produc
 ### EMBED: aho-design-0.2.14.md
 
 ```markdown
-# aho 0.2.14 — Design Doc
+# aho 0.2.14 - Design Doc
 
 **Theme:** Council wiring verification + cascade smoke test
 **Iteration type:** Wiring (distinct from discovery/build/repair/measurement)
@@ -321,12 +321,12 @@ The following sections contain the complete text of all primary artifacts produc
 
 Target context: aho is heading to Firestore-hosted (NoSQL document store, kjtcom data layer pattern). Pipeline architecture must be Firestore-aware in its data flow even when 0.2.14 still operates on local filesystem staging.
 
-Pipeline roles (5 slots, 4 distinct roles — Indexer appears twice):
-1. Indexer-in — Pre-producer. Scans input against registries.
-2. Producer — Initial analysis from input.
-3. Auditor — Receives Producer's work product AND Indexer-in's proposed deltas.
-4. Indexer-out — Post-auditor. Scans Auditor's findings.
-5. Assessor — Receives all prior work products + Indexer-out's proposed deltas.
+Pipeline roles (5 slots, 4 distinct roles - Indexer appears twice):
+1. Indexer-in - Pre-producer. Scans input against registries.
+2. Producer - Initial analysis from input.
+3. Auditor - Receives Producer's work product AND Indexer-in's proposed deltas.
+4. Indexer-out - Post-auditor. Scans Auditor's findings.
+5. Assessor - Receives all prior work products + Indexer-out's proposed deltas.
 
 Malleable role assignment. Roles bind to models per-run.
 
@@ -349,13 +349,13 @@ Out of scope: Matrix testing, dashboards, role-model fit, council architecture d
 ### EMBED: aho-plan-0.2.14.md
 
 ```markdown
-# aho 0.2.14 — Plan Doc
+# aho 0.2.14 - Plan Doc
 
 **Theme:** Council wiring verification + cascade smoke test
 **Executor:** Claude Code (drafter) | **Auditor:** Gemini CLI | **Sign-off:** Kyle
 **Sessions:** 2 | **Workstreams:** 3
 
-## W0 — Setup + Hygiene + Model Docs + Council Inventory
+## W0 - Setup + Hygiene + Model Docs + Council Inventory
 Role: Setup | Session: 1
 
 Scope:
@@ -369,14 +369,14 @@ Scope:
 8. Council inventory list (16 members)
 9. Stage NoSQL manual (201 pages, 247K chars)
 
-## W1 — Council Vet + Cascade Wire + NoSQL Smoke Test
+## W1 - Council Vet + Cascade Wire + NoSQL Smoke Test
 Role: Vet + Build + Smoke | Session: 1 → 2
 
-Sub-phase 1.A — Council vetting (Gate 1): Invoke every member. Record status.
-Sub-phase 1.B — Pipeline schemas + cascade orchestrator (build)
-Sub-phase 1.C — NoSQL smoke test (Gate 2)
+Sub-phase 1.A - Council vetting (Gate 1): Invoke every member. Record status.
+Sub-phase 1.B - Pipeline schemas + cascade orchestrator (build)
+Sub-phase 1.C - NoSQL smoke test (Gate 2)
 
-## W2 — Sign-off + Close
+## W2 - Sign-off + Close
 Role: Close | Session: 2
 
 6 deliverables: council health, wiring sign-off, retrospective, carry-forwards, bundle, sign-off sheet.
@@ -413,7 +413,7 @@ Total: 3 workstreams. W1 contains internal hard gates.
   "findings": [
     "Baseline at 14, not 13. Two new failures from 0.2.13 close reconciliation.",
     "emit_workstream_complete side-effect bug confirmed live: sibling states corrupted.",
-    "test_workstream_events.py does NOT mock find_project_root — causes real checkpoint corruption.",
+    "test_workstream_events.py does NOT mock find_project_root - causes real checkpoint corruption.",
     "Gotcha registry file not found at artifacts/harness/gotcha-registry*.",
     "No workstream_start event logged because AHO_ITERATION was null (pre-version-bump)."
   ]
@@ -448,10 +448,10 @@ Total: 3 workstreams. W1 contains internal hard gates.
   ],
   "findings": [
     "CRITICAL: Ollama context_length 4096 (not 256K). 247K document truncated to ~4K tokens.",
-    "Producer generated Chinese customer-service response — system prompt ineffective at Q4_K_M with truncated context.",
+    "Producer generated Chinese customer-service response - system prompt ineffective at Q4_K_M with truncated context.",
     "Auditor partially Chinese JSON. Delta validation mechanism works.",
     "Inference speed: ~2-9 min per stage. 20-60+ min total cascade.",
-    "test_workstream_events.py corrupts checkpoint — caused 3 resets during W1.",
+    "test_workstream_events.py corrupts checkpoint - caused 3 resets during W1.",
     "Pillar 7 violated: all 5 roles bound to Qwen 3.5:9B."
   ]
 }
@@ -465,7 +465,7 @@ Total: 3 workstreams. W1 contains internal hard gates.
 {
   "workstream_id": "W1.5",
   "iteration": "0.2.14",
-  "theme": "Substrate Repair — dispatcher /api/chat migration + re-smoke",
+  "theme": "Substrate Repair - dispatcher /api/chat migration + re-smoke",
   "executor": "claude-code",
   "auditor": "gemini-cli",
   "audit_status": "pending_audit",
@@ -495,10 +495,10 @@ Total: 3 workstreams. W1 contains internal hard gates.
       "hard_gates": {
         "gate_1_zero_template_tokens": "PASS",
         "gate_2_no_multi_turn_simulation": "PASS",
-        "gate_3_producer_on_topic_english": "PASS — 3908 chars vs run-1 222-char Chinese",
+        "gate_3_producer_on_topic_english": "PASS - 3908 chars vs run-1 222-char Chinese",
         "gate_4_auditor_single_json": "PASS",
         "gate_5_all_stages_complete": "PASS",
-        "gate_6_no_60min_cap_hit": "PASS — longest 9.5 min"
+        "gate_6_no_60min_cap_hit": "PASS - longest 9.5 min"
       }
     }
   },
@@ -543,7 +543,7 @@ Total: 3 workstreams. W1 contains internal hard gates.
   "findings": {
     "dispatcher_bugs": {
       "context_length": "dispatcher.py fails to set num_ctx, defaulting to 4096.",
-      "template_leakage": "/api/generate without stop tokens — artifacts show <|endoftext|>, <|im_start|>, simulated multi-turn.",
+      "template_leakage": "/api/generate without stop tokens - artifacts show <|endoftext|>, <|im_start|>, simulated multi-turn.",
       "stop_tokens": "Absence caused auditor.json to repeat its entire JSON response twice."
     },
     "smoke_test_raw_analysis": {
@@ -599,7 +599,7 @@ Total: 3 workstreams. W1 contains internal hard gates.
 ### EMBED: council-vetting-results.md
 
 ```markdown
-# Council Vetting Results — 0.2.14 W1
+# Council Vetting Results - 0.2.14 W1
 
 Date: 2026-04-13
 Environment: NZXTcos (CachyOS 6.19.11), Ollama running
@@ -637,8 +637,8 @@ Environment: NZXTcos (CachyOS 6.19.11), Ollama running
 
 ## Nemoclaw Architectural Investigation
 
-Finding: Classification B — explicit role routing supported, model_id routing needs ~20 lines.
-Tested: {"cmd": "dispatch", "task": "Say hello", "role": "assistant"} — 18.5s, no Nemotron involvement.
+Finding: Classification B - explicit role routing supported, model_id routing needs ~20 lines.
+Tested: {"cmd": "dispatch", "task": "Say hello", "role": "assistant"} - 18.5s, no Nemotron involvement.
 
 ## Summary
 
@@ -655,9 +655,9 @@ Tested: {"cmd": "dispatch", "task": "Say hello", "role": "assistant"} — 18.5s,
 ### EMBED: dispatch-decision.md
 
 ```markdown
-# Dispatch Decision — 0.2.14 W1
+# Dispatch Decision - 0.2.14 W1
 
-Nemoclaw investigation: B — explicit role routing supported, model_id routing needs ~20 lines.
+Nemoclaw investigation: B - explicit role routing supported, model_id routing needs ~20 lines.
 
 Decision: Direct Ollama dispatch for cascade orchestrator.
 
@@ -676,7 +676,7 @@ Future: swap to Nemoclaw in 0.2.15 once model_id routing added (~20 lines).
 ### EMBED: council-models-0.2.14.md
 
 ```markdown
-# Council Models — aho 0.2.14
+# Council Models - aho 0.2.14
 
 ## Summary Table
 
@@ -713,7 +713,7 @@ GLM depends on community maintainer. 0.2.13 substrate findings remain dominant c
 ### EMBED: council-inventory.md
 
 ```markdown
-# Council Inventory — 0.2.14
+# Council Inventory - 0.2.14
 
 ## LLMs (4)
 | Member | Claimed Status (0.2.12) |
@@ -721,7 +721,7 @@ GLM depends on community maintainer. 0.2.13 substrate findings remain dominant c
 | Qwen-3.5:9B | operational |
 | Nemotron-mini:4b | substrate-compromised (80% "feature") |
 | GLM-4.6V-Flash-9B | substrate-compromised (80% timeout) |
-| OpenClaw | unknown — never audited |
+| OpenClaw | unknown - never audited |
 
 ## MCPs (9)
 context7, sequential-thinking, playwright, filesystem, dart, memory: operational
@@ -738,13 +738,13 @@ Summary: 8 operational, 2 substrate-compromised, 6 unknown (pre-W1 vetting).
 ### EMBED: smoke-test/role-assignment.md
 
 ```markdown
-# Smoke Test Role Assignment — 0.2.14 W1
+# Smoke Test Role Assignment - 0.2.14 W1
 
 Assignment: Qwen-solo
 All 5 roles → qwen3.5:9b. Only viable LLM per vetting.
 
 Pillar 7 Violation Acknowledged: same model drafts and reviews.
-Acceptable for smoke — proves cascade works mechanically.
+Acceptable for smoke - proves cascade works mechanically.
 Restoration path: 0.2.15 matrix testing with expanded roster.
 
 Document: nosql-manual.txt, 247,275 chars, 201 pages.
@@ -800,12 +800,12 @@ Per-stage timeout: 3600 seconds.
 ### EMBED: smoke-test/smoke-test-summary.md
 
 ```markdown
-# Smoke Test Summary — 0.2.14 W1
+# Smoke Test Summary - 0.2.14 W1
 
 Document: NoSQL_DataPipelines_Technical_Manual.pdf (201 pages, 247,275 chars)
-Assignment: Qwen-solo (qwen3.5:9b × 5 roles) — Pillar 7 violation acknowledged
+Assignment: Qwen-solo (qwen3.5:9b × 5 roles) - Pillar 7 violation acknowledged
 Dispatch: Direct Ollama HTTP API
-Status: Complete — all 5 stages finished, 0 exceptions
+Status: Complete - all 5 stages finished, 0 exceptions
 
 Per-Stage Results:
 | Stage | Wall Clock | Output Chars | Notes |
@@ -830,14 +830,14 @@ per-stage artifacts written, auditor validates deltas, assessor produces meta-as
 ### EMBED: llama-3.2-3b-pulled.md
 
 ```markdown
-# Llama 3.2 3B Pull — Pre-W2 Roster Pre-positioning
+# Llama 3.2 3B Pull - Pre-W2 Roster Pre-positioning
 
 - When: 2026-04-13, post W1.5 completion
 - Where: NZXTcos
 - Model: llama3.2:3b (~2GB on disk)
-- Intent: 0.2.15 matrix roster — Triage Officer role candidate
+- Intent: 0.2.15 matrix roster - Triage Officer role candidate
 - Status: On disk, not loaded, not integrated
-- Pulled outside any active workstream — pre-positioning during W1.5 audit window.
+- Pulled outside any active workstream - pre-positioning during W1.5 audit window.
 ```
 
 ---
@@ -845,7 +845,7 @@ per-stage artifacts written, auditor validates deltas, assessor produces meta-as
 ### EMBED: src/aho/pipeline/schemas.py
 
 ```python
-"""Pipeline schemas — Role assignment, trace, and delta (0.2.14 W1)."""
+"""Pipeline schemas - Role assignment, trace, and delta (0.2.14 W1)."""
 from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, Field, field_validator
@@ -929,7 +929,7 @@ class DeltaValidation(BaseModel):
 ### EMBED: src/aho/pipeline/dispatcher.py
 
 ```python
-"""Pipeline dispatcher — thin wrapper around Ollama HTTP API (0.2.14 W1.5).
+"""Pipeline dispatcher - thin wrapper around Ollama HTTP API (0.2.14 W1.5).
 
 W1.5 repair: switched from /api/generate to /api/chat to fix template
 leakage. See audit/W1.json dispatcher_bugs findings.
@@ -998,7 +998,7 @@ def dispatch(model_id: str, prompt: str, system: Optional[str] = None,
 ### EMBED: src/aho/pipeline/orchestrator.py
 
 ```python
-"""Cascade orchestrator — 5-stage pipeline execution (0.2.14 W1).
+"""Cascade orchestrator - 5-stage pipeline execution (0.2.14 W1).
 
 Executes: indexer_in → producer → auditor → indexer_out → assessor
 """
@@ -1086,7 +1086,7 @@ def _build_stage_prompt(stage, document, prior_outputs):
 
 Stage: indexer_in | Model: qwen3.5:9b | Wall clock: 136.45s | Output: 3,061 chars
 
-Response analyzed optimization logic from Sections 98-100 (pp.194-201) — the tail of the document visible in the 4K context window. Produced substantive table of MongoDB/Cassandra/Neo4j/Redis optimization drivers with P99 latency targets and IOPS caps. Identified ingestion schema rules and critical constraints. BUT: ends with `<|endoftext|><|im_start|>user` followed by Chinese text — template token leakage from /api/generate endpoint.
+Response analyzed optimization logic from Sections 98-100 (pp.194-201) - the tail of the document visible in the 4K context window. Produced substantive table of MongoDB/Cassandra/Neo4j/Redis optimization drivers with P99 latency targets and IOPS caps. Identified ingestion schema rules and critical constraints. BUT: ends with `<|endoftext|><|im_start|>user` followed by Chinese text - template token leakage from /api/generate endpoint.
 
 ### EMBED: smoke-test/run-1/producer.json (raw response)
 
@@ -1098,13 +1098,13 @@ Total failure. Response is entirely Chinese: "您好！我是您的智能客服�
 
 Stage: auditor | Model: qwen3.5:9b | Wall clock: 527.12s | Output: 1,936 chars
 
-Two complete JSON blocks separated by `<|endoftext|><|im_start|>` tokens — the auditor's response was repeated twice in a single output due to template leakage. Content in Chinese. Delta validations all accepted (4/4). Followed by simulated user turn in Chinese.
+Two complete JSON blocks separated by `<|endoftext|><|im_start|>` tokens - the auditor's response was repeated twice in a single output due to template leakage. Content in Chinese. Delta validations all accepted (4/4). Followed by simulated user turn in Chinese.
 
 ### EMBED: smoke-test/run-1/indexer_out.json (raw response)
 
 Stage: indexer_out | Model: qwen3.5:9b | Wall clock: 549.16s | Output: 214 chars
 
-Short JSON identifying "no proposed Deltas" in auditor findings. Honest empty assessment. BUT: truncated mid-Chinese-word with `<|endoftext|><|im_start|>user\n你` — template leakage visible.
+Short JSON identifying "no proposed Deltas" in auditor findings. Honest empty assessment. BUT: truncated mid-Chinese-word with `<|endoftext|><|im_start|>user\n你` - template leakage visible.
 
 ### EMBED: smoke-test/run-1/assessor.json (raw response)
 
@@ -1118,7 +1118,7 @@ Cleanest run-1 output. Valid JSON assessment identifying indexer_in optimization
 
 Stage: indexer_in | Model: qwen3.5:9b | Wall clock: 485.96s | Output: 3,550 chars
 
-Analyzed Sections 71-100 with 32K context window. Comprehensive structural analysis: module rotation (Neo4j, Redis, MongoDB, Cassandra), consistent parameters (QUORUM, replication 3), performance constraints table (P99 latency 80-110ms, IOPS 12K-15K). Identified critical constraints: Context Window Leak must remain None, join-heavy operations flagged as regressions. Ends with "Next Steps" options (chat-model helpfulness bias — noted as carry-forward).
+Analyzed Sections 71-100 with 32K context window. Comprehensive structural analysis: module rotation (Neo4j, Redis, MongoDB, Cassandra), consistent parameters (QUORUM, replication 3), performance constraints table (P99 latency 80-110ms, IOPS 12K-15K). Identified critical constraints: Context Window Leak must remain None, join-heavy operations flagged as regressions. Ends with "Next Steps" options (chat-model helpfulness bias - noted as carry-forward).
 
 ### EMBED: smoke-test/run-2/producer.json (raw response)
 
@@ -1137,15 +1137,15 @@ Single coherent JSON block (no doubling, no template tokens). analysis_review co
 Stage: indexer_out | Model: qwen3.5:9b | Wall clock: 212.89s | Output: 2,031 chars
 
 3 substantive proposed deltas responding to auditor findings:
-1. Decision Logic (0.95 confidence) — consolidate action plan to Option 3
-2. Technical Implementation (0.90) — generate specific Cypher schema definitions and Neo4j config
-3. Constraint Monitoring (0.85) — integrate automated validation scripts for P99 and Context Window Leak
+1. Decision Logic (0.95 confidence) - consolidate action plan to Option 3
+2. Technical Implementation (0.90) - generate specific Cypher schema definitions and Neo4j config
+3. Constraint Monitoring (0.85) - integrate automated validation scripts for P99 and Context Window Leak
 
 ### EMBED: smoke-test/run-2/assessor.json (raw response)
 
 Stage: assessor | Model: qwen3.5:9b | Wall clock: 134.02s | Output: 3,062 chars
 
-Comprehensive meta-assessment. Quality score: 92. All 3 indexer_out deltas accepted with substantive reasoning. Final summary synthesizes full pipeline output. 4 recommendations: finalize Option 3, generate Neo4j config, integrate monitoring scripts, document sharding strategy. Cross-stage coherence validated — assessor references auditor's ambiguity finding, indexer_out's resolution, and the original constraint framework.
+Comprehensive meta-assessment. Quality score: 92. All 3 indexer_out deltas accepted with substantive reasoning. Final summary synthesizes full pipeline output. 4 recommendations: finalize Option 3, generate Neo4j config, integrate monitoring scripts, document sharding strategy. Cross-stage coherence validated - assessor references auditor's ambiguity finding, indexer_out's resolution, and the original constraint framework.
 
 ---
 
@@ -1159,7 +1159,7 @@ Comprehensive meta-assessment. Quality score: 92. All 3 indexer_out deltas accep
 2026-04-13T14:38:50Z workstream_start  W2    iteration=0.2.14
 ```
 
-Background events (sample): harness-watcher heartbeats every 30s, nemotron-client classify calls (timing out — Ollama busy with pytest), openclaw/nemoclaw/telegram heartbeats with MISSING_ENV_VAR.
+Background events (sample): harness-watcher heartbeats every 30s, nemotron-client classify calls (timing out - Ollama busy with pytest), openclaw/nemoclaw/telegram heartbeats with MISSING_ENV_VAR.
 
 ---
 

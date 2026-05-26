@@ -547,7 +547,7 @@ def main():
     pts = pt.add_subparsers(dest="telegram_cmd")
     pt_test = pts.add_parser("test", help="Send a test message")
     pt_test.add_argument("project", help="Project code (for credentials)")
-    pt_test.add_argument("text", nargs="?", default="aho Telegram smoke test — system live", help="Message text")
+    pt_test.add_argument("text", nargs="?", default="aho Telegram smoke test - system live", help="Message text")
 
     prf = sub.add_parser("preflight")
     prfs = prf.add_subparsers(dest="preflight_cmd")
@@ -719,13 +719,13 @@ def main():
     pc_status.add_argument("--member", help="Detail on one member")
     pc_status.add_argument("--verbose", action="store_true", help="Include G083 scan summary and routing activity")
 
-    # --- aho serve (0.2.17 W1 — container ready-and-waiting mode) ---
+    # --- aho serve (0.2.17 W1 - container ready-and-waiting mode) ---
     sub.add_parser("serve", help="Container ready-and-waiting mode (W1 entrypoint default)")
 
     # --- aho tier-detect (0.2.17 W1 D2) ---
     sub.add_parser("tier-detect", help="Detect VRAM tier (base/partial/full); print to stdout")
 
-    # --- aho secrets-test (0.2.17 W1 D3 — test-only round-trip via broker) ---
+    # --- aho secrets-test (0.2.17 W1 D3 - test-only round-trip via broker) ---
     pst = sub.add_parser(
         "secrets-test",
         help="W1 test-only: round-trip get_secret via host broker socket",
@@ -733,7 +733,7 @@ def main():
     pst.add_argument("project", help="Project label (must match broker registration)")
     pst.add_argument("name", help="Secret name")
 
-    # --- aho host (0.2.17 W1 D3 — host-side broker + run-container wrapper) ---
+    # --- aho host (0.2.17 W1 D3 - host-side broker + run-container wrapper) ---
     phost = sub.add_parser("host", help="Host-side primitives (secrets broker, run-container)")
     phosts = phost.add_subparsers(dest="host_cmd")
     phost_brk = phosts.add_parser(
@@ -1068,7 +1068,7 @@ def main():
                     broker.stop()
                 sys.exit(0)
             else:
-                # status / shutdown — connect as client
+                # status / shutdown - connect as client
                 import json as _json
                 import socket as _socket
                 target = sock_path or default_socket_path()

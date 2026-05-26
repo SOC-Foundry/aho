@@ -1,10 +1,10 @@
-# ADR 0004 — `aho iteration close --confirm` Redesign
+# ADR 0004 - `aho iteration close --confirm` Redesign
 
 **Status:** Proposed (design only; implementation deferred to 0.2.16 W4)
 **Date:** 2026-04-21
-**Iteration of record:** aho 0.2.16 W0 (bonus — scope-appropriate design, implementation out of W0 budget)
+**Iteration of record:** aho 0.2.16 W0 (bonus - scope-appropriate design, implementation out of W0 budget)
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — iteration-close state machine.
+**Context surface:** aho project-internal - iteration-close state machine.
 
 ---
 
@@ -12,7 +12,7 @@
 
 Two problems surfaced during the 0.2.15 close-out work and are carried into this ADR:
 
-### Problem 1 — `aho iteration close --confirm` is a stub
+### Problem 1 - `aho iteration close --confirm` is a stub
 
 `src/aho/cli.py:212-237` implements `aho iteration close`. The `--confirm` branch:
 
@@ -38,15 +38,15 @@ What it does **not** do:
 - Emit any event (no `iteration_close`, no `iteration_complete`).
 - Advance anything.
 
-Consequence: Kyle observed `--confirm` printing `"Iteration 0.2.14 confirmed and closed"` even when the checkpoint was at 0.2.16. The `.aho.json` `current_iteration` field was stale (value `"0.2.14"`, `last_completed_iteration` `"0.2.13"`) — two iterations behind reality. The command printed that stale value and exited zero.
+Consequence: Kyle observed `--confirm` printing `"Iteration 0.2.14 confirmed and closed"` even when the checkpoint was at 0.2.16. The `.aho.json` `current_iteration` field was stale (value `"0.2.14"`, `last_completed_iteration` `"0.2.13"`) - two iterations behind reality. The command printed that stale value and exited zero.
 
-The non-`--confirm` branch (`cli.py:238-326`) is the real close committer — tests, bundle, report, postflight, `.aho.json` update via `update_last_completed`, checkpoint `status=closed`, `last_event=close_complete`. This is inverted semantics: the presence of `--confirm` should commit; its absence should dry-run.
+The non-`--confirm` branch (`cli.py:238-326`) is the real close committer - tests, bundle, report, postflight, `.aho.json` update via `update_last_completed`, checkpoint `status=closed`, `last_event=close_complete`. This is inverted semantics: the presence of `--confirm` should commit; its absence should dry-run.
 
-### Problem 2 — Sign-off sheet has Kyle ticking checkboxes manually
+### Problem 2 - Sign-off sheet has Kyle ticking checkboxes manually
 
 The 0.2.15 sign-off sheet (`artifacts/iterations/0.2.15/sign-off-0.2.15.md`) lists per-workstream acceptance gates with `[ ]` / `[x]` checkboxes. Kyle manually edits the file to tick each box after verifying evidence. The close-confirm stub above checks those box states (via `validate_signoff`) before printing.
 
-Pillar 1 (delegate everything delegable): the orchestrator's minutes are spent on judgment, scope, and novelty. Mechanical verification — "do all workstreams have a `pass`/`pass_with_findings` audit archive" — is not judgment work. It is mechanical work that should run locally without human checkbox-ticking.
+Pillar 1 (delegate everything delegable): the orchestrator's minutes are spent on judgment, scope, and novelty. Mechanical verification - "do all workstreams have a `pass`/`pass_with_findings` audit archive" - is not judgment work. It is mechanical work that should run locally without human checkbox-ticking.
 
 ### The count-drift recurrence
 
@@ -57,8 +57,8 @@ As a downstream consequence of the manual sign-off pattern, count drift creeps i
 Redesign `aho iteration close --confirm` so that:
 
 1. `--confirm` is the **committing** verb and the only path that mutates state. Without `--confirm`, the command dry-runs.
-2. The commit path reads acceptance and audit archives **directly** — no sign-off checkbox evaluation.
-3. Pass/fail is asserted on the archives — every workstream must have an `acceptance/W{N}.json` with `audit_status` that points to an `audit/W{N}.json` (or `audit/W{N}-v{k}.json` if re-audited) with `audit_result ∈ {pass, pass_with_findings}`.
+2. The commit path reads acceptance and audit archives **directly** - no sign-off checkbox evaluation.
+3. Pass/fail is asserted on the archives - every workstream must have an `acceptance/W{N}.json` with `audit_status` that points to an `audit/W{N}.json` (or `audit/W{N}-v{k}.json` if re-audited) with `audit_result ∈ {pass, pass_with_findings}`.
 4. `.aho.json.current_iteration` and `last_completed_iteration` are advanced atomically with the checkpoint transition. The `last_completed_iteration` bump currently done by `update_last_completed(iteration)` is retained; `current_iteration` is advanced to the next iteration value as part of the same write (or explicitly deferred to a separate `aho iteration advance` command if preferred).
 5. An `iteration_complete` event is emitted to the event log, carrying a manifest of the workstreams, their acceptance/audit references, and the count of carry-forwards (sourced from `carry-forwards-{iteration}.md` parse). The event payload is the canonical count; sign-off / bundle / carry-forwards file footers all **read** from this event instead of maintaining parallel copies.
 6. Pillar 11 is preserved: Kyle triggers the close command. No agent runs it autonomously. The close command's authority is delegated *validation*, not *commission*.
@@ -92,16 +92,16 @@ The sign-off sheet becomes a **record**, not a gate. It continues to exist (bund
 
 ### Count-of-carry-forwards single source of truth
 
-Parse `carry-forwards-{iteration}.md` at close-commit time, count the bullet items, write the number into the `iteration_complete` event payload. Bundle generator, sign-off renderer, and any downstream consumer **read** this number from the event — never recount independently. AF001 goes away because only one count exists.
+Parse `carry-forwards-{iteration}.md` at close-commit time, count the bullet items, write the number into the `iteration_complete` event payload. Bundle generator, sign-off renderer, and any downstream consumer **read** this number from the event - never recount independently. AF001 goes away because only one count exists.
 
 ## Consequences
 
 ### Positive
 
-- No more "prints 0.2.14 regardless of state" — the `--confirm` path actually commits state.
-- No more manual checkbox-ticking — Pillar 1 violation removed.
+- No more "prints 0.2.14 regardless of state" - the `--confirm` path actually commits state.
+- No more manual checkbox-ticking - Pillar 1 violation removed.
 - Count drift (AF001) goes away structurally.
-- `.aho.json` / checkpoint drift detected on close — if `current_iteration` disagrees with the checkpoint at close time, the command halts and surfaces the discrepancy rather than silently advancing.
+- `.aho.json` / checkpoint drift detected on close - if `current_iteration` disagrees with the checkpoint at close time, the command halts and surfaces the discrepancy rather than silently advancing.
 
 ### Negative
 
@@ -136,12 +136,12 @@ Parse `carry-forwards-{iteration}.md` at close-commit time, count the bullet ite
 
 ## Filing
 
-This ADR stands on its own. The corresponding finding in the W0 acceptance archive is **F-W0-002** — `aho iteration close --confirm` is a stub. The finding records the symptom and points here for the redesign; the redesign lands in W4 per this plan.
+This ADR stands on its own. The corresponding finding in the W0 acceptance archive is **F-W0-002** - `aho iteration close --confirm` is a stub. The finding records the symptom and points here for the redesign; the redesign lands in W4 per this plan.
 
 ## References
 
-- `src/aho/cli.py:212-326` — current close implementation.
-- `.aho.json` — `current_iteration` field (observed stale at 0.2.14 during W0).
-- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` — current manual-checkbox format.
-- `artifacts/iterations/0.2.15/audit/W4.json` — AF001 count-drift finding that motivated §Count-of-carry-forwards single source of truth.
-- GEMINI.md §Specific audit focus → count-coherence check — the compensating control that the single-source-of-truth design removes the need for.
+- `src/aho/cli.py:212-326` - current close implementation.
+- `.aho.json` - `current_iteration` field (observed stale at 0.2.14 during W0).
+- `artifacts/iterations/0.2.15/sign-off-0.2.15.md` - current manual-checkbox format.
+- `artifacts/iterations/0.2.15/audit/W4.json` - AF001 count-drift finding that motivated §Count-of-carry-forwards single source of truth.
+- GEMINI.md §Specific audit focus → count-coherence check - the compensating control that the single-source-of-truth design removes the need for.

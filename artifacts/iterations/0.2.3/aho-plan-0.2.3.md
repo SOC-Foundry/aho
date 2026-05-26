@@ -1,4 +1,4 @@
-# aho 0.2.3 — Plan
+# aho 0.2.3 - Plan
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 3 | **run_type:** mixed
 **Agent:** Claude Code single-agent throughout | **Wall clock target:** 3-4 hours
@@ -14,7 +14,7 @@ mkdir -p artifacts/iterations/0.2.3
 mkdir -p web/claw3d
 ```
 
-## W0 — Hygiene + carryover cleanup
+## W0 - Hygiene + carryover cleanup
 
 ```fish
 # Bump versions across canonical artifacts using broadened patterns
@@ -29,7 +29,7 @@ sed -i 's|^version = "0\.2\.2"|version = "0.2.3"|' pyproject.toml
 sed -i 's|updated during 0\.2\.2|updated during 0.2.3|' CLAUDE.md GEMINI.md
 ```
 
-**Fix MANIFEST writer** in `src/aho/components/manifest.py` (or wherever the writer lives — search via `rg -n '"version":' src/aho/`): ensure the `version` field is bumped from `.aho.json` `current_iteration` on every regeneration. Add a test.
+**Fix MANIFEST writer** in `src/aho/components/manifest.py` (or wherever the writer lives - search via `rg -n '"version":' src/aho/`): ensure the `version` field is bumped from `.aho.json` `current_iteration` on every regeneration. Add a test.
 
 **Dedupe build log filename:** find what writes `aho-build-{iteration}.md` (the variant without `-log-`). Search: `rg -n 'aho-build-' src/aho/postflight/ src/aho/feedback/`. Remove the duplicate write. `aho-build-log-{iteration}.md` is canonical.
 
@@ -40,7 +40,7 @@ sed -i 's|updated during 0\.2\.2|updated during 0.2.3|' CLAUDE.md GEMINI.md
 python -m pytest artifacts/tests/ -x
 ```
 
-## W1 — MCP server fleet
+## W1 - MCP server fleet
 
 **Add to components.yaml** (12 entries, all `kind: mcp_server`, `status: active`, `owner: soc-foundry`):
 - mcp-firebase-tools, mcp-context7, mcp-firecrawl, mcp-playwright, mcp-flutter
@@ -76,7 +76,7 @@ end
 
 **Doctor `_check_mcp_fleet()`** in `src/aho/doctor.py`: returns ok if all 12 packages found via `npm list -g --depth=0`, otherwise lists missing.
 
-## W2 — Three-agent role split
+## W2 - Three-agent role split
 
 **`src/aho/agents/roles/workstream_agent.py`:**
 ```python
@@ -182,9 +182,9 @@ WantedBy=default.target
 - evaluator-agent (kind: agent, status: active, notes: "GLM-bound, review role, activated 0.2.3 W2")
 - harness-agent (kind: agent, status: active, notes: "Nemotron-bound, watcher daemon, activated 0.2.3 W2")
 
-**Tests:** test_workstream_agent.py, test_evaluator_agent.py, test_harness_agent.py, test_conductor.py — at least 3 tests each, mock LLM clients.
+**Tests:** test_workstream_agent.py, test_evaluator_agent.py, test_harness_agent.py, test_conductor.py - at least 3 tests each, mock LLM clients.
 
-## W3 — Localhost arch + dashboard plumbing
+## W3 - Localhost arch + dashboard plumbing
 
 **Update `.aho.json`** to include `dashboard_port: 7800`, `aho_role: "localhost"`, `port_range: [7800, 7899]`. Add migration logic in `src/aho/config.py` for clones missing these fields (defaults: port from machine-specific table, role="localhost").
 
@@ -230,9 +230,9 @@ fetch('/components.yaml').then(r => r.text()).then(t => {
 </body></html>
 ```
 
-**`bin/aho-dashboard`** skeleton — Python http.server binding to `127.0.0.1:7800`, serves traces.jsonl tail as JSON. Just enough to prove the port binding works.
+**`bin/aho-dashboard`** skeleton - Python http.server binding to `127.0.0.1:7800`, serves traces.jsonl tail as JSON. Just enough to prove the port binding works.
 
-## W4 — Per-clone age + bundle expansion + doctor
+## W4 - Per-clone age + bundle expansion + doctor
 
 **`bin/aho-install`** age keygen block:
 ```fish
@@ -251,9 +251,9 @@ end
 **Doctor additions** in `src/aho/doctor.py`:
 - `_check_age_key()`: returns ok if `~/.config/aho/age.key` exists with mode 600
 - `_check_dashboard_port()`: returns ok if `.aho.json` has `dashboard_port` field and port is bindable
-- `_check_role_agents()`: imports workstream_agent, evaluator_agent, harness_agent — fails if ImportError
+- `_check_role_agents()`: imports workstream_agent, evaluator_agent, harness_agent - fails if ImportError
 
-## W5 — Dogfood + close
+## W5 - Dogfood + close
 
 **Conductor smoke test:**
 ```fish

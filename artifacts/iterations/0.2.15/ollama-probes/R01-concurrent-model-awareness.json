@@ -22,11 +22,11 @@
     {
       "step": "After Qwen + Llama load",
       "models_reported": ["nemotron-mini:4b", "llama3.2:3b"],
-      "note": "Qwen evicted when Llama loaded. Nemotron reappeared — possible VRAM caching/partial offload behavior. Llama (2.75GB) + Nemotron (3.05GB) = 5.8GB fits in 8GB VRAM.",
+      "note": "Qwen evicted when Llama loaded. Nemotron reappeared - possible VRAM caching/partial offload behavior. Llama (2.75GB) + Nemotron (3.05GB) = 5.8GB fits in 8GB VRAM.",
       "model_count": 2
     }
   ],
-  "evidence_summary": "/api/ps accurately reports loaded models with all required fields (name, size_vram, context_length, expires_at). Reports are consistent with observed VRAM behavior. Nemotron reappearance after Qwen eviction is surprising but not incorrect — Ollama may cache models in system RAM and restore when VRAM becomes available.",
+  "evidence_summary": "/api/ps accurately reports loaded models with all required fields (name, size_vram, context_length, expires_at). Reports are consistent with observed VRAM behavior. Nemotron reappearance after Qwen eviction is surprising but not incorrect - Ollama may cache models in system RAM and restore when VRAM becomes available.",
   "gpu_info": {
     "gpu": "NVIDIA GeForce RTX 2080 SUPER",
     "vram_total_mib": 8192,

@@ -3,7 +3,7 @@
 #
 # Thresholds in this file (cost $2.00/10m, tool-duration p99 baseline)
 # were calibrated against one specific deployment. Recalibrate against
-# your own session distributions before relying on them — see
+# your own session distributions before relying on them - see
 # ../README.md §"Calibration".
 #
 # Status: rule expressions only. Consumer must wire to their own

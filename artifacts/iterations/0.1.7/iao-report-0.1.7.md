@@ -3,7 +3,7 @@
 **Generated:** 2026-04-10T17:00:00Z  
 **Iteration:** 0.1.7  
 **Phase:** 0 (NZXT-only authoring)  
-**Theme:** Let Qwen Cook — repair the artifact loop supporting Qwen
+**Theme:** Let Qwen Cook - repair the artifact loop supporting Qwen
 
 ---
 

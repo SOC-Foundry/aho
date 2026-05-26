@@ -1,4 +1,4 @@
-"""Tests for aho.acceptance — AcceptanceCheck primitive.
+"""Tests for aho.acceptance - AcceptanceCheck primitive.
 
 Minimum 7 cases per W1 plan:
 1. happy path (exit 0, no pattern)

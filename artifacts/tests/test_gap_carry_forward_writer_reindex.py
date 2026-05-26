@@ -20,8 +20,8 @@ import pytest
 def _make_carry_forwards_file(tmp_path: Path, iteration: str) -> Path:
     p = tmp_path / f"carry-forwards-{iteration}.md"
     p.write_text(
-        f"# Carry-forwards — {iteration}\n\n## Target: 0.3.x base-tier hardening\n\n"
-        "- **F-EXISTING-001 — preexisting entry**\n"
+        f"# Carry-forwards - {iteration}\n\n## Target: 0.3.x base-tier hardening\n\n"
+        "- **F-EXISTING-001 - preexisting entry**\n"
         "  - Severity: info\n"
         "  - what: pre-existing fixture entry\n"
         "  - Disposition: noop\n"
@@ -105,7 +105,7 @@ def test_append_succeeds_when_reindex_raises(tmp_path, monkeypatch, capsys):
         },
     )
 
-    # Append must have succeeded — file mutated, counts advanced.
+    # Append must have succeeded - file mutated, counts advanced.
     assert result["entries_added"] == 1
     assert "F-TEST-W6-FAIL-002" in cf_file.read_text(encoding="utf-8")
 

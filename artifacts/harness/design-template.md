@@ -1,4 +1,4 @@
-# aho Design — X.Y.Z
+# aho Design - X.Y.Z
 
 **Phase:** N | **Iteration:** Y | **Run:** Z
 **Theme:** <one-line theme>
@@ -23,8 +23,8 @@
 The Trident diagram is REQUIRED in every design doc. It uses Mermaid
 `graph BT` (bottom-to-top) with exactly two classDefs:
 
-- **shaft**: fill #0D9488 (teal), white text — represents the iteration
-- **prong**: fill #161B22 (dark), stroke #4ADE80 (green) — represents workstream groups
+- **shaft**: fill #0D9488 (teal), white text - represents the iteration
+- **prong**: fill #161B22 (dark), stroke #4ADE80 (green) - represents workstream groups
 
 Minimum 2 prongs, maximum 4. Each prong connects to the shaft via `-->`.
 
@@ -50,7 +50,7 @@ graph BT
 
 ## §5 Pillars
 
-<numbered pillar list — 10 or 11 depending on iteration scope>
+<numbered pillar list - 10 or 11 depending on iteration scope>
 
 ## §6 Workstream Summary
 

@@ -27,6 +27,6 @@
       "result": "pass"
     }
   ],
-  "evidence_summary": "No context leak detected. Each request is stateless — response reflects only the current request's system prompt and user message. Tested across 2 models with unique identifiers. Ollama's /api/chat endpoint is correctly stateless per-request.",
+  "evidence_summary": "No context leak detected. Each request is stateless - response reflects only the current request's system prompt and user message. Tested across 2 models with unique identifiers. Ollama's /api/chat endpoint is correctly stateless per-request.",
   "note": "GLM and Nemotron not tested (GLM cannot load; Nemotron context leak is low-risk given identity confusion is model-intrinsic, not context-bleed). Qwen and Llama cover the primary concern."
 }

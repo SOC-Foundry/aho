@@ -1,10 +1,10 @@
-# ADR 0007 — Containerization Architecture
+# ADR 0007 - Containerization Architecture
 
 **Status:** Accepted
 **Date:** 2026-05-01
 **Iteration of record:** aho 0.2.16 W4
 **Decision owner:** Kyle Thompson (signs), Claude Code (drafted), Gemini CLI (audits)
-**Context surface:** aho project-internal — packaging and deployment shape
+**Context surface:** aho project-internal - packaging and deployment shape
 for 0.2.17 onward. Inherits in 0.3.x for partial- and full-tier deployment;
 informs Phase B/C architectural decisions.
 
@@ -17,12 +17,12 @@ per-machine drift management. The harness, the pipeline, the dispatcher,
 the dashboard, and the model bundle live as a colocated single-machine
 deployment. Migrating to a second machine (tsP3, A8cos, Luke's box)
 requires re-running install.fish and absorbing whatever drift the target
-machine introduces — Arch family detection, VRAM tier, GPU vendor
+machine introduces - Arch family detection, VRAM tier, GPU vendor
 peculiarities, ollama service hygiene, Python virtualenv shape.
 
 The future-state architecture (per Kyle's strategic direction) places
-aho's harness at the edge — engineer workstations, both local and remote
-— with the heavy model compute at the center, on a Tier 2 cloud serving
+aho's harness at the edge - engineer workstations, both local and remote
+- with the heavy model compute at the center, on a Tier 2 cloud serving
 plane. Bridging today's single-machine local loop to tomorrow's
 distributed deployment requires a portable artifact that:
 
@@ -31,7 +31,7 @@ distributed deployment requires a portable artifact that:
    install.fish drift.
 2. Adapts its model bundle to the host's GPU capacity at install time,
    rather than baking a single fat-or-skinny bundle into the image.
-3. Preserves Pillar 11's secrets posture — secrets stay on the host,
+3. Preserves Pillar 11's secrets posture - secrets stay on the host,
    never in the image, never in the registry.
 4. Targets a runtime that fits the CachyOS-posture local hosts and a
    Linux-on-cloud-VM serving target without runtime-hopping.
@@ -54,7 +54,7 @@ set into a host-volume that the container mounts:
 
 | Tier | VRAM threshold | Model bundle | Target hosts |
 |---|---|---|---|
-| **base** | < 12 GB or no nvidia-smi | nemotron-mini:4b (~2.7 GB), nomic-embed-text (~274 MB), llama3.2:3b (~2.0 GB) — total ~5 GB | iGPU hosts, NZXTcos (8 GB), integrated-only laptops |
+| **base** | < 12 GB or no nvidia-smi | nemotron-mini:4b (~2.7 GB), nomic-embed-text (~274 MB), llama3.2:3b (~2.0 GB) - total ~5 GB | iGPU hosts, NZXTcos (8 GB), integrated-only laptops |
 | **partial** | 12 GB to < 32 GB | base bundle + qwen3.5:9b (~6.6 GB), haervwe/GLM-4.6V-Flash-9B (~8.0 GB) and any future ≤16-GB-fit models | tsP3 (16 GB), mid-tier discrete-GPU workstations |
 | **full** | ≥ 32 GB | partial bundle + Nemotron Super (~42 GB) and future large-model additions | A100/H100-class cloud GPU pools (GCP intranet target) |
 
@@ -68,8 +68,8 @@ container-side. The image's disk footprint stays bounded.
 NZXTcos (8 GB VRAM) is **base tier**. The threshold ≤ 12 GB places it
 unambiguously in base; no caveat applies.
 
-The historical NZXTcos behavior — running partial-tier models on the
-bare host with `num_gpu` partial-CPU-offload workarounds — is
+The historical NZXTcos behavior - running partial-tier models on the
+bare host with `num_gpu` partial-CPU-offload workarounds - is
 **out of scope for containerized deployment**. Those workarounds remain
 available to the operator on the bare host (the legacy install.fish
 path through 0.2.x close), but they are not what the container ships
@@ -130,7 +130,7 @@ host-mounted path via bind-mount:
 
 The container's user inside the image has read permission on the
 mounted secret paths and no write permission. The age identity stays
-per-machine — moving aho to a new host requires the operator to mint a
+per-machine - moving aho to a new host requires the operator to mint a
 new age identity on that host and re-encrypt the bulk bundle for it.
 
 The image itself ships with **zero** secrets baked in. The image is
@@ -174,19 +174,19 @@ Starting preference: **Podman**. Rationale:
 - OCI-compliant. Images built by podman pull and run under docker; no
   vendor lock.
 
-Docker is the **fallback** runtime — supported when Podman is not
+Docker is the **fallback** runtime - supported when Podman is not
 available on a host (e.g., a future macOS or Windows engineer
 workstation where Docker Desktop is the path of least resistance), but
 not the recommended runtime for the Linux fleet that the 0.2.17 / 0.3
 deployment targets.
 
-The decision is **soft-deferred** — 0.2.17 W0 confirms Podman runs
+The decision is **soft-deferred** - 0.2.17 W0 confirms Podman runs
 cleanly on NZXTcos before locking the choice. If Podman surfaces a
 blocker in W0 (e.g., GPU passthrough fragility under rootless mode),
 the fallback to Docker is a one-decision pivot with no architectural
 cascade.
 
-### Runtime choice — 0.2.17 W0 confirmation (Podman engaged)
+### Runtime choice - 0.2.17 W0 confirmation (Podman engaged)
 
 **Outcome: Podman, as originally preferred.** 0.2.17 W0 Bucket 2
 confirmed Podman runs cleanly on NZXTcos. `podman 5.8.2` installed
@@ -204,7 +204,7 @@ architectural cascade if a future host fails Podman.
 Podman via pacman failed at the network layer with corrupted CachyOS
 package databases. Investigation surfaced the root cause as Tailscale
 split-DNS hijacking specific CachyOS mirror domains and returning
-incorrect IPs — not aho-introduced, not CachyOS-mirror-broken.
+incorrect IPs - not aho-introduced, not CachyOS-mirror-broken.
 Resolved by Kyle's host-side split-DNS fix excluding the mirror
 domains from Tailscale's resolver. The detour included a tentative
 flip to Docker (already installed on NZXTcos at 29.4.1) under the
@@ -224,7 +224,7 @@ dispatcher (W3), and telemetry wiring (W4) proceed under Podman as
 originally scoped. `host.containers.internal` (Podman default) is
 the hybrid-mode network address per ADR 0008.
 
-### GPU passthrough deferral — 0.2.17 W0
+### GPU passthrough deferral - 0.2.17 W0
 
 **B2.3 (rootless Podman + NVIDIA Container Runtime end-to-end probe)
 is deferred across the post-W0 reboot boundary.** The deferral is
@@ -247,7 +247,7 @@ explicit and bounded; it is not a verification skip.
 
 **Why deferral is acceptable for 0.2.17 W0/W3:**
 ADR 0008's hybrid-mode dispatcher routes partial-tier dispatches
-to `host.containers.internal:11434` — the host's *native* Ollama,
+to `host.containers.internal:11434` - the host's *native* Ollama,
 which uses the host GPU directly with no container in the path.
 0.2.17 development on NZXTcos exercises that hybrid path; the
 container does not need GPU passthrough for any 0.2.17 deliverable.
@@ -256,7 +256,7 @@ Container GPU passthrough becomes load-bearing for production-tier
 all dispatches and must reach the host GPU through NVIDIA Container
 Runtime.
 
-**Post-reboot validation — one-command exercise:**
+**Post-reboot validation - one-command exercise:**
 
 ```fish
 sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml \
@@ -271,7 +271,7 @@ passes. If either fails post-reboot, the failure is real (not
 transient pre-reboot mismatch) and gets a follow-up surface.
 
 **This validation is a 0.3.x deliverable gate, not a 0.2.17 gate.**
-It can land at any point between this W0 close and 0.3.x W0 — the
+It can land at any point between this W0 close and 0.3.x W0 - the
 W0 acceptance archive notes the deferral with this command as the
 post-reboot verification step. Until validated, the
 production-tier-on-base-host scenario is unsupported (ADR 0007's
@@ -279,7 +279,7 @@ production-tier-on-base-host scenario is unsupported (ADR 0007's
 container is base-tier-only; production tier is cloud or partial
 host).
 
-A reasonable layer order — non-normative, included so 0.2.17 W1's
+A reasonable layer order - non-normative, included so 0.2.17 W1's
 Dockerfile work has a starting point:
 
 1. base layer: minimal Debian/Ubuntu/CachyOS base + Python runtime +
@@ -297,22 +297,22 @@ Models are **not** a layer. Models are host-volume content.
 
 ### Council roles
 
-**Added in 0.2.17 W5** — consolidating four iterations (W0/W1/W2/W3/W4)
+**Added in 0.2.17 W5** - consolidating four iterations (W0/W1/W2/W3/W4)
 of in-container council deployment work into the ADR that owns the
 container's runtime shape. The chat-side architecture artifact
 `aho-base-container-architecture.md` §Seat assignments / §Auditor
 contract / §Anti-rubber-stamp hardening sections are the source; this
 subsection makes those decisions repo-resident and authoritative.
 
-Five seats compose the council. Two are external (drafter, executor —
+Five seats compose the council. Two are external (drafter, executor -
 both run on operator's chat / CLI surfaces, not in the container).
 Three are in-container (auditor, triage, retrieval). Each seat has a
 named locus, a fixed model at base tier, and a contract surface.
 
 | Seat | Locus | Base-tier model | Contract surface |
 |---|---|---|---|
-| **Drafter** | external (Claude web) | n/a — chat-resident | Plans, plan-doc authoring, drafter arbitration of audit findings, gap-net for what auditor cannot catch by design. Persistent across chat sessions. |
-| **Executor** | external (Claude Code or Gemini CLI) | n/a — workstation-resident | Per-iteration; codified per iteration in plan doc. Implements deliverables; emits acceptance archive; emits OTEL telemetry; never invokes git. |
+| **Drafter** | external (Claude web) | n/a - chat-resident | Plans, plan-doc authoring, drafter arbitration of audit findings, gap-net for what auditor cannot catch by design. Persistent across chat sessions. |
+| **Executor** | external (Claude Code or Gemini CLI) | n/a - workstation-resident | Per-iteration; codified per iteration in plan doc. Implements deliverables; emits acceptance archive; emits OTEL telemetry; never invokes git. |
 | **Auditor** | in-container | `llama3.2:3b` | Structural spot-check: claim-vs-artifact verification, contract-shape validation, invariant resolution. Confidence floor 0.85 structurally enforced. Disposition shape `clean | halt | surface_to_drafter` with `clean` unreachable below threshold. Deterministic post-hoc filter on RAG-aware findings (`aho.council.audit_finding_filter`, W4 D1) suppresses fake-ID-on-registered-anchor failure mode. Partial-tier and full-tier auditor models deferred to 0.3.x roadmap. |
 | **Triage** | in-container | `nemotron-mini:4b` | Classification only. Raise-on-malformed (no `categories[-1]` fallback per G083). |
 | **Retrieval** | in-container | `nomic-embed-text` + ChromaDB host-mounted volume | Recency-weighted query; sole embedding source; feeds context to triage and audit. |
@@ -321,7 +321,7 @@ named locus, a fixed model at base tier, and a contract surface.
 
 `executor_model_family ≠ auditor_model_family` enforced as an OTEL
 invariant at base tier. The trip-wire fires if executor and auditor
-share a model family — Llama (Meta) vs. Claude/Gemini (Anthropic /
+share a model family - Llama (Meta) vs. Claude/Gemini (Anthropic /
 Google) is the cross-family separation that holds at 0.2.17 base tier.
 The trip-wire surface lives at `src/aho/dashboard/lego/role_collapse_brick.py`
 and reads OTEL resource attributes `aho.role` plus model-family
@@ -363,7 +363,7 @@ work; together they form the base-tier anti-rubber-stamp posture:
    inspects each finding for a registered anchor in description AND a
    fake-ID phrase from the canonical set, suppressing only when both
    match. Filter is deterministic and does not bet the architecture on
-   small-model prompt-following — the model can ignore the
+   small-model prompt-following - the model can ignore the
    registered-references rule and the failure mode is still contained.
 
 Confidence-floor lock: the `clean` disposition is structurally
@@ -389,7 +389,7 @@ inside `aho.council.audit` disposition resolution.
   `surface_to_drafter`; drafter-arbitrated to `pass_with_findings`):
   sha256 `9d5ab9ec11ba302a93cabf0fd33ed7d8963b58346eb208584e697e5a3d82a13a`.
 
-These archives are **sealed** — modifications post-emit forbidden.
+These archives are **sealed** - modifications post-emit forbidden.
 Re-audits create `audit/W{N}-v2.json`, `v3`, etc. per Adversarial
 Authorship convention.
 
@@ -407,7 +407,7 @@ Five properties bind the image build:
 2. Secrets read from filesystem paths inside the container; k8s Secrets
    are volume-mounted as files.
 3. Logs to stdout/stderr; OTEL telemetry sinks (host-mounted today) are
-   not in scope here — that is signal export, not log output.
+   not in scope here - that is signal export, not log output.
 4. Graceful SIGTERM handling within 30s default
    terminationGracePeriodSeconds.
 5. HTTP health-check endpoints at `GET /healthz` (liveness, no deps) and
@@ -464,7 +464,7 @@ materialized.
   fleet. Onboarding a new host (Luke's box, a new tsP3 partition, a
   cloud VM) reduces to install.fish run + image pull + container run.
 - Per-machine drift compresses to "what tier is the host" plus host
-  secret materials. install.fish becomes lighter — no Python
+  secret materials. install.fish becomes lighter - no Python
   virtualenv setup, no pip install, no CachyOS-vs-Ubuntu branching at
   the harness level.
 - Image versioning becomes a registry concern; local installs pin a
@@ -475,7 +475,7 @@ materialized.
   same image with a different tier classification. The architectural
   shape stays one-image-many-tiers; the cloud serving plane is a
   full-tier installation, not a separate artifact.
-- ADR 0008's dispatch hybrid mode has a clean surface to bind to —
+- ADR 0008's dispatch hybrid mode has a clean surface to bind to -
   the env var is read at container start and the dispatcher's
   routing decision flows from it.
 
@@ -530,21 +530,21 @@ materialized.
   multiple engineer workstations pulling from a shared registry is
   Phase B work. 0.2.17 / 0.3.1 ship single-operator.
 - **Signed-image policy and SBOM emission.** Cosign signing,
-  SLSA-style provenance attestations, SBOM generation — these become
+  SLSA-style provenance attestations, SBOM generation - these become
   load-bearing when external consumers (Mercor, future customers,
   enterprise audit) require them. Phase B candidate.
 - **Cloud-side registry choice.** GCP Artifact Registry vs. self-hosted
-  Harbor on a GCP VM vs. another option — Phase C work, decided when
+  Harbor on a GCP VM vs. another option - Phase C work, decided when
   serving-plane infrastructure decisions are firmer.
 - **Kubernetes manifests for full-tier cloud deployment.** Single-pod
   vs. multi-pod-with-sidecar-Ollama, ConfigMap shape for tier
   designation, Secret shape for the age identity rotation, Service
-  exposure for the harness-watcher dashboard — all 0.3.x work, not
+  exposure for the harness-watcher dashboard - all 0.3.x work, not
   this ADR's scope.
 - **AMD ROCm and Apple Metal tier detection.** install.fish's tier
   detection in 0.2.17 covers NVIDIA only. Non-NVIDIA hosts default to
   base. ROCm and Metal support, when added, are tier-detection
-  amendments, not architectural changes — folded into a later iteration.
+  amendments, not architectural changes - folded into a later iteration.
 - **Container-internal ollama hot-reload of newly-pulled models.**
   When install.fish pulls a new model post-container-start, the
   running container needs to either restart or trigger an Ollama
@@ -607,7 +607,7 @@ Stay with bare-host install.fish, layer a configuration-management
 tool on top for multi-host orchestration.
 
 **Rejected.** Configuration management does not solve the per-host
-drift problem at the harness level — Python virtualenv state,
+drift problem at the harness level - Python virtualenv state,
 Ollama service hygiene, dispatcher cache state all stay per-host
 under any CM tool. Containers absorb that surface into one artifact.
 
@@ -637,7 +637,7 @@ following become true:
 
 1. **A second engineer is onboarded to the aho fleet.** Multi-engineer
    image build coordination, registry access semantics, and image
-   version pinning policy all need decisions — those amendments
+   version pinning policy all need decisions - those amendments
    live in a follow-on ADR or a Phase B amendment to this ADR.
 
 2. **External consumers (Mercor, customers) require signed images
@@ -659,17 +659,17 @@ following become true:
 
 ## References
 
-- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` — first iteration
+- `artifacts/iterations/0.2.17/aho-plan-0.2.17.md` - first iteration
   to consume this ADR; W0/W1/W2/W3/W4 outline aligns to it.
-- `artifacts/adrs/0008-dispatcher-missing-model.md` — the dispatch-
+- `artifacts/adrs/0008-dispatcher-missing-model.md` - the dispatch-
   side counterpart to this ADR's tier classification; together they
   define what a tier means at runtime.
-- `install.fish` — tier-detection block lives here once 0.2.17 W2
+- `install.fish` - tier-detection block lives here once 0.2.17 W2
   lands.
-- `artifacts/iterations/0.3-phase-plan.md` — phase-level
+- `artifacts/iterations/0.3-phase-plan.md` - phase-level
   consumption; partial- and full-tier deployments inherit this ADR.
-- `artifacts/harness/base.md` §The Eleven Pillars — pillar 11
+- `artifacts/harness/base.md` §The Eleven Pillars - pillar 11
   (human holds the keys / secrets-on-host) is the binding constraint
   on the secrets model.
-- 0.2.15 W0 install.fish work — the bare-host predecessor of the
+- 0.2.15 W0 install.fish work - the bare-host predecessor of the
   containerized install path.

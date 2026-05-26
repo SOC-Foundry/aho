@@ -1,4 +1,4 @@
-# iao 0.1.2 — Plan Document
+# iao 0.1.2 - Plan Document
 
 **Iteration:** 0.1.2
 **Project:** iao (project code: iaomw)
@@ -143,7 +143,7 @@ sudo systemctl unmask sleep.target suspend.target hibernate.target hybrid-sleep.
 head -3 ~/dev/projects/iao/install.fish
 ```
 
-**Expected:** The header reads `# iao install script - Linux + fish` and **does not** reference v10.66 or "Phase A" — meaning the new W4 install.fish has replaced the old broken one.
+**Expected:** The header reads `# iao install script - Linux + fish` and **does not** reference v10.66 or "Phase A" - meaning the new W4 install.fish has replaced the old broken one.
 
 **If failed:** This means W4 has not yet been applied. The new install.fish is one of the bootstrap deliverables produced alongside this plan document. Copy it from the bootstrap output to `~/dev/projects/iao/install.fish` before launching the iteration.
 
@@ -214,7 +214,7 @@ Both files are part of the bootstrap deliverable set. If either is missing, copy
 gemini --yolo
 ```
 
-Once Gemini is in the iao authoring location with the CLAUDE.md/GEMINI.md briefings loaded, it should automatically begin Phase 1 work (W1 — age + keyring detection). Monitor progress via the tmux session.
+Once Gemini is in the iao authoring location with the CLAUDE.md/GEMINI.md briefings loaded, it should automatically begin Phase 1 work (W1 - age + keyring detection). Monitor progress via the tmux session.
 
 The agent will write a checkpoint to `~/dev/projects/iao/.iao-checkpoint.json` after each workstream. The checkpoint schema:
 
@@ -257,7 +257,7 @@ Claude Code reads the checkpoint, sees that W6 is the next workstream, and begin
 
 W6 is the largest implementation workstream in the iteration (the Qwen artifact loop scaffolding). It involves creating a new subpackage with several files, writing Jinja2 templates, and adding a new CLI subparser. Expect it to take longer than W1-W5 individually.
 
-W7 is shorter — it just runs the W6 deliverables against iao 0.1.2 itself.
+W7 is shorter - it just runs the W6 deliverables against iao 0.1.2 itself.
 
 ### Step 8: Iteration complete
 
@@ -281,7 +281,7 @@ cat ~/dev/projects/iao/.iao-checkpoint.json
 tail -20 ~/dev/projects/iao/artifacts/docs/iterations/0.1.2/build-log.md
 ```
 
-**Expected:** The build log has an "End:" timestamp, not "End: pending". This was the iaomw-G105 candidate from kjtcom 10.69.1 — make sure it doesn't bite us here.
+**Expected:** The build log has an "End:" timestamp, not "End: pending". This was the iaomw-G105 candidate from kjtcom 10.69.1 - make sure it doesn't bite us here.
 
 ### Check 3: All deliverables present
 
@@ -299,7 +299,7 @@ Note: The bootstrap artifacts (the ones I'm producing in this chat session) live
 - `iao-design-0.1.2.md`
 - `iao-plan-0.1.2.md`
 
-These are the originals from the bootstrap. Both sets should exist after the iteration — the iao-prefixed bootstraps and the unprefixed Qwen-generated dogfood outputs.
+These are the originals from the bootstrap. Both sets should exist after the iteration - the iao-prefixed bootstraps and the unprefixed Qwen-generated dogfood outputs.
 
 ### Check 4: New CLI subcommands functional
 
@@ -328,7 +328,7 @@ fish --no-execute ~/dev/projects/iao/install.fish; and echo "install.fish syntax
 grep -rE "(API_KEY|BOT_TOKEN|SECRET).*=.*[A-Za-z0-9]{20,}" ~/dev/projects/iao --include="*.py" --include="*.md" --include="*.fish" --include="*.json" 2>&1 | grep -v "secrets.fish.age" | head -10
 ```
 
-**Expected:** No output. If anything appears, that's a defensive scan finding — investigate immediately.
+**Expected:** No output. If anything appears, that's a defensive scan finding - investigate immediately.
 
 ### Check 7: ~/iao-middleware deleted
 
@@ -402,7 +402,7 @@ end
 
 ### Post-flight summary
 
-If all 14 checks pass, iao 0.1.2 is complete. The next step is **kjtcom 10.69.2** — a separate iteration that runs the kjtcom hardened evaluator against iao 0.1.2's bootstrap artifacts to formally close the cycle. That iteration is scoped in its own planning conversation, not in this plan document.
+If all 14 checks pass, iao 0.1.2 is complete. The next step is **kjtcom 10.69.2** - a separate iteration that runs the kjtcom hardened evaluator against iao 0.1.2's bootstrap artifacts to formally close the cycle. That iteration is scoped in its own planning conversation, not in this plan document.
 
 If any check fails, file a finding in the build log, fix or document the issue, and decide whether to declare iao 0.1.2 complete with caveats or extend the iteration to address the failure.
 
@@ -411,14 +411,14 @@ If any check fails, file a finding in the build log, fix or document the issue, 
 ## Workstream details
 
 For each workstream, this section specifies:
-- **Phase mapping** — which phase the workstream belongs to and which agent runs it
-- **Files touched** — paths the agent will create or modify
-- **Implementation order** — sub-steps within the workstream
-- **Success criteria** — explicit pass/fail conditions
-- **Dependencies** — what must complete before this workstream can run
-- **Estimated effort** — rough wall-clock time for the agent to complete
+- **Phase mapping** - which phase the workstream belongs to and which agent runs it
+- **Files touched** - paths the agent will create or modify
+- **Implementation order** - sub-steps within the workstream
+- **Success criteria** - explicit pass/fail conditions
+- **Dependencies** - what must complete before this workstream can run
+- **Estimated effort** - rough wall-clock time for the agent to complete
 
-### W1 — age + keyring detection and install
+### W1 - age + keyring detection and install
 
 **Phase:** 1 (Gemini CLI)
 **Dependencies:** None (first workstream)
@@ -450,11 +450,11 @@ For each workstream, this section specifies:
 - Encrypt+decrypt round trip works on NZXT
 
 **Gotcha awareness:**
-- iaomw-G001 (printf-style commands, not heredocs) applies — when calling `age` via subprocess, do not use shell heredocs in the wrapper
+- iaomw-G001 (printf-style commands, not heredocs) applies - when calling `age` via subprocess, do not use shell heredocs in the wrapper
 - The `age -p` flag prompts interactively for passphrase. Tests should pass passphrase via stdin to avoid hanging.
 - `keyctl padd` writes binary data; pipe carefully
 
-### W2 — iao secret CLI subcommand surface
+### W2 - iao secret CLI subcommand surface
 
 **Phase:** 2 (Gemini CLI)
 **Dependencies:** W1 complete
@@ -486,7 +486,7 @@ For each workstream, this section specifies:
 - `iao secret status` reports unlock state correctly
 - All commands have `--help` output that a novice could understand
 
-### W3 — Migration handler for plaintext secrets
+### W3 - Migration handler for plaintext secrets
 
 **Phase:** 3 (Gemini CLI)
 **Dependencies:** W1, W2 complete
@@ -515,7 +515,7 @@ For each workstream, this section specifies:
    - sed-removes the migrated lines from config.fish
    - Adds the new `# >>> iao >>>` block to config.fish
    - Validates the new fish syntax with `fish --no-execute`
-3. Add iaomw-G103 entry to the gotcha registry: "Plaintext Secrets in Shell Config — pattern: secrets stored as `set -x` in config.fish are world-readable to any process running as the user, including backups, screen sharing, and accidentally `cat`ing the file. Mitigation: encrypted secrets store via age + keyring."
+3. Add iaomw-G103 entry to the gotcha registry: "Plaintext Secrets in Shell Config - pattern: secrets stored as `set -x` in config.fish are world-readable to any process running as the user, including backups, screen sharing, and accidentally `cat`ing the file. Mitigation: encrypted secrets store via age + keyring."
 4. Add the .gitignore patterns to enforce that secrets files never enter a repo
 5. Write tests that mock config.fish content and verify the migration extracts the right values
 
@@ -527,7 +527,7 @@ For each workstream, this section specifies:
 - iaomw-G103 entry is recorded in the gotcha registry
 - .gitignore covers all secrets paths
 
-### W4 — install.fish + local/global model + preflight/postflight infrastructure
+### W4 - install.fish + local/global model + preflight/postflight infrastructure
 
 **Phase:** 4 (Gemini CLI)
 **Dependencies:** W1, W2, W3 complete (the new install.fish calls W3's migration handler)
@@ -541,7 +541,7 @@ For each workstream, this section specifies:
 - `tests/test_preflight.py`
 
 **Files touched (modified):**
-- `install.fish` (full replacement — this is W4's primary deliverable)
+- `install.fish` (full replacement - this is W4's primary deliverable)
 - `iao/iao/cli.py` (add `iao preflight run` and `iao postflight run` subcommands)
 - `iao/iao/doctor.py` (refactor to use preflight checks internally)
 - `~/.config/iao/projects.json` (add tripledb)
@@ -576,7 +576,7 @@ For each workstream, this section specifies:
 - All preflight checks pass on NZXT
 - local-global-model.md reads correctly to a novice
 
-### W5 — Full kjtcom audit + classification + migration
+### W5 - Full kjtcom audit + classification + migration
 
 **Phase:** 5 (Gemini CLI)
 **Dependencies:** W1-W4 complete
@@ -601,7 +601,7 @@ For each workstream, this section specifies:
 - `iao/iao/cli.py` (add `iao rag` subparser with `query`, `rebuild`, `status` subcommands)
 
 **Files touched (created in kjtcom):**
-- None — kjtcom keeps its own copies, the migration is additive in iao
+- None - kjtcom keeps its own copies, the migration is additive in iao
 
 **Implementation order:**
 1. Run the audit: `find ~/dev/projects/kjtcom -type f` excluding `.git`, `__pycache__`, `node_modules`, `app/build`, `*.pyc`
@@ -614,7 +614,7 @@ For each workstream, this section specifies:
 5. Migrate the highest-priority files first: query_rag, intent_router, ollama_config, logger reconciliation, brave_search, firestore_query
 6. For each migration: copy the file to its new iao location, generalize project-specific references, update imports if needed, add a header comment indicating "migrated from kjtcom/scripts/X.py at iao 0.1.2 W5, kjtcom retains its copy for steady-state"
 7. Add the new `iao rag` subparser to `iao/iao/cli.py`
-8. Reconcile `iao/iao/logger.py` (existing) against `kjtcom/scripts/utils/iao_logger.py` — if they're identical, no action needed; if they differ, document the differences and pick the better version (or merge)
+8. Reconcile `iao/iao/logger.py` (existing) against `kjtcom/scripts/utils/iao_logger.py` - if they're identical, no action needed; if they differ, document the differences and pick the better version (or merge)
 9. Test that the migrated modules import cleanly: `python3 -c "from iao.rag import query, router; from iao.data import firestore; from iao.integrations import brave; from iao import ollama_config"`
 
 **Success criteria:**
@@ -627,7 +627,7 @@ For each workstream, this section specifies:
 
 **Scope guidance:** If the audit surfaces 50+ files to migrate and migrating them all would take more than the allocated time, migrate the highest-priority files (the ones explicitly named in the design doc), document the rest as a finding for iao 0.1.3, and declare W5 complete. Don't try to do a perfect job in one iteration.
 
-### W6 — Qwen-managed artifact generation loop scaffolding
+### W6 - Qwen-managed artifact generation loop scaffolding
 
 **Phase:** 6 (Claude Code)
 **Dependencies:** W1-W5 complete (W6 uses W5's migrated `iao/iao/ollama_config.py`)
@@ -669,7 +669,7 @@ For each workstream, this section specifies:
 - A test invocation generates a non-empty markdown file at the expected path
 - Schemas validate the test output
 
-### W7 — Dogfood test
+### W7 - Dogfood test
 
 **Phase:** 7 (Claude Code)
 **Dependencies:** W1-W6 complete

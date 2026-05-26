@@ -1,7 +1,7 @@
 """W3 empirical comparison: Nemoclaw vs direct dispatch for classification.
 
 Compares two paths on identical inputs, same model (nemotron-mini:4b):
-- Path A (Nemoclaw): nemotron_client.classify() — what NemoClawOrchestrator.route()
+- Path A (Nemoclaw): nemotron_client.classify() - what NemoClawOrchestrator.route()
   calls internally; uses /api/generate.
 - Path B (Direct dispatch): dispatcher.dispatch() with the hardened /api/chat path
   (stop tokens, retry, template leak detection).
@@ -46,7 +46,7 @@ DAEMON_CATEGORIES = ["assistant", "code_runner", "reviewer"]
 
 
 # ---------------------------------------------------------------------------
-# Path A: Nemoclaw in-process (nemotron_client.classify — what route() calls)
+# Path A: Nemoclaw in-process (nemotron_client.classify - what route() calls)
 # ---------------------------------------------------------------------------
 
 def path_a_classify(text, categories):
@@ -70,7 +70,7 @@ def path_a_classify(text, categories):
 
 
 # ---------------------------------------------------------------------------
-# Path B: Direct dispatcher — manual prompt, parse raw content
+# Path B: Direct dispatcher - manual prompt, parse raw content
 # ---------------------------------------------------------------------------
 
 def path_b_classify(text, categories):
@@ -109,7 +109,7 @@ def path_b_classify(text, categories):
 
 
 # ---------------------------------------------------------------------------
-# Path C: Nemoclaw socket (daemon IPC) — role routing for [assistant, code_runner, reviewer]
+# Path C: Nemoclaw socket (daemon IPC) - role routing for [assistant, code_runner, reviewer]
 # ---------------------------------------------------------------------------
 
 SOCK_PATH = str(Path.home() / ".local/share/aho/nemoclaw.sock")
@@ -193,12 +193,12 @@ def run():
         print(f"    C(socket)={c['classification']} ({c['wall_clock_seconds']}s) "
               f"B={b['classification']} ({b['wall_clock_seconds']}s)")
 
-    # Error handling comparison — unknown model
+    # Error handling comparison - unknown model
     print("\n=== Error handling: unknown model ===")
     err_cases = []
 
     # Path A: call classify with model hardcoded to nemotron-mini:4b; can only
-    # provoke error by stopping ollama — skip destructive test. Instead, check
+    # provoke error by stopping ollama - skip destructive test. Instead, check
     # the error type taxonomy by reading the code (see report).
 
     # Path B: request an unknown model via dispatcher

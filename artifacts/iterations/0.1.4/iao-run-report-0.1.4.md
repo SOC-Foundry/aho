@@ -1,4 +1,4 @@
-# Run Report — iao 0.1.4
+# Run Report - iao 0.1.4
 
 **Generated:** 2026-04-09T17:45:02Z
 **Iteration:** 0.1.4
@@ -29,7 +29,7 @@ The report includes a workstream summary, a collection of technical or procedura
 
 ## Agent Questions for Kyle
 
-(none — no questions surfaced during execution)
+(none - no questions surfaced during execution)
 
 ---
 
@@ -44,16 +44,16 @@ The report includes a workstream summary, a collection of technical or procedura
 
 ## Reference: The Ten Pillars of IAO
 
-1. **iaomw-Pillar-1 (Trident)** — Cost / Delivery / Performance triangle governs every decision.
-2. **iaomw-Pillar-2 (Artifact Loop)** — design → plan → build → report → bundle. Every iteration produces all five.
-3. **iaomw-Pillar-3 (Diligence)** — First action: `iao registry query "<topic>"`. Read before you code.
-4. **iaomw-Pillar-4 (Pre-Flight Verification)** — Validate the environment before execution. Pre-flight failures block launch.
-5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** — The harness is the product; the model is the engine.
-6. **iaomw-Pillar-6 (Zero-Intervention Target)** — Interventions are failures in planning. The agent does not ask permission.
-7. **iaomw-Pillar-7 (Self-Healing Execution)** — Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
-8. **iaomw-Pillar-8 (Phase Graduation)** — Formalized via MUST-have deliverables + Qwen graduation analysis.
-9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** — Build is a gatekeeper. Existence checks are necessary but insufficient.
-10. **iaomw-Pillar-10 (Continuous Improvement)** — Run report → Kyle's notes → next iteration design seed. Feedback loop is first-class.
+1. **iaomw-Pillar-1 (Trident)** - Cost / Delivery / Performance triangle governs every decision.
+2. **iaomw-Pillar-2 (Artifact Loop)** - design → plan → build → report → bundle. Every iteration produces all five.
+3. **iaomw-Pillar-3 (Diligence)** - First action: `iao registry query "<topic>"`. Read before you code.
+4. **iaomw-Pillar-4 (Pre-Flight Verification)** - Validate the environment before execution. Pre-flight failures block launch.
+5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** - The harness is the product; the model is the engine.
+6. **iaomw-Pillar-6 (Zero-Intervention Target)** - Interventions are failures in planning. The agent does not ask permission.
+7. **iaomw-Pillar-7 (Self-Healing Execution)** - Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
+8. **iaomw-Pillar-8 (Phase Graduation)** - Formalized via MUST-have deliverables + Qwen graduation analysis.
+9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** - Build is a gatekeeper. Existence checks are necessary but insufficient.
+10. **iaomw-Pillar-10 (Continuous Improvement)** - Run report → Kyle's notes → next iteration design seed. Feedback loop is first-class.
 
 ---
 

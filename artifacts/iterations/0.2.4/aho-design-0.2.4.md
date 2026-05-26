@@ -1,8 +1,8 @@
-# aho Design — 0.2.4
+# aho Design - 0.2.4
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 4
-**Theme:** W1 remediation — canonical MCP list correction + verification harness
-**Predecessor:** 0.2.3 (W1 failed post-run verification — see `aho-run-0_2_3-amended.md`)
+**Theme:** W1 remediation - canonical MCP list correction + verification harness
+**Predecessor:** 0.2.3 (W1 failed post-run verification - see `aho-run-0_2_3-amended.md`)
 
 ---
 
@@ -10,8 +10,8 @@
 
 0.2.3 shipped `bin/aho-mcp` with two independent defects:
 
-1. **Fish scoping bug** — `set -l` at script scope made the package list invisible to functions. The wrapper printed an empty fleet and the installer was a no-op. Test suite did not catch it because no test exercised the CLI end-to-end.
-2. **Unvalidated canonical list** — 2 of 12 packages 404 on npm; 2 more are deprecated. The list was written from memory and never round-tripped against the registry.
+1. **Fish scoping bug** - `set -l` at script scope made the package list invisible to functions. The wrapper printed an empty fleet and the installer was a no-op. Test suite did not catch it because no test exercised the CLI end-to-end.
+2. **Unvalidated canonical list** - 2 of 12 packages 404 on npm; 2 more are deprecated. The list was written from memory and never round-tripped against the registry.
 
 0.2.4 fixes both, hardens the harness against recurrence, and updates every place the canonical list lives so iao decisions, the wrapper, and the docs all agree.
 
@@ -29,9 +29,9 @@ This is a remediation iteration. No new features. No scope creep. Conductor smok
 
 ## Non-goals
 
-- Replacement servers for github/slack/google-drive/fetch — separate ADR, not this iteration.
-- Conductor smoke test — still pending Kyle, not 0.2.4 scope.
-- MCP/HyperAgents integration in kjtcom — separate, larger scope.
+- Replacement servers for github/slack/google-drive/fetch - separate ADR, not this iteration.
+- Conductor smoke test - still pending Kyle, not 0.2.4 scope.
+- MCP/HyperAgents integration in kjtcom - separate, larger scope.
 - Any new feature work in W2/W3/W4 surfaces.
 
 ---
@@ -53,15 +53,15 @@ flutter-mcp
 ```
 
 **Removed (will not be reinstalled):**
-- `@modelcontextprotocol/server-google-drive` — archived, no first-party replacement
-- `@modelcontextprotocol/server-fetch` — Python-only (`uvx mcp-server-fetch`)
-- `@modelcontextprotocol/server-github` — moved to `github/github-mcp-server` (Go binary)
-- `@modelcontextprotocol/server-slack` — deprecated, no current replacement
+- `@modelcontextprotocol/server-google-drive` - archived, no first-party replacement
+- `@modelcontextprotocol/server-fetch` - Python-only (`uvx mcp-server-fetch`)
+- `@modelcontextprotocol/server-github` - moved to `github/github-mcp-server` (Go binary)
+- `@modelcontextprotocol/server-slack` - deprecated, no current replacement
 
 **Added:**
-- `@modelcontextprotocol/server-everything` — reference/test server, useful as conductor smoke target
+- `@modelcontextprotocol/server-everything` - reference/test server, useful as conductor smoke target
 
-`server-git` is a candidate but deferred to the same ADR that handles fetch/github/slack/gdrive — don't add it half-validated.
+`server-git` is a candidate but deferred to the same ADR that handles fetch/github/slack/gdrive - don't add it half-validated.
 
 ---
 
@@ -79,11 +79,11 @@ Fish functions do not inherit local variables from the enclosing script scope. A
 
 ### G-mcp-canonical-drift: canonical package lists must be registry-verified
 
-Any deliverable that includes a "canonical list of external packages" must include a registry verification step in its definition of done. Lists written from agent memory are stale on arrival — the MCP server ecosystem in particular reorganizes faster than any model's training cutoff.
+Any deliverable that includes a "canonical list of external packages" must include a registry verification step in its definition of done. Lists written from agent memory are stale on arrival - the MCP server ecosystem in particular reorganizes faster than any model's training cutoff.
 
 **Detection:** `npm view <pkg> version` returns 404 or `npm install` emits deprecation warnings.
 
-**Fix pattern:** Postflight runs `npm view` against every entry in the canonical list. Any 404 or deprecation flips a postflight check from OK to FAIL (not WARN — these are hard correctness issues).
+**Fix pattern:** Postflight runs `npm view` against every entry in the canonical list. Any 404 or deprecation flips a postflight check from OK to FAIL (not WARN - these are hard correctness issues).
 
 **Where it bit us:** `bin/aho-mcp` 0.2.3, 2 of 12 packages 404, 2 of 12 deprecated.
 
@@ -91,9 +91,9 @@ Any deliverable that includes a "canonical list of external packages" must inclu
 
 ## Verification harness changes
 
-1. **New test: `test_aho_mcp_cli_e2e.fish`** — shells out to `bin/aho-mcp list`, asserts the header contains the version string in parens, asserts the row count equals the declared package count. This is the test that would have caught Defect 1 in the run, not after.
+1. **New test: `test_aho_mcp_cli_e2e.fish`** - shells out to `bin/aho-mcp list`, asserts the header contains the version string in parens, asserts the row count equals the declared package count. This is the test that would have caught Defect 1 in the run, not after.
 
-2. **New postflight check: `mcp_canonical_registry_verify`** — for each package in `mcp_packages`, runs `npm view <pkg> version` and asserts it returns a version (not 404). Fails the check on any 404 or deprecation. Adds ~5 seconds to postflight; worth it.
+2. **New postflight check: `mcp_canonical_registry_verify`** - for each package in `mcp_packages`, runs `npm view <pkg> version` and asserts it returns a version (not 404). Fails the check on any 404 or deprecation. Adds ~5 seconds to postflight; worth it.
 
 3. **Doctor extension:** `bin/aho-mcp doctor` already verifies installed-vs-missing. Add a second pass that runs the registry verification locally for the same defense-in-depth.
 

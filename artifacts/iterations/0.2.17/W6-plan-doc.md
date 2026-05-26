@@ -1,14 +1,14 @@
 # 0.2.17 W6 plan doc
 
-**Workstream:** W6 — final code-change closures (F-0.2.17-W1-001 secrets-test removal + F-0.2.17-W4-001 ChromaDB re-index hook)
+**Workstream:** W6 - final code-change closures (F-0.2.17-W1-001 secrets-test removal + F-0.2.17-W4-001 ChromaDB re-index hook)
 **Iteration:** 0.2.17
 **Phase boundary:** 0.2.17 final workstream. W5 produced ADRs and repo-resident docs. W6 closes the residual code-change carry-forwards, then 0.2.17 closes. After 0.2.17 close: operator runs pre-tsP3 final actions (rotate `ahomw:telegram_bot_token` per F-0.2.17-W1-003) outside the workstream framework. 0.3.1 launches with clean carry-forward state.
 **Executor:** Claude Code (`claude --dangerously-skip-permissions`) on NZXTcos.
 **Drafter:** Claude web.
-**Auditor:** llama3.2 + RAG enrichment + deterministic post-hoc filter — same stabilized primitive.
-**Time budget:** 2–4 hours executor wall-time. Hard ceiling 5 hours. Daytime session — operator watching.
+**Auditor:** llama3.2 + RAG enrichment + deterministic post-hoc filter - same stabilized primitive.
+**Time budget:** 2–4 hours executor wall-time. Hard ceiling 5 hours. Daytime session - operator watching.
 **Adversarial Authorship contract:** standard.
-**Pre-0.3.x hard gate (recurring reminder):** F-0.2.17-W1-003 — rotate `ahomw:telegram_bot_token`. Operator-side, post-0.2.17. Surface at W6 close. Surface before tsP3 handoff.
+**Pre-0.3.x hard gate (recurring reminder):** F-0.2.17-W1-003 - rotate `ahomw:telegram_bot_token`. Operator-side, post-0.2.17. Surface at W6 close. Surface before tsP3 handoff.
 
 ---
 
@@ -16,17 +16,17 @@
 
 W6 closes two outstanding code-change carry-forwards, both pre-0.3.x hard gates:
 
-1. **F-0.2.17-W1-001 — `aho secrets-test` test-only subcommand removal from production image path.** Replace value-printing path with hash-fingerprint comparison so the broker round-trip can still be verified without exposing decrypted values to caller stdout. Alternative: gate the subcommand behind `AHO_DEV_BUILD=1` env so dev builds retain it, production images do not. Drafter recommends hash-fingerprint approach since it preserves the verification capability without breaking Pillar 11.
+1. **F-0.2.17-W1-001 - `aho secrets-test` test-only subcommand removal from production image path.** Replace value-printing path with hash-fingerprint comparison so the broker round-trip can still be verified without exposing decrypted values to caller stdout. Alternative: gate the subcommand behind `AHO_DEV_BUILD=1` env so dev builds retain it, production images do not. Drafter recommends hash-fingerprint approach since it preserves the verification capability without breaking Pillar 11.
 
-2. **F-0.2.17-W4-001 — ChromaDB iteration-context index does not auto-refresh on `carry-forwards-0.2.16.md` updates.** Hook re-index into `aho.gap_carry_forward_writer.append_to_file` so any carry-forward addition triggers a re-index of the source file. Verify: post-W6 audit run sees recently-added carry-forwards as `registered`, not `unverified`.
+2. **F-0.2.17-W4-001 - ChromaDB iteration-context index does not auto-refresh on `carry-forwards-0.2.16.md` updates.** Hook re-index into `aho.gap_carry_forward_writer.append_to_file` so any carry-forward addition triggers a re-index of the source file. Verify: post-W6 audit run sees recently-added carry-forwards as `registered`, not `unverified`.
 
 W6 also runs the final 0.2.17 self-audit and emits the iteration's terminal event.
 
-W6 does NOT include: F-0.2.17-W1-003 token rotation (operator-side, post-0.2.17); 0.3.x partial-tier work; new image build (image rebuild may be required as a side effect of D1 — executor decides scope based on the implementation choice).
+W6 does NOT include: F-0.2.17-W1-003 token rotation (operator-side, post-0.2.17); 0.3.x partial-tier work; new image build (image rebuild may be required as a side effect of D1 - executor decides scope based on the implementation choice).
 
 ## Deliverables
 
-### D1 — F-0.2.17-W1-001 closure: `aho secrets-test` redesign
+### D1 - F-0.2.17-W1-001 closure: `aho secrets-test` redesign
 
 **Module:** `src/aho/cli.py` (modify) + tests update.
 
@@ -45,7 +45,7 @@ W6 does NOT include: F-0.2.17-W1-003 token rotation (operator-side, post-0.2.17)
 - Image rebuild required: `aho:0.2.17-rc2` (or `aho:0.2.17` if executor decides this is the final tag). Push to ghcr.io, verify pull-clean, healthcheck-clean.
 - F-0.2.17-W1-001 closure recorded structurally in W6 acceptance archive `carry_forwards_closed`.
 
-### D2 — F-0.2.17-W4-001 closure: ChromaDB re-index hook
+### D2 - F-0.2.17-W4-001 closure: ChromaDB re-index hook
 
 **Module:** `src/aho/gap_carry_forward_writer.py` (modify).
 
@@ -56,11 +56,11 @@ Failure handling: if re-index fails (Ollama down, ChromaDB down, etc.), the appe
 **Acceptance gate:**
 - Modified `append_to_file` triggers re-index post-write.
 - Test fixture: append a synthetic carry-forward entry to a tmp copy of `carry-forwards-0.2.16.md`, verify subsequent RAG query for the synthetic ID returns the snippet (not null).
-- Live verification: append a real W6-internal-test carry-forward (not a real lesson, just a probe — clearly marked `F-0.2.17-W6-PROBE`), verify RAG query returns it, then remove the probe entry.
+- Live verification: append a real W6-internal-test carry-forward (not a real lesson, just a probe - clearly marked `F-0.2.17-W6-PROBE`), verify RAG query returns it, then remove the probe entry.
 - Re-index failure handling: simulate Ollama down, verify append still succeeds, warning logged, OTEL counter increments. Do NOT actually take Ollama down; mock the embed call to raise.
 - F-0.2.17-W4-001 closure recorded structurally in W6 acceptance archive `carry_forwards_closed`.
 
-### D3 — Final 0.2.17 self-audit
+### D3 - Final 0.2.17 self-audit
 
 **Process:** After D1 + D2 land, executor writes preliminary W6 acceptance archive. Llama+RAG+filter audits it. The audit's RAG enrichment should now show recently-added carry-forwards as `registered` (D2 fix verifies live).
 
@@ -68,7 +68,7 @@ Failure handling: if re-index fails (Ollama down, ChromaDB down, etc.), the appe
 
 **Acceptance gate:**
 - Self-audit disposition lands.
-- RAG enrichment shows F-0.2.17-W4-001 + F-0.2.17-W1-001 status as `registered` (or whatever their post-W5/W6 state is). If still `unverified`, D2 didn't actually fix the staleness — halt-and-surface.
+- RAG enrichment shows F-0.2.17-W4-001 + F-0.2.17-W1-001 status as `registered` (or whatever their post-W5/W6 state is). If still `unverified`, D2 didn't actually fix the staleness - halt-and-surface.
 - Filter outcome recorded.
 - Drafter arbitrates findings before operator signs.
 

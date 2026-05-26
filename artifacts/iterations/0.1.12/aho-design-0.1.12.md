@@ -1,4 +1,4 @@
-# aho — Design 0.1.12
+# aho - Design 0.1.12
 
 **Run:** 0.1.12
 **Phase:** 0
@@ -10,7 +10,7 @@
 
 ## §1. Why 0.1.12 exists
 
-0.1.11 graduated, the rename arc is done, and the project root is now `~/dev/projects/aho`. Four conditions carried forward, all of them targeted fixes for gotchas that surfaced during 0.1.11's execution. This is a narrow maintenance run — four workstreams, roughly 2.5 hours wall clock.
+0.1.11 graduated, the rename arc is done, and the project root is now `~/dev/projects/aho`. Four conditions carried forward, all of them targeted fixes for gotchas that surfaced during 0.1.11's execution. This is a narrow maintenance run - four workstreams, roughly 2.5 hours wall clock.
 
 The big structural work (rename, synthesis evaluator, §22 instrumentation, filename conventions) is behind us. 0.1.12 clears the last four nits from 0.1.11 and positions us for broader scope in 0.1.13+.
 
@@ -18,13 +18,13 @@ The big structural work (rename, synthesis evaluator, §22 instrumentation, file
 
 ## §2. Workstreams
 
-### W0 — Environment hygiene (15 min)
+### W0 - Environment hygiene (15 min)
 
 **Goal:** Verify project root is `~/dev/projects/aho`, bump checkpoint and version to 0.1.12, initialize manual build log, backup files W1-W3 will modify.
 
 **Success:** `command pwd` returns `/home/kthompson/dev/projects/aho`, `./bin/aho --version` returns `aho 0.1.12`.
 
-### W1 — Evaluator baseline reload (aho-G060) (60 min)
+### W1 - Evaluator baseline reload (aho-G060) (60 min)
 
 **Goal:** Fix the evaluator baseline staleness that caused 0.1.11's 2-hour Qwen rejection loop. The dynamic baseline from 0.1.10 W7 loads at module init, so files created or renamed during the current run are invisible to the evaluator.
 
@@ -42,7 +42,7 @@ The big structural work (rename, synthesis evaluator, §22 instrumentation, file
 
 **Success:** `pytest tests/test_evaluator_reload.py -v` passes. A file created 5 seconds ago is recognized by the evaluator in the next `evaluate_text()` call.
 
-### W2 — smoke_instrumentation checkpoint awareness (aho-G061) (30 min)
+### W2 - smoke_instrumentation checkpoint awareness (aho-G061) (30 min)
 
 **Goal:** Fix the iteration-stamp bug where `smoke_instrumentation.py` logs events under the previous iteration's version.
 
@@ -53,7 +53,7 @@ The big structural work (rename, synthesis evaluator, §22 instrumentation, file
 
 **Success:** Running the smoke script after checkpoint bump produces events with the correct iteration stamp.
 
-### W3 — model-fleet.md harness doc cleanup (20 min)
+### W3 - model-fleet.md harness doc cleanup (20 min)
 
 **Goal:** Update `docs/harness/model-fleet.md` from its stale 0.1.4 / "IAO" state to current aho naming and current version.
 
@@ -62,19 +62,19 @@ The big structural work (rename, synthesis evaluator, §22 instrumentation, file
 - Version header: `0.1.4` → `0.1.12`
 - All prose references to "IAO" as an identifier → "aho". Prose describing "iao" as historical name can stay if it refers to the historical project.
 - Section 3 "Deployment and Orchestration": `iao CLI` → `aho CLI`
-- Section 6 "Future Extensions": 0.1.5-era speculation — either delete (outdated) or replace with current roadmap hints
+- Section 6 "Future Extensions": 0.1.5-era speculation - either delete (outdated) or replace with current roadmap hints
 - Section 5 "Security and Privacy": references "the Trident" which is retired from the pillar set. Rephrase to reference Pillars 1 (delegate) and 8 (cost delta) instead.
-- Historical phase charter `iao-phase-0.md` stays unchanged — it's a historical document
+- Historical phase charter `iao-phase-0.md` stays unchanged - it's a historical document
 
 **Success:** `rg -n "IAO" docs/harness/model-fleet.md` returns 0 matches (or only within historical context prose).
 
-### W4 — Dogfood + close (45 min)
+### W4 - Dogfood + close (45 min)
 
 **Goal:** Run the loop against 0.1.12. Verify aho-G060 fix works end-to-end.
 
 **Deliverables:**
 - Manual build log present
-- `./bin/aho iteration build-log 0.1.12` — should NOT hit the old file-rejection loop because of W1's reload fix
+- `./bin/aho iteration build-log 0.1.12` - should NOT hit the old file-rejection loop because of W1's reload fix
 - `./bin/aho iteration report 0.1.12`
 - `./bin/aho iteration close`
 
@@ -93,16 +93,16 @@ The big structural work (rename, synthesis evaluator, §22 instrumentation, file
 
 ## §3. Graduation criteria
 
-**GRADUATE** — All 7 verification checks pass, no new conditions.
-**GRADUATE WITH CONDITIONS** — 5-6 of 7 checks pass, conditions documented.
-**DO NOT GRADUATE** — aho-G060 fix doesn't work (synthesis loop returns), or <5 checks pass.
+**GRADUATE** - All 7 verification checks pass, no new conditions.
+**GRADUATE WITH CONDITIONS** - 5-6 of 7 checks pass, conditions documented.
+**DO NOT GRADUATE** - aho-G060 fix doesn't work (synthesis loop returns), or <5 checks pass.
 
 ---
 
 ## §4. Scope boundaries
 
 - No new features. No amendments. No post-0.1.8 review items (Nemotron evaluator, token tracking, scoring registry).
-- CLAUDE.md / GEMINI.md unchanged — per-phase, not per-run.
+- CLAUDE.md / GEMINI.md unchanged - per-phase, not per-run.
 - Historical files (phase charter, 0.1.2-0.1.10 artifacts) unchanged.
 - No git ops.
 

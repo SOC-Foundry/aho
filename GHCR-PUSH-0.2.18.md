@@ -1,8 +1,8 @@
-# ghcr push runbook — aho:0.2.18
+# ghcr push runbook - aho:0.2.18
 
 **Status:** image built locally on NZXTcos in W1, rebuilt for substrate-drift fix (sha256 below), loaded on a8cos in W2. **Not yet pushed to ghcr.io.** This closes OPR-W1-001 / OPR-W2-002.
 
-**Commit reference:** `e8c7c2e` (`KT completed 0.2.18 and updated README`) — the state that produced this image.
+**Commit reference:** `e8c7c2e` (`KT completed 0.2.18 and updated README`) - the state that produced this image.
 
 ---
 
@@ -37,13 +37,13 @@ podman image inspect aho:0.2.18 --format '{{json .Config.Labels}}' | jq .
 
 ## Authentication (one of)
 
-**Option A — gh CLI** (uses the GitHub token gh manages — preferred if you already have `gh auth status` healthy):
+**Option A - gh CLI** (uses the GitHub token gh manages - preferred if you already have `gh auth status` healthy):
 
 ```fish
 gh auth token | podman login ghcr.io -u <your-github-username> --password-stdin
 ```
 
-**Option B — interactive podman login** (prompts for a personal access token with `write:packages` scope):
+**Option B - interactive podman login** (prompts for a personal access token with `write:packages` scope):
 
 ```fish
 podman login ghcr.io
@@ -85,7 +85,7 @@ curl -sS -H "Authorization: Bearer $(gh auth token)" \
    - `artifacts/iterations/0.2.18/acceptance/W1.json` → `deliverable_evidence.image_digest`
    - `artifacts/iterations/0.2.18/acceptance/W2.json` → no explicit digest field (uses image_id which is unchanged)
 
-   Pattern: add a `pushed_manifest_digest` field next to the existing local digest. Don't overwrite the local digest — both are accurate at their respective layers.
+   Pattern: add a `pushed_manifest_digest` field next to the existing local digest. Don't overwrite the local digest - both are accurate at their respective layers.
 
 2. **Optional: also tag and push a `0.2.18-rc1` alias** if you want to mirror the 0.2.17-rc1/rc2 convention from the registry inventory.
 

@@ -7,7 +7,7 @@
 # prometheus.yml). Translation to vmalert / Grafana alerting is mechanical.
 #
 # Status: rule expressions only. Consumer must wire to their own
-# Alertmanager-compatible engine — see ../README.md.
+# Alertmanager-compatible engine - see ../README.md.
 
 groups:
   - name: agent-policy.commit-violations

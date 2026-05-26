@@ -1,6 +1,6 @@
 # 0.2.17 W2 plan doc
 
-**Workstream:** W2 — feedback loop wiring + ChromaDB integration + auditor-seat transition
+**Workstream:** W2 - feedback loop wiring + ChromaDB integration + auditor-seat transition
 **Iteration:** 0.2.17
 **Phase boundary:** 0.2.17 ships base container on NZXTcos. W1 produced the image and stubs; W2 makes the council real and transitions audit ownership from external (Gemini CLI) to in-container (llama3.2). W3 layers materiality measurement and claw3d. W4 consolidates ADRs and runs retrospective.
 **Executor:** Claude Code (`claude --dangerously-skip-permissions`).
@@ -8,13 +8,13 @@
 **Auditor (this iteration):** llama3.2 in-container, via `aho.council.audit` produced by W2 itself. **This is the auditor-seat transition.** Gemini CLI exited the audit chain at W1 close. From W2 forward, llama3.2 is the structural spot-checker; drafter (Claude web) is the architectural-judgment gap-net.
 **Time budget:** 4–8 hours executor wall-time. Hard ceiling 10 hours. Beyond 10 hours = halt-and-surface, do not continue. This is an overnight run; operator is unavailable for ~8 hours starting at executor launch.
 **Adversarial Authorship contract:** Drafter (me) drafts plan + executor prompt. Executor (Claude Code) implements. Auditor (llama3.2 in-container) audits at end-of-workstream. Drafter (me) reviews llama's disposition pre-sign. Operator (Kyle) signs after drafter review.
-**Pre-0.3.x hard gate carry-forward (recurring reminder):** F-0.2.17-W1-003 — rotate `ahomw:telegram_bot_token`. Surface at W2 close. Surface at W3 close. Surface at W4 close. Surface before tsP3 handoff.
+**Pre-0.3.x hard gate carry-forward (recurring reminder):** F-0.2.17-W1-003 - rotate `ahomw:telegram_bot_token`. Surface at W2 close. Surface at W3 close. Surface at W4 close. Surface before tsP3 handoff.
 
 ---
 
 ## Scope
 
-W2 makes the council real and bootstraps the in-container auditor seat. By close, the framework is auditing itself — a load-bearing thesis test for the architecture's "harness-as-IQ" and "Adversarial Authorship at base-tier" claims.
+W2 makes the council real and bootstraps the in-container auditor seat. By close, the framework is auditing itself - a load-bearing thesis test for the architecture's "harness-as-IQ" and "Adversarial Authorship at base-tier" claims.
 
 W2 ships:
 
@@ -22,22 +22,22 @@ W2 ships:
 2. **Four real council component implementations** replacing W1 stubs: `aho.council.embed` (nomic), `aho.council.triage` (nemotron-mini), `aho.council.audit` (llama3.2), `aho.council.dispatch` (real routing).
 3. **Two real feedback-loop components**: `aho.audit_disposition_emitter`, `aho.gap_carry_forward_writer`.
 4. **Anti-rubber-stamp hardening verified** across the three failure modes (G083 raise-on-malformed, GLM removed from auditor candidacy at base tier, llama confidence floor lock).
-5. **W0 audit replay** — llama3.2 audits sealed `acceptance/W0.json` after-the-fact; disposition compared structurally to Gemini's sealed W0 audit. **Bootstrap test 1.**
-6. **W1 audit replay** — llama3.2 audits sealed `acceptance/W1.json` after-the-fact; disposition compared structurally to Gemini's sealed W1 audit. **Bootstrap test 2.**
-7. **W2 self-audit** — llama3.2 audits W2's own acceptance archive at end-of-workstream. **Bootstrap test 3 (loop closure).**
-8. **Materiality telemetry hooks** — OTEL signals emitted for the four buckets (llama-caught, drafter-caught, escaped, carry-forward-resolution-rate). Not yet wired to claw3d (W3); just emitted so W3 has data.
+5. **W0 audit replay** - llama3.2 audits sealed `acceptance/W0.json` after-the-fact; disposition compared structurally to Gemini's sealed W0 audit. **Bootstrap test 1.**
+6. **W1 audit replay** - llama3.2 audits sealed `acceptance/W1.json` after-the-fact; disposition compared structurally to Gemini's sealed W1 audit. **Bootstrap test 2.**
+7. **W2 self-audit** - llama3.2 audits W2's own acceptance archive at end-of-workstream. **Bootstrap test 3 (loop closure).**
+8. **Materiality telemetry hooks** - OTEL signals emitted for the four buckets (llama-caught, drafter-caught, escaped, carry-forward-resolution-rate). Not yet wired to claw3d (W3); just emitted so W3 has data.
 
-W2 does NOT include: claw3d brick rendering (W3); materiality four-bucket dashboard surfaces (W3); ADR documents (W4); secrets-test subcommand redesign (per F-0.2.17-W1-001 / W1-003 — fold into W2 if low-effort, otherwise W4).
+W2 does NOT include: claw3d brick rendering (W3); materiality four-bucket dashboard surfaces (W3); ADR documents (W4); secrets-test subcommand redesign (per F-0.2.17-W1-001 / W1-003 - fold into W2 if low-effort, otherwise W4).
 
 ## Disagreement-handling protocol (D9/D10 specific)
 
 Per pinned scope:
 
-- If llama's W0 audit replay (D9) disagrees with Gemini's sealed W0 audit on any disposition (deliverable result, finding severity, count_coherence_check, etc.) — **record both dispositions in the W2 acceptance archive's D9 evidence section. Do not attempt to reconcile. Do not modify Gemini's sealed W0 audit.** Flag the disagreement count and shape (which findings, which axis of disagreement) in the D9 disposition note.
+- If llama's W0 audit replay (D9) disagrees with Gemini's sealed W0 audit on any disposition (deliverable result, finding severity, count_coherence_check, etc.) - **record both dispositions in the W2 acceptance archive's D9 evidence section. Do not attempt to reconcile. Do not modify Gemini's sealed W0 audit.** Flag the disagreement count and shape (which findings, which axis of disagreement) in the D9 disposition note.
 - Same pattern for W1 audit replay (D10).
 - Disagreements are NOT findings against W2. They are data points. Drafter (me, in chat) arbitrates each disagreement post-close, before W3 launch. Drafter-arbitrated dispositions either become carry-forward entries (if the disagreement reveals a gotcha or design issue) or get logged as "no action required, dispositions differ on stylistic axis" in the W2 close note.
 
-If executor encounters a disagreement that looks substantively important (e.g., llama flags a Pillar 11 violation Gemini missed, or vice versa), executor halt-and-surfaces immediately rather than completing W2 around the unresolved disagreement. Substantively important = "if true, would invalidate a sealed archive's disposition." Stylistic important = "different framing of the same finding" — record and continue.
+If executor encounters a disagreement that looks substantively important (e.g., llama flags a Pillar 11 violation Gemini missed, or vice versa), executor halt-and-surfaces immediately rather than completing W2 around the unresolved disagreement. Substantively important = "if true, would invalidate a sealed archive's disposition." Stylistic important = "different framing of the same finding" - record and continue.
 
 ## W2 self-audit protocol (D11 specific)
 
@@ -46,21 +46,21 @@ Per pinned scope:
 - D11 runs at end-of-workstream after D1–D10 complete. Sequential, not per-deliverable.
 - Llama3.2 audits W2's own acceptance archive (the artifact W2 just produced).
 - Disposition options: `clean | halt | surface_to_drafter`. Below confidence floor 0.85, disposition locks to `surface_to_drafter` per architecture artifact §Anti-rubber-stamp hardening.
-- Llama's disposition lands in W2's audit archive (`audit/W2.json`) as the iteration's primary audit record — replacing what would have been Gemini's slot.
+- Llama's disposition lands in W2's audit archive (`audit/W2.json`) as the iteration's primary audit record - replacing what would have been Gemini's slot.
 - Executor halt-and-surfaces after D11 emits, regardless of disposition. Drafter (me) reviews llama's disposition pre-sign in chat with operator. **Operator does not sign until drafter has reviewed.**
 
-If llama's W2 self-audit disposition is `surface_to_drafter` — that's the gap-net activating. Drafter reads the disposition, the W2 acceptance archive, and the surfaced findings; either confirms the findings as real (W2 closes pass_with_findings or fails depending on severity) or arbitrates as auditor-overzealous (W2 closes pass with drafter-arbitrated note). Same shape as Adversarial Authorship working through Gemini in W0/W1, just with llama in the seat.
+If llama's W2 self-audit disposition is `surface_to_drafter` - that's the gap-net activating. Drafter reads the disposition, the W2 acceptance archive, and the surfaced findings; either confirms the findings as real (W2 closes pass_with_findings or fails depending on severity) or arbitrates as auditor-overzealous (W2 closes pass with drafter-arbitrated note). Same shape as Adversarial Authorship working through Gemini in W0/W1, just with llama in the seat.
 
 ## Deliverables
 
-### D1 — `aho.rag` real implementation against host-mounted ChromaDB
+### D1 - `aho.rag` real implementation against host-mounted ChromaDB
 
 **Module:** `src/aho/rag.py` (replaces or extends W1 placeholder if present).
 
 **Shape:**
 - ChromaDB client connecting to host-mounted volume at `/var/lib/aho/chroma` (declared in W1 Dockerfile).
 - Single collection per project, named `{project_label}-iteration-context`.
-- Embedding source: `aho.council.embed` (which calls nomic via host Ollama). RAG and embed are tightly coupled — same embedding shape for index and query.
+- Embedding source: `aho.council.embed` (which calls nomic via host Ollama). RAG and embed are tightly coupled - same embedding shape for index and query.
 - Recency weighting: query results weighted by `iteration_seq_ordinal` of the source artifact, with exponential decay. More recent iterations weighted higher per existing aho ChromaDB pattern.
 - Query interface: `query(text: str, k: int = 5, project: str | None = None) -> list[dict]` returning ranked retrievals with metadata (source_iteration, source_workstream, source_artifact_path, snippet, score).
 - Indexing interface: `index_artifact(path: str, project: str, iteration: str, workstream: str)` reads file, embeds via nomic, writes to collection with metadata.
@@ -72,7 +72,7 @@ If llama's W2 self-audit disposition is `surface_to_drafter` — that's the gap-
 - Pre-seed index landed: ChromaDB collection size matches expected count (executor enumerates expected from a recursive grep of sealed artifact paths).
 - Recency weighting verified: query for a topic appearing in both 0.2.16 and 0.2.17 returns the 0.2.17 result first.
 
-### D2 — `aho.council.embed` real implementation
+### D2 - `aho.council.embed` real implementation
 
 **Module:** `src/aho/council/embed.py` (replaces W1 stub).
 
@@ -84,13 +84,13 @@ If llama's W2 self-audit disposition is `surface_to_drafter` — that's the gap-
 - Malformed input (None, int, empty string) raises `CouncilEmbedInputError`.
 - OTEL span lands with full attribute set.
 
-### D3 — `aho.council.triage` real implementation
+### D3 - `aho.council.triage` real implementation
 
 **Module:** `src/aho/council/triage.py` (replaces W1 stub).
 
 **Shape:** Calls nemotron-mini:4b via host Ollama. Two operation modes:
-1. **Classify mode:** classify an artifact into a known category set (gotcha-candidate, ADR-relevance, gate-state, work-shape-tier-decision). Returns structured JSON with `category`, `confidence`, `rationale_summary`. Rubric-bounded; if model output is out-of-rubric, **raise — do not fall back to `categories[-1]`**. G083 hardening verified by explicit test in D8.
-2. **Registry-delta drafting mode:** given an executor output and current registry state, draft proposed new gotcha-registry entries or ADR-relevance hits. Returns list of draft entries with `kind`, `proposed_text`, `confidence`, `rationale`. Drafts are *proposals* — never written to registry directly by triage; written by `aho.council.dispatch` after approval flow (W3 work; W2 just produces the proposals).
+1. **Classify mode:** classify an artifact into a known category set (gotcha-candidate, ADR-relevance, gate-state, work-shape-tier-decision). Returns structured JSON with `category`, `confidence`, `rationale_summary`. Rubric-bounded; if model output is out-of-rubric, **raise - do not fall back to `categories[-1]`**. G083 hardening verified by explicit test in D8.
+2. **Registry-delta drafting mode:** given an executor output and current registry state, draft proposed new gotcha-registry entries or ADR-relevance hits. Returns list of draft entries with `kind`, `proposed_text`, `confidence`, `rationale`. Drafts are *proposals* - never written to registry directly by triage; written by `aho.council.dispatch` after approval flow (W3 work; W2 just produces the proposals).
 
 **Acceptance gate:**
 - Classify mode against fixture artifact returns valid category from rubric, confidence in [0, 1], rationale present.
@@ -98,7 +98,7 @@ If llama's W2 self-audit disposition is `surface_to_drafter` — that's the gap-
 - Registry-delta mode against fixture executor-output produces ≥1 proposal with valid shape.
 - OTEL span per call with full attribute set including `confidence`, `mode`.
 
-### D4 — `aho.council.audit` real implementation
+### D4 - `aho.council.audit` real implementation
 
 **Module:** `src/aho/council/audit.py` (replaces W1 stub).
 
@@ -120,7 +120,7 @@ Disposition shape: `{disposition: clean | halt | surface_to_drafter, confidence:
 - Confidence floor lock verified: a third fixture forces low-confidence model output (artifact ambiguous on purpose); even if model says `clean`, post-validation overrides to `surface_to_drafter`.
 - OTEL span per call with full disposition attributes.
 
-### D5 — `aho.council.dispatch` real implementation
+### D5 - `aho.council.dispatch` real implementation
 
 **Module:** `src/aho/council/dispatch.py` (replaces W1 stub).
 
@@ -137,10 +137,10 @@ OTEL span per dispatch call with `model_id`, `role`, `work_shape`, `tier_decisio
 **Acceptance gate:**
 - Dispatch round-trips for all four base-tier roles work end-to-end.
 - Substantive-drafting dispatch raises `CouncilDispatchEscalateRequired` (not silent fallback).
-- Role-collapse trip-wire emits when dispatched drafter and auditor are same model family — verified by test fixture.
+- Role-collapse trip-wire emits when dispatched drafter and auditor are same model family - verified by test fixture.
 - Routing decisions logged structurally; one OTEL span per dispatch.
 
-### D6 — `aho.audit_disposition_emitter` real implementation
+### D6 - `aho.audit_disposition_emitter` real implementation
 
 **Module:** `src/aho/audit_disposition_emitter.py` (new).
 
@@ -155,7 +155,7 @@ Output path: `artifacts/iterations/{iteration}/audit/{workstream}.json` for top-
 - Header is machine-parseable: `python3 -c "import json; json.load(open(path))"` succeeds, schema validates.
 - Body is human-readable: per-finding sections present, no raw JSON dumps in prose.
 
-### D7 — `aho.gap_carry_forward_writer` real implementation
+### D7 - `aho.gap_carry_forward_writer` real implementation
 
 **Module:** `src/aho/gap_carry_forward_writer.py` (new).
 
@@ -166,7 +166,7 @@ Output path: `artifacts/iterations/{iteration}/audit/{workstream}.json` for top-
 - Entry inserts at the correct location (matches surrounding entry IDs by source iteration/workstream).
 - File line count and entry count both increment by exactly +1 entry, +N lines per the entry's content.
 
-### D8 — Anti-rubber-stamp hardening verification
+### D8 - Anti-rubber-stamp hardening verification
 
 **Module:** `tests/test_anti_rubber_stamp.py` (new test file).
 
@@ -177,13 +177,13 @@ Output path: `artifacts/iterations/{iteration}/audit/{workstream}.json` for top-
 
 **Acceptance gate:**
 - All three tests pass.
-- All three tests fail when their respective hardening is bypassed (mutation-test the hardening itself — verify the test catches the failure mode it's protecting against).
+- All three tests fail when their respective hardening is bypassed (mutation-test the hardening itself - verify the test catches the failure mode it's protecting against).
 
-### D9 — W0 audit replay (bootstrap test 1)
+### D9 - W0 audit replay (bootstrap test 1)
 
 **Process:**
 1. Read sealed `artifacts/iterations/0.2.17/acceptance/W0.json` plus `acceptance/W0-amendment-b2-3.json`.
-2. Read sealed `artifacts/iterations/0.2.17/audit/W0.json` (Gemini's audit) — but DO NOT use its disposition as input. Llama audits independently.
+2. Read sealed `artifacts/iterations/0.2.17/audit/W0.json` (Gemini's audit) - but DO NOT use its disposition as input. Llama audits independently.
 3. Llama runs structural spot-check via `aho.council.audit` against W0 acceptance archive + amendment. Produces disposition.
 4. Compare llama's disposition to Gemini's structurally: per-deliverable result match, per-finding match, count_coherence_check match.
 
@@ -192,9 +192,9 @@ Output path: `artifacts/iterations/{iteration}/audit/{workstream}.json` for top-
 **Acceptance gate:**
 - Llama produces a disposition (any shape).
 - Comparison artifact lists every disagreement explicitly. Empty disagreement list is acceptable; just must be enumerated, not asserted.
-- If any disagreement is "substantively important" (per disagreement-handling protocol above), executor halt-and-surfaces — does not continue to D10.
+- If any disagreement is "substantively important" (per disagreement-handling protocol above), executor halt-and-surfaces - does not continue to D10.
 
-### D10 — W1 audit replay (bootstrap test 2)
+### D10 - W1 audit replay (bootstrap test 2)
 
 **Process:** Same as D9, against `artifacts/iterations/0.2.17/acceptance/W1.json` and Gemini's `audit/W1.json`.
 
@@ -202,7 +202,7 @@ Output path: `artifacts/iterations/{iteration}/audit/{workstream}.json` for top-
 
 **Acceptance gate:** Same as D9.
 
-### D11 — W2 self-audit (bootstrap test 3, loop closure)
+### D11 - W2 self-audit (bootstrap test 3, loop closure)
 
 **Process:**
 1. After D1–D10 land, executor writes preliminary W2 acceptance archive at `acceptance/W2.json` with `audit_status: pending_audit`.
@@ -214,14 +214,14 @@ Output path: `artifacts/iterations/{iteration}/audit/{workstream}.json` for top-
 - Audit archive is structurally valid (sha-recordable, machine-parseable header, human-readable body).
 - Executor halt-and-surfaces after D11 emits, regardless of disposition. **Drafter reviews pre-sign.**
 
-### D12 — Materiality telemetry hooks
+### D12 - Materiality telemetry hooks
 
 **Modules:** Touch all council components and dispatch to add OTEL emission for the four-bucket telemetry per ADR-0010 (architecture artifact §Materiality measurement protocol):
 
-- `claim_vs_artifact_mismatches.caught_by_llama` — incremented when `aho.council.audit` emits a finding.
-- `claim_vs_artifact_mismatches.caught_by_drafter` — placeholder counter, populated in W3 when drafter-flagged gaps land via `aho.gap_carry_forward_writer`.
-- `claim_vs_artifact_mismatches.escaped` — placeholder counter, populated post-iteration when later iterations surface defects from prior closes.
-- `carry_forward_resolution_rate` — placeholder counter, populated when an executor closes a carry-forward by reference in their workstream output.
+- `claim_vs_artifact_mismatches.caught_by_llama` - incremented when `aho.council.audit` emits a finding.
+- `claim_vs_artifact_mismatches.caught_by_drafter` - placeholder counter, populated in W3 when drafter-flagged gaps land via `aho.gap_carry_forward_writer`.
+- `claim_vs_artifact_mismatches.escaped` - placeholder counter, populated post-iteration when later iterations surface defects from prior closes.
+- `carry_forward_resolution_rate` - placeholder counter, populated when an executor closes a carry-forward by reference in their workstream output.
 
 W2 emits the signals; W3 wires them to claw3d brick rendering. W2's bar is "OTEL signals emit, structurally correct, no observable downstream renderer required."
 
@@ -231,7 +231,7 @@ W2 emits the signals; W3 wires them to claw3d brick rendering. W2's bar is "OTEL
 
 ## Cross-references
 
-- **Architecture artifact:** `aho-base-container-architecture.md` — canonical design source.
+- **Architecture artifact:** `aho-base-container-architecture.md` - canonical design source.
 - **W1 plan doc + close note:** `artifacts/iterations/0.2.17/W1-plan-doc.md`, `artifacts/iterations/0.2.17/W1-close-note.md`.
 - **W1 acceptance + audit archives:** `artifacts/iterations/0.2.17/acceptance/W1.json` (sha `e4d076ee…`), `artifacts/iterations/0.2.17/audit/W1.json` (sha `8b2771ac…`). DO NOT MODIFY.
 - **W0 acceptance + audit + amendment archives:** sha values per W0 close note. DO NOT MODIFY.
@@ -254,7 +254,7 @@ W2 emits the signals; W3 wires them to claw3d brick rendering. W2's bar is "OTEL
 - One entry per D1–D12.
 - `carry_forwards_added` for any new findings during W2.
 - `pillar_11_invariant_check: "pass"` with executor-session-log evidence.
-- `agents_involved` lists drafter, executor, auditor (llama3.2 — explicit model_id).
+- `agents_involved` lists drafter, executor, auditor (llama3.2 - explicit model_id).
 - `auditor_seat_transition_recorded` field documenting that this is the first iteration with in-container auditor.
 
 ## Halt-and-surface conditions

@@ -1,4 +1,4 @@
-"""W4 D3 — materiality four-bucket dashboard surfaces.
+"""W4 D3 - materiality four-bucket dashboard surfaces.
 
 Renders the four ADR-0010 materiality buckets as inspectable dashboard
 surfaces. Each surface reads one counter from the W2 materiality OTEL
@@ -30,10 +30,10 @@ All surfaces consume a normalized ``materiality_state`` dict shape:
 
 Per ADR-0010, the four buckets are:
 
-  1. caught_by_llama         — auditor catches a claim/artifact mismatch
-  2. caught_by_drafter       — drafter (gap-net) catches one the auditor missed
-  3. escaped                 — surfaced retrospectively, escaped sealed iteration
-  4. carry_forward_resolution_rate — explicit carry-forward closure count
+  1. caught_by_llama         - auditor catches a claim/artifact mismatch
+  2. caught_by_drafter       - drafter (gap-net) catches one the auditor missed
+  3. escaped                 - surfaced retrospectively, escaped sealed iteration
+  4. carry_forward_resolution_rate - explicit carry-forward closure count
 
 The first three feed the materiality protocol's catch-rate metric; the
 fourth feeds the carry-forward closure rate. Together they render the
@@ -74,7 +74,7 @@ BUCKET_DESCRIPTIONS = {
         " passed the artifact."
     ),
     "escaped": (
-        "Mismatches surfaced retrospectively — escaped a sealed iteration."
+        "Mismatches surfaced retrospectively - escaped a sealed iteration."
     ),
     "carry_forward_resolution": (
         "Carry-forwards explicitly closed by reference in a workstream"
@@ -114,7 +114,7 @@ def normalize_materiality_state(raw: Dict[str, Any]) -> Dict[str, Any]:
 
     Tolerates missing buckets (they fill to zero). Tolerates partial
     severity dicts (missing severities fill to zero). Returns a fresh
-    dict — does not mutate input.
+    dict - does not mutate input.
     """
     if not isinstance(raw, dict):
         raw = {}
@@ -186,7 +186,7 @@ def render_overview(state: Dict[str, Any]) -> OverviewSurface:
 
 
 def render_dashboard_payload(state: Dict[str, Any]) -> Dict[str, Any]:
-    """Render the full D3 dashboard payload — the four bucket surfaces
+    """Render the full D3 dashboard payload - the four bucket surfaces
     plus the overview, in JSON form suitable for /api/state or the
     dashboard renderer."""
     overview = render_overview(state)
@@ -231,7 +231,7 @@ def materiality_state_from_otel_counters(
     ``counters`` is a dict keyed by counter name (``aho.materiality.*``).
     Each value is itself a dict keyed by severity ('info'/'important'/
     'critical'), with int counts. Counters not in ``COUNTER_TO_BUCKET``
-    are ignored — drift detection (via tests) catches missing wiring,
+    are ignored - drift detection (via tests) catches missing wiring,
     not silent data loss.
     """
     buckets: Dict[str, Any] = {b: _empty_bucket_dict() for b in CANONICAL_BUCKETS}

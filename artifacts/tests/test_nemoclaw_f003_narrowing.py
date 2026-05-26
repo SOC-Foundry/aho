@@ -16,7 +16,7 @@ from aho.pipeline.router import ClassificationError, DispatchError
 
 
 # ---------------------------------------------------------------------------
-# NemoClawOrchestrator.dispatch — line 77 narrowing
+# NemoClawOrchestrator.dispatch - line 77 narrowing
 # ---------------------------------------------------------------------------
 
 @patch("aho.agents.nemoclaw.classify_task")
@@ -68,7 +68,7 @@ def test_dispatch_catches_json_decode_error(mock_qwen_cls, mock_classify):
 @patch("aho.agents.nemoclaw.classify_task")
 @patch("aho.agents.openclaw.QwenClient")
 def test_dispatch_does_not_catch_attribute_error(mock_qwen_cls, mock_classify):
-    """Programmer error (AttributeError) propagates — no longer masked."""
+    """Programmer error (AttributeError) propagates - no longer masked."""
     mock_classify.return_value = "assistant"
     mock_client = MagicMock()
     mock_client.generate.side_effect = AttributeError("missing method")
@@ -81,7 +81,7 @@ def test_dispatch_does_not_catch_attribute_error(mock_qwen_cls, mock_classify):
 
 
 # ---------------------------------------------------------------------------
-# NemoClawHandler.handle — line 134 narrowing
+# NemoClawHandler.handle - line 134 narrowing
 # ---------------------------------------------------------------------------
 
 def _make_handler_for_cmd(cmd_req: dict, orch_mock) -> tuple[MagicMock, MagicMock]:
@@ -137,7 +137,7 @@ def test_handler_dispatch_catches_dispatch_error(mock_get_orch):
 
 @patch("aho.agents.nemoclaw._get_orchestrator")
 def test_handler_dispatch_does_not_catch_value_error(mock_get_orch):
-    """Unhandled ValueError propagates — F003 no longer swallows."""
+    """Unhandled ValueError propagates - F003 no longer swallows."""
     orch = MagicMock()
     orch.dispatch.side_effect = ValueError("unexpected")
     mock_get_orch.return_value = orch

@@ -1,4 +1,4 @@
-"""Tests for Telegram inbound bridge — routing, openclaw client, formatting."""
+"""Tests for Telegram inbound bridge - routing, openclaw client, formatting."""
 import json
 import socket
 import threading

@@ -1,4 +1,4 @@
-"""Tests for schema v3 — efficacy instrumentation (W8 Part D).
+"""Tests for schema v3 - efficacy instrumentation (W8 Part D).
 
 4+ cases: v3 emit, v2 backward compat, v1 backward compat, CLI flags.
 """

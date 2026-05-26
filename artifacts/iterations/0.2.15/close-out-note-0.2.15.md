@@ -6,14 +6,14 @@
 
 ## Summary
 
-0.2.15 is closed. Sign-off boxes ticked, drift corrected, `.aho.json` state advanced. The `aho iteration close` CLI machinery was not invoked — see rationale below.
+0.2.15 is closed. Sign-off boxes ticked, drift corrected, `.aho.json` state advanced. The `aho iteration close` CLI machinery was not invoked - see rationale below.
 
 ## Actions taken
 
 1. **Sign-off drift** (`artifacts/iterations/0.2.15/sign-off-0.2.15.md`):
    - Line 25 carry-forward line: `21 items total: 1 critical, 10 important, 10 nice-to-have. By target: 16 to 0.2.16, 5 to 0.2.17+` → `27 items total: 2 critical, 14 important, 11 nice-to-have. By target: 23 to 0.2.16, 4 to 0.2.17+`.
    - Line 31 bundle section line: `8 sections` → `9 sections`, appended close-package section name.
-   - Sign-off checkboxes (all Kyle Hard Gate + Soft Gate + Iteration acceptance) ticked — this change was already staged in the working tree prior to this session.
+   - Sign-off checkboxes (all Kyle Hard Gate + Soft Gate + Iteration acceptance) ticked - this change was already staged in the working tree prior to this session.
 
 2. **Carry-forwards footer** (`artifacts/iterations/0.2.15/carry-forwards-0.2.15.md`):
    - `Total items: 25` → `27`.
@@ -39,12 +39,12 @@ The proper close machinery is redesigned in `artifacts/adrs/0004-iteration-close
 
 ## What this close-out does NOT include
 
-- Build log regeneration (`aho-build-0.2.15.md`) — not regenerated. Was built at W4 close.
-- Bundle regeneration (`aho-bundle-0.2.15.md`) — not regenerated. Canonical 9-section bundle was built at W4 close.
-- Mechanical report regeneration — not regenerated.
-- Run file regeneration — not regenerated.
-- Postflight gate pass — not run.
-- Telegram `iteration_complete` notification — not emitted (no `iteration_complete` event fires via the stub path).
+- Build log regeneration (`aho-build-0.2.15.md`) - not regenerated. Was built at W4 close.
+- Bundle regeneration (`aho-bundle-0.2.15.md`) - not regenerated. Canonical 9-section bundle was built at W4 close.
+- Mechanical report regeneration - not regenerated.
+- Run file regeneration - not regenerated.
+- Postflight gate pass - not run.
+- Telegram `iteration_complete` notification - not emitted (no `iteration_complete` event fires via the stub path).
 
 All of these landed at W4 close and remain canonical on disk. The surgical close does not re-run them.
 

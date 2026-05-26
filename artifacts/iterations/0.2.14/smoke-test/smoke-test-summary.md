@@ -1,9 +1,9 @@
-# Smoke Test Summary — 0.2.14 W1
+# Smoke Test Summary - 0.2.14 W1
 
 **Document:** NoSQL_DataPipelines_Technical_Manual.pdf (201 pages, 247,275 chars)
-**Assignment:** Qwen-solo (qwen3.5:9b × 5 roles) — Pillar 7 violation acknowledged
+**Assignment:** Qwen-solo (qwen3.5:9b × 5 roles) - Pillar 7 violation acknowledged
 **Dispatch:** Direct Ollama HTTP API
-**Status:** Complete — all 5 stages finished, 0 exceptions
+**Status:** Complete - all 5 stages finished, 0 exceptions
 
 ---
 
@@ -25,8 +25,8 @@
 ### Critical: Ollama context_length is 4,096 (not 256K)
 
 Ollama runs Qwen 3.5:9B with `context_length: 4096` by default. The model's 256K context window is not utilized. The 247K-char document is truncated to ~4K tokens by Ollama before the model sees it. This explains why:
-- Indexer_in only referenced sections 98-100 (pp.194-201) — the tail of the document visible in 4K context
-- Producer generated off-topic Chinese response — insufficient context to understand the task
+- Indexer_in only referenced sections 98-100 (pp.194-201) - the tail of the document visible in 4K context
+- Producer generated off-topic Chinese response - insufficient context to understand the task
 
 **Fix for 0.2.15:** Set `num_ctx` in Ollama API call or modelfile. The model supports 256K context natively.
 
@@ -34,9 +34,9 @@ Ollama runs Qwen 3.5:9B with `context_length: 4096` by default. The model's 256K
 
 - **Indexer_in:** Substantive analysis of document tail. Quality is reasonable for what the model could see.
 - **Producer:** Off-topic Chinese customer service response. System prompt ineffective at Q4_K_M with truncated context.
-- **Auditor:** Delta validation in JSON format. Partially Chinese. The mechanism works — auditor accepted/rejected deltas with reasoning.
+- **Auditor:** Delta validation in JSON format. Partially Chinese. The mechanism works - auditor accepted/rejected deltas with reasoning.
 - **Indexer_out:** Correctly identified no deltas in auditor output. Honest empty response.
-- **Assessor:** Structured JSON assessment. Validated prior work products. Produced final summary with recommendations. The assessor is the strongest output — it received smaller inputs (prior outputs only, not full document) and produced coherent structured analysis.
+- **Assessor:** Structured JSON assessment. Validated prior work products. Produced final summary with recommendations. The assessor is the strongest output - it received smaller inputs (prior outputs only, not full document) and produced coherent structured analysis.
 
 ### Cascade mechanics: proven
 
@@ -57,7 +57,7 @@ At Q4_K_M on consumer hardware (NZXTcos), per-stage: 136–549s (2.3–9.2 min).
 
 | Criterion | Met? | Notes |
 |-----------|------|-------|
-| Vetting table complete | Yes | Gate 1 satisfied — 16 members, all with explicit status |
+| Vetting table complete | Yes | Gate 1 satisfied - 16 members, all with explicit status |
 | Cascade integration test on dummy | Yes | 5 stages completed on dummy doc |
 | NoSQL smoke test executed | Yes | 5/5 stages complete, 0 exceptions |
 | Trace events present | Yes | 10 events (5 dispatch + 5 complete) |

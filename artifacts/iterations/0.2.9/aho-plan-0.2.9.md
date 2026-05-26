@@ -1,4 +1,4 @@
-# aho Plan — 0.2.9
+# aho Plan - 0.2.9
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 9
 **Theme:** Remote operability plumbing + P3 clone
@@ -27,14 +27,14 @@
 
 ## Workstream details
 
-### W0 — Bumps + decisions + carry-forward
+### W0 - Bumps + decisions + carry-forward
 
 - All 10 canonical artifacts → 0.2.9
 - `.aho.json` current_iteration → 0.2.9
 - `artifacts/iterations/0.2.9/decisions.md` captures Kyle's answers to design open questions 1–5
 - Carry-forward section in 0.2.9 design doc references: post-reboot daemon verification, protocol smoke column, openclaw stability → 0.2.10
 
-### W1 — .mcp.json portability
+### W1 - .mcp.json portability
 
 - Create `.mcp.json.tpl` at repo root with placeholder `{{PROJECT_ROOT}}` in filesystem allowed-dirs
 - `bin/aho-bootstrap` extended: on first run, reads template, substitutes `{{PROJECT_ROOT}}` with `aho_paths.find_project_root()` output, writes `.mcp.json`
@@ -43,49 +43,49 @@
 - `bin/aho-bootstrap` idempotent: detects existing .mcp.json, skips regeneration unless `--force`
 - Test: template substitution produces valid JSON, placeholder fully replaced, idempotency check works
 
-### W2 — install.fish cross-machine audit
+### W2 - install.fish cross-machine audit
 
 - Grep install.fish and all `bin/aho-*` wrappers for any hardcoded `/home/kthompson`, `NZXTcos`, `172.31.255.245`, or similar machine-specific values
 - Replace with calls to `aho_paths`, `$USER`, `hostname`, or equivalent resolvers
 - Audit `artifacts/harness/pacman-packages.txt` and `model-fleet.txt` for packages known to behave differently on P3 vs NZXTcos (e.g., ollama still needs upstream install per 0.2.6)
 - Produce `artifacts/iterations/0.2.9/portability-audit.md` as iteration deliverable
-- No install.fish changes unless audit surfaces something — most machine-specific work was already done right in 0.2.5/0.2.6
+- No install.fish changes unless audit surfaces something - most machine-specific work was already done right in 0.2.5/0.2.6
 
-### W3 — Workstream event emission
+### W3 - Workstream event emission
 
-- New module `src/aho/workstream_events.py` — emits `workstream_start` and `workstream_complete` events to `data/aho_event_log.jsonl`
+- New module `src/aho/workstream_events.py` - emits `workstream_start` and `workstream_complete` events to `data/aho_event_log.jsonl`
 - Both events include: iteration, workstream_id, timestamp, source_agent, outcome (for complete), one-line summary
 - CLI integration: `aho iteration workstream start W0` and `aho iteration workstream complete W0 --status pass --summary "..."` subcommands
 - Tests: event shape, JSONL append-only semantics, idempotent start/complete guards
 
-### W4 — /ws command family
+### W4 - /ws command family
 
 - Extend `src/aho/telegram/inbound.py` command dispatch dict with 4 new entries: `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`
 - Handlers:
-  - `/ws status` — reads `.aho.json` + `.aho-checkpoint.json`, formats current iteration + WS + proceed_awaited state
-  - `/ws pause` — writes proceed_awaited=true to checkpoint, replies "paused at next WS boundary"
-  - `/ws proceed` — writes proceed_awaited=false, replies "proceeding"
-  - `/ws last` — reads last workstream_complete event from event log, formats one-line summary
+  - `/ws status` - reads `.aho.json` + `.aho-checkpoint.json`, formats current iteration + WS + proceed_awaited state
+  - `/ws pause` - writes proceed_awaited=true to checkpoint, replies "paused at next WS boundary"
+  - `/ws proceed` - writes proceed_awaited=false, replies "proceeding"
+  - `/ws last` - reads last workstream_complete event from event log, formats one-line summary
 - Auto-push subscriber: daemon watches aho_event_log.jsonl for new workstream_complete events, sends summary to configured chat_id
 - Use `context7-mcp` for any Telegram Bot API doc lookups during implementation (MCP-first)
 - Tests: each command routes correctly, auto-push fires once per event, chat_id filter honored
 
-### W5 — Checkpoint proceed_awaited handshake
+### W5 - Checkpoint proceed_awaited handshake
 
 - Add `proceed_awaited` field to `.aho-checkpoint.json` schema (default false)
-- New helper `src/aho/workstream_gate.py` — `wait_if_paused(timeout_seconds=None)` function that polls checkpoint every 5s until proceed_awaited is false
+- New helper `src/aho/workstream_gate.py` - `wait_if_paused(timeout_seconds=None)` function that polls checkpoint every 5s until proceed_awaited is false
 - Agent-side integration: CLI wrappers call `wait_if_paused()` at each workstream boundary before writing workstream_start event
 - Timeout None = block indefinitely. Explicit timeout supported for safety in non-interactive runs
 - Tests: helper respects proceed_awaited toggle, timeout path works, no busy-loop (5s poll interval honored)
 
-### W6 — secrets-architecture.md
+### W6 - secrets-architecture.md
 
 - New file `artifacts/harness/secrets-architecture.md`
 - Covers: age key location + mode, OS keyring role, fernet session cache, Pattern for committing config files with empty secret placeholders + shell env export, what NEVER gets committed (keys, passphrases, tokens, encrypted blobs outside explicit vault paths), junior-dev workflow for first-run
 - Target: readable cold by a junior engineer who has never seen aho. ~500-800 words, code examples welcome
-- No code extraction — documentation only. Hard extraction target is 0.4.x+
+- No code extraction - documentation only. Hard extraction target is 0.4.x+
 
-### W7 — ADR-045: Discovery iteration formalization
+### W7 - ADR-045: Discovery iteration formalization
 
 - New file `artifacts/adrs/ahomw-ADR-045.md`
 - Draft from Claude (provided below in the launch prompt block or separately)
@@ -93,7 +93,7 @@
 - Kyle reviews, agent lands file in adrs/ with chosen number
 - Update ADR-044 cross-reference to ADR-045 if appropriate
 
-### W8 — P3 clone execution
+### W8 - P3 clone execution
 
 **Kyle-led, agent supports.** This workstream is manual clone driven by Kyle on P3 directly. Agent's role:
 1. Produce a step-by-step runbook document (`artifacts/iterations/0.2.9/p3-clone-runbook.md`) before Kyle executes
@@ -110,7 +110,7 @@
 
 **Success criteria (restated from design):** git clone works, bin/aho-bootstrap halts cleanly on capability gaps, install.fish runs as far as it can, whatever breaks gets a reproduction path documented. Full install success is 0.2.10.
 
-### W9 — Close
+### W9 - Close
 
 - Test suite green (target 190+ tests, up from 182)
 - Bundle generation, all postflight gates green (including bundle_completeness and mcp_sources_aligned)
@@ -139,9 +139,9 @@
 
 ## Risk register
 
-- **Tonight deadline on W8.** W0–W7 must land in time to execute W8 before Kyle's cutoff. If scope pressure arises, cut order: W7 (ADR-045 — can shift to 0.2.10 W0), W6 (secrets-architecture — can shift to 0.2.10), NEVER cut W1/W2/W8.
+- **Tonight deadline on W8.** W0–W7 must land in time to execute W8 before Kyle's cutoff. If scope pressure arises, cut order: W7 (ADR-045 - can shift to 0.2.10 W0), W6 (secrets-architecture - can shift to 0.2.10), NEVER cut W1/W2/W8.
 - **P3 cold state unknown.** If P3 has existing aho state, install.fish idempotency is exercised. If P3 is fully cold, fresh-install path is exercised. Different failure modes. Both informative.
-- **Telegram getUpdates race if P3 runs inbound daemon.** W0 decision 2 must land — lean is P3 skips inbound daemon for 0.2.9.
+- **Telegram getUpdates race if P3 runs inbound daemon.** W0 decision 2 must land - lean is P3 skips inbound daemon for 0.2.9.
 - **Per-workstream cadence on tonight's deadline.** Heavy review early (W1-W5) is the right shape; W6-W7 can be lighter-touch; W8 is all-hands-on-deck regardless.
 
 ## Out of scope

@@ -1,7 +1,7 @@
-# aho Design — 0.2.12
+# aho Design - 0.2.12
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 12
-**Theme:** Council activation — discovery, visibility, design, and measurement of the LLM council as a continuous improvement system
+**Theme:** Council activation - discovery, visibility, design, and measurement of the LLM council as a continuous improvement system
 **Iteration type:** Discovery-heavy hybrid per ADR-045 (discovery W0–W5, visibility W6–W9, design W10–W12, implementation W13–W16, measurement W17–W18, close W19)
 **Primary executor:** gemini-cli (first Gemini-primary iteration since early 0.2.x)
 **Execution mode:** Per-workstream review ON, three sessions, no overnight
@@ -13,19 +13,19 @@
 
 0.2.11 closed honest at W9 after recognizing executor-bias: claude-code carried 100% of workstream load while the local council (Qwen, GLM, Nemotron, evaluator-agent, OpenClaw, Nemoclaw, MCP servers) participated zero. G077 named this planner-executor-bias-consumes-council-capacity. Schema v3 efficacy instrumentation made it measurable but had no council data to measure against.
 
-0.2.12 addresses this directly. The objective is to establish a continuous improvement model for the LLM council working with other agentic components to optimize productivity, reduce time-to-build, and reduce token spend — resilient and portable, replicable across other PCs and GCP projects. Anything that doesn't move toward this objective is off-mission.
+0.2.12 addresses this directly. The objective is to establish a continuous improvement model for the LLM council working with other agentic components to optimize productivity, reduce time-to-build, and reduce token spend - resilient and portable, replicable across other PCs and GCP projects. Anything that doesn't move toward this objective is off-mission.
 
-This iteration takes two deliberate structural steps. First, the primary executor shifts from claude-code to gemini-cli. This breaks the planner-default pattern — my prompt-drafting bias flips from "what I've watched claude-code execute cleanly" to equal uncertainty about gemini-cli behavior in-harness. Second, the iteration is structured discovery-first — before dispatching workstreams to council members, we must know which members are operational, what their dispatch surfaces are, what their failure modes look like.
+This iteration takes two deliberate structural steps. First, the primary executor shifts from claude-code to gemini-cli. This breaks the planner-default pattern - my prompt-drafting bias flips from "what I've watched claude-code execute cleanly" to equal uncertainty about gemini-cli behavior in-harness. Second, the iteration is structured discovery-first - before dispatching workstreams to council members, we must know which members are operational, what their dispatch surfaces are, what their failure modes look like.
 
 ## §2 Goals
 
 1. Shift primary executor to gemini-cli for all 20 workstreams. Stress-test GEMINI-iteration.md + GEMINI-run.md as operational agent instructions
 2. Complete council inventory: which agents are running, which have dispatch surfaces, which have ever executed a workstream-level task
-3. Build `aho council status` CLI — visibility primitive enumerating operational agents, dispatch surfaces, queue depth, last-routing-decision, model availability
+3. Build `aho council status` CLI - visibility primitive enumerating operational agents, dispatch surfaces, queue depth, last-routing-decision, model availability
 4. Design the workstream-level delegation pattern: dispatch contract, routing-by-capability, result protocol, failure handling
 5. Dispatch at least three real workstream tasks to council members (Qwen via nemoclaw, GLM for evaluator review, MCP server for tool invocation) and measure via schema v3
 6. Baseline: direct executor vs council delegation on comparable workstream kinds. Measurable delegate ratio trajectory
-7. Lego office visualization as primary operational diagram — council members as figures, dispatch lines showing work volume, state, health
+7. Lego office visualization as primary operational diagram - council members as figures, dispatch lines showing work volume, state, health
 8. Pattern framework bootstrap (was 0.2.11 W8.5): artifacts/patterns/ folder, evolution-log semantics, five seed patterns (planner-discipline, age-fernet-keyring, install-surface, daemon-lifecycle, council-dispatch)
 9. Tech-legacy-debt audit (slipped from 0.2.11 W18): inventory shims, unused modules, stale harness, orphaned tests, deprecated patterns
 10. README content review (slipped from 0.2.11 W8): stale sections corrected, three-persona model updated, iteration roadmap current
@@ -55,7 +55,7 @@ graph BT
 - AUR installer abstraction (slipped to 0.2.14)
 - Frontend multi-folder reshape + Firestore scaffolding (slipped to 0.2.14)
 - P3 clone-to-deploy (slipped to 0.2.15+)
-- Executing tech-debt prunes (audit only — execution 0.2.14)
+- Executing tech-debt prunes (audit only - execution 0.2.14)
 - Full council dispatch production-hardening (0.2.13+)
 - Multi-user Telegram, Gemini CLI remote executor routing, secrets module extraction (0.3.x+)
 
@@ -104,7 +104,7 @@ graph BT
 - **Per-workstream review ON** for all 20 workstreams
 - **Three sessions**: W0–W7 (discovery + visibility), W8–W14 (design + implementation), W15–W19 (dispatch + measurement + close)
 - **Hard gate**: W0–W5 discovery must complete before visibility/design/implementation fires. If a council member is completely non-operational, that's discovery surfacing ground truth, not failure
-- **Acceptance assertions**: every workstream from W1 onward emits AcceptanceCheck results. Discovery workstreams may assert "component not operational, gap documented" and pass — measurement is the goal, not uniform health
+- **Acceptance assertions**: every workstream from W1 onward emits AcceptanceCheck results. Discovery workstreams may assert "component not operational, gap documented" and pass - measurement is the goal, not uniform health
 - **Council dispatch acceptance**: W13–W16 include executable acceptance checks verifying work was routed through a council member (not executor) and returned measurable output
 - **Halt-on-fail**: any workstream where acceptance returns false triggers proceed_awaited=true + Telegram push + halt
 
@@ -124,7 +124,7 @@ graph BT
 3. **MCP servers pass smoke but fail workflow-level invocation.** Tool-list round-trip is different from "consume MCP server output in a workstream." Mitigation: W5 audit distinguishes the two; W15 attempts real workflow invocation.
 4. **Schema v3 data overwhelms the new executor.** Tracking tokens and forensics-minutes accurately requires discipline gemini-cli may not have. Mitigation: CLI flag provides manual override; auto-capture deferred to 0.2.13+.
 5. **Lego office visualization scope creep.** Foundation in W7, integration in W9. Mitigation: foundation = static placeholder figures + line-drawing; integration = live data feed. Full interactive visualization deferred.
-6. **Pattern framework authorship.** Writing 5 seeds well is an authorial task. Mitigation: scope reduces if constrained — planner-discipline + age-fernet-keyring + council-dispatch is minimum viable.
+6. **Pattern framework authorship.** Writing 5 seeds well is an authorial task. Mitigation: scope reduces if constrained - planner-discipline + age-fernet-keyring + council-dispatch is minimum viable.
 
 ## §10 Success Criteria
 

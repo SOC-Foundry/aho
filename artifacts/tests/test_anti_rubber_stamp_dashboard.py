@@ -1,4 +1,4 @@
-"""W4 D6 — anti-rubber-stamp verification dashboard tests.
+"""W4 D6 - anti-rubber-stamp verification dashboard tests.
 
 Verifies the four-surface dashboard:
   - Four surfaces in the canonical order

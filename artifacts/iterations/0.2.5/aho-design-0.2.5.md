@@ -1,4 +1,4 @@
-# aho Design — 0.2.5
+# aho Design - 0.2.5
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 5
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
@@ -10,7 +10,7 @@
 
 0.2.5 has two intertwined goals.
 
-**Primary:** rebuild `install.fish` as a complete clone-to-deploy entry point that takes a fresh CachyOS/Arch box from `git clone` to a working aho environment with zero manual Python edits. This is the gating deliverable for Phase 0 graduation — Phase 0 ends when P3 can clone aho and reach an operational state. Today, install.fish is a partial scaffold that only handles a subset of the steps. NZXTcos has all 4 daemons running, the model fleet pulled, the MCP fleet installed, and age keys generated, but only because Kyle did most of that work by hand or via separate wrappers across 0.2.1–0.2.4. None of it is reproducible from a single command.
+**Primary:** rebuild `install.fish` as a complete clone-to-deploy entry point that takes a fresh CachyOS/Arch box from `git clone` to a working aho environment with zero manual Python edits. This is the gating deliverable for Phase 0 graduation - Phase 0 ends when P3 can clone aho and reach an operational state. Today, install.fish is a partial scaffold that only handles a subset of the steps. NZXTcos has all 4 daemons running, the model fleet pulled, the MCP fleet installed, and age keys generated, but only because Kyle did most of that work by hand or via separate wrappers across 0.2.1–0.2.4. None of it is reproducible from a single command.
 
 **Secondary:** close the four 0.2.3 carry-forward defects discovered during 0.2.4 close. They are small individually but they erode trust in the run reports if they keep accumulating. Bundling them into the same iteration as install.fish makes sense because three of the four (`harness-watcher` deployment, OTEL dict bug, conductor smoke definition) touch surfaces that 0.2.5 is already modifying.
 
@@ -20,7 +20,7 @@
 
 1. `install.fish` is a thin orchestrator. Every step delegates to a `bin/aho-*` wrapper. Pillar 4 holds.
 2. Running `install.fish` on a fresh CachyOS box brings up a complete aho environment: native packages, AUR packages, Python package, model fleet, age keys, OS keyring bootstrap, MCP fleet, all 4 systemd daemons (including harness-watcher), telegram scaffolding.
-3. `install.fish` is idempotent. Running it twice on the same machine is safe — second run is mostly no-op.
+3. `install.fish` is idempotent. Running it twice on the same machine is safe - second run is mostly no-op.
 4. `install.fish` halts cleanly on capability gaps (sudo prompts, secret entry, network failure) and resumes from the same point after the gap is closed.
 5. The four 0.2.3 carry-forward defects are fixed with tests preventing recurrence.
 6. Two new gotchas captured (OTEL scalar attributes, claimed-vs-installed verification).
@@ -31,7 +31,7 @@
 - Telegram secret entry beyond a placeholder prompt + capability gap halt.
 - Replacing `bin/aho-install` (it becomes one of the steps install.fish calls, possibly renamed `bin/aho-bootstrap`).
 - Anything from kjtcom or the future MCP replacement ADR.
-- Pulling Flutter into install.fish — Flutter is a kjtcom dependency, not an aho dependency. Kjtcom bootstrap installs Flutter on top of aho.
+- Pulling Flutter into install.fish - Flutter is a kjtcom dependency, not an aho dependency. Kjtcom bootstrap installs Flutter on top of aho.
 
 ---
 
@@ -68,7 +68,7 @@ Model fleet installer via `ollama pull`. Reads from `artifacts/harness/model-fle
 - `haervwe/GLM-4.6V-Flash-9B:latest`
 - `nomic-embed-text:latest`
 
-Idempotent — `ollama pull` on an existing model is a no-op.
+Idempotent - `ollama pull` on an existing model is a no-op.
 
 ### `bin/aho-secrets-init` (new)
 
@@ -90,11 +90,11 @@ Installs and enables the 4 user daemons from `templates/systemd/`:
 - `aho-telegram.service`
 - `aho-harness-watcher.service` ← **closes 0.2.3 W3 gap**
 
-Verifies `loginctl enable-linger $USER` is set. Idempotent — `systemctl --user enable` is safe to repeat.
+Verifies `loginctl enable-linger $USER` is set. Idempotent - `systemctl --user enable` is safe to repeat.
 
 ### `bin/aho-python` (new, thin)
 
-Wraps `pip install -e . --break-system-packages` and verifies the `aho` CLI is on PATH. Exists as a wrapper for symmetry — Pillar 4 says every tool is invoked through a `/bin` wrapper.
+Wraps `pip install -e . --break-system-packages` and verifies the `aho` CLI is on PATH. Exists as a wrapper for symmetry - Pillar 4 says every tool is invoked through a `/bin` wrapper.
 
 ### `bin/aho-mcp` (existing, no changes)
 

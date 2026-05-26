@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/server-everything.fish — CLI health check for @modelcontextprotocol/server-everything
+# mcp-smoke/server-everything.fish - CLI health check for @modelcontextprotocol/server-everything
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 
 set -l server_name "server-everything"

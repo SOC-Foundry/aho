@@ -1,4 +1,4 @@
-"""aho.rag — retrieval-augmented context against host-mounted ChromaDB.
+"""aho.rag - retrieval-augmented context against host-mounted ChromaDB.
 
 W2 entry points (replaces W1 placeholder):
 - query(text, k=5, project=None) -> list of ranked retrievals
@@ -10,7 +10,7 @@ Storage: ChromaDB persistent client at AHO_CHROMA_DIR (default
 `~/.local/share/aho/chroma` on hosts where /var/lib/aho is unavailable).
 
 Embedding: aho.council.embed (nomic-embed-text). Index and query share the
-same embedding shape — required for honest similarity scoring.
+same embedding shape - required for honest similarity scoring.
 
 Recency weighting: combines cosine similarity with an exponential decay on
 `iteration_seq_ordinal`. The current iteration (`AHO_ITERATION` env) gets
@@ -40,7 +40,7 @@ DEFAULT_K = 5
 SIMILARITY_WEIGHT = 0.55
 RECENCY_WEIGHT = 0.45
 
-# Ordinal anchors — current iteration. Set per AHO_ITERATION at query time.
+# Ordinal anchors - current iteration. Set per AHO_ITERATION at query time.
 # Decay halves every DECAY_HALFLIFE_ITERATIONS *iteration ordinal units*.
 # 0.2.17 vs 0.2.16 = 1 unit; 0.2.17 vs 0.1.13 = (0.2*1000+17) - (0.1*1000+13)
 # = 200+17 - 100+13 = 104 units (most-recent-iteration dominance is desired).
@@ -148,7 +148,7 @@ def _read_text_safely(path: Path) -> str:
 
 def _doc_id(project: str, iteration: str, workstream: str, path: Path) -> str:
     # Include parent dir to disambiguate acceptance/W0.json from
-    # audit/W0.json — both share path.name. Using parent.name only
+    # audit/W0.json - both share path.name. Using parent.name only
     # (not full path) keeps ids stable across host moves.
     rel = f"{path.parent.name}/{path.name}"
     return f"{project}::{iteration}::{workstream}::{rel}"
@@ -180,7 +180,7 @@ def index_artifact(
 ) -> str:
     """Index a single artifact into the project's iteration-context
     collection. Reads the file, embeds via nomic, writes with metadata.
-    Returns the doc id assigned. Idempotent — re-indexing the same path
+    Returns the doc id assigned. Idempotent - re-indexing the same path
     overwrites the existing entry.
     """
     p = Path(path)
@@ -213,7 +213,7 @@ def index_artifact(
         )
         try:
             vector = _embed_text(chunk_text)
-        except Exception as exc:  # noqa: BLE001 — embed boundary
+        except Exception as exc:  # noqa: BLE001 - embed boundary
             raise RagError(
                 f"embed failed for chunk {chunk_idx} of {p}: {exc}"
             ) from exc
@@ -312,7 +312,7 @@ def seed_iteration_context(
             indexed += 1
         except (RagInputError, RagError) as exc:
             errors.append({"path": str(p), "error": str(exc)})
-        except Exception as exc:  # noqa: BLE001 — bulk seed boundary
+        except Exception as exc:  # noqa: BLE001 - bulk seed boundary
             errors.append({
                 "path": str(p),
                 "error": f"unexpected: {type(exc).__name__}: {exc}",

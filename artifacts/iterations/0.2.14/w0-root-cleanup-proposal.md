@@ -1,6 +1,6 @@
-# Root Directory Cleanup Proposal — 0.2.14 W0
+# Root Directory Cleanup Proposal - 0.2.14 W0
 
-**Status:** PROPOSAL ONLY — Kyle reviews and approves before any mv/rm executes.
+**Status:** PROPOSAL ONLY - Kyle reviews and approves before any mv/rm executes.
 
 ---
 
@@ -29,7 +29,7 @@
 
 ### Scratch from Prior Iterations (MOVE to `artifacts/iterations/0.2.12/scratch/`)
 
-All files below have mtime 2026-04-12 (0.2.12 iteration). No `src/` or `artifacts/tests/` imports found. Only references are in historical bundle docs (aho-bundle-0.2.3.md, aho-bundle-0.2.12.md, etc.) — these are path mentions in MANIFEST snapshots, not functional dependencies.
+All files below have mtime 2026-04-12 (0.2.12 iteration). No `src/` or `artifacts/tests/` imports found. Only references are in historical bundle docs (aho-bundle-0.2.3.md, aho-bundle-0.2.12.md, etc.) - these are path mentions in MANIFEST snapshots, not functional dependencies.
 
 **patch_*.py (19 files):**
 
@@ -90,7 +90,7 @@ All files below have mtime 2026-04-12 (0.2.12 iteration). No `src/` or `artifact
 3. **Move** all 7 `run_acceptance_w*.py` files to `artifacts/iterations/0.2.12/scratch/`
 4. **Move** `install.fish.v10.66.backup` and `install-old.fish` to `artifacts/iterations/0.2.12/scratch/`
 5. **Add** `firebase-debug.log` to `.gitignore`
-6. **Do NOT delete** any files — moves only, preserving history in iteration scratch dirs
+6. **Do NOT delete** any files - moves only, preserving history in iteration scratch dirs
 
 **Total:** 28 files moved, 1 .gitignore entry added, 0 files deleted.
 

@@ -12,7 +12,7 @@ One call per server. Lean confirmed.
 W3 produces 9 fish scripts, each making a single known-good call to its
 target MCP server, asserting a known-good response shape, exiting 0/1.
 Deeper exercise (multi-call, error handling, real workflow) waits until
-there is a real workflow to drive it — likely 0.3.x.
+there is a real workflow to drive it - likely 0.3.x.
 
 Rationale: 0.2.8 is about establishing the habit of using MCP at all.
 Smoke proves invokability. Utility proves itself later.

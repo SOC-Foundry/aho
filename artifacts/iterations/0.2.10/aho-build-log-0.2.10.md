@@ -1,4 +1,4 @@
-# aho Build Log — 0.2.10
+# aho Build Log - 0.2.10
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 10
 **Theme:** Install surface implementation + CLI unification + observability deployment
@@ -65,7 +65,7 @@ Tests: 227 passed. Build log, run report, bundle, CHANGELOG finalized.
 
 ## Kyle's Notes
 
-*(placeholder — Kyle fills in morning)*
+*(placeholder - Kyle fills in morning)*
 
 - W8 already landed via direct-binary install, credit corrected
 - W9 used direct-binary not AUR due to environmental blockers (CachyOS mirror + Jaeger AUR package rename)

@@ -7,7 +7,7 @@
 
 ---
 
-## W0 — Environment hygiene
+## W0 - Environment hygiene
 
 Workstream W0 initialized the iteration environment. The project root was verified at `~/dev/projects/aho`. A backup directory `~/dev/projects/aho.backup-pre-0.1.12` was created to preserve the state of `src/aho/artifacts/evaluator.py`, `scripts/smoke_instrumentation.py`, `docs/harness/model-fleet.md`, and `data/gotcha_archive.json`.
 
@@ -15,7 +15,7 @@ The `.aho-checkpoint.json` file was updated to reflect the current iteration `0.
 
 ---
 
-## W1 — Evaluator baseline reload (aho-G060)
+## W1 - Evaluator baseline reload (aho-G060)
 
 Workstream W1 addressed the staleness issue in the evaluator baseline. The module `src/aho/artifacts/evaluator.py` was modified to remove the init-time baseline load. Instead, `get_allowed_scripts()` and `get_allowed_cli_commands()` are now invoked inside `evaluate_text()` on every invocation. This ensures files created or renamed mid-run are visible to the evaluator immediately.
 
@@ -23,7 +23,7 @@ The failure mode was registered in `data/gotcha_archive.json` with code `aho-G06
 
 ---
 
-## W2 — smoke_instrumentation checkpoint awareness (aho-G061)
+## W2 - smoke_instrumentation checkpoint awareness (aho-G061)
 
 Workstream W2 fixed the iteration-stamp bug in `scripts/smoke_instrumentation.py`. The script was updated to read the current iteration from `.aho-checkpoint.json` at script start, rather than relying on environment variables or hardcoded values. Every `log_event` call now passes the iteration explicitly.
 
@@ -31,7 +31,7 @@ The failure mode was registered in `data/gotcha_archive.json` with code `aho-G06
 
 ---
 
-## W3 — model-fleet.md harness doc cleanup
+## W3 - model-fleet.md harness doc cleanup
 
 Workstream W3 updated `docs/harness/model-fleet.md` from its stale 0.1.4 state. The title was changed from "IAO Model Fleet" to "aho Model Fleet". The version header was updated to `0.1.12`. All prose references to "IAO" as an identifier were replaced with "aho", while historical references were preserved. Section 3 references to "iao CLI" were updated to "aho CLI". Section 5 references to "the Trident" were rephrased to reference Pillar 1 (delegate) and Pillar 8 (cost delta).
 
@@ -39,7 +39,7 @@ Additionally, `docs/harness/agents-architecture.md` was updated to reflect versi
 
 ---
 
-## W4 — Dogfood + close
+## W4 - Dogfood + close
 
 Workstream W4 executed the verification loop. The build log was manually initialized. The iteration report was generated. The iteration was closed.
 

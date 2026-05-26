@@ -45,7 +45,7 @@
     {
       "check": "No new except Exception blocks (G083)",
       "result": "pass",
-      "evidence": "Five specific exception types: DispatchError, MalformedResponseError, TemplateLeakError, ModelUnavailableError, DispatchTimeoutError. Error handling catches urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError — all specific types."
+      "evidence": "Five specific exception types: DispatchError, MalformedResponseError, TemplateLeakError, ModelUnavailableError, DispatchTimeoutError. Error handling catches urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError - all specific types."
     },
     {
       "check": "Retry with exponential backoff implemented",
@@ -122,12 +122,12 @@
     {
       "id": "F002",
       "severity": "info",
-      "description": "Unknown model family falls back to Qwen config. This is safe (ChatML is widely compatible) but verbose — unrecognized models won't have optimized stop tokens."
+      "description": "Unknown model family falls back to Qwen config. This is safe (ChatML is widely compatible) but verbose - unrecognized models won't have optimized stop tokens."
     },
     {
       "id": "F003",
       "severity": "info",
-      "description": "Template leak detection is post-hoc — it fires after receiving the full response. For streaming dispatch (future), leak detection would need per-chunk scanning."
+      "description": "Template leak detection is post-hoc - it fires after receiving the full response. For streaming dispatch (future), leak detection would need per-chunk scanning."
     }
   ],
   "test_results": {

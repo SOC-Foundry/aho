@@ -7,7 +7,7 @@ def check():
 
     pipelines = list_pipelines()
     if not pipelines:
-        return ("ok", "SKIP — no pipelines declared in .aho.json")
+        return ("ok", "SKIP - no pipelines declared in .aho.json")
 
     from aho.pipelines.validate import validate_pipeline
     from aho.paths import find_project_root

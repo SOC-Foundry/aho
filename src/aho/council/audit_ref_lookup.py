@@ -1,4 +1,4 @@
-"""council.audit_ref_lookup — RAG retrieval per detected audit reference.
+"""council.audit_ref_lookup - RAG retrieval per detected audit reference.
 
 Step 2 of the W3 reference-resolution pipeline. D1 detects reference-shaped
 tokens. D2 (this module) queries `aho.rag` for each detected reference
@@ -9,7 +9,7 @@ Per the plan doc:
 - k=3 retrievals per reference.
 - Zero retrievals → mark `unverified` (the auditor flags for verification
   rather than auto-flagging as fake).
-- Backend failure (chromadb missing, embed unreachable) RAISES — silent
+- Backend failure (chromadb missing, embed unreachable) RAISES - silent
   pass-through would defeat the load-bearing fix from F-0.2.17-W2-006.
 
 The returned shape is per-reference (so the prompt can render
@@ -31,12 +31,12 @@ from ..rag import (
 
 
 DEFAULT_K_PER_REF = 3
-# Pool multiplier — RAG returns top-k by cosine similarity for arbitrary
+# Pool multiplier - RAG returns top-k by cosine similarity for arbitrary
 # text, but for opaque reference IDs (`F-0.2.17-W0-001`) embedding
 # similarity is low signal: every query returns *something*, regardless
 # of whether the ID is actually in the corpus. We pull a wider pool then
 # filter to retrievals whose document contains the literal reference ID.
-# This is what makes the `unverified` status meaningful — without literal
+# This is what makes the `unverified` status meaningful - without literal
 # substring filtering, the spurious-ID acceptance gate cannot fail.
 DEFAULT_POOL_MULTIPLIER = 8
 SNIPPET_PROMPT_LEN = 200
@@ -163,7 +163,7 @@ def lookup_references(
     `aho.rag.query` default.
 
     Raises RefLookupError on backend failure. A reference with zero
-    retrievals is marked `unverified`, NOT raised — that path is the
+    retrievals is marked `unverified`, NOT raised - that path is the
     explicit auditor signal "ID looks shaped right but is not in the
     iteration-context collection."
     """
@@ -194,7 +194,7 @@ def lookup_references(
 
         # Filter to retrievals that literally contain the reference ID.
         # Embedding similarity for opaque IDs is too noisy to define
-        # "registered" — substring presence is the load-bearing signal.
+        # "registered" - substring presence is the load-bearing signal.
         variants = _id_search_variants(ref)
         filtered = [
             _normalise_retrieval(r, snippet_variants=variants)

@@ -1,4 +1,4 @@
-# Report — aho 0.1.16
+# Report - aho 0.1.16
 
 **Generated:** 2026-04-11T13:47:10Z
 **Iteration:** 0.1.16
@@ -126,7 +126,7 @@ install.fish: install.fish syntax OK
 Artifacts: All Qwen-generated artifacts present |
 | manifest_current | ok | all 71 file hashes current |
 | pillars_present | ok | Eleven pillars present in design and README |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | ok | README updated during this iteration (mtime: 2026-04-11T13:43:20.235188+00:00) |
 | run_complete | deferred | Kyle's notes section not yet filled in |
 | run_quality | ok | Run file passes quality gate |
@@ -163,21 +163,21 @@ Artifacts: All Qwen-generated artifacts present |
 
 From 0.1.15 Kyle's Notes:
 
-**0.1.15 graduated.** First iteration with full component visibility. The component manifest landed exactly as designed — 72 entries, openclaw/nemoclaw/telegram visible as `stub` with `next_iteration: 0.1.16` in every report from now on. The deferral pattern is structurally dead.
+**0.1.15 graduated.** First iteration with full component visibility. The component manifest landed exactly as designed - 72 entries, openclaw/nemoclaw/telegram visible as `stub` with `next_iteration: 0.1.16` in every report from now on. The deferral pattern is structurally dead.
 
-**Wall clock: 12m31s for 5 workstreams** — Claude Code single-agent the whole way through, no Gemini handoff. Validates that tight foundation runs don't need split-agent.
+**Wall clock: 12m31s for 5 workstreams** - Claude Code single-agent the whole way through, no Gemini handoff. Validates that tight foundation runs don't need split-agent.
 
 **aho.run domain registered today.** Add to README, pyproject, and aho-phase-0.md in 0.1.16 W0.
 
 **Phase 0 exit roadmap update:**
-- **0.1.16** — Iteration 1 graduation ceremony + close sequence repair + canonical artifact discipline (today, ~1hr)
-- **0.2.1** — Cleanup pass + soc-foundry initial push + openclaw/nemoclaw global wrappers + telegram bridge real implementation (today evening)
-- **0.2.2** — P3 clone attempt + smoke test + capability gap capture (tonight or tomorrow)
-- **0.2.3+** — Whatever P3 surfaces, fix in tight runs
-- **0.3.x** — Alex demo prep, claw3d scaffold, novice operability
+- **0.1.16** - Iteration 1 graduation ceremony + close sequence repair + canonical artifact discipline (today, ~1hr)
+- **0.2.1** - Cleanup pass + soc-foundry initial push + openclaw/nemoclaw global wrappers + telegram bridge real implementation (today evening)
+- **0.2.2** - P3 clone attempt + smoke test + capability gap capture (tonight or tomorrow)
+- **0.2.3+** - Whatever P3 surfaces, fix in tight runs
+- **0.3.x** - Alex demo prep, claw3d scaffold, novice operability
 - **Phase 0 graduates** when P3 + Alex validation lands clean
 
-The 0.1.15 close-sequence ordering bug is the most consequential thing surfaced — every future run will false-flag postflight failures until it's fixed. **0.1.16 W0 fixes it before any other work**, then runs through the corrected sequence on its own close to verify.
+The 0.1.15 close-sequence ordering bug is the most consequential thing surfaced - every future run will false-flag postflight failures until it's fixed. **0.1.16 W0 fixes it before any other work**, then runs through the corrected sequence on its own close to verify.
 
 ---
 

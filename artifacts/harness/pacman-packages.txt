@@ -1,4 +1,4 @@
-# aho pacman packages — declarative subset for clone-to-deploy
+# aho pacman packages - declarative subset for clone-to-deploy
 # Read by bin/aho-pacman. One package per line. Comments and blank lines ignored.
 # Locked during 0.2.5 W0 from Kyle's decision.
 
@@ -26,7 +26,7 @@ fd
 htop
 
 # Ollama runtime for the model fleet
-# NOTE: ollama removed from pacman list — installed via upstream script
+# NOTE: ollama removed from pacman list - installed via upstream script
 # (curl -fsSL https://ollama.com/install.sh | sh) because CachyOS pacman
 # package conflicts with upstream /usr/share/ollama. bin/aho-models doctor
 # checks ollama availability separately.
@@ -34,5 +34,5 @@ htop
 # OS keyring backend for bin/aho-secrets-init
 libsecret
 
-# Container runtime (0.2.18 W2 — required for image load/run on container hosts)
+# Container runtime (0.2.18 W2 - required for image load/run on container hosts)
 podman

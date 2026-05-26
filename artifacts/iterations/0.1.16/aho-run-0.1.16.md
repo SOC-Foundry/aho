@@ -1,9 +1,9 @@
-# Run File — aho 0.1.16
+# Run File - aho 0.1.16
 
 **Generated:** 2026-04-11
 **Iteration:** 0.1.16
 **Phase:** 0
-**Status:** Graduated — iteration 1 closed
+**Status:** Graduated - iteration 1 closed
 
 ## Workstream Summary
 
@@ -11,13 +11,13 @@
 |---|---|---|---|
 | W0 | pass | claude-code | Close sequence repair (7 explicit steps), canonical_artifacts gate (7 checked), run file wired with component section + agent attribution, version bumps, _iao_data() bug fixed, legacy SHA256 manifest removed |
 | W1 | pass | claude-code | iteration-1-close.md, iteration-2-charter.md, phase 0 charter updated with 3-iteration structure, README iteration roadmap |
-| W2 | pass | claude-code | Close sequence dogfooded — zero false-positive postflight failures, render_summary() string-checkpoint bug fixed, report schema updated to match mechanical builder |
+| W2 | pass | claude-code | Close sequence dogfooded - zero false-positive postflight failures, render_summary() string-checkpoint bug fixed, report schema updated to match mechanical builder |
 
 Wall clock: 13m 27s. Tests: 80 passing. Bundle: 312KB. Postflight: 12/15 ok, 0 fail.
 
 ---
 
-## Agent Questions — Answered
+## Agent Questions - Answered
 
 No questions surfaced. Two minor carryovers identified for 0.2.1 W0:
 

@@ -1,4 +1,4 @@
-"""Reviewer — role for reviewing aho artifacts (full implementation deferred to 0.1.8)."""
+"""Reviewer - role for reviewing aho artifacts (full implementation deferred to 0.1.8)."""
 from aho.agents.roles.base_role import AgentRole
 
 

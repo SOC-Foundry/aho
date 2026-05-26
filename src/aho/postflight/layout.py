@@ -14,7 +14,7 @@ def detect_layout(doc_path: Path) -> LayoutVariant:
         content = doc_path.read_text()
         
         # Check for W-based markers
-        w_matches = re.findall(r'^#{2,3}\s+W[0-6]\s+—', content, re.MULTILINE)
+        w_matches = re.findall(r'^#{2,3}\s+W[0-6]\s+-', content, re.MULTILINE)
         if len(w_matches) >= 3:
             return LayoutVariant.W_BASED
             

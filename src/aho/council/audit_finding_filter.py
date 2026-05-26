@@ -1,4 +1,4 @@
-"""council.audit_finding_filter — deterministic post-hoc filter on RAG-aware
+"""council.audit_finding_filter - deterministic post-hoc filter on RAG-aware
 audit findings (W4 D1, drafter-arbitrated path c from F-0.2.17-W3-001).
 
 Closes the small-model prompt-following inconsistency surfaced by W3 D4: with
@@ -14,7 +14,7 @@ After the model returns its findings list, this filter:
    ``rag_enrichment.references`` list with status ``"registered"``.
 3. Checks if the finding's description contains a fake-ID phrase
    (substring match, case-insensitive). The phrase set is intentionally
-   small and explicit — exactly the shapes that surfaced as false
+   small and explicit - exactly the shapes that surfaced as false
    positives during W2 self-audit and W3 D4 RAG replays.
 4. If BOTH conditions are met, the finding is dropped from the active
    list and recorded in a structured ``suppressed_findings`` entry with
@@ -24,17 +24,17 @@ After the model returns its findings list, this filter:
 
 Structural narrowness is the load-bearing G083 protection. Findings with
 a fake-ID phrase but no registered anchor stay active (the auditor is
-flagging an unverified ID — legitimate). Findings with a registered
+flagging an unverified ID - legitimate). Findings with a registered
 anchor but no fake-ID phrase stay active (the auditor is flagging
-something else about a known ID — legitimate). The filter only
+something else about a known ID - legitimate). The filter only
 suppresses the specific F-0.2.17-W3-001 failure mode.
 
-0.2.18 W0 extension — RAG enrichment status echo (F-0.2.18-W0-006).
+0.2.18 W0 extension - RAG enrichment status echo (F-0.2.18-W0-006).
 A second false-positive shape: llama3.2:3b sometimes paraphrases the
 "## Registered references retrieved from project context" table into
 findings whose description is the literal status-line template
-``{ID} ({kind}) — status: `registered|unverified`.`` with no
-substantive content. These are non-findings — the auditor is just
+``{ID} ({kind}) - status: `registered|unverified`.`` with no
+substantive content. These are non-findings - the auditor is just
 echoing the ground-truth context section back. The
 ``_RAG_STATUS_ECHO_PATTERN`` matches that exact shape and the filter
 drops matched findings with reason ``"rag_enrichment_status_echo"``.
@@ -51,11 +51,11 @@ from .audit_ref_extract import RefExtractError, detect_references
 
 
 # Phrase set is the canonical W4 plan-doc D1 list. Case-insensitive
-# substring match — "whole-phrase" in plan-doc parlance is the entire
+# substring match - "whole-phrase" in plan-doc parlance is the entire
 # phrase as a contiguous token sequence inside the description.
 #
 # Adding to this list expands suppression coverage. Do NOT add open-ended
-# phrases ("suspicious", "weird") — those would erode the structural
+# phrases ("suspicious", "weird") - those would erode the structural
 # narrowness G083 hardening relies on.
 FAKE_ID_PHRASES: Tuple[str, ...] = (
     "not real",
@@ -84,7 +84,7 @@ _RAG_STATUS_ECHO_PATTERN = re.compile(
     r"^\s*"
     r"[A-Za-z][A-Za-z0-9._-]*"          # anchor ID
     r"\s*\(\s*[a-z][a-z_]*\s*\)\s*"     # (kind)
-    r"[—–\-]\s*"              # em-dash, en-dash, or hyphen
+    r"[-–\-]\s*"              # em-dash, en-dash, or hyphen
     r"status\s*:\s*"
     r"[`'\"]?(?:registered|unverified)[`'\"]?"
     r"\s*\.?\s*$",
@@ -133,7 +133,7 @@ def _matched_phrase(description: str) -> Optional[str]:
 def _extracted_anchor_ids(description: str) -> List[str]:
     """Run the W3 D1 detection regex set against description text. Empty
     list on any extraction failure (description must remain a sentence,
-    not a structured payload — silent fall-through here is correct
+    not a structured payload - silent fall-through here is correct
     because the absence of detected anchors is itself a "no suppression"
     signal, not a hard error)."""
     if not isinstance(description, str) or not description.strip():
@@ -157,13 +157,13 @@ def _filter_one(
     structured entry to append to the audit's ``suppressed_findings``
     list when ``suppress`` is True.
 
-    `eligible_for_fake_id_rule` gates the F-0.2.17-W3-001 rule only — the
+    `eligible_for_fake_id_rule` gates the F-0.2.17-W3-001 rule only - the
     RAG status-echo rule (F-0.2.18-W0-006) fires regardless of registered
     set size since it's description-shape-driven, not phrase-driven.
     """
     description = finding.get("description", "") if isinstance(finding, dict) else ""
 
-    # F-0.2.18-W0-006 — RAG enrichment status echo (description-shape rule).
+    # F-0.2.18-W0-006 - RAG enrichment status echo (description-shape rule).
     if isinstance(description, str) and _RAG_STATUS_ECHO_PATTERN.match(description):
         return True, {
             "reason": RAG_STATUS_ECHO_REASON,
@@ -174,7 +174,7 @@ def _filter_one(
     if not eligible_for_fake_id_rule:
         return False, None
 
-    # F-0.2.17-W3-001 — registered-ID flagged as fake (phrase + anchor).
+    # F-0.2.17-W3-001 - registered-ID flagged as fake (phrase + anchor).
     phrase = _matched_phrase(description)
     if phrase is None:
         return False, None
@@ -202,7 +202,7 @@ def filter_findings(
     ``findings`` is the model-returned findings list (already
     schema-validated by the audit primitive). ``rag_enrichment`` is the
     audit's RAG enrichment summary dict (may be None when enrichment
-    was disabled — in which case nothing is suppressed).
+    was disabled - in which case nothing is suppressed).
 
     Returns a dict shaped:
         {

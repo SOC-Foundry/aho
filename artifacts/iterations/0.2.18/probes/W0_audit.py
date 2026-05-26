@@ -1,8 +1,8 @@
-"""0.2.18 W0 — invoke the council audit primitive against acceptance/W0.json.
+"""0.2.18 W0 - invoke the council audit primitive against acceptance/W0.json.
 
 The auditor seat is the in-container `llama3.2:3b` primitive (W3 RAG enrichment +
 W4 deterministic post-hoc filter wired). Pillar 7 holds: artifact produced by
-claude-opus-4-7, audited by llama3.2:3b — distinct model family, distinct prompt,
+claude-opus-4-7, audited by llama3.2:3b - distinct model family, distinct prompt,
 distinct wrapper.
 
 State-machine effect:

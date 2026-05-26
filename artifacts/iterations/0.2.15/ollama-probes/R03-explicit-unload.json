@@ -33,6 +33,6 @@
       "result": "untestable"
     }
   ],
-  "evidence_summary": "All 3 loadable models unload reliably within 5 seconds of keep_alive:0 request. Unload is not immediate — there is a grace period of 1-5 seconds. GLM cannot load, so unload is untestable.",
-  "grace_period_note": "Models show in /api/ps immediately after keep_alive:0 but are gone within 5s. This is consistent Ollama behavior — unload is deferred, not synchronous."
+  "evidence_summary": "All 3 loadable models unload reliably within 5 seconds of keep_alive:0 request. Unload is not immediate - there is a grace period of 1-5 seconds. GLM cannot load, so unload is untestable.",
+  "grace_period_note": "Models show in /api/ps immediately after keep_alive:0 but are gone within 5s. This is consistent Ollama behavior - unload is deferred, not synchronous."
 }

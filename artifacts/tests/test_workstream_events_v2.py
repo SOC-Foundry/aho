@@ -1,4 +1,4 @@
-"""Tests for workstream_events v2 schema — acceptance_results in events.
+"""Tests for workstream_events v2 schema - acceptance_results in events.
 
 Minimum 6 cases per W2 plan:
 1. v2 emit with acceptance_results serializes correctly

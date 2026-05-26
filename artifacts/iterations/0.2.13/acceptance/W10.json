@@ -61,17 +61,17 @@
   "baseline_new_failures": 0,
   "baseline_newly_passing": ["test_daemon_healthy.py::test_healthy_unit_passes"],
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ imports during council health measurement",
-    "G079 — baseline_regression_check is backstop: 12 actual failures all within 13 known baseline",
-    "G081 — no celebratory framing in any deliverable; substrate findings front-and-center",
-    "G082 — canonical paths: event log at ~/.local/share/aho/events/ per canonical resolution",
-    "G083 — no new code written; close artifacts only"
+    "G070 - cleared __pycache__ after src/aho/ imports during council health measurement",
+    "G079 - baseline_regression_check is backstop: 12 actual failures all within 13 known baseline",
+    "G081 - no celebratory framing in any deliverable; substrate findings front-and-center",
+    "G082 - canonical paths: event log at ~/.local/share/aho/events/ per canonical resolution",
+    "G083 - no new code written; close artifacts only"
   ],
   "audit_status": "pending_audit",
   "findings": {
     "f1_health_unchanged": {
       "severity": "expected",
-      "detail": "Council health 35.3/100 — unchanged from 0.2.12. Success criterion (>=50) not met. This is honest: parser fixes make failures visible rather than silent, but the models themselves remain non-functional. Health score reflects member status, which correctly hasn't changed."
+      "detail": "Council health 35.3/100 - unchanged from 0.2.12. Success criterion (>=50) not met. This is honest: parser fixes make failures visible rather than silent, but the models themselves remain non-functional. Health score reflects member status, which correctly hasn't changed."
     },
     "f2_checkpoint_inconsistency": {
       "severity": "medium",
@@ -83,7 +83,7 @@
     },
     "f4_plan_doc_workstream_count_discrepancy": {
       "severity": "info",
-      "detail": "Plan doc footer says '11 (W0, W1, W2, W2.5, W3, W4, W5, W6, W7, W8, W8.5, W9, W10)' which is actually 13 workstreams, not 11. This is a pre-existing error in the plan doc. Per ADR-012, plan doc is immutable — noting it here, not correcting it."
+      "detail": "Plan doc footer says '11 (W0, W1, W2, W2.5, W3, W4, W5, W6, W7, W8, W8.5, W9, W10)' which is actually 13 workstreams, not 11. This is a pre-existing error in the plan doc. Per ADR-012, plan doc is immutable - noting it here, not correcting it."
     }
   },
   "agents_involved": [

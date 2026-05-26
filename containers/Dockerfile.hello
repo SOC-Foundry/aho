@@ -1,4 +1,4 @@
-# Throwaway Dockerfile — 0.2.17 W0 Bucket 3 (B3.1).
+# Throwaway Dockerfile - 0.2.17 W0 Bucket 3 (B3.1).
 #
 # Purpose: validate the runtime+package-install loop end to end before
 # W1 authors the production Dockerfile. NOT pushed to any registry.
@@ -33,7 +33,7 @@ RUN python3 -m venv /opt/aho/.venv \
 
 ENV PATH="/opt/aho/.venv/bin:${PATH}"
 
-# No ENTRYPOINT — keeps the literal probe form
+# No ENTRYPOINT - keeps the literal probe form
 # `podman run --rm aho:hello aho --version` working as plan text expects.
 # W1's production Dockerfile is the right place to introduce an entrypoint
 # script (secrets mount + tier manifest read + OTEL setup); B3 throwaway

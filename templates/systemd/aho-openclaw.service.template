@@ -8,6 +8,9 @@ ExecStart=/usr/bin/python -m aho.agents.openclaw --serve
 Restart=on-failure
 RestartSec=5
 Environment=PYTHONUNBUFFERED=1
+# OTLP endpoint + auth + resource attrs from the deployment-private env-file.
+# Leading - makes it optional: no failure if the file is absent.
+EnvironmentFile=-%h/.config/aho/beacon.env
 
 [Install]
 WantedBy=default.target

@@ -1,4 +1,4 @@
-# Run File — aho 0.1.12
+# Run File - aho 0.1.12
 
 **Generated:** 2026-04-11T03:37:40Z
 **Iteration:** 0.1.12
@@ -24,13 +24,13 @@ This run file is a canonical iteration artifact produced during the `iteration c
 
 ## Agent Questions for Kyle
 
-(none — no questions surfaced during execution)
+(none - no questions surfaced during execution)
 
 ---
 
 ## Kyle's Notes for Next Iteration
 
-0.1.12 graduated clean — first clean close since 0.1.10. Two gotchas fixed (aho-G060 evaluator baseline reload, aho-G061 smoke instrumentation iteration read), model-fleet.md and agents-architecture.md headers bumped to 0.1.12. Four conditions carry into 0.1.13:
+0.1.12 graduated clean - first clean close since 0.1.10. Two gotchas fixed (aho-G060 evaluator baseline reload, aho-G061 smoke instrumentation iteration read), model-fleet.md and agents-architecture.md headers bumped to 0.1.12. Four conditions carry into 0.1.13:
 
 1. **Harness prose drift.** `docs/harness/agents-architecture.md` body still says "Iteration 0.1.7 introduces a complete rebuild of the iao agentic foundations" and references `iao.logger.log_event`. Footer credits "iao 0.1.7 W8". Only the header was sed'd in 0.1.12 W3. Rename sweeps keep missing doc prose because `rg`+`sed` target imports, not narrative text. 0.1.13 W2 fixes this surgically.
 
@@ -38,9 +38,9 @@ This run file is a canonical iteration artifact produced during the `iteration c
 
 3. **Folder reorg is go.** Deferred through every run since 0.1.8. 0.1.13 W3 executes: `docs/`, `scripts/`, `templates/`, `prompts/`, `tests/` all collapse under `/artifacts/*`. New root is `/src`, `/bin`, `/artifacts`, `/data`, `/app`, `/pipeline`. `/app` and `/pipeline` land as scaffolds with READMEs.
 
-4. **Phase 0 objective reframed.** Phase 0 is no longer "NZXT-only authoring" — it's **"clone soc-foundry/aho on a second Arch box (P3) and deploy LLMs + MCPs + agents via the `/bin` wrapper package."** CLAUDE.md and GEMINI.md both get rewritten once in 0.1.13 W1 as universal Phase 0 files reflecting this objective. Legacy iao prose in both files is cleared. Per-phase universal rule still holds after 0.1.13 — they don't get touched again until Phase 1.
+4. **Phase 0 objective reframed.** Phase 0 is no longer "NZXT-only authoring" - it's **"clone soc-foundry/aho on a second Arch box (P3) and deploy LLMs + MCPs + agents via the `/bin` wrapper package."** CLAUDE.md and GEMINI.md both get rewritten once in 0.1.13 W1 as universal Phase 0 files reflecting this objective. Legacy iao prose in both files is cleared. Per-phase universal rule still holds after 0.1.13 - they don't get touched again until Phase 1.
 
-0.1.13 is designed long and ambitious — W0–W6 in a single overnight Gemini run. Split-agent model: Gemini rips W0–W5, Claude Code handles W6 dogfood + close if needed. Capability-gap interrupts expected in W5 for any sudo-adjacent install operations.
+0.1.13 is designed long and ambitious - W0–W6 in a single overnight Gemini run. Split-agent model: Gemini rips W0–W5, Claude Code handles W6 dogfood + close if needed. Capability-gap interrupts expected in W5 for any sudo-adjacent install operations.
 
 ---
 

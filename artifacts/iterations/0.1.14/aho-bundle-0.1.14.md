@@ -11,7 +11,7 @@
 
 ### DESIGN (aho-design-0.1.14.md)
 ```markdown
-# aho 0.1.14 — Design
+# aho 0.1.14 - Design
 
 **Phase:** 0
 **Iteration:** 0.1.14
@@ -45,45 +45,45 @@
 
 ## Workstreams
 
-### W0 — Hygiene + reorg cleanup
+### W0 - Hygiene + reorg cleanup
 Bump `.aho.json` and `.aho-checkpoint.json` to 0.1.14. Backup tarball. Populate `MANIFEST.json` with current package manifest (walk `src/aho/`). Restore fish marker block in `install.fish`. Flatten `artifacts/docs/iterations/0.1.2/` → `artifacts/iterations/0.1.2/`. Remove `artifacts/docs/` tree entirely (verify empty after move). `aho doctor` → 6 ok / 0 warn gate.
 
-### W1 — Terminology sweep (iao → aho, ahomw → ahomw, IAO expansion)
+### W1 - Terminology sweep (iao → aho, ahomw → ahomw, IAO expansion)
 Three-pass sweep:
 
 **Pass 1: "Agentic Harness Orchestration" → "Agentic Harness Orchestration"**
 - Grep all `.md` under `artifacts/harness/`, `artifacts/adrs/`, `artifacts/roadmap/`, plus `CLAUDE.md`, `GEMINI.md`, `README.md`.
 - Update every full expansion. Update every casual use ("the Iterative Agentic..." variants).
-- Mermaid trident chart label: `IAO` stays (it's the acronym for the new expansion too — "Agentic Harness Orchestration" abbreviates awkwardly; keep three-letter shaft text as `AHO` and update).
+- Mermaid trident chart label: `IAO` stays (it's the acronym for the new expansion too - "Agentic Harness Orchestration" abbreviates awkwardly; keep three-letter shaft text as `AHO` and update).
 
 **Pass 2: `ahomw` → `ahomw`**
-- `artifacts/harness/base.md` — footer "ahomw - inviolable" → "ahomw - inviolable", and all ADR prefixes `ahomw-ADR-*` → `ahomw-ADR-*` (ADR-003, 005, 007, 009, 012, 014, 015, 017, 021, 027).
-- `projects.json` — entry key `ahomw` → `ahomw`.
+- `artifacts/harness/base.md` - footer "ahomw - inviolable" → "ahomw - inviolable", and all ADR prefixes `ahomw-ADR-*` → `ahomw-ADR-*` (ADR-003, 005, 007, 009, 012, 014, 015, 017, 021, 027).
+- `projects.json` - entry key `ahomw` → `ahomw`.
 - Script registry `data/script_registry.json`.
-- Gotcha registry `data/gotcha_archive.json` — any `ahomw-*` prefixes.
-- `src/aho/registry.py` — hardcoded prefix strings if any.
+- Gotcha registry `data/gotcha_archive.json` - any `ahomw-*` prefixes.
+- `src/aho/registry.py` - hardcoded prefix strings if any.
 - Pattern refs in base.md (`aho-Pattern-*` already correct, verify).
 
 **Pass 3: Residual `iao` narrative prose**
 - Sweep for any `iao` still surviving in prose (not filenames, not historical iteration dirs).
-- Whitelist: `docs/phase-charters/iao-phase-0.md` (historical filename, now at `artifacts/phase-charters/iao-phase-0.md`) — do not rename file, content already historical.
+- Whitelist: `docs/phase-charters/iao-phase-0.md` (historical filename, now at `artifacts/phase-charters/iao-phase-0.md`) - do not rename file, content already historical.
 - Whitelist: everything under `artifacts/iterations/0.1.2/` through `artifacts/iterations/0.1.12/`.
 
 **Gate:** `rg -i "iterative agentic-orchestration" artifacts/ CLAUDE.md GEMINI.md README.md` returns zero. `rg "ahomw" artifacts/ src/ data/ projects.json` returns zero outside historical iteration dirs.
 
-### W2 — Six canonical artifacts repair
+### W2 - Six canonical artifacts repair
 Full audit + rewrite pass, in order:
 
-1. **`artifacts/harness/base.md`** — footer `ahomw` → `ahomw`, all ADR prefixes, version bump to 0.1.14. Verify Eleven Pillars unchanged.
-2. **`artifacts/harness/agents-architecture.md`** — verify 0.1.13 body rewrite held, bump header to 0.1.14, update footer ("Updated by Gemini CLI during aho 0.1.14 W2").
-3. **`artifacts/harness/model-fleet.md`** — footer still says "Document updated for aho 0.1.12 W3" — bump to 0.1.14 W2. Verify no ahomw refs.
-4. **`CLAUDE.md`** — verify 0.1.13 rewrite held, add "Agentic Harness Orchestration" expansion if any full expansion is used, bump phase rewrite date.
-5. **`GEMINI.md`** — same as CLAUDE.md.
-6. **`README.md`** — update trident chart label text (`Agentic Harness Orchestration` → `Agentic Harness Orchestration`), update all body references, bump iteration to 0.1.14, update component count if §22 classification ships.
+1. **`artifacts/harness/base.md`** - footer `ahomw` → `ahomw`, all ADR prefixes, version bump to 0.1.14. Verify Eleven Pillars unchanged.
+2. **`artifacts/harness/agents-architecture.md`** - verify 0.1.13 body rewrite held, bump header to 0.1.14, update footer ("Updated by Gemini CLI during aho 0.1.14 W2").
+3. **`artifacts/harness/model-fleet.md`** - footer still says "Document updated for aho 0.1.12 W3" - bump to 0.1.14 W2. Verify no ahomw refs.
+4. **`CLAUDE.md`** - verify 0.1.13 rewrite held, add "Agentic Harness Orchestration" expansion if any full expansion is used, bump phase rewrite date.
+5. **`GEMINI.md`** - same as CLAUDE.md.
+6. **`README.md`** - update trident chart label text (`Agentic Harness Orchestration` → `Agentic Harness Orchestration`), update all body references, bump iteration to 0.1.14, update component count if §22 classification ships.
 
 **Gate:** all six files pass `rg -i "iterative agentic"` → zero, `rg "ahomw"` → zero, header versions all 0.1.14.
 
-### W3 — Build log stub generator
+### W3 - Build log stub generator
 New module `src/aho/feedback/build_log_stub.py`. Signature: `generate_stub(iteration: str) -> Path`.
 
 Behavior:
@@ -97,31 +97,31 @@ Test: `artifacts/tests/test_build_log_stub.py` with a fixture checkpoint + event
 
 **Gate:** stub generation on 0.1.13 fixture data produces a well-formed build log; bundle §3 validation passes on the stub output.
 
-### W4 — Postflight gate repair
+### W4 - Postflight gate repair
 Two changes:
 
-1. **`pillars_present.py` + `structural_gates.py`** — detect layout variant (W-based workstream or §-based template) and apply variant-appropriate checks. Add `LayoutVariant` enum. W-based runs check for W0–Wn headers and workstream summary tables; §-based runs check for §1–§22. Both must produce passing gates.
+1. **`pillars_present.py` + `structural_gates.py`** - detect layout variant (W-based workstream or §-based template) and apply variant-appropriate checks. Add `LayoutVariant` enum. W-based runs check for W0–Wn headers and workstream summary tables; §-based runs check for §1–§22. Both must produce passing gates.
 
-2. **§22 component checklist minimum-by-run-type.** Add `run_type` classification to checkpoint schema: `{"run_type": "agent_execution" | "reorg_docs" | "hygiene" | "mixed"}`. §22 gate applies floor based on run_type — agent_execution expects ≥6, reorg_docs expects ≥2, hygiene expects ≥1. Classification is declared in the design doc (new required field) and read from checkpoint at close.
+2. **§22 component checklist minimum-by-run-type.** Add `run_type` classification to checkpoint schema: `{"run_type": "agent_execution" | "reorg_docs" | "hygiene" | "mixed"}`. §22 gate applies floor based on run_type - agent_execution expects ≥6, reorg_docs expects ≥2, hygiene expects ≥1. Classification is declared in the design doc (new required field) and read from checkpoint at close.
 
 Update `aho-design-0.1.14.md` to declare `run_type: mixed` for its own run.
 
 **Gate:** replay 0.1.13 bundle through new gates → all green. New tests in `artifacts/tests/test_postflight_layouts.py` and `test_postflight_run_types.py`.
 
-### W5 — P3 deployment dry-run on NZXT
+### W5 - P3 deployment dry-run on NZXT
 Scratch dir: `/tmp/aho-p3-dryrun/`. Execute `bin/aho-install --dry-run --target /tmp/aho-p3-dryrun` (add `--dry-run` flag if not present).
 
 Validate:
-- XDG paths created (`~/.local/bin/`, `~/.config/aho/`, `~/.local/share/aho/` — but scoped under scratch root, not real XDG, to avoid polluting NZXT).
+- XDG paths created (`~/.local/bin/`, `~/.config/aho/`, `~/.local/share/aho/` - but scoped under scratch root, not real XDG, to avoid polluting NZXT).
 - Wrapper symlinks created.
 - Credential template copied.
 - Capability-gap interrupt list matches `artifacts/harness/p3-deployment-runbook.md`.
 
-Any surface issues get captured as runbook updates. Do NOT attempt real XDG writes on NZXT — scratch root only.
+Any surface issues get captured as runbook updates. Do NOT attempt real XDG writes on NZXT - scratch root only.
 
 **Gate:** dry-run completes cleanly, runbook updated with any surfaced gaps.
 
-### W6 — Dogfood + close (Claude Code)
+### W6 - Dogfood + close (Claude Code)
 Full test suite (57+ tests). `aho doctor`. Bundle generation using new build log stub generator if manual log absent (it will be absent since Gemini runs overnight again). Bundle §1–§22 validation. Postflight gates with new layout variant + run_type classification. Populate `aho-run-0.1.14.md`. Handoff.
 
 ## Risks
@@ -146,7 +146,7 @@ Full test suite (57+ tests). `aho doctor`. Bundle generation using new build log
 
 ### PLAN (aho-plan-0.1.14.md)
 ```markdown
-# aho 0.1.14 — Plan
+# aho 0.1.14 - Plan
 
 **Phase:** 0 | **Iteration:** 0.1.14 | **Primary:** Gemini CLI (W0–W5) | **Closer:** Claude Code (W6)
 **run_type:** mixed
@@ -160,7 +160,7 @@ tmux new-session -d -s aho-0.1.14 -c ~/dev/projects/aho
 tmux send-keys -t aho-0.1.14 'cd ~/dev/projects/aho; set -x AHO_EXECUTOR gemini-cli; gemini --yolo' Enter
 ```
 
-## W0 — Hygiene + reorg cleanup
+## W0 - Hygiene + reorg cleanup
 
 ```fish
 cd ~/dev/projects/aho
@@ -197,7 +197,7 @@ rg "# >>> aho install >>>" install.fish
 
 **Gate:** `aho doctor` → 6 ok / 0 warn. `command ls artifacts/` shows no `docs` entry.
 
-## W1 — Terminology sweep
+## W1 - Terminology sweep
 
 ### Pass 1: Agentic Harness Orchestration → Agentic Harness Orchestration
 
@@ -206,7 +206,7 @@ rg -l "Agentic Harness Orchestration" artifacts/ CLAUDE.md GEMINI.md README.md >
 command cat /tmp/aho-pass1.txt
 ```
 
-For each file: replace "Agentic Harness Orchestration" with "Agentic Harness Orchestration" in prose. Verify mermaid trident shaft text stays `A H O` (aho acronym — the three letters now stand for Agentic Harness Orchestration, no label change needed).
+For each file: replace "Agentic Harness Orchestration" with "Agentic Harness Orchestration" in prose. Verify mermaid trident shaft text stays `A H O` (aho acronym - the three letters now stand for Agentic Harness Orchestration, no label change needed).
 
 ### Pass 2: ahomw → ahomw
 
@@ -216,10 +216,10 @@ command cat /tmp/aho-pass2.txt
 ```
 
 Targets:
-- `artifacts/harness/base.md` — footer `ahomw - inviolable` → `ahomw - inviolable`; every `ahomw-ADR-*` → `ahomw-ADR-*` (ADR-003, 005, 007, 009, 012, 014, 015, 017, 021, 027).
-- `projects.json` — key `ahomw` → `ahomw`, name `iao` → `aho`, path `~/dev/projects/iao` → `~/dev/projects/aho`.
-- `data/script_registry.json`, `data/gotcha_archive.json` — any `ahomw-*` → `ahomw-*`.
-- `src/aho/registry.py` — hardcoded prefix strings.
+- `artifacts/harness/base.md` - footer `ahomw - inviolable` → `ahomw - inviolable`; every `ahomw-ADR-*` → `ahomw-ADR-*` (ADR-003, 005, 007, 009, 012, 014, 015, 017, 021, 027).
+- `projects.json` - key `ahomw` → `ahomw`, name `iao` → `aho`, path `~/dev/projects/iao` → `~/dev/projects/aho`.
+- `data/script_registry.json`, `data/gotcha_archive.json` - any `ahomw-*` → `ahomw-*`.
+- `src/aho/registry.py` - hardcoded prefix strings.
 
 ### Pass 3: residual iao narrative
 
@@ -236,20 +236,20 @@ rg -i "iterative agentic" artifacts/ CLAUDE.md GEMINI.md README.md  # zero
 rg "ahomw" artifacts/ src/ data/ projects.json  # zero
 ```
 
-## W2 — Six canonical artifacts repair
+## W2 - Six canonical artifacts repair
 
 In order:
 
-1. **`artifacts/harness/base.md`** — apply W1 Pass 2 changes, bump version header to 0.1.14, update timestamp.
-2. **`artifacts/harness/agents-architecture.md`** — header to 0.1.14, footer to "Updated by Gemini CLI during aho 0.1.14 W2".
-3. **`artifacts/harness/model-fleet.md`** — header version 0.1.13 → 0.1.14, footer "Document updated for aho 0.1.12 W3" → "Document updated for aho 0.1.14 W2".
-4. **`CLAUDE.md`** — verify no residual drift, bump "Rewritten during 0.1.13 W1" note if any full expansion added.
-5. **`GEMINI.md`** — same.
-6. **`README.md`** — iteration label to 0.1.14, trident chart expansion text update, component count if §22 classification changed count.
+1. **`artifacts/harness/base.md`** - apply W1 Pass 2 changes, bump version header to 0.1.14, update timestamp.
+2. **`artifacts/harness/agents-architecture.md`** - header to 0.1.14, footer to "Updated by Gemini CLI during aho 0.1.14 W2".
+3. **`artifacts/harness/model-fleet.md`** - header version 0.1.13 → 0.1.14, footer "Document updated for aho 0.1.12 W3" → "Document updated for aho 0.1.14 W2".
+4. **`CLAUDE.md`** - verify no residual drift, bump "Rewritten during 0.1.13 W1" note if any full expansion added.
+5. **`GEMINI.md`** - same.
+6. **`README.md`** - iteration label to 0.1.14, trident chart expansion text update, component count if §22 classification changed count.
 
-**Gate:** `for f in artifacts/harness/base.md artifacts/harness/agents-architecture.md artifacts/harness/model-fleet.md CLAUDE.md GEMINI.md README.md; rg -l "0.1.14" $f; end` — all six hit.
+**Gate:** `for f in artifacts/harness/base.md artifacts/harness/agents-architecture.md artifacts/harness/model-fleet.md CLAUDE.md GEMINI.md README.md; rg -l "0.1.14" $f; end` - all six hit.
 
-## W3 — Build log stub generator
+## W3 - Build log stub generator
 
 1. Create `src/aho/feedback/build_log_stub.py`:
    - `generate_stub(iteration: str, project_root: Path = None) -> Path`
@@ -272,7 +272,7 @@ In order:
 
 **Gate:** `python -m pytest artifacts/tests/test_build_log_stub.py -v` → green.
 
-## W4 — Postflight gate repair
+## W4 - Postflight gate repair
 
 1. **Layout variant detection** in `src/aho/postflight/`:
    - Add `src/aho/postflight/layout.py` with `detect_layout(doc_path: Path) -> LayoutVariant` (`w_based` | `section_based`).
@@ -288,8 +288,8 @@ In order:
    - If §22 component count ≥ floor, pass. Record the classification in run report.
 
 3. Tests:
-   - `artifacts/tests/test_postflight_layouts.py` — fixtures for both variants.
-   - `artifacts/tests/test_postflight_run_types.py` — fixtures for each run_type.
+   - `artifacts/tests/test_postflight_layouts.py` - fixtures for both variants.
+   - `artifacts/tests/test_postflight_run_types.py` - fixtures for each run_type.
 
 4. Regression: replay 0.1.13 bundle through new gates:
    ```fish
@@ -300,7 +300,7 @@ In order:
 
 **Gate:** new tests green, 0.1.13 regression green.
 
-## W5 — P3 deployment dry-run
+## W5 - P3 deployment dry-run
 
 ```fish
 set SCRATCH /tmp/aho-p3-dryrun
@@ -324,7 +324,7 @@ rm -rf $SCRATCH
 
 **Gate:** dry-run exit 0, runbook updated, scratch cleaned.
 
-## W6 — Dogfood + close (Claude Code handoff)
+## W6 - Dogfood + close (Claude Code handoff)
 
 Checkpoint at W5 complete with `current_workstream=W6`, `executor=claude-code`. Fresh tmux:
 
@@ -333,11 +333,11 @@ tmux new-session -d -s aho-0.1.14-close -c ~/dev/projects/aho
 tmux send-keys -t aho-0.1.14-close 'claude --dangerously-skip-permissions' Enter
 ```
 
-1. `python -m pytest artifacts/tests/ -v` — all green.
-2. `aho doctor` — 6 ok / 0 warn.
+1. `python -m pytest artifacts/tests/ -v` - all green.
+2. `aho doctor` - 6 ok / 0 warn.
 3. Verify manual build log absent → confirm stub generator fires → verify §3 populated.
 4. Bundle generation + §1–§22 validation.
-5. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates` — all green via new layout variant + run_type gates.
+5. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates` - all green via new layout variant + run_type gates.
 6. Populate `artifacts/iterations/0.1.14/aho-run-0.1.14.md` with workstream summary, empty Kyle's Notes, unchecked sign-off.
 7. Final checkpoint: `status=closed`, `closed_at=<timestamp>`.
 8. Notify stdout with `[CLOSE COMPLETE]` marker.
@@ -376,7 +376,7 @@ If any surface: halt, write to checkpoint, notify stdout with `[CAPABILITY GAP]`
 
 ### BUILD LOG (MANUAL) (aho-build-log-0.1.14.md)
 ```markdown
-# aho 0.1.14 — Build Log (Stub)
+# aho 0.1.14 - Build Log (Stub)
 
 **Run Type:** mixed
 **Generated:** 2026-04-11T05:19:50.584891+00:00
@@ -438,7 +438,7 @@ If any surface: halt, write to checkpoint, notify stdout with `[CAPABILITY GAP]`
 
 ### RUN REPORT (aho-run-0.1.14.md)
 ```markdown
-# Run File — aho 0.1.14
+# Run File - aho 0.1.14
 
 **Generated:** 2026-04-11
 **Iteration:** 0.1.14
@@ -459,7 +459,7 @@ W6 close by Claude Code after Gemini CLI executed W0–W5. Split-agent model: Ge
 | W0 | pass | gemini-cli | Version bump, MANIFEST.json populated, install.fish marker restored, artifacts/docs/ flattened |
 | W1 | pass | gemini-cli | Terminology sweep: "Iterative Agentic Orchestration" → "Agentic Harness Orchestration", iaomw → ahomw across active docs and source |
 | W2 | pass | gemini-cli | Six canonical artifacts (base.md, agents-architecture.md, model-fleet.md, CLAUDE.md, GEMINI.md, README.md) repaired to 0.1.14 |
-| W3 | pass | gemini-cli | Build log stub generator (src/aho/feedback/build_log_stub.py) — auto-generates build log from checkpoint + event log |
+| W3 | pass | gemini-cli | Build log stub generator (src/aho/feedback/build_log_stub.py) - auto-generates build log from checkpoint + event log |
 | W4 | pass | gemini-cli | Postflight gate repair: layout variant detection (W-based vs §-based), run_type floors for §22 component checklist |
 | W5 | pass | gemini-cli | bin/aho-install --dry-run on scratch dir verified XDG path creation |
 | W6 | pass | claude-code | Dogfood, 3 postflight bug fixes, bundle generation, close |
@@ -470,13 +470,13 @@ W6 close by Claude Code after Gemini CLI executed W0–W5. Split-agent model: Ge
 
 Claude Code discovered and fixed three postflight gate bugs during W6 close:
 
-1. **`pillars_present.py`** — W-based design docs were checked for per-pillar enumeration (patterns like `\b7.\s+`), which only exists in §-based templates. Fixed: W-based layouts now check for workstream headers and `## Workstreams` instead of individual pillar mentions.
+1. **`pillars_present.py`** - W-based design docs were checked for per-pillar enumeration (patterns like `\b7.\s+`), which only exists in §-based templates. Fixed: W-based layouts now check for workstream headers and `## Workstreams` instead of individual pillar mentions.
 
-2. **`iteration_complete.py`** — `check_all_workstreams_complete()` expected dict values (`{"status": "pass"}`) for workstream entries, but the checkpoint stores flat strings (`"pass"`). Caused `'str' object has no attribute 'get'` error. Fixed: handles both formats.
+2. **`iteration_complete.py`** - `check_all_workstreams_complete()` expected dict values (`{"status": "pass"}`) for workstream entries, but the checkpoint stores flat strings (`"pass"`). Caused `'str' object has no attribute 'get'` error. Fixed: handles both formats.
 
-3. **`build_log_stub.py`** — Stub output was `aho-build-{v}.md` but all postflight checks expected `aho-build-log-{v}.md`. Fixed naming to match convention.
+3. **`build_log_stub.py`** - Stub output was `aho-build-{v}.md` but all postflight checks expected `aho-build-log-{v}.md`. Fixed naming to match convention.
 
-Tests: 65/65 green (1 skipped). Doctor: 5 ok / 1 warn (MANIFEST hash mismatch from W0–W5 edits — expected).
+Tests: 65/65 green (1 skipped). Doctor: 5 ok / 1 warn (MANIFEST hash mismatch from W0–W5 edits - expected).
 
 ---
 
@@ -490,7 +490,7 @@ Tests: 65/65 green (1 skipped). Doctor: 5 ok / 1 warn (MANIFEST hash mismatch fr
 
 ## Kyle's Notes
 
-*(empty — for Kyle to populate)*
+*(empty - for Kyle to populate)*
 
 ---
 
@@ -530,7 +530,7 @@ Tests: 65/65 green (1 skipped). Doctor: 5 ok / 1 warn (MANIFEST hash mismatch fr
 # aho - Base Harness
 
 **Version:** 0.1.14
-**Last updated:** 2026-04-10 (aho 0.1.14 W2 — terminology repair)
+**Last updated:** 2026-04-10 (aho 0.1.14 W2 - terminology repair)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -542,7 +542,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -554,9 +554,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -657,9 +657,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
+aho treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
 **Phase 0 (Clone-to-Deploy)** | **Iteration 0.1.14** | **Status: Terminology Sweep + Build Log Stub + Postflight Gate Repair**
 
@@ -693,13 +693,13 @@ graph BT
 
 aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 9).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
 
 ---
 
@@ -728,7 +728,7 @@ aho/
 
 ## Phase 0 Status
 
-**Phase:** 0 — Clone-to-Deploy
+**Phase:** 0 - Clone-to-Deploy
 **Charter:** artifacts/phase-charters/iao-phase-0.md
 
 ### Exit Criteria
@@ -765,7 +765,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.1.14 — Phase 0 — April 2026*
+*aho v0.1.14 - Phase 0 - April 2026*
 ```
 
 ## §8. CHANGELOG
@@ -774,20 +774,20 @@ License to be determined before v0.6.0 release.
 ```markdown
 # iao changelog
 
-## [0.1.3] — 2026-04-09
+## [0.1.3] - 2026-04-09
 
-### Phase 0 — NZXT-only authoring
+### Phase 0 - NZXT-only authoring
 
 **Iteration:** 0.1.3.1
 **Theme:** Bundle quality hardening, folder consolidation, src-layout refactor, pipeline scaffolding, human feedback loop
 
 **Workstreams:**
-- W0: Iteration bookkeeping — bumped .aho.json to 0.1.3.1
-- W1: Folder consolidation — moved artifacts/docs/iterations to docs/iterations
-- W2: src-layout refactor — moved iao/iao/ to iao/src/aho/
-- W3: Universal bundle spec — added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
-- W4: Universal pipeline scaffolding — new src/aho/pipelines/ subpackage + iao pipeline CLI
-- W5: Human feedback loop — new src/aho/feedback/ subpackage + run report artifact
+- W0: Iteration bookkeeping - bumped .aho.json to 0.1.3.1
+- W1: Folder consolidation - moved artifacts/docs/iterations to docs/iterations
+- W2: src-layout refactor - moved iao/iao/ to iao/src/aho/
+- W3: Universal bundle spec - added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
+- W4: Universal pipeline scaffolding - new src/aho/pipelines/ subpackage + iao pipeline CLI
+- W5: Human feedback loop - new src/aho/feedback/ subpackage + run report artifact
 - W6: README sync + Phase 0 charter retrofit + 10 pillars enforcement
 - W7: Qwen loop hardening + dogfood + closing sequence
 
@@ -821,7 +821,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 - iao eval and iao registry subcommands stubbed
 - Linux + fish + Python 3.11+ targeted; macOS / Windows not yet
 
-## 0.1.9 — IAO → AHO Rename
+## 0.1.9 - IAO → AHO Rename
 
 - Renamed Python package iao → aho
 - Renamed CLI bin/iao → bin/aho
@@ -836,7 +836,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — aho (Agentic Harness Orchestration) Phase 0
+# CLAUDE.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Claude Code executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -876,14 +876,14 @@ Split-agent model: Gemini CLI runs W0–W5 (bulk execution); you run W6 close (d
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. If closing a run: read the manual build log first (authoritative per ADR-042), synthesis second.
 
-## Gotcha Registry — Query First
+## Gotcha Registry - Query First
 
 Before any novel action, query the gotcha registry. Known Phase 0 gotchas include:
 - **aho-G001 (printf not heredoc):** Use `printf '...\n' > file` not heredocs in fish.
 - **aho-G022 (command ls):** Use `command ls` to strip color codes from agent output.
 - **aho-G060:** Evaluator baseline must reload per call, not at init (fixed 0.1.12).
 - **aho-G061:** Smoke instrumentation reads iteration from checkpoint at script start.
-- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` — leaks API keys.
+- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` - leaks API keys.
 
 ## Sign-off Format
 
@@ -891,7 +891,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
 
 ## What NOT to Do
 
@@ -909,27 +909,27 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 ## Close Sequence (W6 pattern)
 
 1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates.
+2. `aho doctor` - all gates.
 3. Bundle: validate §1–§21 spec, §22 component checklist = 6.
 4. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
-5. Populate `aho-run-{iteration}.md` — workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
+5. Populate `aho-run-{iteration}.md` - workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
 6. Generate `aho-bundle-{iteration}.md`.
 7. Write checkpoint state = closed. Notify Kyle.
 
 ## Communication Style
 
-Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout — no bashisms.
+Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout - no bashisms.
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.1.14 W2. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 - updated during 0.1.14 W2. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §10. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — aho (Agentic Harness Orchestration) Phase 0
+# GEMINI.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Gemini CLI executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -945,7 +945,7 @@ Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux 
 
 You are Gemini CLI operating inside an aho iteration. You are the primary bulk executor for Phase 0 runs, handling workstreams W0 through W5 in the split-agent model. Claude Code handles W6 close. You execute workstreams defined by the run's plan doc. You do not design scope, invent amendments, or produce artifacts Kyle has not explicitly requested.
 
-You are launched with `gemini --yolo` which implies sandbox bypass — single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
+You are launched with `gemini --yolo` which implies sandbox bypass - single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
 
 ## The Eleven Pillars
 
@@ -969,7 +969,7 @@ You are launched with `gemini --yolo` which implies sandbox bypass — single fl
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. Write first event to `data/aho_event_log.jsonl` marking workstream start.
 
-## Gotcha Registry — Phase 0 Critical List
+## Gotcha Registry - Phase 0 Critical List
 
 - **aho-G001 (printf not heredoc):** Fish heredocs break on nested quotes. Use `printf '...\n' > file`.
 - **aho-G022 (command ls):** Bare `ls` injects color escape codes into agent output. Use `command ls`.
@@ -996,7 +996,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
 
 ## What NOT to Do
 
@@ -1030,7 +1030,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — updated during 0.1.14 W2. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 - updated during 0.1.14 W2. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §11. .aho.json

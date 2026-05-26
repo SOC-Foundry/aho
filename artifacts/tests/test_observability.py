@@ -1,4 +1,4 @@
-"""test_observability.py — W1 D7 of 0.3.1.
+"""test_observability.py - W1 D7 of 0.3.1.
 
 Tests aho.observability:
 - record_observable appends valid JSONL
@@ -92,10 +92,10 @@ def test_color_cascade():
     assert fact_color(None, 3600) == "red"        # never probed
 
 
-def test_snapshot_all_facts_has_13_rows(isolated_log):
+def test_snapshot_all_facts_has_14_rows(isolated_log):
     from aho.observability import snapshot_all_facts, FACT_WARNING_AGE_SECONDS
     s = snapshot_all_facts()
-    assert len(s) == 13
+    assert len(s) == 14
     assert set(r["fact_id"] for r in s) == set(FACT_WARNING_AGE_SECONDS.keys())
     for row in s:
         assert row["color"] in ("green", "yellow", "red")

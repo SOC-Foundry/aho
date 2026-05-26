@@ -7,7 +7,7 @@ W5 acceptance archive sealed at
 `artifacts/iterations/0.2.17/acceptance/W5.json`.
 W5 audit archive sealed at
 `artifacts/iterations/0.2.17/audit/W5.json` with
-`disposition: "halt"` (llama self-audit verbatim — driven by two
+`disposition: "halt"` (llama self-audit verbatim - driven by two
 structural pre-check fires, both self-referential). Drafter
 (claude-web) arbitrated all 10 findings and arbitrated disposition
 to `pass_with_findings`. Two new carry-forwards added (W5-001
@@ -21,7 +21,7 @@ path drift). Sealed shas (verified at close-note authoring time):
   (target_artifact_sha256 inside the audit document:
   `8795328226425c4536ac03bbe7e1ca2a991f65485cf190756aad5bb179faffbd`,
   reflecting the pre-edit acceptance archive content the audit ran
-  against — drafter arbitration occurs in the acceptance archive
+  against - drafter arbitration occurs in the acceptance archive
   only, not the audit JSON)
 - carry-forwards file sha256 (post-W5-001 + W5-002 append):
   `72d0fc903477e9357defd41224d52c7841617a1e2b62a3bcd8fe39b43487b295`
@@ -31,7 +31,7 @@ disposition field reads `halt`; drafter arbitration is recorded
 only in the acceptance archive's D8 `drafter_review_note` block
 + `carry_forwards_added` entries, and in this close note's prose.
 Per Adversarial Authorship sealed-archive convention, audit
-archives are not amended after emit — corrections and arbitrations
+archives are not amended after emit - corrections and arbitrations
 land in acceptance evidence and close-note prose, never in the
 audit JSON.
 
@@ -53,7 +53,7 @@ code-heavy work:
   finding list. Both demonstrated false positives now caught.
 - **W5 fourth deployment:** filter remains structurally narrow on
   documentation-heavy work. Filter eligible (16 registered IDs),
-  ran on every model finding, suppressed_count=0 — none of the 8
+  ran on every model finding, suppressed_count=0 - none of the 8
   model findings have a fake-ID phrase substring. Filter live;
   filter correct. The audit-target shape (acceptance archive prose
   rather than test-result evidence) did not change the filter's
@@ -89,7 +89,7 @@ findings (8 model + 2 structural pre-check). Drafter
   + `docs/retrospectives/` per plan-doc explicit (net-new
   directories). Auditor's literal description text re-uses the D2
   pattern wording rather than each deliverable's specific path,
-  but the underlying signal — path drift in plan-doc — is correct
+  but the underlying signal - path drift in plan-doc - is correct
   across all six. **Captured as new carry-forward F-0.2.17-W5-002.**
 
 - **F-0.2.17-W1-001 (info).** Auditor reports W1-001 (secrets-test
@@ -97,7 +97,7 @@ findings (8 model + 2 structural pre-check). Drafter
   registered, in fact open, in fact W6 scope per plan-doc. The
   auditor is reporting open carry-forwards as if they were W5
   substance defects rather than as informational status references
-  — stylistic note, not a W5 defect. The carry-forward closes at
+  - stylistic note, not a W5 defect. The carry-forward closes at
   W6 production-image cut.
 
 - **F-0.2.17-W4-001 (info).** Same shape as W1-001 finding.
@@ -110,7 +110,7 @@ findings (8 model + 2 structural pre-check). Drafter
   matched literal text inside D6 evidence's
   `celebratory_framing_check` field, which explicitly enumerates
   the banned-phrase list as the phrases the retrospective avoided.
-  Pre-check has no scope discrimination — it scans archive prose
+  Pre-check has no scope discrimination - it scans archive prose
   including fields whose content is explicitly the pattern set
   being checked.
 
@@ -128,12 +128,12 @@ plan-doc-vs-repo-convention path drift (six findings, captured as
 F-0.2.17-W5-002); (b) auditor reporting outstanding-state
 observations on existing carry-forwards (two findings, accurate
 status references); or (c) self-referential structural pre-check
-fires (two findings, captured as F-0.2.17-W5-001 — third
+fires (two findings, captured as F-0.2.17-W5-001 - third
 occurrence in iteration; pattern-confirmed).
 
-The D8 hard-fail condition — "self-audit produces fake-ID-on-
+The D8 hard-fail condition - "self-audit produces fake-ID-on-
 registered-anchor false positives that the filter should have
-caught (W4 D1 hardening regression)" — **did not trigger.** No
+caught (W4 D1 hardening regression)" - **did not trigger.** No
 finding has the failure shape. Filter was active and eligible
 across all 8 model findings; suppressed_count=0 because no
 candidate matched. **Bootstrap test 6 (loop closure with
@@ -148,7 +148,7 @@ W1-003) are explicitly W6 / operator scope per plan-doc.
 
 Two new W5 carry-forwards, surfaced by the D8 self-audit:
 
-- **F-0.2.17-W5-001 — Structural pre-check self-referential
+- **F-0.2.17-W5-001 - Structural pre-check self-referential
   pattern (third occurrence).** Severity: important. Source:
   0.2.17 W3 D5 + W4 D7 + W5 D8. Summary: audit-target prose that
   cites the regex patterns being checked (git-op tokens in Pillar
@@ -157,14 +157,14 @@ Two new W5 carry-forwards, surfaced by the D8 self-audit:
   structural pre-checks. Pre-check has no awareness that a token
   appearing inside a compliance-evidence field is documentation,
   not violation. Disposition: structural pre-checks need scope
-  discrimination — JSON path exclusion in pre-check scan (drafter
+  discrimination - JSON path exclusion in pre-check scan (drafter
   recommendation: explicit and auditable; alternative
   context-aware regex with negative lookbehind is fragile because
   lookbehind state varies with field shape). Target: 0.3.x
   base-tier hardening. Audit traceability: W3 D5 + W4 D7 + W5 D8
   audit archives.
 
-- **F-0.2.17-W5-002 — Plan-doc / repo-convention path drift.**
+- **F-0.2.17-W5-002 - Plan-doc / repo-convention path drift.**
   Severity: info. Source: 0.2.17 W5 D8 audit findings 0-5.
   Summary: W5 plan-doc specified `docs/adr/` for new ADRs; repo
   convention is `artifacts/adrs/`; W4 close-note already pointed
@@ -178,15 +178,15 @@ Two new W5 carry-forwards, surfaced by the D8 self-audit:
   Target: drafter chat-side process improvement + 0.3.x plan-doc
   convention notes.
 
-The carry-forwards file update is **complete in this turn** — both
+The carry-forwards file update is **complete in this turn** - both
 new entries appended via `aho.gap_carry_forward_writer.append_to_file`
 in the same dogfooding pattern W2 / W4 used. Writer logged
 `entry_count_before=32 → entry_count_after=34 (entries_added=2)`
 under its strict regex; the permissive cross-iteration counter
 took the file from 39 to 41 (W4 close-note convention).
 
-The two counts measure different things — the strict regex counts
-canonical `- **{id} — {title}**` entries inside the file scope of
+The two counts measure different things - the strict regex counts
+canonical `- **{id} - {title}**` entries inside the file scope of
 the writer's heading detection; the permissive counter sweeps the
 entire file including legacy entries. Both are honest; neither
 contradicts the other. Same shape as W4 close note.
@@ -245,8 +245,8 @@ Status check at W5 close:
 - Rotation status as of W5 close-note authoring:
   **operator_action_pending**.
 - Outstanding pre-0.3.x gates: F-0.2.17-W1-003 (token rotation),
-  F-0.2.17-W1-001 (secrets-test subcommand removal — W6 scope),
-  F-0.2.17-W4-001 (ChromaDB re-index hook — W6 scope).
+  F-0.2.17-W1-001 (secrets-test subcommand removal - W6 scope),
+  F-0.2.17-W4-001 (ChromaDB re-index hook - W6 scope).
 
 ## Forward-looking note for W6
 
@@ -254,11 +254,11 @@ W6 closes the residual code-change carry-forwards. After W6 +
 operator token rotation, 0.2.17 fully closes. Anticipated W6 scope
 (drafter-input, not yet a plan):
 
-- **F-0.2.17-W1-001 — secrets-test subcommand removal.** Production-
+- **F-0.2.17-W1-001 - secrets-test subcommand removal.** Production-
   image cut. Two candidate mechanisms (delete parser registration
   vs. `AHO_DEV_BUILD=1` env-gating); final mechanism pinned in W6
   plan-doc.
-- **F-0.2.17-W4-001 — ChromaDB re-index hook.** Hook re-index into
+- **F-0.2.17-W4-001 - ChromaDB re-index hook.** Hook re-index into
   `gap_carry_forward_writer.append_to_file` OR schedule pre-audit
   re-index; either approach closes the staleness.
 - **0.2.17 final close + tsP3 handoff.** After W6 closes its
@@ -282,7 +282,7 @@ operator token rotation, 0.2.17 fully closes. Anticipated W6 scope
   (target_artifact_sha256 inside the document is
   `8795328226425c4536ac03bbe7e1ca2a991f65485cf190756aad5bb179faffbd`,
   reflecting the pre-edit acceptance archive content the audit
-  ran against — drafter arbitration occurs in the acceptance
+  ran against - drafter arbitration occurs in the acceptance
   archive only, not the audit JSON).
 - **Carry-forwards file:** updated in this turn. Two new entries
   appended (F-0.2.17-W5-001 under new target heading
@@ -324,14 +324,14 @@ operator token rotation, 0.2.17 fully closes. Anticipated W6 scope
   `artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` (two
   appends for F-0.2.17-W5-001 + F-0.2.17-W5-002 via
   gap_carry_forward_writer in the same dogfooding pattern W2/W4
-  established) — no `.git/`, no `~/.config/`, no `/etc/`, no
+  established) - no `.git/`, no `~/.config/`, no `/etc/`, no
   `.ssh/` writes. F-0.2.17-W1-003 token rotation explicitly NOT
   performed (surfaced as continuing reminder under
   `outstanding_pre_03x_gates`).
 - **Auditor (llama3.2:3b in-container, RAG + filter):** zero git
   operations. In-container model has no shell, no filesystem
   write capability outside the audit primitive's controlled
-  emitter path. Audit archive itself is JSON-only — no
+  emitter path. Audit archive itself is JSON-only - no
   executable artifacts. The RAG retrieval step
   (`aho.council.audit_ref_lookup`) reads the host-mounted
   ChromaDB collection only; no git tree access. The W4 D1

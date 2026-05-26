@@ -1,4 +1,4 @@
-# aho Plan — 0.2.4
+# aho Plan - 0.2.4
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 4
 **Theme:** W1 remediation
@@ -18,11 +18,11 @@
 | W3 | Gotcha registry | G-fish-set-l + G-mcp-canonical-drift entries |
 | W4 | Run report close-out + bundle | Bundle at 0.2.4, postflight green, 0.2.3 amended report archived |
 
-No W5 needed — single-agent run, W4 handles close-out.
+No W5 needed - single-agent run, W4 handles close-out.
 
 ---
 
-## W1 — `bin/aho-mcp` patch (the actual patch)
+## W1 - `bin/aho-mcp` patch (the actual patch)
 
 ### Step 1: confirm the scoping fix is still in place
 
@@ -40,7 +40,7 @@ If `script_version` still says `0.2.3`, bump it manually as part of the W0 canon
 
 ### Step 2: replace the package array
 
-The 0.2.3 array has 12 entries. Replace with 9. The cleanest way is to rewrite the block in-place. Below is the exact target block — apply with str_replace or by hand:
+The 0.2.3 array has 12 entries. Replace with 9. The cleanest way is to rewrite the block in-place. Below is the exact target block - apply with str_replace or by hand:
 
 **Old block (lines ~7-20):**
 ```fish
@@ -81,7 +81,7 @@ sudo npm uninstall -g \
     @modelcontextprotocol/server-slack
 ```
 
-(google-drive and fetch never installed — nothing to clean up.)
+(google-drive and fetch never installed - nothing to clean up.)
 
 ### Step 4: install the new addition
 
@@ -107,7 +107,7 @@ Expected: `All 9 MCP servers present. OK.`
 
 ---
 
-## W2 — Verification harness
+## W2 - Verification harness
 
 ### test_aho_mcp_cli_e2e.fish
 
@@ -132,22 +132,22 @@ No network = SKIP with WARN (capability gap, not a defect).
 
 ---
 
-## W3 — Gotcha registry entries
+## W3 - Gotcha registry entries
 
 Two new entries in the gotcha registry (full text in design doc §"The two new gotchas"):
 
-- **G-fish-set-l** — fish `set -l` invisible inside functions, use `set -g` for script-level constants
-- **G-mcp-canonical-drift** — canonical package lists must be registry-verified, never written from agent memory
+- **G-fish-set-l** - fish `set -l` invisible inside functions, use `set -g` for script-level constants
+- **G-mcp-canonical-drift** - canonical package lists must be registry-verified, never written from agent memory
 
 ---
 
-## W0 — Canonical bumps
+## W0 - Canonical bumps
 
 All 10 canonical artifacts bump 0.2.3 → 0.2.4. userMemories iao canonical MCP list updated to the 9-package set. install.fish updated if it references any of the 4 removed packages.
 
 ---
 
-## W4 — Close-out
+## W4 - Close-out
 
 - Bundle generation, postflight green (incl. new registry check)
 - Run report `aho-run-0_2_4.md` produced

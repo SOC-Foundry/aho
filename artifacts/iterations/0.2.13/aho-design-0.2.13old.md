@@ -1,9 +1,9 @@
-# aho 0.2.13 — Design Doc
+# aho 0.2.13 - Design Doc
 
 **Theme:** Dispatch-layer repair
 **Iteration type:** Repair (distinct from discovery/build)
 **Primary executor:** Claude Code (`claude --dangerously-skip-permissions`)
-**Auditor:** Gemini CLI (`gemini --yolo`) — Pattern C
+**Auditor:** Gemini CLI (`gemini --yolo`) - Pattern C
 **Sign-off:** Kyle
 **Success criterion:** Council health ≥50/100 (from 35.3)
 

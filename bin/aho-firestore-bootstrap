@@ -1,0 +1,20 @@
+#!/usr/bin/env fish
+# aho-firestore-bootstrap - seed initial schema markers into the tenant's
+# canonical Firestore collection (0.3.1 W2 D5).
+#
+# Usage:
+#   aho-firestore-bootstrap --dry-run    Report planned writes (no backend).
+#   aho-firestore-bootstrap              Execute (gates on tenant Firestore live
+#                                        + service-account key in broker path).
+#   aho-firestore-bootstrap --json       Machine-readable output.
+#
+# Tenant routing is env-driven (AHO_TENANT_* + FIRESTORE_EMULATOR_HOST). No
+# tenant/project identifiers are baked into the wrapper. Pillar 4: wrappers are
+# the tool surface.
+
+set -g script_name "aho-firestore-bootstrap"
+set -g project_root (dirname (dirname (realpath (status filename))))
+
+cd $project_root
+set -x PYTHONPATH "$project_root/src" $PYTHONPATH
+exec python3 -m aho.firestore_writer.bootstrap $argv

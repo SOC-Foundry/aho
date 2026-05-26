@@ -1,4 +1,4 @@
-# W2 Audit Dispositions — 0.2.16
+# W2 Audit Dispositions - 0.2.16
 
 Audit archive: `artifacts/iterations/0.2.16/audit/W2.json`
 Audit result: `pass_with_findings`
@@ -10,7 +10,7 @@ sealed archive so the record is self-describing at W2 close.
 
 ## Dispositions (verbatim)
 
-- **AF003** (Baseline count-coherence drift — 421 vs 427 collection set) —
+- **AF003** (Baseline count-coherence drift - 421 vs 427 collection set) -
   accepted as-is. Gemini's action_required is already correct: "None for W2
   close; update test-baseline.json counts in the next workstream or iteration
   close-out to reflect the 427 total." Disposition: fold into iteration
@@ -22,7 +22,7 @@ sealed archive so the record is self-describing at W2 close.
   baseline_regression reporting to prevent this class of count drift. Add that
   as a carry-forward item under the next-workstream harness-hygiene bucket.
 
-- **AF004** (dispatch.duration_ms measurement-site gap on error paths) —
+- **AF004** (dispatch.duration_ms measurement-site gap on error paths) -
   accepted as carry-forward. Target: 0.2.17 test coverage for error-path
   duration consistency. Severity: info. No action in W2 close beyond recording
   in carry-forwards-0.2.16.md.

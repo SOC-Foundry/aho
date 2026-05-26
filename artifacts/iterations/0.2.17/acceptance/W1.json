@@ -32,13 +32,13 @@
         "credential_filename_sweep": {
           "regex": "id_ed25519|id_rsa|gh_token|age-identity|fernet|gitconfig|secrets.fish|.env",
           "matches": ["/opt/aho/src/aho/secrets/backends/fernet.py"],
-          "match_assessment": "Python source module implementing FernetBackend class — not a credential file. Verified by reading first lines: imports only."
+          "match_assessment": "Python source module implementing FernetBackend class - not a credential file. Verified by reading first lines: imports only."
         },
         "credential_path_check": {
-          "ssh_dir": "/root/.ssh — absent",
-          "gh_config_dir": "/root/.config/gh — absent",
-          "gitconfig": "/root/.gitconfig — absent",
-          "netrc": "/root/.netrc — absent"
+          "ssh_dir": "/root/.ssh - absent",
+          "gh_config_dir": "/root/.config/gh - absent",
+          "gitconfig": "/root/.gitconfig - absent",
+          "netrc": "/root/.netrc - absent"
         },
         "credential_content_grep": {
           "regex": "ssh-(rsa|ed25519)|-----BEGIN (RSA|OPENSSH|EC) PRIVATE KEY|gho_[a-zA-Z0-9]{36}|ghp_[a-zA-Z0-9]{36}|AGE-SECRET-KEY-1[A-Z0-9]{50,}",
@@ -101,7 +101,7 @@
             "result": "pass",
             "command": "aho host run-container --project ahomw --image aho:0.2.17-rc1-local -- secrets-test ahomw telegram_bot_token",
             "exit_code": 0,
-            "value_observed": "non-MISSING string, length 46, format <digits>:<base64ish> (telegram bot token shape) — value not reproduced in archive per Pillar 11"
+            "value_observed": "non-MISSING string, length 46, format <digits>:<base64ish> (telegram bot token shape) - value not reproduced in archive per Pillar 11"
           },
           "gate2_project_mismatch": {
             "result": "pass",
@@ -137,7 +137,7 @@
           "remediation": "Operator should rotate ahomw:telegram_bot_token. W2 acceptance gates should not surface raw secret values."
         }
       ],
-      "notes": "All four mechanical D3 gates pass. Gate 5 (broker log inspection) pending operator confirmation of foreground broker terminal — broker writes only request shape by design, but only operator can confirm on the running process's stdout."
+      "notes": "All four mechanical D3 gates pass. Gate 5 (broker log inspection) pending operator confirmation of foreground broker terminal - broker writes only request shape by design, but only operator can confirm on the running process's stdout."
     },
     {
       "id": "D4",
@@ -153,12 +153,12 @@
         },
         "p2_mounted_secrets": {
           "broker_socket_mount": "host -v $XDG_RUNTIME_DIR/aho-secrets.sock:/run/host-services/aho-secrets.sock:ro applied by aho host run-container wrapper",
-          "chroma_volume_declaration": "{\"/var/lib/aho/chroma\": {}} (declared but not wired — W2)"
+          "chroma_volume_declaration": "{\"/var/lib/aho/chroma\": {}} (declared but not wired - W2)"
         },
         "p3_logs": {
           "stdout_stderr_only": true,
           "no_file_logs_in_container": "ls /var/log/aho/*.log → no matches",
-          "logger_otel_export_endpoint": "default 127.0.0.1:4317 (UNAVAILABLE inside container without collector — non-fatal)"
+          "logger_otel_export_endpoint": "default 127.0.0.1:4317 (UNAVAILABLE inside container without collector - non-fatal)"
         },
         "p4_sigterm_drain": {
           "command": "podman kill -s TERM <container> && podman wait <container>",
@@ -193,7 +193,7 @@
         },
         "tailnet_exposure_removed": {
           "command_from_auraX9cos": "curl http://nzxtcos:11434/api/version (or 100.66.240.101:11434)",
-          "result": "exit code 28 (timeout) — operator-verified",
+          "result": "exit code 28 (timeout) - operator-verified",
           "post_amendment": true
         },
         "rule_amendment_history": "Operator initially landed nft rules accepting source 127.0.0.0/8 + 169.254.0.0/16. Container gateway resolves to 169.254.1.2 (in range), but pasta networking SNATs container→host traffic to host's primary IP (172.31.255.245) arriving on lo, not on the apparent container-gateway address. SYN dropped by source-address rules. Operator amended via 'nft insert rule inet aho_ollama input iif lo tcp dport 11434 accept' inserted at top of chain. Tailnet exposure remains removed."

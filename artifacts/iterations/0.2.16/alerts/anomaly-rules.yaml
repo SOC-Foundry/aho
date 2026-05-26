@@ -1,4 +1,4 @@
-# aho 0.2.16 W3 — Anomaly detection rules
+# aho 0.2.16 W3 - Anomaly detection rules
 #
 # Format: Prometheus alerting rules YAML.
 # Rule expressions match plan §W3 table verbatim except where called out in
@@ -6,7 +6,7 @@
 #
 # Status: rule expressions written, NOT yet evaluated against a running engine.
 # Rule 5 (ToolDurationOutlier) carries a calibrated baseline computed from
-# observed W1+W2 metrics — see pillar-11-monitoring-notes.md §"Baseline calibration".
+# observed W1+W2 metrics - see pillar-11-monitoring-notes.md §"Baseline calibration".
 
 groups:
   - name: aho.anomaly
@@ -15,7 +15,7 @@ groups:
 
       # Rule 3: ClaudeAPIErrorSpike
       # Plan §W3 expression: `rate(claude_code_api_error[5m]) > 1`
-      # Plan §W3 parenthetical: "(>5 in 5m)" — note this is inconsistent with the
+      # Plan §W3 parenthetical: "(>5 in 5m)" - note this is inconsistent with the
       # formal expr (rate > 1 ≈ >300 events in 5m, not 5). Rule below uses the
       # formal expression verbatim per W3 brief instruction "match plan table
       # exactly". The discrepancy is documented in pillar-11-monitoring-notes.md
@@ -54,12 +54,12 @@ groups:
       # Rule 5: ToolDurationOutlier
       # Threshold = baseline_p99 * 3 = 2411 ms. Baseline_p99 = 804 ms,
       # calibrated W3 bucket 6 from 21 ``claude_code.tool_result`` log events
-      # in W2 (W1 absent from on-disk logs file — see pillar-11-monitoring-notes.md
+      # in W2 (W1 absent from on-disk logs file - see pillar-11-monitoring-notes.md
       # §"Baseline calibration" for sample-size limitations and re-runnability).
       #
       # IMPORTANT: this rule's metric reference
       # ``claude_code_tool_result_duration_ms_bucket`` does NOT exist in the
-      # current Claude Code emission set — duration_ms is recorded only as a
+      # current Claude Code emission set - duration_ms is recorded only as a
       # ``claude_code.tool_result`` log event attribute, not a histogram
       # metric. The expression is correct for an Alertmanager-compatible
       # engine fed by a Prometheus-style histogram, but a metric source must

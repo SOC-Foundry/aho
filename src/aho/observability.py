@@ -1,4 +1,4 @@
-"""aho.observability — substrate-freshness telemetry (W1 D4 of 0.3.1).
+"""aho.observability - substrate-freshness telemetry (W1 D4 of 0.3.1).
 
 Per-substrate-fact "last verified" telemetry. Each fact has a warning-age
 threshold; when its `last_verified_age_seconds` exceeds the threshold,
@@ -11,7 +11,7 @@ Mechanics:
   we just observed; age grows over time per `last_verified_age_seconds`).
 - `last_verified_age_seconds(fact_id, ...)` scans the log for the most
   recent successful probe of the fact and returns seconds since.
-- Closes F-0.2.18-W1-004 operationally — substrate-freshness signal lives
+- Closes F-0.2.18-W1-004 operationally - substrate-freshness signal lives
   in OTEL + dashboard, no longer purely tribal knowledge.
 
 Log shape (per JSONL line):
@@ -48,7 +48,7 @@ OBSERVABLES_LOG = Path(os.environ.get(
 try:
     from opentelemetry import metrics as _otel_metrics
     _meter = _otel_metrics.get_meter("aho.observability")
-    # Observable gauge — registered via callback so we don't have to manage
+    # Observable gauge - registered via callback so we don't have to manage
     # per-fact instruments. The callback reads the JSONL log on demand.
     _gauge_instrument: Optional[Any] = None
 except ImportError:  # pragma: no cover
@@ -72,6 +72,7 @@ FACT_WARNING_AGE_SECONDS: Dict[str, int] = {
     "chromadb_doc_count":                    1800,
     "checkpoint_mtime":             24 * 3600,
     "sys_path_clean":                        3600,
+    "beacon_otlp_reachable":                 3600,
 }
 
 
@@ -138,14 +139,17 @@ def record_observable(
 ) -> ProbeRecord:
     """Record a fact probe. Appends one JSONL line to `OBSERVABLES_LOG`.
 
-    `probe_outcome` is one of "ok" | "fail" | "host_unreachable". `value_observed`
-    is a short serializable summary (e.g., version string, count, file mtime).
+    `probe_outcome` is one of "ok" | "fail" | "host_unreachable" |
+    "unreachable" | "auth_failed". Only "ok" counts toward freshness; all other
+    outcomes are non-fresh. `value_observed` is a short serializable summary
+    (e.g., version string, count, file mtime).
     """
     if not isinstance(fact_id, str) or not fact_id.strip():
         raise ObservabilityError(f"fact_id must be a non-empty string, got {fact_id!r}")
-    if probe_outcome not in ("ok", "fail", "host_unreachable"):
+    _valid_outcomes = ("ok", "fail", "host_unreachable", "unreachable", "auth_failed")
+    if probe_outcome not in _valid_outcomes:
         raise ObservabilityError(
-            f"probe_outcome must be ok|fail|host_unreachable, got {probe_outcome!r}"
+            f"probe_outcome must be one of {_valid_outcomes}, got {probe_outcome!r}"
         )
 
     rec = ProbeRecord(
@@ -290,7 +294,7 @@ def _emit_otel_age_gauge(fact_id: str, host: str, project: str, age_seconds: flo
             "host": host,
             "project": project,
         })
-    except Exception:  # noqa: BLE001 — telemetry boundary
+    except Exception:  # noqa: BLE001 - telemetry boundary
         pass
 
 

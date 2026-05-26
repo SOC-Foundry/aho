@@ -1,4 +1,4 @@
-"""aho.rag.bootstrap — ingest canonical artifact set into per-project ChromaDB
+"""aho.rag.bootstrap - ingest canonical artifact set into per-project ChromaDB
 collection. Closes F-0.3.1-W0-002.
 
 The W0 D9 audit surfaced that chromadb pip install creates the python module
@@ -170,7 +170,7 @@ def _drop_collection(project: str) -> None:
     name = _collection_name(project)
     try:
         client.delete_collection(name=name)
-    except Exception:  # noqa: BLE001 — chromadb raises NotFoundError or InvalidCollection
+    except Exception:  # noqa: BLE001 - chromadb raises NotFoundError or InvalidCollection
         pass
 
 
@@ -237,7 +237,7 @@ def bootstrap(
             )
             total_chunks += plan.estimated_chunks
             result.indexed_paths.append(str(plan.path))
-        except Exception as exc:  # noqa: BLE001 — bootstrap-level boundary
+        except Exception as exc:  # noqa: BLE001 - bootstrap-level boundary
             result.skipped_paths.append({
                 "path": str(plan.path),
                 "reason": f"{type(exc).__name__}: {exc}",

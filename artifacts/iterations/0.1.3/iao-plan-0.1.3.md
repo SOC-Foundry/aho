@@ -1,6 +1,6 @@
-# iao — Plan 0.1.3
+# iao - Plan 0.1.3
 
-**Iteration:** 0.1.3.1 (phase 0, iteration 1, run 1 — first execution of 0.1.3)
+**Iteration:** 0.1.3.1 (phase 0, iteration 1, run 1 - first execution of 0.1.3)
 **Phase:** 0 (NZXT-only authoring)
 **Date:** April 09, 2026
 **Machine:** NZXTcos
@@ -21,11 +21,11 @@ iao is the methodology and Python package for running disciplined LLM-driven eng
 
 ---
 
-## Section A — Pre-flight
+## Section A - Pre-flight
 
 The pre-flight phase runs before any workstream begins. Every check must pass (or be explicitly noted-and-proceeded per Pillar 6 + Pattern-22) before launch.
 
-### A.0 — Working directory and shell state
+### A.0 - Working directory and shell state
 
 ```fish
 cd ~/dev/projects/iao
@@ -38,11 +38,11 @@ command ls -la .iao.json VERSION pyproject.toml
 
 **Failure remediation:** If any file missing, you are in the wrong directory or the project is corrupted. Restore from `~/dev/projects/iao.backup-pre-0.1.3` and re-investigate.
 
-### A.1 — Backup the project before launch
+### A.1 - Backup the project before launch
 
 ```fish
 test -d ~/dev/projects/iao.backup-pre-0.1.3
-# Expected: nothing (no output) on first run — we're about to create it
+# Expected: nothing (no output) on first run - we're about to create it
 
 cp -a ~/dev/projects/iao ~/dev/projects/iao.backup-pre-0.1.3
 test -d ~/dev/projects/iao.backup-pre-0.1.3
@@ -54,7 +54,7 @@ du -sh ~/dev/projects/iao.backup-pre-0.1.3
 
 **Failure remediation:** If backup fails (disk space, permissions), do not launch. Free space or fix permissions first.
 
-### A.2 — Git state clean
+### A.2 - Git state clean
 
 ```fish
 cd ~/dev/projects/iao
@@ -67,7 +67,7 @@ git log --oneline -5
 
 **Failure remediation:** If working tree is dirty, Kyle must commit or stash before launch. Per Pillar 0, the agent does NOT run git commit. Surface the dirty state and stop.
 
-### A.3 — Python environment
+### A.3 - Python environment
 
 ```fish
 python3 --version
@@ -85,7 +85,7 @@ which iao
 
 **Failure remediation:** If Python is missing or wrong version, reinstall. If pip is missing, `sudo pacman -S python-pip`.
 
-### A.4 — iao package installed
+### A.4 - iao package installed
 
 ```fish
 iao --version
@@ -100,7 +100,7 @@ iao doctor quick
 
 **Failure remediation:** If `iao --version` fails, `cd ~/dev/projects/iao && pip install -e . --break-system-packages`. If `iao doctor quick` fails, read the error and fix before launch.
 
-### A.5 — Ollama daemon and models
+### A.5 - Ollama daemon and models
 
 ```fish
 curl -s http://localhost:11434/api/tags | head -5
@@ -112,7 +112,7 @@ ollama list | grep -E "qwen3.5:9b|nomic-embed-text"
 
 **Failure remediation:** If Ollama not running, `systemctl --user start ollama` or `ollama serve &`. If models missing, `ollama pull qwen3.5:9b` and/or `ollama pull nomic-embed-text`.
 
-### A.6 — Disk space
+### A.6 - Disk space
 
 ```fish
 df -h ~/dev/projects/iao | tail -1
@@ -121,7 +121,7 @@ df -h ~/dev/projects/iao | tail -1
 
 **Failure remediation:** Free space before launch. iao 0.1.3 doesn't write much but the bundle generation in W7 needs headroom.
 
-### A.7 — Sleep/suspend masked
+### A.7 - Sleep/suspend masked
 
 ```fish
 systemctl status sleep.target suspend.target hibernate.target hybrid-sleep.target | grep "Active:"
@@ -133,7 +133,7 @@ systemctl status sleep.target | grep "Loaded:"
 
 **Failure remediation:** If not masked, run `sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target` per the standard NZXT pre-flight from previous iterations.
 
-### A.8 — `.iao.json` reflects 0.1.2 close state
+### A.8 - `.iao.json` reflects 0.1.2 close state
 
 ```fish
 cat .iao.json | jq .current_iteration
@@ -145,7 +145,7 @@ cat .iao.json | jq .name
 
 **Failure remediation:** If iteration field is wrong, edit `.iao.json` manually before launch (this is W0's first action anyway; if it's already done, skip to W1).
 
-### A.9 — No active tmux session for this iteration
+### A.9 - No active tmux session for this iteration
 
 ```fish
 tmux ls 2>/dev/null | grep "iao-0.1.3"
@@ -154,7 +154,7 @@ tmux ls 2>/dev/null | grep "iao-0.1.3"
 
 **Failure remediation:** If a session named `iao-0.1.3` exists, kill it: `tmux kill-session -t iao-0.1.3`. Then verify the bundle from any previous attempt is moved aside before relaunching.
 
-### A.10 — Required tools present
+### A.10 - Required tools present
 
 ```fish
 which git python3 pip ollama jq age keyctl
@@ -166,7 +166,7 @@ age --version
 
 **Failure remediation:** Install any missing tool. `age` should already be present from 0.1.2 W1; if not, `sudo pacman -S age`.
 
-### A.11 — Pre-flight summary
+### A.11 - Pre-flight summary
 
 After all 11 pre-flight checks pass, print:
 
@@ -192,16 +192,16 @@ If any check failed, do NOT launch. Surface the failure to Kyle, fix, re-run pre
 
 ---
 
-## Section B — Launch Protocol
+## Section B - Launch Protocol
 
-### B.1 — Open tmux session
+### B.1 - Open tmux session
 
 ```fish
 tmux new-session -d -s iao-0.1.3 -c ~/dev/projects/iao
 tmux send-keys -t iao-0.1.3 'cd ~/dev/projects/iao && set -x IAO_ITERATION 0.1.3.1 && set -x IAO_PROJECT_NAME iao' Enter
 ```
 
-### B.2 — Initialize checkpoint
+### B.2 - Initialize checkpoint
 
 ```fish
 printf '%s\n' '{
@@ -226,7 +226,7 @@ printf '%s\n' '{
 
 The launching shell replaces the timestamp placeholder with `(date -u +%Y-%m-%dT%H:%M:%SZ)`.
 
-### B.3 — Launch Gemini CLI for W0–W5
+### B.3 - Launch Gemini CLI for W0–W5
 
 ```fish
 tmux send-keys -t iao-0.1.3 'gemini --yolo' Enter
@@ -236,7 +236,7 @@ Gemini reads `GEMINI.md` (project root) and `CLAUDE.md` (project root) for conte
 
 Kyle's role during Gemini's run: monitor occasionally, intervene only on Pillar 6 violations (Gemini asking permission for non-destructive actions). The expected wall clock for W0–W5 is ~4 hours.
 
-### B.4 — Handoff to Claude Code for W6–W7
+### B.4 - Handoff to Claude Code for W6–W7
 
 When Gemini's W5 completes and the checkpoint shows `"current_workstream": "handoff"`, attach to the tmux session:
 
@@ -263,7 +263,7 @@ claude --dangerously-skip-permissions
 
 Claude Code reads `CLAUDE.md`, picks up at W6, completes W6 and W7. Expected wall clock for W6–W7 is ~2.5 hours.
 
-### B.5 — Iteration close
+### B.5 - Iteration close
 
 When Claude Code completes W7 (the dogfood test + closing sequence), it stops and prints:
 
@@ -288,9 +288,9 @@ This is where the agent stops. The human takes over.
 
 ---
 
-## Section C — Workstream Execution Details
+## Section C - Workstream Execution Details
 
-### W0 — Iteration Bookkeeping
+### W0 - Iteration Bookkeeping
 
 **Agent:** Gemini CLI
 **Wall clock target:** 5 min
@@ -334,7 +334,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W1 — Folder Consolidation
+### W1 - Folder Consolidation
 
 **Agent:** Gemini CLI
 **Wall clock target:** 45 min
@@ -437,7 +437,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W2 — src-layout Refactor
+### W2 - src-layout Refactor
 
 **Agent:** Gemini CLI
 **Wall clock target:** 40 min
@@ -547,7 +547,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W3 — Universal Bundle Spec + Quality Gates
+### W3 - Universal Bundle Spec + Quality Gates
 
 **Agent:** Gemini CLI
 **Wall clock target:** 90 min
@@ -583,9 +583,9 @@ This is where the agent stops. The human takes over.
 
    Documents the 0.1.2 W7 failure mode. Prevention: every success criterion must include a content check, not just an existence check.
 
-6. **Append iaomw-G104 to gotcha registry:** (also done in W2 for src-layout — this is a different gotcha)
+6. **Append iaomw-G104 to gotcha registry:** (also done in W2 for src-layout - this is a different gotcha)
 
-   Wait — re-checking. W2 already used G104 for src-layout. W3's gotcha is **iaomw-G105**: "Existence-Only Acceptance Criteria":
+   Wait - re-checking. W2 already used G104 for src-layout. W3's gotcha is **iaomw-G105**: "Existence-Only Acceptance Criteria":
 
    ```json
    {
@@ -667,7 +667,7 @@ This is where the agent stops. The human takes over.
 
 8. **Rewrite `prompts/bundle.md.j2`:**
 
-   Jinja template that loops over the 20 sections and embeds each source file's content as a fenced code block under a `## §N. <Title>` header. The template does NOT call out to Qwen — it's pure Jinja rendering of real file content.
+   Jinja template that loops over the 20 sections and embeds each source file's content as a fenced code block under a `## §N. <Title>` header. The template does NOT call out to Qwen - it's pure Jinja rendering of real file content.
 
 9. **Update `prompts/design.md.j2`:**
 
@@ -680,7 +680,7 @@ This is where the agent stops. The human takes over.
    {{ ten_pillars_block }}
    ```
 
-   The `trident_block` and `ten_pillars_block` variables are loaded from `docs/harness/base.md` at template render time. Qwen does NOT generate these — they're loaded verbatim.
+   The `trident_block` and `ten_pillars_block` variables are loaded from `docs/harness/base.md` at template render time. Qwen does NOT generate these - they're loaded verbatim.
 
    Add minimum word count: 5000. The Qwen generation loop in `src/iao/artifacts/loop.py` checks output length and re-prompts if under.
 
@@ -745,7 +745,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W4 — Universal Pipeline Scaffolding
+### W4 - Universal Pipeline Scaffolding
 
 **Agent:** Gemini CLI
 **Wall clock target:** 90 min
@@ -830,7 +830,7 @@ This is where the agent stops. The human takes over.
 
    Example for `phase1_extract.py.template`:
    ```python
-   """{{ pipeline_name }} — Phase 1: Extract.
+   """{{ pipeline_name }} - Phase 1: Extract.
 
    Acquires raw data from source. Project-specific implementation
    replaces the TODO block.
@@ -940,7 +940,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W5 — Human Feedback Loop + Run Report
+### W5 - Human Feedback Loop + Run Report
 
 **Agent:** Gemini CLI
 **Wall clock target:** 75 min
@@ -972,7 +972,7 @@ This is where the agent stops. The human takes over.
 
 6. **Create `prompts/run-report.md.j2`:**
 
-   Jinja template for the run report. Variables: iteration version, workstream list, build log path, bundle path, agent questions list. Does NOT call Qwen — pure mechanical assembly.
+   Jinja template for the run report. Variables: iteration version, workstream list, build log path, bundle path, agent questions list. Does NOT call Qwen - pure mechanical assembly.
 
 7. **Add `iao iteration close` and `iao iteration close --confirm` to `src/iao/cli.py`:**
 
@@ -1032,7 +1032,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W6 — README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
+### W6 - README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
 
 **Agent:** Claude Code
 **Wall clock target:** 75 min
@@ -1057,7 +1057,7 @@ This is where the agent stops. The human takes over.
    - **Trident mermaid** (verbatim from base.md)
    - **The Ten Pillars of IAO** (verbatim from base.md, numbered list)
    - **What iao Does** (the harness is the product, the model is the engine)
-   - **Component Review** (chip count: secrets backend, artifact loop, pipeline scaffold, post-flight, pre-flight, run report, bundle, doctor, registry, harness, install — count actual subpackages and modules)
+   - **Component Review** (chip count: secrets backend, artifact loop, pipeline scaffold, post-flight, pre-flight, run report, bundle, doctor, registry, harness, install - count actual subpackages and modules)
    - **Architecture** (Python package layout, CLI surface, harness file locations, bundle structure)
    - **Active iao Projects** (table)
    - **Phase 0 Status** (current phase, exit criteria checklist with checkboxes)
@@ -1070,9 +1070,9 @@ This is where the agent stops. The human takes over.
 
    Copy §1 of `docs/iterations/0.1.3/iao-design-0.1.3.md` (the Phase 0 Charter section). Add front-matter:
    ```markdown
-   # Phase 0 Charter — iao
+   # Phase 0 Charter - iao
 
-   **Phase:** 0 — NZXT-only authoring
+   **Phase:** 0 - NZXT-only authoring
    **Charter author:** iao planning chat (retroactive)
    **Charter version:** 0.1
    **Charter date:** 2026-04-09
@@ -1143,7 +1143,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W7 — Qwen Loop Hardening + Dogfood + Closing Sequence
+### W7 - Qwen Loop Hardening + Dogfood + Closing Sequence
 
 **Agent:** Claude Code
 **Wall clock target:** 90 min
@@ -1178,7 +1178,7 @@ This is where the agent stops. The human takes over.
 
    - JSON schemas for build log, report, run report, bundle metadata
    - Validation called from loop.py after each Qwen output
-   - Design and plan have NO schema validation in W7 — they are immutable inputs per ADR-012 amendment
+   - Design and plan have NO schema validation in W7 - they are immutable inputs per ADR-012 amendment
 
 5. **Run dogfood test:**
    ```fish
@@ -1241,7 +1241,7 @@ This is where the agent stops. The human takes over.
 
 10. **Update VERSION:**
 
-    Already done in W0 — verify it's still `0.1.3`.
+    Already done in W0 - verify it's still `0.1.3`.
 
 11. **Update `.iao.json` to next iteration draft:**
     ```fish
@@ -1279,11 +1279,11 @@ This is where the agent stops. The human takes over.
 
 ---
 
-## Section D — Post-flight (After Kyle's --confirm)
+## Section D - Post-flight (After Kyle's --confirm)
 
 When Kyle returns, fills in his notes, ticks the sign-off boxes, and runs `iao iteration close --confirm`, the post-flight sequence runs:
 
-### D.1 — Validate sign-off
+### D.1 - Validate sign-off
 
 ```fish
 iao iteration close --confirm
@@ -1294,14 +1294,14 @@ iao iteration close --confirm
 # 4. If yes, marks iteration complete in .iao.json
 ```
 
-### D.2 — Final post-flight check pass
+### D.2 - Final post-flight check pass
 
 ```fish
 iao doctor postflight
 # Expected: all checks PASS (no DEFERRED for run_report_complete now that Kyle filled it in)
 ```
 
-### D.3 — Seed next iteration
+### D.3 - Seed next iteration
 
 ```fish
 iao iteration seed
@@ -1310,7 +1310,7 @@ iao iteration seed
 # (Used by 0.1.4 W7's Qwen design generation)
 ```
 
-### D.4 — Final state verification
+### D.4 - Final state verification
 
 ```fish
 cat .iao.json | jq .current_iteration
@@ -1324,7 +1324,7 @@ command ls docs/iterations/0.1.3/
 #           iao-report-0.1.3.1.md, iao-run-report-0.1.3.1.md, iao-bundle-0.1.3.1.md
 ```
 
-### D.5 — Manual git commit (Kyle, per Pillar 0)
+### D.5 - Manual git commit (Kyle, per Pillar 0)
 
 ```fish
 git status
@@ -1338,7 +1338,7 @@ git commit -m "iao 0.1.3.1: bundle quality, folder consolidation, src-layout, pi
 
 ---
 
-## Section E — Rollback Procedure
+## Section E - Rollback Procedure
 
 If iao 0.1.3.1 fails catastrophically at any point:
 
@@ -1373,12 +1373,12 @@ exec fish
 **When NOT to rollback:**
 - Single test failure that has a clear fix (just fix it)
 - Wall clock running long but workstreams still completing (let it run)
-- Qwen producing undersized artifacts (the run report mechanism handles this — surface to Kyle, don't roll back)
-- Kyle hasn't filled in run report notes yet (this is expected — wait for him)
+- Qwen producing undersized artifacts (the run report mechanism handles this - surface to Kyle, don't roll back)
+- Kyle hasn't filled in run report notes yet (this is expected - wait for him)
 
 ---
 
-## Section F — Wall Clock Targets
+## Section F - Wall Clock Targets
 
 | Workstream | Target | Cumulative |
 |---|---|---|
@@ -1398,10 +1398,10 @@ Soft cap is 8 hours, with the understanding that 50 minutes of overrun is within
 
 ---
 
-## Section G — Sign-off
+## Section G - Sign-off
 
 This plan is the operational instruction set for iao 0.1.3.1. It is read by both Gemini CLI (W0–W5) and Claude Code (W6–W7). Both agents have separate briefings: GEMINI.md for Gemini, CLAUDE.md for Claude Code. Both briefings reference this plan for execution detail.
 
 This plan is immutable per ADR-012 once W0 begins. The build log records what actually happened. The report grades it. The run report is where Kyle's voice enters the loop.
 
-— Bootstrap planning chat, 2026-04-09
+- Bootstrap planning chat, 2026-04-09

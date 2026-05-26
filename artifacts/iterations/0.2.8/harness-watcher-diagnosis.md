@@ -14,7 +14,7 @@
    Loaded: loaded (enabled; preset: enabled)
    Active: inactive (dead)
 ```
-Enabled but never started. No crash, no failure — just never ran.
+Enabled but never started. No crash, no failure - just never ran.
 
 ### Step 2: service file review
 ```ini
@@ -55,7 +55,7 @@ Daemon starts cleanly and runs. Tails the event log and monitors for harness eve
 
 ## Fix Applied
 
-Added `systemctl --user start aho-$d.service` after the enable line in `bin/aho-systemd`. All four daemons now get enabled AND started on install. Idempotent — starting an already-running service is a no-op.
+Added `systemctl --user start aho-$d.service` after the enable line in `bin/aho-systemd`. All four daemons now get enabled AND started on install. Idempotent - starting an already-running service is a no-op.
 
 ## Current State
 
@@ -63,4 +63,4 @@ harness-watcher is now running on NZXTcos. Dashboard daemon health card should s
 
 ---
 
-*harness-watcher-diagnosis.md — 0.2.8 W8. Branch A executed. 5 minutes total.*
+*harness-watcher-diagnosis.md - 0.2.8 W8. Branch A executed. 5 minutes total.*

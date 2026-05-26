@@ -16,117 +16,117 @@
     "bucket_2_runtime_decision": "Partially in scope. B2.1 (Podman install + hello-world), B2.2 (nvidia-container-toolkit + libnvidia-container install), B2.4 (host.containers.internal probe), B2.5 (registry pre-flight) verified. B2.3 (GPU passthrough probe) deferred across post-W0 reboot boundary per ADR 0007 §GPU passthrough deferral amendment.",
     "bucket_3_aho_hello_container": "In scope. Throwaway aho:hello image builds and runs locally; not pushed to any registry.",
     "bucket_4_adversarial_authorship_rename": "In scope. File rename + content rename across live governance docs; sealed acceptance + audit archives untouched.",
-    "kyle_authored_amendments_during_w0": "Three plan-time amendments authored mid-W0 by Kyle and applied in place: (a) ADR 0007 §k8s-readiness subsection (binds W1 acceptance gate to five image properties); (b) plan §W1 acceptance bullet for k8s-readiness; (c) plan §Plan amendments entry #4 recording the k8s-readiness addition. Pre-launch scoping for W1 (not-yet-started workstream) per ADR 0006 — not iteration-scope drift.",
+    "kyle_authored_amendments_during_w0": "Three plan-time amendments authored mid-W0 by Kyle and applied in place: (a) ADR 0007 §k8s-readiness subsection (binds W1 acceptance gate to five image properties); (b) plan §W1 acceptance bullet for k8s-readiness; (c) plan §Plan amendments entry #4 recording the k8s-readiness addition. Pre-launch scoping for W1 (not-yet-started workstream) per ADR 0006 - not iteration-scope drift.",
     "rca_detour_recorded": "Bucket 2 surfaced a Tailscale MagicDNS hijack of CachyOS mirror domains (~45 min wrong-RCA cost). Drafter pursued mirror-corruption hypothesis to the wrong layer of the stack; Kyle identified the actual cause (Tailscale 'Override Local DNS' forcing CachyOS mirror DNS through MagicDNS, resolving to TEST-NET-3 addresses serving an interception HTML page). Resolved via split-DNS rule; F-host-001 captures the durable record + investigation lesson + binding deployment-doc requirement for 0.3.x install.fish."
   },
   "acceptance_checks": [
     {
       "check": "AHO_ITERATION + AHO_WORKSTREAM env confirmed; workstream_start emitted with correct attribution; OTEL pipelines verify literal attribution within 60s (Preconditions P1-P4)",
       "result": "pass",
-      "evidence": "AHO_ITERATION=0.2.17, AHO_WORKSTREAM=W0 confirmed in shell env. `aho iteration workstream start W0` emitted workstream_start event at 2026-05-02T03:00:27Z with iteration=0.2.17, workstream_id=W0. All three OTEL pipelines (~/.local/share/aho/{logs,metrics,traces}/) confirmed to attribute literally aho.iteration=0.2.17 + aho.workstream=W0 + aho.role=drafter via Python OTEL JSON inspection (not shell substring match). Daemon heartbeats from telegram/openclaw/nemoclaw still emit iteration=0.2.16 (cached _ITERATION at module import time) — captured as F-0.2.17-W0-002, not blocking."
+      "evidence": "AHO_ITERATION=0.2.17, AHO_WORKSTREAM=W0 confirmed in shell env. `aho iteration workstream start W0` emitted workstream_start event at 2026-05-02T03:00:27Z with iteration=0.2.17, workstream_id=W0. All three OTEL pipelines (~/.local/share/aho/{logs,metrics,traces}/) confirmed to attribute literally aho.iteration=0.2.17 + aho.workstream=W0 + aho.role=drafter via Python OTEL JSON inspection (not shell substring match). Daemon heartbeats from telegram/openclaw/nemoclaw still emit iteration=0.2.16 (cached _ITERATION at module import time) - captured as F-0.2.17-W0-002, not blocking."
     },
     {
-      "check": "B1.1 — AF004 api_error_count alias decision + implementation (carry-forward closure)",
+      "check": "B1.1 - AF004 api_error_count alias decision + implementation (carry-forward closure)",
       "result": "pass",
       "evidence": "Decision: map (api_error event exists in current Claude Code emission, 2 instances visible in logs.jsonl). Source change at src/aho/dashboard/otel_aggregator.py:280-285: removed incorrect `api_error_count += 1` from internal_error branch, added explicit `event_name == 'api_error'` branch that increments the field. Docstring updated with explicit event-to-counter mapping table. Test added at artifacts/tests/test_otel_aggregator.py::test_api_error_and_retries_exhausted_mapping verifying api_error → api_error_count, internal_error does NOT bump api_error_count."
     },
     {
-      "check": "B1.2 — AF005 api_retries_exhausted_count dead field decision + implementation (carry-forward closure)",
+      "check": "B1.2 - AF005 api_retries_exhausted_count dead field decision + implementation (carry-forward closure)",
       "result": "pass",
-      "evidence": "Decision: map (api_retries_exhausted event exists in Claude Code emission, 2 instances visible in logs.jsonl). Same edit as AF004 — added `event_name == 'api_retries_exhausted'` branch incrementing api_retries_exhausted_count. Test coverage in same test_api_error_and_retries_exhausted_mapping case asserts api_retries_exhausted_count == 1 from one fixture event."
+      "evidence": "Decision: map (api_retries_exhausted event exists in Claude Code emission, 2 instances visible in logs.jsonl). Same edit as AF004 - added `event_name == 'api_retries_exhausted'` branch incrementing api_retries_exhausted_count. Test coverage in same test_api_error_and_retries_exhausted_mapping case asserts api_retries_exhausted_count == 1 from one fixture event."
     },
     {
-      "check": "B1.3 — F-W0-004 conftest allowlist brittleness fix (third-recurrence mitigation)",
+      "check": "B1.3 - F-W0-004 conftest allowlist brittleness fix (third-recurrence mitigation)",
       "result": "pass",
       "evidence": "Source-side guard added at src/aho/workstream_events.py: TestIsolationError class + _resolve_checkpoint_root() helper that, when PYTEST_CURRENT_TEST is set and AHO_TEST_CHECKPOINT_DIR is unset and find_project_root() returns a path outside the system tempdir, raises TestIsolationError loudly. Both emit_workstream_start and emit_workstream_complete refactored to call _resolve_checkpoint_root() and use narrow exception handlers (json.JSONDecodeError, OSError) instead of bare `except Exception`. Conftest also sets AHO_TEST_CHECKPOINT_DIR=tmp_path for allowlisted modules. Tests at artifacts/tests/test_checkpoint_isolation_guard.py: 4 cases pass (guard raises with correct message; AHO_TEST_CHECKPOINT_DIR override accepted; tmpdir-resolved root accepted; real .aho-checkpoint.json mtime unchanged after guard fires). Belt-and-suspenders: allowlist provides positive isolation, source-side guard catches drift. The class is decorated with `__test__ = False` so pytest does not attempt to collect it as a test class."
     },
     {
-      "check": "B1.4 — W2-AF004 dispatch.duration_ms error-path measurement consistency test (carry-forward closure)",
+      "check": "B1.4 - W2-AF004 dispatch.duration_ms error-path measurement consistency test (carry-forward closure)",
       "result": "pass",
-      "evidence": "Trip-wire test at artifacts/tests/test_dispatcher_duration_error_path.py: 2 cases pass. Test 1 asserts span attribute dispatch.duration_ms is set on DispatchError path AND drift between span end-start and reported duration_ms is < 1ms. Test 2 (with retries=2) confirms the same property holds across the retry loop. Drift measured well under 1ms — no measurement-site unification required at this time. Test exists as a regression trip-wire: if drift ever exceeds 1ms in future, the test fails with an explicit message pointing to the W2-AF004 carry-forward and the measurement-site unification work."
+      "evidence": "Trip-wire test at artifacts/tests/test_dispatcher_duration_error_path.py: 2 cases pass. Test 1 asserts span attribute dispatch.duration_ms is set on DispatchError path AND drift between span end-start and reported duration_ms is < 1ms. Test 2 (with retries=2) confirms the same property holds across the retry loop. Drift measured well under 1ms - no measurement-site unification required at this time. Test exists as a regression trip-wire: if drift ever exceeds 1ms in future, the test fails with an explicit message pointing to the W2-AF004 carry-forward and the measurement-site unification work."
     },
     {
-      "check": "B1.5 — F-W1-001 settings.json env-var expansion wrapper (carry-forward closure)",
+      "check": "B1.5 - F-W1-001 settings.json env-var expansion wrapper (carry-forward closure)",
       "result": "pass",
-      "evidence": "New module src/aho/workstream_init.py with init_settings_for_workstream(iteration, workstream_id, settings_path) and helper _rewrite_resource_attrs(attrs, iteration, workstream_id) that rewrites OTEL_RESOURCE_ATTRIBUTES csv string preserving non-aho keys in original order, replacing aho.iteration + aho.workstream values, appending if missing. Idempotent: returns False on no-op. CLI subcommand `aho iteration workstream init <ws_id> [--iteration X.Y.Z] [--settings-path /path]` added at src/aho/cli.py with dispatch handler that defaults --iteration to AHO_ITERATION env. Tests at artifacts/tests/test_workstream_init.py: 6 cases pass (key replacement preserves order; missing aho keys appended; ${VAR} placeholder residue replaced — explicit F-W1-001 closure surface; end-to-end write + idempotency; FileNotFoundError on missing settings.json; ValueError on malformed env block). End-to-end CLI verified: `aho iteration workstream init W0` prints idempotency message against current 0.2.17/W0 settings.json."
+      "evidence": "New module src/aho/workstream_init.py with init_settings_for_workstream(iteration, workstream_id, settings_path) and helper _rewrite_resource_attrs(attrs, iteration, workstream_id) that rewrites OTEL_RESOURCE_ATTRIBUTES csv string preserving non-aho keys in original order, replacing aho.iteration + aho.workstream values, appending if missing. Idempotent: returns False on no-op. CLI subcommand `aho iteration workstream init <ws_id> [--iteration X.Y.Z] [--settings-path /path]` added at src/aho/cli.py with dispatch handler that defaults --iteration to AHO_ITERATION env. Tests at artifacts/tests/test_workstream_init.py: 6 cases pass (key replacement preserves order; missing aho keys appended; ${VAR} placeholder residue replaced - explicit F-W1-001 closure surface; end-to-end write + idempotency; FileNotFoundError on missing settings.json; ValueError on malformed env block). End-to-end CLI verified: `aho iteration workstream init W0` prints idempotency message against current 0.2.17/W0 settings.json."
     },
     {
-      "check": "B2.1 — Podman install + rootless hello-world",
+      "check": "B2.1 - Podman install + rootless hello-world",
       "result": "pass",
       "evidence": "podman 5.8.2 installed via pacman (post-Tailscale-DNS-fix; see F-host-001 for the detour). Rootless hello-world required a one-time fix for overlay-storage backing on ext4: installed fuse-overlayfs, ran `podman system reset --force` to clear the broken storage state, re-ran `podman run --rm hello-world` which returned the canonical Podman ASCII-art output. F-host-001 captures the DNS-detour record."
     },
     {
-      "check": "B2.2 — nvidia-container-toolkit pkg-name resolution + install",
+      "check": "B2.2 - nvidia-container-toolkit pkg-name resolution + install",
       "result": "pass",
-      "evidence": "Package names resolved from pacman repos: nvidia-container-toolkit and libnvidia-container (no -base or vendor-qualifier suffix needed on CachyOS). Installation succeeded post-DNS-fix: `pacman -Qs nvidia-container` reports `local/libnvidia-container 1.19.0-1.1` and `local/nvidia-container-toolkit 1.19.0-1.1`. Note: /etc/cdi/ directory not yet created — sudo nvidia-ctk cdi generate is the next step but is blocked by the NVML driver/library version mismatch (B2.3 deferral)."
+      "evidence": "Package names resolved from pacman repos: nvidia-container-toolkit and libnvidia-container (no -base or vendor-qualifier suffix needed on CachyOS). Installation succeeded post-DNS-fix: `pacman -Qs nvidia-container` reports `local/libnvidia-container 1.19.0-1.1` and `local/nvidia-container-toolkit 1.19.0-1.1`. Note: /etc/cdi/ directory not yet created - sudo nvidia-ctk cdi generate is the next step but is blocked by the NVML driver/library version mismatch (B2.3 deferral)."
     },
     {
-      "check": "B2.3 — Podman GPU passthrough probe",
+      "check": "B2.3 - Podman GPU passthrough probe",
       "result": "deferred",
-      "evidence": "Deferred across post-W0 reboot boundary per ADR 0007 §GPU passthrough deferral amendment. Empirical state: `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml` fails with `failed to initialize NVML: Driver/library version mismatch`. Root cause: pacman update brought userspace libraries to 595.71.05 (libnvidia-ml.so.595.71.05) while the running kernel still has the prior NVIDIA module loaded (595.58.03-class). Module reload mid-session reliably fails because Plasma/Wayland/X are using the modules. Reboot deferred to Sunday post-SF-queue per Kyle. Post-reboot validation is a one-command exercise: `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml && podman run --rm --device nvidia.com/gpu=all docker.io/nvidia/cuda:12.0-base nvidia-smi` — expected: nvidia-smi from inside container reports the host GPU (RTX 2080 SUPER, 8 GB) and post-update driver 595.71.05. B2.3 is NOT on the W0/W3 critical path: ADR 0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required. Container GPU passthrough becomes load-bearing for production-tier (0.3.x) deployment."
+      "evidence": "Deferred across post-W0 reboot boundary per ADR 0007 §GPU passthrough deferral amendment. Empirical state: `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml` fails with `failed to initialize NVML: Driver/library version mismatch`. Root cause: pacman update brought userspace libraries to 595.71.05 (libnvidia-ml.so.595.71.05) while the running kernel still has the prior NVIDIA module loaded (595.58.03-class). Module reload mid-session reliably fails because Plasma/Wayland/X are using the modules. Reboot deferred to Sunday post-SF-queue per Kyle. Post-reboot validation is a one-command exercise: `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml && podman run --rm --device nvidia.com/gpu=all docker.io/nvidia/cuda:12.0-base nvidia-smi` - expected: nvidia-smi from inside container reports the host GPU (RTX 2080 SUPER, 8 GB) and post-update driver 595.71.05. B2.3 is NOT on the W0/W3 critical path: ADR 0008 hybrid-mode dispatcher routes to host's native Ollama, which uses the host GPU directly with no container GPU passthrough required. Container GPU passthrough becomes load-bearing for production-tier (0.3.x) deployment."
     },
     {
-      "check": "B2.4 — host.containers.internal reachability probe (ADR 0008 hybrid-mode wire)",
+      "check": "B2.4 - host.containers.internal reachability probe (ADR 0008 hybrid-mode wire)",
       "result": "pass",
-      "evidence": "`podman run --rm alpine sh -c 'apk add curl >/dev/null 2>&1 && curl -sf -m 5 http://host.containers.internal:11434/api/version'` returned `{\"version\":\"0.20.2\"}`. Host Ollama was rebound from 127.0.0.1:11434 to 0.0.0.0:11434 via systemd drop-in /etc/systemd/system/ollama.service.d/override.conf to satisfy the literal probe — see F-host-002 for the full record + accepted security trade-off + deferred firewall-rule mitigation (W3 alongside ADR 0008 implementation). DNS resolution of host.containers.internal works inside the container (resolves to 169.254.1.2, the netavark gateway). Wire was independently confirmed before the Ollama rebind via HTTP 301 from host.containers.internal:9090 (Jaeger UI) — proves the network path was not the blocker. The ADR 0008 hybrid-mode wire is verified end to end."
+      "evidence": "`podman run --rm alpine sh -c 'apk add curl >/dev/null 2>&1 && curl -sf -m 5 http://host.containers.internal:11434/api/version'` returned `{\"version\":\"0.20.2\"}`. Host Ollama was rebound from 127.0.0.1:11434 to 0.0.0.0:11434 via systemd drop-in /etc/systemd/system/ollama.service.d/override.conf to satisfy the literal probe - see F-host-002 for the full record + accepted security trade-off + deferred firewall-rule mitigation (W3 alongside ADR 0008 implementation). DNS resolution of host.containers.internal works inside the container (resolves to 169.254.1.2, the netavark gateway). Wire was independently confirmed before the Ollama rebind via HTTP 301 from host.containers.internal:9090 (Jaeger UI) - proves the network path was not the blocker. The ADR 0008 hybrid-mode wire is verified end to end."
     },
     {
-      "check": "B2.5 — Registry writability pre-flight (ghcr.io/soc-foundry/aho)",
+      "check": "B2.5 - Registry writability pre-flight (ghcr.io/soc-foundry/aho)",
       "result": "pass",
-      "evidence": "Full push+pull+delete cycle verified end to end against ghcr.io/soc-foundry/aho. Sequence: (1) `gh auth token | podman login ghcr.io -u SOCkjt --password-stdin` returned `Login Succeeded!` — token piped through stdin, never displayed in any tool output, never written to a repo file. (2) `podman tag aho:hello ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` (exit 0). (3) `podman push ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` succeeded — 5 blobs copied, manifest written to destination. (4) `podman rmi ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` returned `Untagged`. (5) `podman pull ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` re-fetched cleanly; pulled config sha matches the pushed image id (`f9954c7fd711d54069215e44db73118047e87cb0d2007b14f2be9893027b58da`); `podman run --rm <pulled-image> aho --version` returns `aho 0.2.14` — round-trip integrity preserved end to end. (6) Final local rmi clean. (7) Remote tag deletion via `gh api -X DELETE /orgs/soc-foundry/packages/container/aho/versions/836298903` rejected with HTTP 400: 'You cannot delete the last tagged version of a package. You must delete the package instead.' Per GitHub API guidance in the error body, executed `gh api -X DELETE /orgs/soc-foundry/packages/container/aho` (exit 0). Verified gone — `gh api /orgs/soc-foundry/packages/container/aho` returns HTTP 404 'Package not found.' Final state: local aho:hello intact (B3 deliverable), zero ghcr.io/soc-foundry/* local tags, remote package empty (W1's first push of `aho:0.2.17-rc1` will re-create it).",
+      "evidence": "Full push+pull+delete cycle verified end to end against ghcr.io/soc-foundry/aho. Sequence: (1) `gh auth token | podman login ghcr.io -u SOCkjt --password-stdin` returned `Login Succeeded!` - token piped through stdin, never displayed in any tool output, never written to a repo file. (2) `podman tag aho:hello ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` (exit 0). (3) `podman push ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` succeeded - 5 blobs copied, manifest written to destination. (4) `podman rmi ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` returned `Untagged`. (5) `podman pull ghcr.io/soc-foundry/aho:hello-throwaway-w0-preflight` re-fetched cleanly; pulled config sha matches the pushed image id (`f9954c7fd711d54069215e44db73118047e87cb0d2007b14f2be9893027b58da`); `podman run --rm <pulled-image> aho --version` returns `aho 0.2.14` - round-trip integrity preserved end to end. (6) Final local rmi clean. (7) Remote tag deletion via `gh api -X DELETE /orgs/soc-foundry/packages/container/aho/versions/836298903` rejected with HTTP 400: 'You cannot delete the last tagged version of a package. You must delete the package instead.' Per GitHub API guidance in the error body, executed `gh api -X DELETE /orgs/soc-foundry/packages/container/aho` (exit 0). Verified gone - `gh api /orgs/soc-foundry/packages/container/aho` returns HTTP 404 'Package not found.' Final state: local aho:hello intact (B3 deliverable), zero ghcr.io/soc-foundry/* local tags, remote package empty (W1's first push of `aho:0.2.17-rc1` will re-create it).",
       "notes": {
         "soc_foundry_namespace": "Verified via `gh api orgs/soc-foundry` to be type=Organization (display name 'SOC-Foundry'). API path for package operations is `/orgs/soc-foundry/packages/container/<name>`, not `/users/...`.",
-        "github_api_constraint_recorded": "GitHub does not allow deleting the last tagged version of a container package via `/versions/<id>` DELETE — instead requires deleting the entire package via `/packages/container/<name>` DELETE. This is GitHub API behavior, not a tooling issue. W1 should be aware: pushing `aho:0.2.17-rc1` re-creates the soc-foundry/aho package; tag deletions while >1 version exists work normally; deleting the last remaining tag requires the package-level delete (which W1's stable tags presumably won't need to invoke — only ephemeral preflight tags would).",
+        "github_api_constraint_recorded": "GitHub does not allow deleting the last tagged version of a container package via `/versions/<id>` DELETE - instead requires deleting the entire package via `/packages/container/<name>` DELETE. This is GitHub API behavior, not a tooling issue. W1 should be aware: pushing `aho:0.2.17-rc1` re-creates the soc-foundry/aho package; tag deletions while >1 version exists work normally; deleting the last remaining tag requires the package-level delete (which W1's stable tags presumably won't need to invoke - only ephemeral preflight tags would).",
         "host_locality_history_preserved": "First B2.5 attempt was blocked on gh-auth host-locality: Kyle's initial `gh auth login` landed on auraX9cos (the operator's starting shell), not NZXTcos (where the Podman build/push runs). gh credentials do not auto-sync between hosts. Re-running `gh auth login` on NZXTcos specifically resolved it. Recorded as historical context for future operators provisioning new hosts: gh auth + podman+ghcr work both need to land on the same host.",
         "gh_token_handling_pillar_11_compliance": "Token consumed via `gh auth token | podman login --password-stdin` pipe only. Never displayed in any drafter-tool output. Never written to a file in the repo. Never read back into drafter context after the pipe completed. Username `SOCkjt` retrieved via `gh api user --jq .login` (does not return token)."
       }
     },
     {
-      "check": "B3.1 + B3.2 — Aho-internal hello-world container builds and runs",
+      "check": "B3.1 + B3.2 - Aho-internal hello-world container builds and runs",
       "result": "pass",
-      "evidence": "containers/Dockerfile.hello authored: debian:stable-slim base, python3 + python3-pip + python3-venv via apt, pyproject.toml + src/ copied to /opt/aho, pip install into /opt/aho/.venv, PATH prepended. CMD ['aho', '--version']. `podman build -f containers/Dockerfile.hello -t aho:hello .` succeeded. Image size: 350 MB (well under W1's 2 GB target — production build via multi-stage will be smaller). Both probe forms return `aho 0.2.14` (the current pyproject.toml version): (1) `podman run --rm aho:hello aho --version` → 'aho 0.2.14'; (2) `podman run --rm aho:hello` → 'aho 0.2.14' via CMD default."
+      "evidence": "containers/Dockerfile.hello authored: debian:stable-slim base, python3 + python3-pip + python3-venv via apt, pyproject.toml + src/ copied to /opt/aho, pip install into /opt/aho/.venv, PATH prepended. CMD ['aho', '--version']. `podman build -f containers/Dockerfile.hello -t aho:hello .` succeeded. Image size: 350 MB (well under W1's 2 GB target - production build via multi-stage will be smaller). Both probe forms return `aho 0.2.14` (the current pyproject.toml version): (1) `podman run --rm aho:hello aho --version` → 'aho 0.2.14'; (2) `podman run --rm aho:hello` → 'aho 0.2.14' via CMD default."
     },
     {
-      "check": "B3.3 — aho:hello is throwaway, NOT pushed to registry",
+      "check": "B3.3 - aho:hello is throwaway, NOT pushed to registry",
       "result": "pass",
       "evidence": "Image exists locally only: `podman images aho:hello` shows localhost/aho:hello with no remote registry tag. The header comment in containers/Dockerfile.hello explicitly states 'NOT pushed to any registry' and notes that W1's production Dockerfile is the registry-bound artifact. The pretest tag for B2.5 (ghcr.io/socfoundry/aho-pretest:smoke) is a registry-pre-flight artifact distinct from aho:hello and is deleted after registry verification."
     },
     {
-      "check": "B4.1 — Adversarial Authorship rename across live governance docs",
+      "check": "B4.1 - Adversarial Authorship rename across live governance docs",
       "result": "pass_with_findings",
-      "evidence": "File rename: artifacts/harness/pattern-c-protocol.md → artifacts/harness/adversarial-authorship-protocol.md (header rewritten with rename note + sealed-archive disposition; protocol body unchanged). CLAUDE.md: 3 references updated (line 3 narrative, line 39 section header, line 124 file path). GEMINI.md: 3 references updated (line 3 narrative, line 37 section header, lines 41/119/164 narrative + file paths). artifacts/adrs/0006-iteration-deliverable-discipline.md: 2 references updated (narrative parenthetical + file path in §References). artifacts/iterations/0.2.17/aho-plan-0.2.17.md §W1 acceptance: file path reference updated. artifacts/iterations/0.2.16/carry-forwards-0.2.16.md W4-AF002 narrative updated with traceability note. Sealed 0.2.16 acceptance + audit archives confirmed untouched. Finding: 11 'Pattern C' residues remain in plan §B4 narrative describing the rename action (bucket title, §Rationale, §Out-of-scope sections); these are intentional rename-announcement context — see deviations_from_brief.bucket4_scope_clarification."
+      "evidence": "File rename: artifacts/harness/pattern-c-protocol.md → artifacts/harness/adversarial-authorship-protocol.md (header rewritten with rename note + sealed-archive disposition; protocol body unchanged). CLAUDE.md: 3 references updated (line 3 narrative, line 39 section header, line 124 file path). GEMINI.md: 3 references updated (line 3 narrative, line 37 section header, lines 41/119/164 narrative + file paths). artifacts/adrs/0006-iteration-deliverable-discipline.md: 2 references updated (narrative parenthetical + file path in §References). artifacts/iterations/0.2.17/aho-plan-0.2.17.md §W1 acceptance: file path reference updated. artifacts/iterations/0.2.16/carry-forwards-0.2.16.md W4-AF002 narrative updated with traceability note. Sealed 0.2.16 acceptance + audit archives confirmed untouched. Finding: 11 'Pattern C' residues remain in plan §B4 narrative describing the rename action (bucket title, §Rationale, §Out-of-scope sections); these are intentional rename-announcement context - see deviations_from_brief.bucket4_scope_clarification."
     },
     {
-      "check": "B4.4 — Verify grep zero-match in live docs",
+      "check": "B4.4 - Verify grep zero-match in live docs",
       "result": "pass_with_findings",
-      "evidence": "`grep -rn 'Pattern C\\|pattern-c\\|pattern c' CLAUDE.md GEMINI.md artifacts/adrs/0006-*.md artifacts/harness/ artifacts/iterations/0.2.17/ artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` returns 17 matches. All 17 are in rename-announcement / pointer / sealed-archive-disposition context (not active use of the old term): 3 in adversarial-authorship-protocol.md header note, 2 in ADR 0006 (one parenthetical + one file-rename note in §References), 1 in carry-forwards W4-AF002 traceability note, 11 in plan §B4 narrative describing the rename action. None describe live system usage of 'Pattern C' as the current label. Disposition recorded as scope clarification — auditor disposition welcome on whether plan §B4 should be reworded further."
+      "evidence": "`grep -rn 'Pattern C\\|pattern-c\\|pattern c' CLAUDE.md GEMINI.md artifacts/adrs/0006-*.md artifacts/harness/ artifacts/iterations/0.2.17/ artifacts/iterations/0.2.16/carry-forwards-0.2.16.md` returns 17 matches. All 17 are in rename-announcement / pointer / sealed-archive-disposition context (not active use of the old term): 3 in adversarial-authorship-protocol.md header note, 2 in ADR 0006 (one parenthetical + one file-rename note in §References), 1 in carry-forwards W4-AF002 traceability note, 11 in plan §B4 narrative describing the rename action. None describe live system usage of 'Pattern C' as the current label. Disposition recorded as scope clarification - auditor disposition welcome on whether plan §B4 should be reworded further."
     }
   ],
   "deliverables": {
     "source_code_changes": [
-      "src/aho/dashboard/otel_aggregator.py — AF004/AF005 closure (api_error + api_retries_exhausted event mapping); docstring event-to-counter mapping table",
-      "src/aho/workstream_events.py — F-W0-004 source-side guard via TestIsolationError + _resolve_checkpoint_root(); narrowed exception handlers from `except Exception` to `(json.JSONDecodeError, OSError)`",
-      "src/aho/workstream_init.py — new module, F-W1-001 closure (settings.json env-rewrite wrapper)",
-      "src/aho/cli.py — `aho iteration workstream init <ws_id>` subcommand wired to workstream_init module"
+      "src/aho/dashboard/otel_aggregator.py - AF004/AF005 closure (api_error + api_retries_exhausted event mapping); docstring event-to-counter mapping table",
+      "src/aho/workstream_events.py - F-W0-004 source-side guard via TestIsolationError + _resolve_checkpoint_root(); narrowed exception handlers from `except Exception` to `(json.JSONDecodeError, OSError)`",
+      "src/aho/workstream_init.py - new module, F-W1-001 closure (settings.json env-rewrite wrapper)",
+      "src/aho/cli.py - `aho iteration workstream init <ws_id>` subcommand wired to workstream_init module"
     ],
     "test_changes": [
-      "artifacts/tests/test_otel_aggregator.py — added test_api_error_and_retries_exhausted_mapping (AF004/AF005 closure)",
-      "artifacts/tests/test_checkpoint_isolation_guard.py — new file, 4 cases (F-W0-004 guard verification)",
-      "artifacts/tests/test_dispatcher_duration_error_path.py — new file, 2 cases (W2-AF004 trip-wire)",
-      "artifacts/tests/test_workstream_init.py — new file, 6 cases (F-W1-001 wrapper)",
-      "artifacts/tests/conftest.py — AHO_TEST_CHECKPOINT_DIR set on allowlisted modules in addition to find_project_root monkeypatch"
+      "artifacts/tests/test_otel_aggregator.py - added test_api_error_and_retries_exhausted_mapping (AF004/AF005 closure)",
+      "artifacts/tests/test_checkpoint_isolation_guard.py - new file, 4 cases (F-W0-004 guard verification)",
+      "artifacts/tests/test_dispatcher_duration_error_path.py - new file, 2 cases (W2-AF004 trip-wire)",
+      "artifacts/tests/test_workstream_init.py - new file, 6 cases (F-W1-001 wrapper)",
+      "artifacts/tests/conftest.py - AHO_TEST_CHECKPOINT_DIR set on allowlisted modules in addition to find_project_root monkeypatch"
     ],
     "containers": [
-      "containers/Dockerfile.hello — throwaway B3 verification image; debian:stable-slim base, ~350 MB; NOT pushed"
+      "containers/Dockerfile.hello - throwaway B3 verification image; debian:stable-slim base, ~350 MB; NOT pushed"
     ],
     "doc_amendments": [
-      "artifacts/adrs/0007-containerization-architecture.md — §Runtime choice — 0.2.17 W0 confirmation (Podman engaged); §GPU passthrough deferral; §k8s-readiness (Kyle-authored)",
-      "artifacts/adrs/0006-iteration-deliverable-discipline.md — Adversarial Authorship rename (2 references)",
+      "artifacts/adrs/0007-containerization-architecture.md - §Runtime choice - 0.2.17 W0 confirmation (Podman engaged); §GPU passthrough deferral; §k8s-readiness (Kyle-authored)",
+      "artifacts/adrs/0006-iteration-deliverable-discipline.md - Adversarial Authorship rename (2 references)",
       "artifacts/harness/pattern-c-protocol.md → artifacts/harness/adversarial-authorship-protocol.md (file rename + content rename + rename note in header)",
-      "CLAUDE.md — Adversarial Authorship rename (3 references)",
-      "GEMINI.md — Adversarial Authorship rename (3 references)",
-      "artifacts/iterations/0.2.17/aho-plan-0.2.17.md — §W1 acceptance k8s-readiness bullet (Kyle-authored); §Plan amendments entry #4 (Kyle-authored); §B4.1 file path reference updated",
-      "artifacts/iterations/0.2.16/carry-forwards-0.2.16.md — F-0.2.17-W0-001, F-0.2.17-W0-002, F-host-001, F-host-002 added; W4-AF002 narrative updated for Adversarial Authorship rename"
+      "CLAUDE.md - Adversarial Authorship rename (3 references)",
+      "GEMINI.md - Adversarial Authorship rename (3 references)",
+      "artifacts/iterations/0.2.17/aho-plan-0.2.17.md - §W1 acceptance k8s-readiness bullet (Kyle-authored); §Plan amendments entry #4 (Kyle-authored); §B4.1 file path reference updated",
+      "artifacts/iterations/0.2.16/carry-forwards-0.2.16.md - F-0.2.17-W0-001, F-0.2.17-W0-002, F-host-001, F-host-002 added; W4-AF002 narrative updated for Adversarial Authorship rename"
     ]
   },
   "carry_forwards_closed": [
@@ -145,7 +145,7 @@
     {
       "id": "F-W0-004",
       "title": "conftest allowlist brittleness (third recurrence)",
-      "decision": "option (b) source-side guard — emit clear-test-error if checkpoint-write would touch a non-tmp path inside pytest",
+      "decision": "option (b) source-side guard - emit clear-test-error if checkpoint-write would touch a non-tmp path inside pytest",
       "closure_reference": "src/aho/workstream_events.py TestIsolationError + _resolve_checkpoint_root + artifacts/tests/test_checkpoint_isolation_guard.py"
     },
     {
@@ -239,14 +239,14 @@
     "claude_code_commit_count_increment": "zero",
     "claude_code_pull_request_count_increment": "zero",
     "secrets_read_or_written_by_drafter": "zero",
-    "git_mv_or_git_add_or_git_commit_executed": "none — file rename used `mv` (filesystem-only); all writes via Edit/Write tools without git operations"
+    "git_mv_or_git_add_or_git_commit_executed": "none - file rename used `mv` (filesystem-only); all writes via Edit/Write tools without git operations"
   },
   "deviations_from_brief": {
     "rca_detour_cost": "~45 min spent on wrong RCA chain (mirror corruption hypothesis) before Kyle identified the actual cause (Tailscale MagicDNS hijack). Documented in F-host-001 with investigation lesson.",
-    "adr_0007_amendment_revision": "ADR 0007 §Runtime choice was tentatively amended to 'Docker engaged' mid-bucket under the working assumption that Podman install was unrecoverable; reverted in place to 'Podman engaged' once Tailscale DNS fix resolved the install path. The history is recorded in the §Runtime choice — 0.2.17 W0 confirmation subsection so future readers see the detour without having to reconstruct it from carry-forwards.",
+    "adr_0007_amendment_revision": "ADR 0007 §Runtime choice was tentatively amended to 'Docker engaged' mid-bucket under the working assumption that Podman install was unrecoverable; reverted in place to 'Podman engaged' once Tailscale DNS fix resolved the install path. The history is recorded in the §Runtime choice - 0.2.17 W0 confirmation subsection so future readers see the detour without having to reconstruct it from carry-forwards.",
     "bucket4_scope_clarification": {
       "issue": "Plan §B4.4 grep target 'zero matches in live docs' applied to artifacts/iterations/0.2.17/, but plan §B4 narrative itself necessarily uses 'Pattern C' to describe the rename action (bucket title literal '\"Pattern C\" → \"Adversarial Authorship\" rename', §Rationale '\"Pattern C\" was an arbitrary label that accreted load-bearing meaning by repetition', §Out of scope discussing what sealed archives retain).",
-      "drafter_disposition": "Accepted plan §B4 residue as intentional rename-announcement / rationale / sealed-archive-pointer context. Reworking the plan §B4 prose to obliterate 'Pattern C' references would damage informational value — future readers couldn't tell what was renamed from what without reading sealed archives. The rename itself is complete in active-use governance text (CLAUDE.md, GEMINI.md, ADR 0006 narrative, harness protocol file body, plan file-path references).",
+      "drafter_disposition": "Accepted plan §B4 residue as intentional rename-announcement / rationale / sealed-archive-pointer context. Reworking the plan §B4 prose to obliterate 'Pattern C' references would damage informational value - future readers couldn't tell what was renamed from what without reading sealed archives. The rename itself is complete in active-use governance text (CLAUDE.md, GEMINI.md, ADR 0006 narrative, harness protocol file body, plan file-path references).",
       "auditor_disposition_welcome": "Gemini auditor disposition welcome on whether plan §B4 should be reworded further to satisfy the literal zero-match interpretation, or whether the residue is acceptable as rename-context. Drafter recommends acceptance; auditor may rule otherwise."
     },
     "b25_pending_operator_action": "B2.5 registry pre-flight requires interactive `gh auth login` from operator's shell (write:packages scope on token). Surfaced to Kyle; awaiting confirmation. Acceptance archive will be revised in place from `pending_operator_action` to `pass` (or `fail` with surface) before audit_status is read by Gemini. If Kyle defers gh auth login past W0 close, B2.5 remains pending and gates W1 launch per plan §Halt-and-surface conditions."

@@ -1,14 +1,14 @@
-"""W4 D2 — per-component claw3d bricks.
+"""W4 D2 - per-component claw3d bricks.
 
 Each brick is a structured visualization of one ``aho.*`` component's
 operational state. A brick reads a small slice of OTEL state and reduces
 it to one of three colors:
 
-  - **green** — recent activity matches the healthy predicate (no errors,
+  - **green** - recent activity matches the healthy predicate (no errors,
     expected emit count, etc.)
-  - **red** — fault predicate matches (error count > 0, signal missing
+  - **red** - fault predicate matches (error count > 0, signal missing
     when it should be present, trip-wire fired, etc.)
-  - **unknown** — neither predicate matches (no signal in window, e.g.
+  - **unknown** - neither predicate matches (no signal in window, e.g.
     component was idle or OTEL collector hadn't started yet)
 
 Brick specs are deliberately small and inspectable. Each spec names the
@@ -16,7 +16,7 @@ signal keys it reads from the aggregated OTEL state, so a reviewer can
 verify "this brick reds because ``aho.council.audit.error_count > 0``"
 without re-reading code paths.
 
-The brick layer reads aggregated OTEL state — it does not poll Ollama,
+The brick layer reads aggregated OTEL state - it does not poll Ollama,
 ChromaDB, or systemd directly. The aggregator
 (``aho.claw3d.otel_aggregator``) is the single owner of OTEL parsing.
 
@@ -27,7 +27,7 @@ Coverage is the W4 plan-doc §D2 list of ten components:
   status), aho.council.triage, aho.council.embed + aho.rag (combined).
 
 The ``aho.adversarial`` brick is the role-collapse trip-wire surface; it
-overlaps with D4 by design — D4 is the single dedicated trip-wire brick,
+overlaps with D4 by design - D4 is the single dedicated trip-wire brick,
 while D2's aho.adversarial brick wraps the same signal in the per-
 component grid view.
 """
@@ -49,7 +49,7 @@ class BrickSpec:
     """One component's brick definition.
 
     ``signal_keys`` is the documented set of OTEL counter / span / log
-    attribute names this brick consumes. Listed for inspection — the
+    attribute names this brick consumes. Listed for inspection - the
     actual predicates may also tolerate aliases or fall-throughs, but
     ``signal_keys`` is the canonical reference for "what feeds this
     brick".
@@ -59,7 +59,7 @@ class BrickSpec:
     Both can return False, in which case the brick is ``unknown`` (no
     signal in window).
 
-    Predicates take a ``signal_state`` dict — see
+    Predicates take a ``signal_state`` dict - see
     ``synthetic_signal_state`` for the canonical shape. They must be
     pure functions: same input → same output.
     """
@@ -83,7 +83,7 @@ class BrickState:
 
 
 # ---------------------------------------------------------------------------
-# Signal accessors — small, audited helpers for reading the signal_state
+# Signal accessors - small, audited helpers for reading the signal_state
 # dict shape that bricks rely on.
 # ---------------------------------------------------------------------------
 
@@ -110,7 +110,7 @@ def _flag(state: Dict[str, Any], key: str, default: bool = False) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Brick specs — ten components per W4 plan §D2.
+# Brick specs - ten components per W4 plan §D2.
 #
 # Each spec's predicates are deliberately small. Anything fancier should
 # move into the aggregator so brick logic stays inspectable.
@@ -133,7 +133,7 @@ def _audit_filter_extra(state: Dict[str, Any]) -> Dict[str, Any]:
 _BRICK_SPECS: List[BrickSpec] = [
     BrickSpec(
         component_id="aho.dispatcher",
-        description="Pipeline dispatcher — local model dispatch wrapper",
+        description="Pipeline dispatcher - local model dispatch wrapper",
         signal_keys=[
             "aho.pipeline.dispatcher.invocation_count",
             "aho.pipeline.dispatcher.error_count",
@@ -146,7 +146,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.adversarial",
-        description="Adversarial Authorship dispatch — role-collapse trip-wire",
+        description="Adversarial Authorship dispatch - role-collapse trip-wire",
         signal_keys=[
             "aho.council.dispatch.role_collapse_tripwire_fired",
             "aho.council.dispatch.invocation_count",
@@ -161,7 +161,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.workstream",
-        description="Workstream events — checkpoint emit + isolation guard",
+        description="Workstream events - checkpoint emit + isolation guard",
         signal_keys=[
             "aho.workstream.event_count",
             "aho.workstream.checkpoint_write_error_count",
@@ -176,7 +176,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.secrets_client",
-        description="Secrets broker client — read-only host ↔ container bridge",
+        description="Secrets broker client - read-only host ↔ container bridge",
         signal_keys=[
             "aho.secrets_client.read_count",
             "aho.secrets_client.error_count",
@@ -189,7 +189,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.otel",
-        description="OTEL exporter — logs.jsonl + metrics.jsonl liveness",
+        description="OTEL exporter - logs.jsonl + metrics.jsonl liveness",
         signal_keys=[
             "aho.otel.logs_emitted_count",
             "aho.otel.metrics_emitted_count",
@@ -203,7 +203,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.health",
-        description="Health probe — periodic /health checks across components",
+        description="Health probe - periodic /health checks across components",
         signal_keys=[
             "aho.health.probe_success_count",
             "aho.health.probe_failure_count",
@@ -216,7 +216,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.signal",
-        description="Signal / alert subsystem — telegram + halt-and-surface",
+        description="Signal / alert subsystem - telegram + halt-and-surface",
         signal_keys=[
             "aho.signal.emit_count",
             "aho.signal.error_count",
@@ -230,7 +230,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     BrickSpec(
         component_id="aho.council.audit",
         description=(
-            "Council auditor (llama3.2 + RAG + post-hoc filter) — disposition"
+            "Council auditor (llama3.2 + RAG + post-hoc filter) - disposition"
             " emit count, filter activity"
         ),
         signal_keys=[
@@ -248,7 +248,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     ),
     BrickSpec(
         component_id="aho.council.triage",
-        description="Council triage (nemotron) — rubric classification",
+        description="Council triage (nemotron) - rubric classification",
         signal_keys=[
             "aho.council.triage.invocation_count",
             "aho.council.triage.malformed_count",
@@ -264,7 +264,7 @@ _BRICK_SPECS: List[BrickSpec] = [
     BrickSpec(
         component_id="aho.council.embed+aho.rag",
         description=(
-            "Embedding + RAG retrieval — ChromaDB query liveness, audit"
+            "Embedding + RAG retrieval - ChromaDB query liveness, audit"
             " enrichment retrieval count"
         ),
         signal_keys=[
@@ -282,7 +282,7 @@ _BRICK_SPECS: List[BrickSpec] = [
 
 
 def brick_specs() -> List[BrickSpec]:
-    """Canonical ordered list of brick specs. Read-only — callers must not
+    """Canonical ordered list of brick specs. Read-only - callers must not
     mutate the returned list (it shares state with the module-level
     constant)."""
     return list(_BRICK_SPECS)
@@ -320,7 +320,7 @@ def evaluate_all(signal_state: Dict[str, Any]) -> List[BrickState]:
 
 
 # ---------------------------------------------------------------------------
-# Synthetic state fixtures — used by tests, probes, and dashboards that
+# Synthetic state fixtures - used by tests, probes, and dashboards that
 # need to demonstrate brick rendering without a live OTEL collector.
 # ---------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-"""W4 D5 — materiality comparison surface acceptance tests.
+"""W4 D5 - materiality comparison surface acceptance tests.
 
 Verifies:
   - Baseline reconstruction from 0.2.16 audits produces non-pathological
@@ -103,11 +103,11 @@ def test_extract_carry_forward_resolution_handles_missing_path(tmp_path):
 def test_extract_carry_forward_resolution_counts_closed_entries(tmp_path):
     p = tmp_path / "carry-forwards-x.md"
     p.write_text(
-        "- **F-X-001 — closed in W2**: detail here\n"
-        "- **F-X-002 — open**: detail\n"
-        "- **F-X-003 — resolved by drafter**: detail\n"
-        "- **AF002 — closed**: detail\n"
-        "- **AF003 — closing per W3 close note**: detail\n"
+        "- **F-X-001 - closed in W2**: detail here\n"
+        "- **F-X-002 - open**: detail\n"
+        "- **F-X-003 - resolved by drafter**: detail\n"
+        "- **AF002 - closed**: detail\n"
+        "- **AF003 - closing per W3 close note**: detail\n"
     )
     n = extract_carry_forward_resolution_count(p)
     assert n == 3, (

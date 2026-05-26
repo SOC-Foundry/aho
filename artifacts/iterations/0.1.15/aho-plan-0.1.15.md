@@ -1,4 +1,4 @@
-# aho 0.1.15 — Plan
+# aho 0.1.15 - Plan
 
 **Phase:** 0 | **Iteration:** 0.1.15 | **run_type:** mixed
 **Primary:** Gemini CLI (W0–W3) | **Closer:** Claude Code (W4)
@@ -15,9 +15,9 @@ tmux new-session -d -s aho-0.1.15 -c ~/dev/projects/aho
 tmux send-keys -t aho-0.1.15 'cd ~/dev/projects/aho; set -x AHO_EXECUTOR gemini-cli; gemini --yolo' Enter
 ```
 
-## W0 — Report repair + hygiene + charter rewrite
+## W0 - Report repair + hygiene + charter rewrite
 
-### Part A — Mechanical report builder
+### Part A - Mechanical report builder
 
 Create `src/aho/feedback/report_builder.py`:
 
@@ -27,7 +27,7 @@ mkdir -p src/aho/feedback
 
 Module signature:
 - `build_report(iteration: str, project_root: Path = None) -> Path`
-- Reads `.aho-checkpoint.json`, `data/aho_event_log.jsonl`, postflight result cache, `artifacts/harness/components.yaml` (gracefully empty if absent — populated in W1).
+- Reads `.aho-checkpoint.json`, `data/aho_event_log.jsonl`, postflight result cache, `artifacts/harness/components.yaml` (gracefully empty if absent - populated in W1).
 - Emits `artifacts/iterations/{iteration}/aho-report-{iteration}.md` with sections:
   1. Header (iteration, phase, run_type, generated timestamp, status)
   2. Executive Summary (mechanical: 3–5 sentences derived from workstream pass/fail counts + postflight summary)
@@ -41,9 +41,9 @@ Module signature:
 
 Wire into `src/aho/cli.py` close sequence: replace prior Qwen-first report generation with mechanical-first, Qwen-commentary-second.
 
-Test: `artifacts/tests/test_report_builder.py` with 0.1.14 fixture data — assert 8 sections present, no Qwen call required.
+Test: `artifacts/tests/test_report_builder.py` with 0.1.14 fixture data - assert 8 sections present, no Qwen call required.
 
-### Part B — Hygiene
+### Part B - Hygiene
 
 ```fish
 # MANIFEST refresh
@@ -78,7 +78,7 @@ rg "iaomw" data/gotcha_archive.json data/script_registry.json
 # replace any hits with ahomw
 ```
 
-CHANGELOG.md rewrite — full file replacement with:
+CHANGELOG.md rewrite - full file replacement with:
 - Header `# aho changelog`
 - Entries for 0.1.15, 0.1.14, 0.1.13, 0.1.12, 0.1.11, 0.1.10, 0.1.9 (each with theme + key changes from build logs)
 - Restored 0.1.0-alpha entry with original `iaomw` references intact (historical accuracy)
@@ -88,7 +88,7 @@ Create `src/aho/postflight/changelog_current.py`:
 - FAIL if CHANGELOG.md does not contain entry for current iteration
 - Wire into close sequence
 
-### Part C — Phase 0 charter rewrite
+### Part C - Phase 0 charter rewrite
 
 ```fish
 mv artifacts/phase-charters/iao-phase-0.md artifacts/phase-charters/iao-phase-0-historical.md
@@ -102,11 +102,11 @@ Create `artifacts/phase-charters/aho-phase-0.md`:
 - Iteration roadmap table 0.1.15 through 0.18.x → Phase 1
 - Charter revision history
 
-Add `aho-phase-0.md` to canonical artifacts list — seven files total.
+Add `aho-phase-0.md` to canonical artifacts list - seven files total.
 
 **W0 Gate:** `python -m pytest artifacts/tests/test_report_builder.py -v` green; `aho doctor` shows manifest_current ok; CHANGELOG.md contains 0.1.15 entry; `artifacts/phase-charters/aho-phase-0.md` exists with version 0.1.15 header.
 
-## W1 — Component manifest system
+## W1 - Component manifest system
 
 ```fish
 mkdir -p src/aho/components artifacts/harness
@@ -155,18 +155,18 @@ components:
 Auto-populate the rest from MANIFEST.json walk. Gemini: read MANIFEST.json, generate one entry per file with kind=python_module, status=active, owner=soc-foundry, path from manifest. Append to components.yaml under the explicit entries.
 
 Create `src/aho/components/manifest.py`:
-- `load_components() -> List[Component]` — parse YAML
-- `attribute_workload(events: List[dict]) -> Dict[str, float]` — count events per source_agent / target, normalize to percentages
-- `render_section() -> str` — markdown table for §23 + run report
+- `load_components() -> List[Component]` - parse YAML
+- `attribute_workload(events: List[dict]) -> Dict[str, float]` - count events per source_agent / target, normalize to percentages
+- `render_section() -> str` - markdown table for §23 + run report
 
 Create `src/aho/components/__init__.py` exporting public API.
 
 Add `components` subcommand to `src/aho/cli.py`:
-- `aho components list` — table of all
-- `aho components list --status stub` — filter
-- `aho components attribution` — workload from event log
+- `aho components list` - table of all
+- `aho components list --status stub` - filter
+- `aho components attribution` - workload from event log
 
-Add §23 to bundle spec — Gemini: locate bundle spec definition (likely `src/aho/bundle/__init__.py` or `src/aho/bundle/components_section.py`), add §23 section that calls `manifest.render_section()`.
+Add §23 to bundle spec - Gemini: locate bundle spec definition (likely `src/aho/bundle/__init__.py` or `src/aho/bundle/components_section.py`), add §23 section that calls `manifest.render_section()`.
 
 Wire §23 data into report_builder.py Component Activity section.
 
@@ -177,7 +177,7 @@ Test: `artifacts/tests/test_components_manifest.py`:
 
 **W1 Gate:** `aho components list` shows openclaw, nemoclaw, telegram with status=stub; bundle includes §23; report includes Component Activity section.
 
-## W2 — OpenTelemetry instrumentation
+## W2 - OpenTelemetry instrumentation
 
 ```fish
 pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp --break-system-packages
@@ -237,7 +237,7 @@ Test: `artifacts/tests/test_logger_otel.py`:
 
 **W2 Gate:** `set -x AHO_OTEL_ENABLED 1; bin/aho-otel-up; python -c "from aho.logger import log_event; log_event(event_type='smoke', source_agent='test')"` produces visible span in Jaeger UI at localhost:16686. JSONL output unchanged.
 
-## W3 — /app Flutter scaffold
+## W3 - /app Flutter scaffold
 
 Capability check first:
 ```fish
@@ -267,7 +267,7 @@ class IterationTimelinePage extends StatelessWidget {
   const IterationTimelinePage({super.key});
   @override
   Widget build(BuildContext context) => const Scaffold(
-    body: Center(child: Text('Iteration Timeline — 0.1.16+ wiring pending')),
+    body: Center(child: Text('Iteration Timeline - 0.1.16+ wiring pending')),
   );
 }
 ```
@@ -303,7 +303,7 @@ Update doctor sequence: remove build_gatekeeper, add app_build_check. Refresh MA
 
 **W3 Gate:** `app/build/web/index.html` exists; `aho doctor` shows app_build_check ok; build_gatekeeper no longer in doctor output.
 
-## W4 — Dogfood + close (Claude Code)
+## W4 - Dogfood + close (Claude Code)
 
 Handoff: checkpoint at `current_workstream=W4`, `executor=claude-code`, all W0–W3 = pass.
 
@@ -313,15 +313,15 @@ tmux send-keys -t aho-0.1.15-close 'claude --dangerously-skip-permissions' Enter
 ```
 
 Close sequence:
-1. `python -m pytest artifacts/tests/ -v` — all green (target ~75 tests with new W0/W1/W2/W3 additions)
-2. `aho doctor` — all gates green including new `manifest_current`, `changelog_current`, `app_build_check`
+1. `python -m pytest artifacts/tests/ -v` - all green (target ~75 tests with new W0/W1/W2/W3 additions)
+2. `aho doctor` - all gates green including new `manifest_current`, `changelog_current`, `app_build_check`
 3. Verify components.yaml loads, `aho components list` shows openclaw/nemoclaw/telegram
 4. Bundle generation with new §23
 5. Mechanical report builder produces structured `aho-report-0.1.15.md`
 6. Build log stub generator fires (Gemini won't have authored manual log)
 7. Populate `aho-run-0.1.15.md` with workstream summary + Component Activity section + empty Kyle's Notes
 8. Final checkpoint: `status=closed`, `closed_at=<timestamp>`
-9. Notify stdout `[CLOSE COMPLETE] aho 0.1.15 W4 — ready for Kyle sign-off`
+9. Notify stdout `[CLOSE COMPLETE] aho 0.1.15 W4 - ready for Kyle sign-off`
 
 ## Capability gaps expected
 

@@ -1,4 +1,4 @@
-# aho 0.2.2 — Plan
+# aho 0.2.2 - Plan
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 2 | **run_type:** mixed
 **Agent:** Claude Code single-agent throughout
@@ -17,7 +17,7 @@ tmux send-keys -t aho-0.2.2 'cd ~/dev/projects/aho; claude --dangerously-skip-pe
 tmux attach -t aho-0.2.2
 ```
 
-## W0 — Carryover hygiene
+## W0 - Carryover hygiene
 
 ```fish
 sed -i 's|\*\*Version:\*\* 0\.2\.1|**Version:** 0.2.2|' artifacts/harness/base.md
@@ -74,7 +74,7 @@ Run close with `AHO_EVAL_DEBUG=1` and document the cause in 0.2.2 Kyle's Notes.
 python -m pytest artifacts/tests/ -x
 ```
 
-## W1 — OpenClaw global daemon
+## W1 - OpenClaw global daemon
 
 Read `src/aho/agents/openclaw.py`. Replace stub `OpenClawSession` with real implementation. Key methods:
 
@@ -159,9 +159,9 @@ bin/aho-openclaw chat "say hello in 5 words"
 
 **Update components.yaml:** openclaw `status: active`, remove `next_iteration`.
 
-**Test:** `artifacts/tests/test_openclaw_real.py` — session creation, chat round-trip, execute_code with subprocess, cleanup.
+**Test:** `artifacts/tests/test_openclaw_real.py` - session creation, chat round-trip, execute_code with subprocess, cleanup.
 
-## W2 — NemoClaw global daemon
+## W2 - NemoClaw global daemon
 
 Same pattern as W1. Real `NemoClaw` class wraps `NemotronClient` for routing + session pool dict for OpenClaw instances:
 
@@ -187,9 +187,9 @@ Systemd unit `aho-nemoclaw.service` with `After=aho-openclaw.service`. Wrapper `
 
 **Update components.yaml:** nemoclaw `status: active`.
 
-**Test:** `test_nemoclaw_real.py` — routing, dispatch, session reuse on second call.
+**Test:** `test_nemoclaw_real.py` - routing, dispatch, session reuse on second call.
 
-## W3 — Telegram bridge real implementation
+## W3 - Telegram bridge real implementation
 
 **Capability gap check:**
 ```fish
@@ -261,7 +261,7 @@ end
 
 **Test:** `test_telegram_real.py` with mocked `requests.post`.
 
-## W4 — Doctor + install integration
+## W4 - Doctor + install integration
 
 Add to `src/aho/doctor.py` quick checks:
 ```python
@@ -296,7 +296,7 @@ end
 
 Update `artifacts/harness/global-deployment.md` capability gap inventory with Telegram bot creation step. Update `artifacts/harness/p3-deployment-runbook.md`.
 
-## W5 — Dogfood + close
+## W5 - Dogfood + close
 
 **End-to-end smoke:**
 ```fish

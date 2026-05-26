@@ -11,10 +11,10 @@
 
 ### DESIGN (aho-design-0.2.2.md)
 ```markdown
-# aho 0.2.2 — Design
+# aho 0.2.2 - Design
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 2
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 **Run Type:** mixed | **Wall clock:** ~2-3 hours | **Agent:** Claude Code
 
 ## Context
@@ -40,21 +40,21 @@
 
 ## Workstreams
 
-### W0 — Carryover hygiene
+### W0 - Carryover hygiene
 - Bump versions, backup, .aho.json/.aho-checkpoint.json
 - Bump 8 canonical artifacts to 0.2.2
-- Fix `build_log_complete.py` design path resolution (second attempt — confirm against the new artifacts/iterations layout)
+- Fix `build_log_complete.py` design path resolution (second attempt - confirm against the new artifacts/iterations layout)
 - Fix `report_builder.py` workstream parser to compute wall clock from checkpoint `started_at`/`closed_at` per workstream OR from event log first/last event timestamps when checkpoint lacks per-workstream timing
-- Investigate `build_log_synthesis` evaluator warn/reject loop — likely the synthesis evaluator firing repeatedly during close. Add log statement to identify the cause; fix or document as known noise.
-- Update `components.yaml`: openclaw, nemoclaw, telegram all bump `next_iteration: "0.2.2"` (in flight) — they'll flip to `active` at end of W1/W2/W3 respectively
+- Investigate `build_log_synthesis` evaluator warn/reject loop - likely the synthesis evaluator firing repeatedly during close. Add log statement to identify the cause; fix or document as known noise.
+- Update `components.yaml`: openclaw, nemoclaw, telegram all bump `next_iteration: "0.2.2"` (in flight) - they'll flip to `active` at end of W1/W2/W3 respectively
 - MANIFEST refresh
 
-### W1 — OpenClaw global daemon
+### W1 - OpenClaw global daemon
 **Real implementation:**
-- `OpenClawSession.__init__` — generates UUID, creates `/tmp/openclaw-{uuid}/` workspace, initializes conversation history list, opens persistent connection to Ollama via QwenClient
-- `OpenClawSession.chat(message)` — appends to history, sends to Qwen with full conversation context, appends response, returns text
-- `OpenClawSession.execute_code(code, language)` — writes code to workspace, subprocess.run with timeout=30s, captures stdout/stderr/exit_code, logs OTEL span with attributes
-- `OpenClawSession.cleanup()` — removes workspace, closes connection
+- `OpenClawSession.__init__` - generates UUID, creates `/tmp/openclaw-{uuid}/` workspace, initializes conversation history list, opens persistent connection to Ollama via QwenClient
+- `OpenClawSession.chat(message)` - appends to history, sends to Qwen with full conversation context, appends response, returns text
+- `OpenClawSession.execute_code(code, language)` - writes code to workspace, subprocess.run with timeout=30s, captures stdout/stderr/exit_code, logs OTEL span with attributes
+- `OpenClawSession.cleanup()` - removes workspace, closes connection
 - All methods continue to emit OTEL spans (instrumentation already landed in 0.2.1 W5)
 
 **Systemd service:**
@@ -64,21 +64,21 @@
 - After=network.target ollama.service
 
 **Wrapper:**
-- `bin/aho-openclaw` — fish wrapper that connects to the socket and dispatches commands
-- `bin/aho-openclaw chat "message"` — single message
-- `bin/aho-openclaw execute "code"` — code execution
-- `bin/aho-openclaw status` — session count, uptime
+- `bin/aho-openclaw` - fish wrapper that connects to the socket and dispatches commands
+- `bin/aho-openclaw chat "message"` - single message
+- `bin/aho-openclaw execute "code"` - code execution
+- `bin/aho-openclaw status` - session count, uptime
 
 **components.yaml:** openclaw status `stub` → `active`, remove `next_iteration`, update notes to "global daemon, systemd user service"
 
-**Tests:** `artifacts/tests/test_openclaw_real.py` — session creation, chat round-trip, code execution, cleanup
+**Tests:** `artifacts/tests/test_openclaw_real.py` - session creation, chat round-trip, code execution, cleanup
 
-### W2 — NemoClaw global daemon
+### W2 - NemoClaw global daemon
 **Real implementation:**
-- `NemoClaw.__init__` — initializes Nemotron classifier, opens session pool dict, loads role registry
-- `NemoClaw.route(task)` — sends task description to Nemotron with role list, returns classified role
-- `NemoClaw.dispatch(task)` — classifies via route(), gets-or-creates OpenClaw session for that role, dispatches via session.chat(), returns response
-- `NemoClaw.session_pool` — dict keyed by role name, lazy-instantiated, capped at 5 concurrent sessions
+- `NemoClaw.__init__` - initializes Nemotron classifier, opens session pool dict, loads role registry
+- `NemoClaw.route(task)` - sends task description to Nemotron with role list, returns classified role
+- `NemoClaw.dispatch(task)` - classifies via route(), gets-or-creates OpenClaw session for that role, dispatches via session.chat(), returns response
+- `NemoClaw.session_pool` - dict keyed by role name, lazy-instantiated, capped at 5 concurrent sessions
 - All methods emit OTEL spans
 
 **Systemd service:**
@@ -87,24 +87,24 @@
 - After=network.target ollama.service aho-openclaw.service
 
 **Wrapper:**
-- `bin/aho-nemoclaw dispatch "task description"` — fire-and-forget dispatch
-- `bin/aho-nemoclaw status` — pool state, route history
+- `bin/aho-nemoclaw dispatch "task description"` - fire-and-forget dispatch
+- `bin/aho-nemoclaw status` - pool state, route history
 
 **components.yaml:** nemoclaw status `stub` → `active`
 
-**Tests:** `artifacts/tests/test_nemoclaw_real.py` — routing, dispatch, session reuse
+**Tests:** `artifacts/tests/test_nemoclaw_real.py` - routing, dispatch, session reuse
 
-### W3 — Telegram bridge real implementation
+### W3 - Telegram bridge real implementation
 **Secrets:**
-- New age-encrypted secret `telegram_bot_token` via `aho secret set telegram_bot_token <token>` — capability gap if Kyle hasn't created the bot yet
+- New age-encrypted secret `telegram_bot_token` via `aho secret set telegram_bot_token <token>` - capability gap if Kyle hasn't created the bot yet
 - New age-encrypted secret `telegram_chat_id` for default destination
 - Loaded at daemon startup via existing secrets backend
 
 **Real implementation:**
-- `aho.telegram.notifications.send(message, priority="normal", chat_id=None)` — POST to `https://api.telegram.org/bot{token}/sendMessage`, handles 429 rate limiting with backoff, logs OTEL span
-- `aho.telegram.notifications.send_capability_gap(gap_description)` — formatted alert with `[CAPABILITY GAP]` prefix
-- `aho.telegram.notifications.send_close_complete(iteration, status)` — iteration close notification
-- Send-only — no receive loop in this run
+- `aho.telegram.notifications.send(message, priority="normal", chat_id=None)` - POST to `https://api.telegram.org/bot{token}/sendMessage`, handles 429 rate limiting with backoff, logs OTEL span
+- `aho.telegram.notifications.send_capability_gap(gap_description)` - formatted alert with `[CAPABILITY GAP]` prefix
+- `aho.telegram.notifications.send_close_complete(iteration, status)` - iteration close notification
+- Send-only - no receive loop in this run
 
 **Systemd service:**
 - `~/.config/systemd/user/aho-telegram.service`
@@ -112,26 +112,26 @@
 - After=network.target
 
 **Wrapper:**
-- `bin/aho-telegram send "message"` — manual send
-- `bin/aho-telegram test` — sends a test message to verify wiring
-- `bin/aho-telegram status` — service state, last send timestamp
+- `bin/aho-telegram send "message"` - manual send
+- `bin/aho-telegram test` - sends a test message to verify wiring
+- `bin/aho-telegram status` - service state, last send timestamp
 
 **Wire into close sequence:** `src/aho/cli.py` close subcommand calls `telegram.send_close_complete()` after checkpoint write (best-effort, never blocks close on telegram failure)
 
 **components.yaml:** telegram status `stub` → `active`
 
-**Tests:** `artifacts/tests/test_telegram_real.py` — mock requests, verify payload shape, verify graceful failure on missing token
+**Tests:** `artifacts/tests/test_telegram_real.py` - mock requests, verify payload shape, verify graceful failure on missing token
 
 **Capability gap expected:** Kyle creates Telegram bot via @BotFather, gets token, runs `aho secret set telegram_bot_token <token>`, runs `aho secret set telegram_chat_id <id>`. Agent halts cleanly if secrets absent.
 
-### W4 — Doctor + install integration
+### W4 - Doctor + install integration
 - `src/aho/doctor.py` adds checks: `aho-openclaw.service active`, `aho-nemoclaw.service active`, `aho-telegram.service active`, `telegram_bot_token secret present`
 - `bin/aho-install` generates and installs all three new systemd unit files, runs `systemctl --user daemon-reload`, enables --now all three
 - `bin/aho-uninstall` stops + disables + removes all three units
 - `artifacts/harness/global-deployment.md` updated: 4 user services now (collector + 3 daemons), capability gap inventory updated with telegram bot creation
 - `artifacts/harness/p3-deployment-runbook.md` updated with telegram setup steps
 
-### W5 — Dogfood + close
+### W5 - Dogfood + close
 **End-to-end smoke:**
 ```fish
 bin/aho-nemoclaw dispatch "summarize the eleven pillars in 3 sentences"
@@ -178,7 +178,7 @@ The deferral debt that's been carried since iao 0.1.4 is fully cleared. aho has 
 
 ### PLAN (aho-plan-0.2.2.md)
 ```markdown
-# aho 0.2.2 — Plan
+# aho 0.2.2 - Plan
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 2 | **run_type:** mixed
 **Agent:** Claude Code single-agent throughout
@@ -197,7 +197,7 @@ tmux send-keys -t aho-0.2.2 'cd ~/dev/projects/aho; claude --dangerously-skip-pe
 tmux attach -t aho-0.2.2
 ```
 
-## W0 — Carryover hygiene
+## W0 - Carryover hygiene
 
 ```fish
 sed -i 's|\*\*Version:\*\* 0\.2\.1|**Version:** 0.2.2|' artifacts/harness/base.md
@@ -254,7 +254,7 @@ Run close with `AHO_EVAL_DEBUG=1` and document the cause in 0.2.2 Kyle's Notes.
 python -m pytest artifacts/tests/ -x
 ```
 
-## W1 — OpenClaw global daemon
+## W1 - OpenClaw global daemon
 
 Read `src/aho/agents/openclaw.py`. Replace stub `OpenClawSession` with real implementation. Key methods:
 
@@ -339,9 +339,9 @@ bin/aho-openclaw chat "say hello in 5 words"
 
 **Update components.yaml:** openclaw `status: active`, remove `next_iteration`.
 
-**Test:** `artifacts/tests/test_openclaw_real.py` — session creation, chat round-trip, execute_code with subprocess, cleanup.
+**Test:** `artifacts/tests/test_openclaw_real.py` - session creation, chat round-trip, execute_code with subprocess, cleanup.
 
-## W2 — NemoClaw global daemon
+## W2 - NemoClaw global daemon
 
 Same pattern as W1. Real `NemoClaw` class wraps `NemotronClient` for routing + session pool dict for OpenClaw instances:
 
@@ -367,9 +367,9 @@ Systemd unit `aho-nemoclaw.service` with `After=aho-openclaw.service`. Wrapper `
 
 **Update components.yaml:** nemoclaw `status: active`.
 
-**Test:** `test_nemoclaw_real.py` — routing, dispatch, session reuse on second call.
+**Test:** `test_nemoclaw_real.py` - routing, dispatch, session reuse on second call.
 
-## W3 — Telegram bridge real implementation
+## W3 - Telegram bridge real implementation
 
 **Capability gap check:**
 ```fish
@@ -441,7 +441,7 @@ end
 
 **Test:** `test_telegram_real.py` with mocked `requests.post`.
 
-## W4 — Doctor + install integration
+## W4 - Doctor + install integration
 
 Add to `src/aho/doctor.py` quick checks:
 ```python
@@ -476,7 +476,7 @@ end
 
 Update `artifacts/harness/global-deployment.md` capability gap inventory with Telegram bot creation step. Update `artifacts/harness/p3-deployment-runbook.md`.
 
-## W5 — Dogfood + close
+## W5 - Dogfood + close
 
 **End-to-end smoke:**
 ```fish
@@ -536,24 +536,24 @@ KT completed 0.2.2: openclaw + nemoclaw + telegram graduated from stub to active
 
 ### BUILD LOG (MANUAL) (aho-build-log-0.2.2.md)
 ```markdown
-# aho 0.2.2 — Build Log
+# aho 0.2.2 - Build Log
 
-## W0 — Carryover hygiene
+## W0 - Carryover hygiene
 Version bumps to 0.2.2 across 8 canonical artifacts. components.yaml next_iteration bumped for openclaw/nemoclaw/telegram. build_log_complete multi-candidate path fix. report_builder wall clock per-workstream from event log. Evaluator AHO_EVAL_DEBUG logging added. CLI version bumped. 87 tests pass.
 
-## W1 — OpenClaw global daemon
+## W1 - OpenClaw global daemon
 Real --serve mode with Unix socket server at ~/.local/share/aho/openclaw.sock. Session pool (5 max), JSON protocol (chat/execute/status/close). Error handling for Qwen degenerate output. Systemd user service aho-openclaw.service. bin/aho-openclaw wrapper using Python socket client. templates/systemd/ directory created. 7 new tests. Status flipped stub -> active.
 
-## W2 — NemoClaw global daemon
+## W2 - NemoClaw global daemon
 Real --serve mode with Unix socket at ~/.local/share/aho/nemoclaw.sock. Global NemoClawOrchestrator with 3-role session pool (assistant/code_runner/reviewer). Nemotron classification for task routing. JSON protocol (dispatch/route/status). Systemd user service aho-nemoclaw.service. bin/aho-nemoclaw wrapper. 6 new tests. Status flipped stub -> active.
 
-## W3 — Telegram bridge real implementation
+## W3 - Telegram bridge real implementation
 Rewrote notifications.py with project-scoped secrets via get_secret(PROJECT, name). send/send_capability_gap/send_close_complete functions. 429 rate limit retry with backoff. Unix socket daemon mode. Systemd user service aho-telegram.service. bin/aho-telegram wrapper (send/test/status/gap). Live smoke test delivered. 8 new tests. Status flipped stub -> active.
 
-## W4 — Doctor + install integration
-Added _check_aho_daemons() to doctor.py — checks aho-openclaw, aho-nemoclaw, aho-telegram systemd user services. Updated bin/aho-install to copy templates/systemd/*.template and enable --now all 3 services. bin/aho-uninstall already handles aho-* glob. Doctor preflight: all 15 checks green.
+## W4 - Doctor + install integration
+Added _check_aho_daemons() to doctor.py - checks aho-openclaw, aho-nemoclaw, aho-telegram systemd user services. Updated bin/aho-install to copy templates/systemd/*.template and enable --now all 3 services. bin/aho-uninstall already handles aho-* glob. Doctor preflight: all 15 checks green.
 
-## W5 — Dogfood + close
+## W5 - Dogfood + close
 End-to-end smoke: nemoclaw dispatch -> route -> openclaw chat -> qwen generate -> telegram send. Trace count +5 (26->31). All 5 span names verified in traces.jsonl. 108 tests pass (target 87+). 0 stubs in components.yaml. Close artifacts generated. Telegram close-complete notification sent.
 ```
 
@@ -561,7 +561,7 @@ End-to-end smoke: nemoclaw dispatch -> route -> openclaw chat -> qwen generate -
 
 ### REPORT (aho-report-0.2.2.md)
 ```markdown
-# Report — aho 0.2.2
+# Report - aho 0.2.2
 
 **Generated:** 2026-04-11T16:08:31Z
 **Iteration:** 0.2.2
@@ -692,7 +692,7 @@ install.fish: install.fish syntax OK
 Artifacts: All Qwen-generated artifacts present |
 | manifest_current | fail | stale hashes: src/aho/agents/nemoclaw.py, src/aho/agents/openclaw.py, src/aho/agents/roles/assistant.py |
 | pillars_present | ok | Eleven pillars present in design and README |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | ok | README updated during this iteration (mtime: 2026-04-11T15:14:16.435041+00:00) |
 | run_complete | deferred | Kyle's notes section not yet filled in |
 | run_quality | ok | Run file passes quality gate |
@@ -740,20 +740,20 @@ From 0.2.1 Kyle's Notes:
 - 8 canonical artifacts now version-tracked
 - soc-foundry/aho second commit live
 
-**The deferral debt is still in components.yaml.** openclaw, nemoclaw, telegram are still `stub` with `next_iteration: 0.1.16` (stale — should have been bumped to 0.2.2 in 0.2.1 but missed). 0.2.2 is the run where they actually graduate from stub to active. The instrumentation pass in 0.2.1 W5 wired spans into them — now 0.2.2 makes them functional.
+**The deferral debt is still in components.yaml.** openclaw, nemoclaw, telegram are still `stub` with `next_iteration: 0.1.16` (stale - should have been bumped to 0.2.2 in 0.2.1 but missed). 0.2.2 is the run where they actually graduate from stub to active. The instrumentation pass in 0.2.1 W5 wired spans into them - now 0.2.2 makes them functional.
 
 **Today's status:** ~7:35am PST. Three runs shipped this morning (0.1.15, 0.1.16 iteration 1 graduation, 0.2.1). Family time mid-afternoon. 6-11pm evening block available. P3 ship deadline = end of today. Alex ship deadline = Sunday. Fly Sunday.
 
 **Phase 0 exit roadmap update (3 iterations + ship gauntlet):**
-- **0.2.2** — openclaw/nemoclaw global daemons + telegram bridge real implementation + 3 stubs flip to active (today, ~2-3 hours)
-- **0.2.3** — MCP server fleet (firebase-tools, context7, firecrawl, playwright, flutter, modelcontextprotocol/server-*) (today evening or tomorrow morning)
-- **0.2.4** — P3 clone attempt + smoke test + capability gap capture (tomorrow)
-- **0.2.5+** — Whatever P3 surfaces, fix in tight runs
+- **0.2.2** - openclaw/nemoclaw global daemons + telegram bridge real implementation + 3 stubs flip to active (today, ~2-3 hours)
+- **0.2.3** - MCP server fleet (firebase-tools, context7, firecrawl, playwright, flutter, modelcontextprotocol/server-*) (today evening or tomorrow morning)
+- **0.2.4** - P3 clone attempt + smoke test + capability gap capture (tomorrow)
+- **0.2.5+** - Whatever P3 surfaces, fix in tight runs
 - **Iteration 2 graduates** when P3 runs an aho iteration end-to-end
-- **0.3.x** — Alex demo prep, claw3d, novice operability validation (Sunday SF prep)
+- **0.3.x** - Alex demo prep, claw3d, novice operability validation (Sunday SF prep)
 - **Phase 0 graduates** when iteration 3 closes clean
 
-**Event log audit clean.** The W6 smoke spans contain only `test prompt`, `hello`, `test task`, `print('hello')` — no credentials, no secrets, no API keys. Telemetry design records `input_summary` (truncated/shape) not full prompts, which is the right pattern. Confirmed safe.
+**Event log audit clean.** The W6 smoke spans contain only `test prompt`, `hello`, `test task`, `print('hello')` - no credentials, no secrets, no API keys. Telemetry design records `input_summary` (truncated/shape) not full prompts, which is the right pattern. Confirmed safe.
 
 **First commit history note.** `data/chroma/` and `data/aho_event_log.jsonl` exist in commit `ac0f66b` history but are gone from HEAD. ChromaDB binaries are noise. Event log is shape-only smoke data. No security action required. Future `git filter-repo` cleanup is a Phase 1 housekeeping item, not a Phase 0 blocker.
 
@@ -770,7 +770,7 @@ From 0.2.1 Kyle's Notes:
 
 ### RUN REPORT (aho-run-0.2.2.md)
 ```markdown
-# Run File — aho 0.2.2
+# Run File - aho 0.2.2
 
 **Generated:** 2026-04-11T16:08:31Z
 **Iteration:** 0.2.2
@@ -881,7 +881,7 @@ The report includes a workstream summary, a collection of technical or procedura
 
 ## Agent Questions for Kyle
 
-(none — no questions surfaced during execution)
+(none - no questions surfaced during execution)
 
 ---
 
@@ -896,14 +896,14 @@ The report includes a workstream summary, a collection of technical or procedura
 
 1. **Delegate everything delegable.** The paid orchestrator is the most expensive resource in the system. Any task that can run on a free local model must run on a free local model. Drafting, classification, retrieval, validation, grading, and routing all belong to the local fleet. The orchestrator's minutes are spent on judgment, scope, and novelty.
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 5. **Three octets, three meanings: phase, iteration, run.** Phase is strategic scope. Iteration is tactical scope. Run is execution instance. Every artifact carries the full phase.iteration.run label.
 6. **Transitions are durable.** Moving between phases, iterations, or runs writes state to a durable artifact before the transition is considered complete. Every gate is a write point. No implicit state.
 7. **Generation and evaluation are separate roles.** The model that produced an artifact is never the model that grades it. Drafter and reviewer are different agents behind different wrappers with different prompts and ideally different underlying weights.
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
 ---
@@ -930,7 +930,7 @@ The report includes a workstream summary, a collection of technical or procedura
 # aho - Base Harness
 
 **Version:** 0.2.2
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -942,7 +942,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -954,9 +954,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -1057,9 +1057,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
+aho treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
 **Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.2** | **Status: Global Deployment + Full Telemetry**
 
@@ -1093,13 +1093,13 @@ graph BT
 
 aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 9).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
 
 ---
 
@@ -1137,7 +1137,7 @@ aho/
 
 ## Phase 0 Status
 
-**Phase:** 0 — Clone-to-Deploy
+**Phase:** 0 - Clone-to-Deploy
 **Charter:** artifacts/phase-charters/aho-phase-0.md
 
 Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
@@ -1162,7 +1162,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.2 — aho.run — Phase 0 — April 2026*
+*aho v0.2.2 - aho.run - Phase 0 - April 2026*
 ```
 
 ## §8. CHANGELOG
@@ -1171,9 +1171,9 @@ License to be determined before v0.6.0 release.
 ```markdown
 # aho changelog
 
-## [0.2.2] — 2026-04-11
+## [0.2.2] - 2026-04-11
 
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 
 - OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
 - NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
@@ -1187,29 +1187,29 @@ License to be determined before v0.6.0 release.
 - `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
 - 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
 
-## [0.2.1] — 2026-04-11
+## [0.2.1] - 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
 
-- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
-- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
-- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Global deployment architecture (`global-deployment.md`) - hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` - idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` - clean removal with safety contract (never touches data/artifacts/git)
 - Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
-- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL always-on by default - opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
 - OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
-- `bin/aho-models-status` — Ollama fleet status wrapper
-- `bin/aho-otel-status` — collector service + trace status
+- `bin/aho-models-status` - Ollama fleet status wrapper
+- `bin/aho-otel-status` - collector service + trace status
 - Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
 - `build_log_complete.py` design path fix using `get_artifacts_root()`
 - 8 canonical artifacts (added global-deployment.md)
 - 87 tests passing (7 new OTEL instrumentation tests)
 
-## [0.1.16] — 2026-04-11
+## [0.1.16] - 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation
 
 - Close sequence refactored: tests → bundle → report → run file → postflight → .aho.json → checkpoint
-- Canonical artifacts gate (`canonical_artifacts_current.py`) — 7 versioned artifacts checked at close
+- Canonical artifacts gate (`canonical_artifacts_current.py`) - 7 versioned artifacts checked at close
 - Run file wired through report_builder for agent attribution and component activity section
 - `aho_json.py` helper for `last_completed_iteration` auto-update
 - Iteration 1 graduation ceremony: close artifact, iteration 2 charter, phase 0 charter update
@@ -1219,11 +1219,11 @@ License to be determined before v0.6.0 release.
 - pyproject.toml: version 0.1.16, project URLs added
 - `_iao_data()` bug fixed in components attribution CLI
 
-## [0.1.15] — 2026-04-11
+## [0.1.15] - 2026-04-11
 
 **Theme:** Foundation for Phase 0 exit
 
-- Mechanical report builder (`report_builder.py`) — ground-truth-driven, Qwen as commentary only
+- Mechanical report builder (`report_builder.py`) - ground-truth-driven, Qwen as commentary only
 - Component manifest system (`components.yaml`, `aho components` CLI, §23 bundle section)
 - OpenTelemetry dual emitter in `logger.py` (JSONL authoritative, OTEL additive)
 - Flutter `/app` scaffold with 5 placeholder pages
@@ -1232,7 +1232,7 @@ License to be determined before v0.6.0 release.
 - MANIFEST.json refresh with blake2b hashes
 - CHANGELOG.md restored with full iteration history
 
-## [0.1.14] — 2026-04-11
+## [0.1.14] - 2026-04-11
 
 **Theme:** Evaluator hardening + Qwen loop reliability
 
@@ -1242,7 +1242,7 @@ License to be determined before v0.6.0 release.
 - Seed extraction CLI (`aho iteration seed`)
 - Two-pass artifact generation for design and plan docs
 
-## [0.1.13] — 2026-04-10
+## [0.1.13] - 2026-04-10
 
 **Theme:** Folder consolidation + build log split
 
@@ -1252,7 +1252,7 @@ License to be determined before v0.6.0 release.
 - Graduation analysis via `aho iteration graduate`
 - Event log JSONL structured logging
 
-## [0.1.12] — 2026-04-10
+## [0.1.12] - 2026-04-10
 
 **Theme:** RAG archive + ChromaDB integration
 
@@ -1261,7 +1261,7 @@ License to be determined before v0.6.0 release.
 - GLM client integration alongside Qwen and Nemotron
 - Evaluator baseline reload fix (aho-G060)
 
-## [0.1.11] — 2026-04-10
+## [0.1.11] - 2026-04-10
 
 **Theme:** Agent roles + secret rotation
 
@@ -1270,7 +1270,7 @@ License to be determined before v0.6.0 release.
 - Age + OS keyring secret backends
 - Pipeline validation improvements
 
-## [0.1.10] — 2026-04-09
+## [0.1.10] - 2026-04-09
 
 **Theme:** Pipeline scaffolding + doctor levels
 
@@ -1279,7 +1279,7 @@ License to be determined before v0.6.0 release.
 - Postflight plugin system with dynamic module loading
 - Disk space and dependency checks
 
-## [0.1.9] — 2026-04-09
+## [0.1.9] - 2026-04-09
 
 **Theme:** IAO → AHO rename
 
@@ -1290,18 +1290,18 @@ License to be determined before v0.6.0 release.
 - Renamed gotcha code prefix ahomw-G* → aho-G*
 - Build log filename split: manual authoritative, Qwen synthesis to -synthesis suffix (ADR-042)
 
-## [0.1.0-alpha] — 2026-04-08
+## [0.1.0-alpha] - 2026-04-08
 
 First versioned release. Extracted from kjtcom POC project as iaomw (later renamed iao, then aho).
 
-- iaomw.paths — path-agnostic project root resolution
-- iaomw.registry — script and gotcha registry queries
-- iaomw.bundle — bundle generator with 10-item minimum spec
-- iaomw.compatibility — data-driven compatibility checker
-- iaomw.doctor — shared pre/post-flight health check module
-- iaomw.cli — CLI with project, init, status, check, push subcommands
-- iaomw.harness — two-harness alignment tool
-- pyproject.toml — pip-installable package
+- iaomw.paths - path-agnostic project root resolution
+- iaomw.registry - script and gotcha registry queries
+- iaomw.bundle - bundle generator with 10-item minimum spec
+- iaomw.compatibility - data-driven compatibility checker
+- iaomw.doctor - shared pre/post-flight health check module
+- iaomw.cli - CLI with project, init, status, check, push subcommands
+- iaomw.harness - two-harness alignment tool
+- pyproject.toml - pip-installable package
 - Linux + fish + Python 3.11+ targeted
 ```
 
@@ -1309,7 +1309,7 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — aho (Agentic Harness Orchestration) Phase 0
+# CLAUDE.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Claude Code executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -1349,14 +1349,14 @@ Split-agent model: Gemini CLI runs W0–W5 (bulk execution); you run W6 close (d
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. If closing a run: read the manual build log first (authoritative per ADR-042), synthesis second.
 
-## Gotcha Registry — Query First
+## Gotcha Registry - Query First
 
 Before any novel action, query the gotcha registry. Known Phase 0 gotchas include:
 - **aho-G001 (printf not heredoc):** Use `printf '...\n' > file` not heredocs in fish.
 - **aho-G022 (command ls):** Use `command ls` to strip color codes from agent output.
 - **aho-G060:** Evaluator baseline must reload per call, not at init (fixed 0.1.12).
 - **aho-G061:** Smoke instrumentation reads iteration from checkpoint at script start.
-- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` — leaks API keys.
+- **aho-Sec001:** Never `cat ~/.config/fish/config.fish` - leaks API keys.
 
 ## Sign-off Format
 
@@ -1364,7 +1364,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed; misses fold into the next run's design.
 
 ## What NOT to Do
 
@@ -1382,27 +1382,27 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 ## Close Sequence (W6 pattern)
 
 1. Full test suite: `python -m pytest artifacts/tests/ -v`
-2. `aho doctor` — all gates.
+2. `aho doctor` - all gates.
 3. Bundle: validate §1–§21 spec, §22 component checklist = 6.
 4. Postflight: `run_complete`, `run_quality`, `pillars_present`, `structural_gates`.
-5. Populate `aho-run-{iteration}.md` — workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
+5. Populate `aho-run-{iteration}.md` - workstream summary + agent questions + empty Kyle's Notes + unchecked sign-off.
 6. Generate `aho-bundle-{iteration}.md`.
 7. Write checkpoint state = closed. Notify Kyle.
 
 ## Communication Style
 
-Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout — no bashisms.
+Kyle is terse and direct. Match it. No preamble, no hedging, no apology loops. If something blocks you, state the block and the capability gap in one line. Fish shell throughout - no bashisms.
 
 ---
 
-*CLAUDE.md for aho Phase 0 — updated during 0.2.2 W0. Next rewrite: Phase 1 boundary.*
+*CLAUDE.md for aho Phase 0 - updated during 0.2.2 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §10. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# GEMINI.md — aho (Agentic Harness Orchestration) Phase 0
+# GEMINI.md - aho (Agentic Harness Orchestration) Phase 0
 
 **Scope:** Universal agent instructions for Gemini CLI executing aho Phase 0 iterations.
 **Applies to:** All runs within Phase 0 (0.1.x). Rewritten at phase boundaries.
@@ -1418,7 +1418,7 @@ Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux 
 
 You are Gemini CLI operating inside an aho iteration. You are the primary bulk executor for Phase 0 runs, handling workstreams W0 through W5 in the split-agent model. Claude Code handles W6 close. You execute workstreams defined by the run's plan doc. You do not design scope, invent amendments, or produce artifacts Kyle has not explicitly requested.
 
-You are launched with `gemini --yolo` which implies sandbox bypass — single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
+You are launched with `gemini --yolo` which implies sandbox bypass - single flag, no `--sandbox=none`. You operate inside a tmux session created by Kyle.
 
 ## The Eleven Pillars
 
@@ -1442,7 +1442,7 @@ You are launched with `gemini --yolo` which implies sandbox bypass — single fl
 4. Read `artifacts/harness/base.md` for Pillars and ADRs source of truth.
 5. Write first event to `data/aho_event_log.jsonl` marking workstream start.
 
-## Gotcha Registry — Phase 0 Critical List
+## Gotcha Registry - Phase 0 Critical List
 
 - **aho-G001 (printf not heredoc):** Fish heredocs break on nested quotes. Use `printf '...\n' > file`.
 - **aho-G022 (command ls):** Bare `ls` injects color escape codes into agent output. Use `command ls`.
@@ -1469,7 +1469,7 @@ Use `[x]` checked, `[ ]` unchecked. NEVER `[y]` / `[n]`.
 
 ## Octet Discipline
 
-`phase.iteration.run` — phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
+`phase.iteration.run` - phase is strategic, iteration is tactical workstream bundle, run is execution instance. **NO FOURTH OCTET EVER.** No `0.1.13.1`. No `0.1.99` throwaway dirs. Each run ships as designed.
 
 ## What NOT to Do
 
@@ -1503,7 +1503,7 @@ Kyle is terse and direct. Match it. No preamble. Fish shell only. No bashisms.
 
 ---
 
-*GEMINI.md for aho Phase 0 — updated during 0.2.2 W0. Next rewrite: Phase 1 boundary.*
+*GEMINI.md for aho Phase 0 - updated during 0.2.2 W0. Next rewrite: Phase 1 boundary.*
 ```
 
 ## §11. .aho.json

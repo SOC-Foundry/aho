@@ -1,4 +1,4 @@
-"""Orchestrator configuration — reads ~/.config/aho/orchestrator.json.
+"""Orchestrator configuration - reads ~/.config/aho/orchestrator.json.
 
 0.2.7 W5. Engine field is reserved metadata only (no behavior change).
 """

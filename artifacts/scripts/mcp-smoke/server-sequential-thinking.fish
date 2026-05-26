@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/server-sequential-thinking.fish — CLI health check for @modelcontextprotocol/server-sequential-thinking
+# mcp-smoke/server-sequential-thinking.fish - CLI health check for @modelcontextprotocol/server-sequential-thinking
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 
 set -l server_name "server-sequential-thinking"

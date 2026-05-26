@@ -1,4 +1,4 @@
-"""W5 D8 — self-audit with stabilized auditor (bootstrap test 6).
+"""W5 D8 - self-audit with stabilized auditor (bootstrap test 6).
 
 Runs `aho.council.audit` against the W5 acceptance archive itself with
 rag_enrichment=True and the W4 D1 deterministic post-hoc filter active.
@@ -59,7 +59,7 @@ def main() -> int:
         result = council_audit(
             artifact_text,
             contract=(
-                "W5 acceptance archive — ADR consolidation + repo-resident"
+                "W5 acceptance archive - ADR consolidation + repo-resident"
                 " component decomposition + repo-resident claw3d brick spec +"
                 " 0.2.17 retrospective + W5 self-audit. Auditor must"
                 " spot-check whether deliverables D1-D7 actually correspond"

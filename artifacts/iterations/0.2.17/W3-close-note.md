@@ -9,7 +9,7 @@ W3 audit archive sealed at
 `artifacts/iterations/0.2.17/audit/W3.json` with
 `disposition: "halt"` (llama self-audit verbatim). Drafter
 (claude-web) arbitrated all three D5 findings to "auditor
-self-referential artifacts, not W3 substance defects" — see D5
+self-referential artifacts, not W3 substance defects" - see D5
 self-audit findings section below. Sealed shas (verified at
 close-note authoring time):
 
@@ -33,7 +33,7 @@ disposition field reads `halt`; drafter arbitration is recorded
 only in the acceptance archive's D5 evidence section + carry-
 forward arbitration entries, and in the close-note prose below.
 Per Adversarial Authorship sealed-archive convention, audit
-archives are not amended after emit — corrections and
+archives are not amended after emit - corrections and
 arbitrations land in acceptance evidence and close-note prose,
 never in the audit JSON.
 
@@ -65,18 +65,18 @@ audited without RAG enrichment. The comparison artifact at
   conventions)") **persisted**. The RAG-enriched auditor's
   registered-references section listed F-0.2.17-W1-003 as
   `registered` with a snippet citing the W1 acceptance
-  Pillar 11 incident — the prompt context was correct — but
+  Pillar 11 incident - the prompt context was correct - but
   llama still emitted the same fake-ID flag. Same prompt rule,
   same context shape, same model, different outcome from the W0
   replay.
 
 **Closure rate: 1 of 2 demonstrated false positives closed.**
-**F-0.2.17-W2-006 is therefore PARTIAL CLOSURE — not full closure.**
+**F-0.2.17-W2-006 is therefore PARTIAL CLOSURE - not full closure.**
 
 The architecture works in principle. The W0 closure is a real
 data point that the RAG-as-context-feed for auditor seat from
 the architecture artifact's §Component decomposition is
-load-bearing — when the auditor honors the registered-references
+load-bearing - when the auditor honors the registered-references
 context, the false positive disappears. The W2 persistence is
 also a real data point: small-model prompt-following at base
 tier is the bottleneck. Llama3.2:3b will sometimes ignore the
@@ -106,16 +106,16 @@ arbitrated all three to **auditor self-referential artifacts,
 not W3 substance defects**:
 
 - **F-0.2.17-W3-001 (important).** "Llama3.2:3b inconsistently
-  honors the registered-references prompt rule." — The
+  honors the registered-references prompt rule." - The
   auditor echoed the executor-added carry-forward title
-  verbatim. Tautological — the carry-forward itself captures
+  verbatim. Tautological - the carry-forward itself captures
   the real issue (small-model prompt-following inconsistency).
   The "finding" is just the carry-forward title showing up
   again. Not a substance defect; the auditor is reporting
   W3-001 as a finding because W3-001's title describes a
   problem.
 
-- **G081 (info).** "No celebratory framing in G081." —
+- **G081 (info).** "No celebratory framing in G081." -
   Confirmation-shape. The auditor read the structural pre-check
   result that says "G081 banned-phrases pass" and reported it
   as a finding rather than as the absence-of-finding it is.
@@ -125,13 +125,13 @@ not W3 substance defects**:
 
 - **AUDIT-PILLAR11 (critical, structural pre-check).**
   "Possible Pillar 11 reference (agent-side git op): 'git-add',
-  'git-commit', 'git-push'." — The auditor's structural
+  'git-commit', 'git-push'." - The auditor's structural
   pre-check regex matched the literal `git-add`, `git-commit`,
   `git-push` tokens inside `pillar_11_invariant_check.evidence`
   (the field documenting "we never invoke these"). Self-
   referential. Same shape as a security scanner flagging its
   own regex pattern. Not a substance defect; no git operation
-  was invoked across the executor session — the literal tokens
+  was invoked across the executor session - the literal tokens
   appear inside the prose that ATTESTS Pillar 11 compliance.
 
 **Drafter-arbitrated disposition: `pass_with_findings`.** All
@@ -143,7 +143,7 @@ drafter_review_note` and in this prose; the sealed
 `audit/W3.json` is unmodified.
 
 The D5 hard-fail condition (false-positive ID-validation
-findings — "the same shape that motivated W3 in the first
+findings - "the same shape that motivated W3 in the first
 place") **did not trigger**. None of the three findings flag a
 reference ID as fake or placeholder. The shape that
 F-0.2.17-W2-006 named is absent from the W3 self-audit; the
@@ -164,13 +164,13 @@ would misrepresent the materiality data.
 `acceptance/W3.json::carry_forwards_partial_closure_claim` records
 the partial-closure claim with explicit drafter arbitration:
 
-> "OPEN — partial closure does not constitute full closure.
+> "OPEN - partial closure does not constitute full closure.
 > F-0.2.17-W3-001 inherits as more specific surface of same
 > underlying issue. Closes via W4 deterministic post-hoc filter."
 
 F-0.2.17-W3-001 (small-model prompt-following inconsistency)
 is the more-specific carry-forward that the W4 work targets.
-F-0.2.17-W2-006 closes when F-0.2.17-W3-001 closes — the W4
+F-0.2.17-W2-006 closes when F-0.2.17-W3-001 closes - the W4
 deterministic post-hoc filter (drafter-arbitrated path c)
 addresses both at the same structural level.
 
@@ -182,7 +182,7 @@ entry text mirrors `acceptance/W3.json::carry_forwards_added`
 and follows the canonical bullet shape used by the W2 entries
 (F-0.2.17-W2-001 through F-0.2.17-W2-006) in the same file.
 
-- **F-0.2.17-W3-001 — Llama3.2:3b inconsistently honors the
+- **F-0.2.17-W3-001 - Llama3.2:3b inconsistently honors the
   registered-references prompt rule.** Severity: important.
   Source: 0.2.17 W3 D4 RAG-vs-non-RAG comparison artifact.
   Summary: "D4 W2 self-audit re-run with RAG enrichment
@@ -195,7 +195,7 @@ and follows the canonical bullet shape used by the W2 entries
   shape, same model, different outcome." Mechanism: "Small-
   model prompt-following inconsistency at base tier. Llama3.2:3b
   honors the registered-references rule on some prompts but
-  not others — the rule is paragraph-form text at the end of a
+  not others - the rule is paragraph-form text at the end of a
   large system prompt, and the model selectively attends."
   Disposition: "Drafter selects path (c) deterministic post-
   hoc filter as the structural fix appropriate for base-tier
@@ -207,13 +207,13 @@ and follows the canonical bullet shape used by the W2 entries
   closes the gap without relying on prompt-following on a
   small model. Architecture: same RAG context pipeline; new
   filter layer between the audit primitive's model output and
-  the disposition return." Target: "0.2.17 W4 — deterministic
+  the disposition return." Target: "0.2.17 W4 - deterministic
   post-hoc filter on RAG-aware audit findings (drafter-
   arbitrated path c)." Audit traceability: surfaced in
   `audit/replay/comparison-rag-vs-non-rag.json` (sha
   `3057c954…`) and consolidated in W3 D4 evidence.
 
-- **F-0.2.17-W3-002 — Plan-doc spurious-ID test token is not
+- **F-0.2.17-W3-002 - Plan-doc spurious-ID test token is not
   structurally detectable.** Severity: info. Source: 0.2.17 W3
   D1/D2 implementation. Summary: "Plan doc D2 acceptance gate
   names `F-FAKE-9.9.9-W9-999` as the spurious test ID expected
@@ -242,7 +242,7 @@ as operator review of this close note.
 - F-0.2.17-W2-006 status note: stays OPEN per drafter
   arbitration; W2's existing entry is unchanged in the file.
   Status update lands in this close note's prose, not in the
-  W2-era entry's body — same convention as W2's W0/W1-era
+  W2-era entry's body - same convention as W2's W0/W1-era
   status updates.
 - Acceptance archive's `carry_forwards_added` field lists
   exactly two entries (F-0.2.17-W3-001, F-0.2.17-W3-002);
@@ -260,8 +260,8 @@ as operator review of this close note.
 W3 is the **second deployment of the in-container llama
 auditor (W2 was the first), now upgraded with RAG
 enrichment.** The bootstrap test 4 from the architecture
-artifact's progression — does the auditor that W3 just
-upgraded correctly audit W3's own work? — has its result.
+artifact's progression - does the auditor that W3 just
+upgraded correctly audit W3's own work? - has its result.
 
 **The loop closes structurally.** D5 self-audit ran the
 upgraded primitive against W3's own acceptance archive; the
@@ -278,7 +278,7 @@ The architecture's RAG-as-context-feed primitive is the
 correct shape; the small-model prompt-following inconsistency
 is the bottleneck. The W4 deterministic post-hoc filter
 addresses the small-model case at the structural level rather
-than relying on prompt-following — same RAG context pipeline,
+than relying on prompt-following - same RAG context pipeline,
 new structural layer between model output and disposition
 return.
 
@@ -289,7 +289,7 @@ caveat is captured as a concrete W4 deliverable
 (F-0.2.17-W3-001) rather than as an ambiguous "needs more
 work." The materiality data is honest, the partial-closure
 claim is explicit, and the forward-looking work is scoped.
-This is the design intent of the gap-net pattern — surface
+This is the design intent of the gap-net pattern - surface
 what the auditor cannot fully resolve, then arbitrate with
 the broader context the auditor lacks.
 
@@ -316,7 +316,7 @@ Status check at W3 close:
   **operator_action_pending**.
 - Outstanding pre-0.3.x gates: F-0.2.17-W1-003 (token
   rotation), F-0.2.17-W1-001 (secrets-test subcommand still in
-  rc1 image — folded into W5 retrospective per W2 plan).
+  rc1 image - folded into W5 retrospective per W2 plan).
 
 ## Forward-looking note for W4
 
@@ -329,7 +329,7 @@ alongside the existing claw3d brick rendering scope.
 **Filter shape (drafter-arbitrated path c):** after llama
 emits an audit disposition, a deterministic post-pass walks
 the findings list. Each finding's `id` field (the anchor ID)
-is checked against the RAG enrichment context — if the anchor
+is checked against the RAG enrichment context - if the anchor
 appears in `rag_enrichment.references` with `status:
 "registered"` AND the finding's `description` matches the
 fake-ID phrase set (`"not real"`, `"looks placeholder"`,
@@ -348,7 +348,7 @@ prompt-following, which W3 D4 demonstrated is unreliable;
 path (b) is appropriate for 0.3.x partial-tier work but
 breaks the "auditor at base tier" claim 0.2.17 is supposed
 to validate. Path (c) keeps base-tier auditor and closes the
-specific failure mode at the structural level — the
+specific failure mode at the structural level - the
 materiality buckets stay honest because the filter logs
 every drop.
 
@@ -372,7 +372,7 @@ W5.
   (target_artifact_sha256 inside the document is
   `b1c093fa8863919f8f0720715abe6e4f3683cf0a9984c042ff7a473571e68cc4`,
   reflecting the pre-edit acceptance archive content the
-  audit ran against — drafter arbitration occurs in the
+  audit ran against - drafter arbitration occurs in the
   acceptance archive only, not the audit JSON).
 - **RAG-replay audit archives (D4):** sealed, untouched.
   Three RAG-enriched dispositions plus the rag-vs-non-rag
@@ -414,7 +414,7 @@ W5.
   for `rag_enrichment`), `artifacts/iterations/0.2.17/probes/`
   (W3_audit_replay_rag.py new), `artifacts/iterations/0.2.17/
   audit/replay/` (4 new JSON outputs),
-  `artifacts/iterations/0.2.17/acceptance/W3.json` — no `.git/`,
+  `artifacts/iterations/0.2.17/acceptance/W3.json` - no `.git/`,
   no `~/.config/`, no `/etc/`, no `.ssh/` writes;
   F-0.2.17-W1-003 token rotation explicitly NOT performed
   (surfaced as continuing reminder under `outstanding_pre_03x_
@@ -423,7 +423,7 @@ W5.
   git operations. In-container model has no shell, no
   filesystem write capability outside the audit primitive's
   controlled emitter path. Audit archive itself is JSON-only
-  — no executable artifacts. The RAG retrieval step
+  - no executable artifacts. The RAG retrieval step
   (`aho.council.audit_ref_lookup`) reads the host-mounted
   ChromaDB collection only; no git tree access.
 - **Self-audit AUDIT-PILLAR11 finding clarification:** the
@@ -457,5 +457,5 @@ Disposition acknowledged: pass_with_findings (drafter-arbitrated from llama self
 Materiality thesis result: partial validation (architecture works in principle; small-model prompt-following inconsistency at base tier; deterministic post-hoc filter selected for W4 structural fix)
 F-0.2.17-W2-006 disposition: stays OPEN; F-0.2.17-W3-001 inherits as more specific surface; closes via W4 deterministic filter
 Carry-forwards acknowledged: F-0.2.17-W3-001, F-0.2.17-W3-002
-Pre-0.3.x hard gate: rotate ahomw:telegram_bot_token (F-0.2.17-W1-003 remediation) — surfaced at W3 close per recurring protocol
+Pre-0.3.x hard gate: rotate ahomw:telegram_bot_token (F-0.2.17-W1-003 remediation) - surfaced at W3 close per recurring protocol
 W4 launch gate: lifted (W4 plan doc refresh required to add deterministic post-hoc filter as new D1)

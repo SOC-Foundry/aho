@@ -105,13 +105,13 @@ def main():
     print(f"Added {len(contents)} chunks to {temp_name}")
 
     if new_col.count() == 0:
-        raise SystemExit(f"ERROR: {temp_name} has 0 documents — aborting")
+        raise SystemExit(f"ERROR: {temp_name} has 0 documents - aborting")
 
     # Smoke-check: focus on harness docs
     results = new_col.query(query_texts=["pillar"], n_results=20, include=["documents", "metadatas"])
     for doc, meta in zip(results.get("documents", [[]])[0], results.get("metadatas", [[]])[0]):
         if ("ahomw-Pillar-" in doc or "split-agent" in doc) and meta.get("chunk_type") == "harness":
-             raise SystemExit(f"ERROR: {temp_name} still contains retired patterns in HARNESS — rebuild filter failed. Source: {meta.get('source_file')}")
+             raise SystemExit(f"ERROR: {temp_name} still contains retired patterns in HARNESS - rebuild filter failed. Source: {meta.get('source_file')}")
 
     try:
         client.delete_collection("aho_archive")

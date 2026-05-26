@@ -79,7 +79,7 @@ def test_empty_content_with_error_does_not_raise(tmp_path):
             role_assignment=_role_assignment(),
             output_dir=str(tmp_path / "out"),
         )
-    # Cascade completed — existing error path preserved.
+    # Cascade completed - existing error path preserved.
     assert len(trace.handoffs) == 5
     assert trace.handoffs[0].error == "timeout after 3600s"
 
@@ -123,14 +123,14 @@ def test_stage_artifact_written_before_halt(tmp_path):
             )
 
     # Both the successful indexer_in and the empty-content producer artifacts
-    # should exist — forensic trail preserved.
+    # should exist - forensic trail preserved.
     assert (out_dir / "indexer_in.json").exists()
     assert (out_dir / "producer.json").exists()
     prod_data = json.loads((out_dir / "producer.json").read_text())
     assert prod_data["output_chars"] == 0
     assert prod_data["error"] is None
     # Downstream stages (auditor, indexer_out, assessor) must NOT have been
-    # dispatched — the halt stops propagation.
+    # dispatched - the halt stops propagation.
     assert not (out_dir / "auditor.json").exists()
     assert not (out_dir / "indexer_out.json").exists()
     assert not (out_dir / "assessor.json").exists()

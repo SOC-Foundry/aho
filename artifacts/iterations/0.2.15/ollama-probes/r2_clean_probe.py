@@ -1,4 +1,4 @@
-"""R2 clean-state LRU eviction probe — W1 correction.
+"""R2 clean-state LRU eviction probe - W1 correction.
 
 Runs against freshly restarted Ollama. Records VRAM and /api/ps after each step.
 """
@@ -100,12 +100,12 @@ print("\n--- Step 1: Load Qwen 3.5:9B ---")
 r = load_model("qwen3.5:9b")
 steps.append(record_step("Step 1: after Qwen load", r))
 
-# Step 2: load Llama (2GB) — may force Qwen eviction
+# Step 2: load Llama (2GB) - may force Qwen eviction
 print("\n--- Step 2: Load Llama 3.2:3B ---")
 r = load_model("llama3.2:3b")
 steps.append(record_step("Step 2: after Llama load", r))
 
-# Step 3: load GLM (8GB) — critical test
+# Step 3: load GLM (8GB) - critical test
 print("\n--- Step 3: Load GLM-4.6V-Flash-9B (CRITICAL) ---")
 r = load_model("haervwe/GLM-4.6V-Flash-9B:latest")
 steps.append(record_step("Step 3: after GLM load", r))
@@ -115,7 +115,7 @@ print("\n--- Step 4: Load Nemotron-mini:4b ---")
 r = load_model("nemotron-mini:4b")
 steps.append(record_step("Step 4: after Nemotron load", r))
 
-# Step 5: request Qwen again — should reload
+# Step 5: request Qwen again - should reload
 print("\n--- Step 5: Reload Qwen ---")
 r = load_model("qwen3.5:9b")
 steps.append(record_step("Step 5: after Qwen reload", r))

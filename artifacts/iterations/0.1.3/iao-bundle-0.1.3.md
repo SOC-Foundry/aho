@@ -11,41 +11,41 @@
 
 ### DESIGN (iao-design-0.1.3.md)
 ```markdown
-# iao — Design 0.1.3
+# iao - Design 0.1.3
 
-**Iteration:** 0.1.3.0 (phase.iteration.run — `.0` = planning draft)
+**Iteration:** 0.1.3.0 (phase.iteration.run - `.0` = planning draft)
 **Phase:** 0 (NZXT-only authoring)
 **Phase position:** Third authored iteration of Phase 0, first iteration with hardened Qwen artifact loop
 **Date:** April 09, 2026
-**Repo:** ~/dev/projects/iao (local only — Phase 0 has no remote)
+**Repo:** ~/dev/projects/iao (local only - Phase 0 has no remote)
 **Machine:** NZXTcos
 **Wall clock target:** ~6–8 hours, soft cap (no hard cap)
 **Run mode:** Bounded sequential, split-agent (Gemini W0–W5, Claude Code W6–W7)
-**Significance:** Bundle quality hardening, folder consolidation, src-layout refactor, universal pipeline scaffolding, human feedback loop, Phase 0 charter retrofit. Last iteration whose canonical design+plan are authored in chat — from 0.1.4 onward, the Qwen loop owns canonical artifact production and the chat reverts to forensic debugging only.
+**Significance:** Bundle quality hardening, folder consolidation, src-layout refactor, universal pipeline scaffolding, human feedback loop, Phase 0 charter retrofit. Last iteration whose canonical design+plan are authored in chat - from 0.1.4 onward, the Qwen loop owns canonical artifact production and the chat reverts to forensic debugging only.
 
 ---
 
 ## What is iao
 
-(Novice-operability constraint, iaomw-Pattern-32 candidate — every iao artifact opens with this.)
+(Novice-operability constraint, iaomw-Pattern-32 candidate - every iao artifact opens with this.)
 
-**iao** (Iterative Agentic Orchestration) is a methodology and Python package for running disciplined LLM-driven engineering iterations. It treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology was developed inside `kjtcom`, a location-intelligence platform, and graduated to a standalone Python package during kjtcom Phase 10. iao is currently in Phase 0 — single-machine authoring on NZXT — and will graduate to Phase 1 (multi-engineer onboarding) when iao 0.6.x ships to the public soc-foundry/iao GitHub organization.
+**iao** (Iterative Agentic Orchestration) is a methodology and Python package for running disciplined LLM-driven engineering iterations. It treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology was developed inside `kjtcom`, a location-intelligence platform, and graduated to a standalone Python package during kjtcom Phase 10. iao is currently in Phase 0 - single-machine authoring on NZXT - and will graduate to Phase 1 (multi-engineer onboarding) when iao 0.6.x ships to the public soc-foundry/iao GitHub organization.
 
-A junior engineer reading this document should know that iao is a *system for getting LLM agents to ship working software without supervision*, and that iao 0.1.3 hardens that system against the failure modes that surfaced in iao 0.1.2 — a bundle that shipped at 3.2 KB instead of 600 KB, three docs locations instead of one, and an artifact loop whose only success criterion was "the file exists."
+A junior engineer reading this document should know that iao is a *system for getting LLM agents to ship working software without supervision*, and that iao 0.1.3 hardens that system against the failure modes that surfaced in iao 0.1.2 - a bundle that shipped at 3.2 KB instead of 600 KB, three docs locations instead of one, and an artifact loop whose only success criterion was "the file exists."
 
 ---
 
 ## §1. Phase 0 Charter (Pattern-31 retrofit)
 
-**Phase:** 0 — NZXT-only authoring
+**Phase:** 0 - NZXT-only authoring
 **Status:** active
-**Charter author:** iao planning chat (retroactive — Phase 0 was not formally chartered when it began at iao 0.1.0)
+**Charter author:** iao planning chat (retroactive - Phase 0 was not formally chartered when it began at iao 0.1.0)
 **Charter version:** 0.1
 **Charter date:** 2026-04-09
 
 ### Why This Phase Exists
 
-iao was extracted from kjtcom during kjtcom Phase 10. Before iao can be delivered to other engineers and other machines, it has to mature on a single workstation under a single author. Phase 0 is that maturation period. It exists so that the methodology can dogfood itself, surface its own failure modes, and harden its harness against those failures *before* anyone else has to install it. Phase 0 ends when iao is publishable to the public soc-foundry/iao GitHub organization at 0.6.x — a state where a fresh machine can `git clone`, run `install.fish`, and have a working iao environment without the original author intervening.
+iao was extracted from kjtcom during kjtcom Phase 10. Before iao can be delivered to other engineers and other machines, it has to mature on a single workstation under a single author. Phase 0 is that maturation period. It exists so that the methodology can dogfood itself, surface its own failure modes, and harden its harness against those failures *before* anyone else has to install it. Phase 0 ends when iao is publishable to the public soc-foundry/iao GitHub organization at 0.6.x - a state where a fresh machine can `git clone`, run `install.fish`, and have a working iao environment without the original author intervening.
 
 ### Phase Objectives
 
@@ -58,7 +58,7 @@ iao was extracted from kjtcom during kjtcom Phase 10. Before iao can be delivere
 7. Establish telegram framework, global MCP install, ambient agent briefings (0.1.4)
 8. Establish cross-platform installer for fish/bash/PowerShell/macOS (0.1.4)
 9. Validate iao can produce production-quality artifacts via Qwen loop without chat-authored bootstrap (0.1.5)
-10. Reach a state where iao is publishable to soc-foundry/iao (0.6.x — phase exit)
+10. Reach a state where iao is publishable to soc-foundry/iao (0.6.x - phase exit)
 
 ### Phase Entry Criteria (where Phase 0 began)
 
@@ -71,23 +71,23 @@ iao was extracted from kjtcom during kjtcom Phase 10. Before iao can be delivere
 
 ### Phase Exit Criteria (Graduation Conditions)
 
-- [x] iao installable as Python package on NZXT — achieved 0.1.0
-- [x] Secrets architecture (age + OS keyring) functional — achieved 0.1.2 W1
-- [x] kjtcom methodology code migrated into iao authoring location — achieved 0.1.2 W5
-- [x] Qwen artifact loop scaffolded end-to-end — achieved 0.1.2 W6
-- [ ] Bundle quality gates enforced (size + section completeness + content checks) — 0.1.3 W3
-- [ ] Folder layout consolidated to single `docs/` root matching kjtcom convention — 0.1.3 W1
-- [ ] Python package on src-layout (`src/iao/` not `iao/iao/`) — 0.1.3 W2
-- [ ] Universal pipeline scaffolding pattern with `iao pipeline init` CLI — 0.1.3 W4
-- [ ] Human feedback loop with run report + Kyle's notes seed mechanism — 0.1.3 W5
-- [ ] README on kjtcom structure with all 10 pillars + trident — 0.1.3 W6
-- [ ] Phase 0 charter committed to design history (this document is the W6 deliverable) — 0.1.3 W6
-- [ ] Qwen loop produces production-weight artifacts (design ≥ 25 KB, plan ≥ 25 KB, build log ≥ 15 KB, report ≥ 10 KB, bundle ≥ 100 KB) — 0.1.3 W7
-- [ ] Telegram framework + global MCP install + ambient agent briefings — 0.1.4
-- [ ] Cross-platform installer (fish/bash/zsh/PowerShell) — 0.1.4
-- [ ] Novice operability validation pass (junior engineer reads design cold, can summarize) — 0.1.5
+- [x] iao installable as Python package on NZXT - achieved 0.1.0
+- [x] Secrets architecture (age + OS keyring) functional - achieved 0.1.2 W1
+- [x] kjtcom methodology code migrated into iao authoring location - achieved 0.1.2 W5
+- [x] Qwen artifact loop scaffolded end-to-end - achieved 0.1.2 W6
+- [ ] Bundle quality gates enforced (size + section completeness + content checks) - 0.1.3 W3
+- [ ] Folder layout consolidated to single `docs/` root matching kjtcom convention - 0.1.3 W1
+- [ ] Python package on src-layout (`src/iao/` not `iao/iao/`) - 0.1.3 W2
+- [ ] Universal pipeline scaffolding pattern with `iao pipeline init` CLI - 0.1.3 W4
+- [ ] Human feedback loop with run report + Kyle's notes seed mechanism - 0.1.3 W5
+- [ ] README on kjtcom structure with all 10 pillars + trident - 0.1.3 W6
+- [ ] Phase 0 charter committed to design history (this document is the W6 deliverable) - 0.1.3 W6
+- [ ] Qwen loop produces production-weight artifacts (design ≥ 25 KB, plan ≥ 25 KB, build log ≥ 15 KB, report ≥ 10 KB, bundle ≥ 100 KB) - 0.1.3 W7
+- [ ] Telegram framework + global MCP install + ambient agent briefings - 0.1.4
+- [ ] Cross-platform installer (fish/bash/zsh/PowerShell) - 0.1.4
+- [ ] Novice operability validation pass (junior engineer reads design cold, can summarize) - 0.1.5
 - [ ] Buffer iterations 0.2.x–0.5.x consumed if needed
-- [ ] iao 0.6.x ships to soc-foundry/iao public repo — Phase 0 graduates
+- [ ] iao 0.6.x ships to soc-foundry/iao public repo - Phase 0 graduates
 
 ### Iterations Planned in Phase 0
 
@@ -125,9 +125,9 @@ iao 0.1.2 shipped, and on every objective measure it succeeded. All seven workst
 
 But the bootstrap session set the wrong success criteria.
 
-W7's success criterion was **"existence-only"** — Qwen had to produce a file at the right path with the right name, and that was enough. The actual content was deferred to "quality validation comes in iao 0.1.3." That deferral has now arrived and the bill is large:
+W7's success criterion was **"existence-only"** - Qwen had to produce a file at the right path with the right name, and that was enough. The actual content was deferred to "quality validation comes in iao 0.1.3." That deferral has now arrived and the bill is large:
 
-1. **The 0.1.2 bundle is 3.2 KB.** kjtcom's bundle at 10.69.1 is 616 KB. The reference implementation produces a bundle that is two orders of magnitude heavier than what iao's own loop produces, against essentially the same harness. The bundle is supposed to be a complete forensic recovery package — every artifact, every harness file, every config, every relevant log tail — and at 3.2 KB it is functionally a stub index. A junior engineer trying to debug a failed iao iteration from the bundle alone would have nothing to work with.
+1. **The 0.1.2 bundle is 3.2 KB.** kjtcom's bundle at 10.69.1 is 616 KB. The reference implementation produces a bundle that is two orders of magnitude heavier than what iao's own loop produces, against essentially the same harness. The bundle is supposed to be a complete forensic recovery package - every artifact, every harness file, every config, every relevant log tail - and at 3.2 KB it is functionally a stub index. A junior engineer trying to debug a failed iao iteration from the bundle alone would have nothing to work with.
 
 2. **The bundle has no specification.** base.md (the universal harness file) defines the trident, the 10 pillars, ADRs, and patterns. It does not say what a bundle should contain. kjtcom's bundle has 20 sections (§1 Design through §20 Environment); none of those 20 sections are mentioned anywhere in iao's universal harness. Qwen could not produce a 600 KB bundle in 0.1.2 because Qwen had no template that demanded one.
 
@@ -137,9 +137,9 @@ W7's success criterion was **"existence-only"** — Qwen had to produce a file a
 
 5. **The Python package layout is `iao/iao/`.** A package whose import name shadows its repo name produces ambiguous tooling, confusing imports, and a directory structure where `cd iao/iao` is a sentence that means something. Modern Python convention is src-layout: `iao/src/iao/`. The longer this is delayed, the more code references have to be rewritten when it eventually happens.
 
-6. **There is no pipeline scaffolding in the universal harness.** Every iao consumer project has *some* pipeline shape — kjtcom transcribes YouTube audio, tripledb migrates Firestore data, future projects will scrape PDFs, ingest CSVs, run OCR over scanned books. The canonical 10-phase pipeline pattern exists *only* inside kjtcom's project-specific scripts. New consumer projects have no template to copy. iao cannot be delivered to other engineers without this.
+6. **There is no pipeline scaffolding in the universal harness.** Every iao consumer project has *some* pipeline shape - kjtcom transcribes YouTube audio, tripledb migrates Firestore data, future projects will scrape PDFs, ingest CSVs, run OCR over scanned books. The canonical 10-phase pipeline pattern exists *only* inside kjtcom's project-specific scripts. New consumer projects have no template to copy. iao cannot be delivered to other engineers without this.
 
-7. **There is no human feedback loop.** When an iteration completes, there is no mechanism for the human to write down what they want changed, no place for the agent to ask Kyle questions after the fact, no way to seed the next iteration from the previous run's notes. The current loop is: iteration runs, Kyle reads everything in chat, Kyle types the next iteration's design from scratch. This is precisely the workflow Kyle has now said must end — *"this chat session... should no longer be the primary plan and design creator."*
+7. **There is no human feedback loop.** When an iteration completes, there is no mechanism for the human to write down what they want changed, no place for the agent to ask Kyle questions after the fact, no way to seed the next iteration from the previous run's notes. The current loop is: iteration runs, Kyle reads everything in chat, Kyle types the next iteration's design from scratch. This is precisely the workflow Kyle has now said must end - *"this chat session... should no longer be the primary plan and design creator."*
 
 8. **The 10 pillars and trident are not enforced in iao's own artifacts.** Both the Claude bootstrap design and the Qwen dogfood design for 0.1.2 omitted the pillars block entirely. The harness rule that every kjtcom design doc must contain the trident mermaid + 10 pillars verbatim does not extend to iao itself, even though iao is the project that *defines* that rule.
 
@@ -167,16 +167,16 @@ graph BT
 
 ## §4. The Ten Pillars (locked, iaomw-Pillar-1 through iaomw-Pillar-10)
 
-1. **iaomw-Pillar-1 (Trident)** — Cost / Delivery / Performance triangle governs every decision.
-2. **iaomw-Pillar-2 (Artifact Loop)** — design → plan → build → report → bundle. Every iteration produces all five.
-3. **iaomw-Pillar-3 (Diligence)** — First action: `iao registry query "<topic>"`. Read before you code.
-4. **iaomw-Pillar-4 (Pre-Flight Verification)** — Validate the environment before execution. Pre-flight failures block launch.
-5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** — The harness is the product; the model is the engine.
-6. **iaomw-Pillar-6 (Zero-Intervention Target)** — Interventions are failures in planning. The agent does not ask permission.
-7. **iaomw-Pillar-7 (Self-Healing Execution)** — Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
-8. **iaomw-Pillar-8 (Phase Graduation)** — Formalized via MUST-have deliverables + Qwen graduation analysis. Pattern-31 chartering.
-9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** — Build is a gatekeeper. Existence checks are necessary but insufficient (ADR-009).
-10. **iaomw-Pillar-10 (Continuous Improvement)** — Run report → Kyle's notes → next iteration design seed. Feedback loop is first-class.
+1. **iaomw-Pillar-1 (Trident)** - Cost / Delivery / Performance triangle governs every decision.
+2. **iaomw-Pillar-2 (Artifact Loop)** - design → plan → build → report → bundle. Every iteration produces all five.
+3. **iaomw-Pillar-3 (Diligence)** - First action: `iao registry query "<topic>"`. Read before you code.
+4. **iaomw-Pillar-4 (Pre-Flight Verification)** - Validate the environment before execution. Pre-flight failures block launch.
+5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** - The harness is the product; the model is the engine.
+6. **iaomw-Pillar-6 (Zero-Intervention Target)** - Interventions are failures in planning. The agent does not ask permission.
+7. **iaomw-Pillar-7 (Self-Healing Execution)** - Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
+8. **iaomw-Pillar-8 (Phase Graduation)** - Formalized via MUST-have deliverables + Qwen graduation analysis. Pattern-31 chartering.
+9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** - Build is a gatekeeper. Existence checks are necessary but insufficient (ADR-009).
+10. **iaomw-Pillar-10 (Continuous Improvement)** - Run report → Kyle's notes → next iteration design seed. Feedback loop is first-class.
 
 ---
 
@@ -192,9 +192,9 @@ graph BT
 - Templates directory: phase-charter-template.md, systemd subdirectory
 - Data directory: `gotcha_archive.json` (no script_registry.json yet)
 - Docs (three locations, all consolidating in W1):
-  - `artifacts/docs/iterations/` — iteration outputs
-  - `docs/{adrs,harness,roadmap}/` — project docs
-  - `iao/iao/docs/harness/` — empty third location
+  - `artifacts/docs/iterations/` - iteration outputs
+  - `docs/{adrs,harness,roadmap}/` - project docs
+  - `iao/iao/docs/harness/` - empty third location
 - Install: `install.fish` (W4 version from 0.1.2), `install.fish.v10.66.backup`, `install-old.fish`
 - Compatibility: `COMPATIBILITY.md`, `MANIFEST.json`, `projects.json`
 - Active iao projects: `iaomw` (this), `kjtco`, `tripl` (per 0.1.2 W4 registration)
@@ -224,18 +224,18 @@ graph BT
 
 ### What is NOT changing in 0.1.3
 
-- **Secrets architecture stays** — age + OS keyring as established in 0.1.2 W1. No rotation or backend changes.
-- **kjtcom is not touched** — kjtcom is in steady state per kjtcom 10.69.1. No migrations into or out of kjtcom.
-- **Telegram bot stays on bot.env** — Path C deferral from 0.1.2. Migration to iao secrets is iao 0.1.X+ work, not 0.1.3.
-- **MCP architecture is not installed globally** — that is iao 0.1.4 W-something. 0.1.3 leaves the kjtcom `.mcp.json` source-of-truth alone.
-- **Cross-platform installer is not written** — 0.1.4 deliverable.
-- **Pillar 0 is absolute** — neither Claude Code nor Gemini CLI commits or pushes anything. All git operations are manual by Kyle.
+- **Secrets architecture stays** - age + OS keyring as established in 0.1.2 W1. No rotation or backend changes.
+- **kjtcom is not touched** - kjtcom is in steady state per kjtcom 10.69.1. No migrations into or out of kjtcom.
+- **Telegram bot stays on bot.env** - Path C deferral from 0.1.2. Migration to iao secrets is iao 0.1.X+ work, not 0.1.3.
+- **MCP architecture is not installed globally** - that is iao 0.1.4 W-something. 0.1.3 leaves the kjtcom `.mcp.json` source-of-truth alone.
+- **Cross-platform installer is not written** - 0.1.4 deliverable.
+- **Pillar 0 is absolute** - neither Claude Code nor Gemini CLI commits or pushes anything. All git operations are manual by Kyle.
 
 ---
 
 ## §6. Workstreams (W0–W7)
 
-### W0 — Iteration Bookkeeping
+### W0 - Iteration Bookkeeping
 
 **Goal:** Update iao's own metadata to reflect 0.1.3 in flight.
 
@@ -260,7 +260,7 @@ graph BT
 
 ---
 
-### W1 — Folder Consolidation (kjtcom-style flat docs/)
+### W1 - Folder Consolidation (kjtcom-style flat docs/)
 
 **Goal:** Eliminate the three-docs-locations problem. Establish a single `docs/` root that matches kjtcom convention exactly.
 
@@ -286,8 +286,8 @@ iao/
 │   ├── phase-charters/             ← NEW (W6 writes iao-phase-0.md here)
 │   ├── archive/                    ← NEW (parallel to kjtcom docs/archive/)
 │   └── drafts/                     ← NEW (parallel to kjtcom docs/drafts/)
-└── (no artifacts/ directory at all — deleted)
-└── (no iao/iao/docs/ — deleted)
+└── (no artifacts/ directory at all - deleted)
+└── (no iao/iao/docs/ - deleted)
 ```
 
 **Deliverables:**
@@ -303,7 +303,7 @@ iao/
 - Grep entire codebase for `artifacts/docs` references and update each
 - Run all tests, fix any path-related failures
 
-**Dependencies:** None — W1 is structural and runs first.
+**Dependencies:** None - W1 is structural and runs first.
 
 **Agent owner:** Gemini CLI.
 
@@ -318,7 +318,7 @@ iao/
 
 ---
 
-### W2 — src-layout Refactor (`iao/iao/` → `iao/src/iao/`)
+### W2 - src-layout Refactor (`iao/iao/` → `iao/src/iao/`)
 
 **Goal:** Move the Python package from flat layout to src-layout. Eliminates the `iao/iao/` ambiguity, brings the project in line with modern Python convention, and de-couples import path from repo root.
 
@@ -365,7 +365,7 @@ iao/
 **Agent owner:** Gemini CLI.
 
 **Acceptance checks:**
-- `find ~/dev/projects/iao/iao -type f` returns nothing (or fails — directory doesn't exist)
+- `find ~/dev/projects/iao/iao -type f` returns nothing (or fails - directory doesn't exist)
 - `find ~/dev/projects/iao/src/iao -name "__init__.py" | wc -l` returns at least 8 (one per subpackage)
 - `pip show iao` shows install location under `src/`
 - `pytest tests/` passes (all 8+ test files)
@@ -376,13 +376,13 @@ iao/
 
 ---
 
-### W3 — Universal Bundle Spec + Quality Gates
+### W3 - Universal Bundle Spec + Quality Gates
 
 **Goal:** Make Qwen physically unable to ship a 3.2 KB bundle ever again. Hoist the §1–§20 bundle structure from kjtcom into base.md as a universal harness rule. Add bundle quality gates to post-flight that block "complete" outcome on undersized or incomplete bundles.
 
 **Deliverables:**
 
-**3.1 — base.md additions:**
+**3.1 - base.md additions:**
 - New `iaomw-ADR-028: Universal Bundle Specification` with the §1–§20 section list:
   - §1 Design (verbatim copy of design doc)
   - §2 Plan (verbatim copy of plan doc)
@@ -409,19 +409,19 @@ iao/
 - New `iaomw-Pattern-32: Existence-Only Success Criteria Mask Quality Failures` documenting the 0.1.2 W7 failure mode
 - New `iaomw-G104: Existence-Only Acceptance Criteria` in gotcha registry
 
-**3.2 — bundle.py rewrite:**
+**3.2 - bundle.py rewrite:**
 - `iao/src/iao/bundle.py` rewritten to enforce the §1–§20 spec
 - New `BundleSpec` class with section definitions, minimum sizes, and content validators
 - `iao bundle build` command produces a bundle conforming to the spec
 - `iao bundle validate <path>` command validates an existing bundle against the spec
 - Returns nonzero exit code on any validation failure
 
-**3.3 — Bundle template rewrite:**
+**3.3 - Bundle template rewrite:**
 - `prompts/bundle.md.j2` rewritten to render all 20 sections
 - Each section is a Jinja loop over the actual file content (not a Qwen-generated summary)
 - Bundle is mechanical aggregation, not LLM synthesis (Qwen does not "write" the bundle, the iao package assembles it from real files)
 
-**3.4 — Post-flight check:**
+**3.4 - Post-flight check:**
 - New `iao/src/iao/postflight/bundle_quality.py`:
   - Checks bundle exists at expected path
   - Checks bundle file size ≥ 50 KB (sanity floor)
@@ -433,23 +433,23 @@ iao/
   - Returns FAIL with specific section listing on any check failure
 - Wired into `iao doctor postflight`
 
-**3.5 — design.md.j2 template hardening:**
+**3.5 - design.md.j2 template hardening:**
 - Add §3 Trident mermaid block (verbatim from base.md) to required sections
 - Add §4 Ten Pillars (verbatim from base.md) to required sections
 - Add minimum word count: 5000 words (Qwen will be prompted to expand if under)
-- Add `phase_charter_required: true` flag — if `.iao.json.iteration_position` indicates this is the first iteration of a new phase, §1 must be a Phase Charter
+- Add `phase_charter_required: true` flag - if `.iao.json.iteration_position` indicates this is the first iteration of a new phase, §1 must be a Phase Charter
 
-**3.6 — plan.md.j2 template hardening:**
+**3.6 - plan.md.j2 template hardening:**
 - Add minimum word count: 3000 words
 - Required sections: pre-flight checklist, launch protocol, per-workstream details, post-flight checklist, rollback procedure
 
-**3.7 — build-log.md.j2 template hardening:**
+**3.7 - build-log.md.j2 template hardening:**
 - Required sections: pre-flight, discrepancies, per-workstream entries (one per declared W), files changed, files created, files deleted, wall clock log, deliverables verification, exit criteria verification, graduation recommendation, what could be better, next iteration candidates
 - Minimum word count: 2000 words
 
-**3.8 — report.md.j2 template hardening:**
+**3.8 - report.md.j2 template hardening:**
 - Required sections: summary, workstream scores table (#, Workstream, Priority, Outcome, Score, Evidence), trident grading, what could be better, per-workstream details
-- Workstream scores table is mandatory — empty table is a validation failure
+- Workstream scores table is mandatory - empty table is a validation failure
 - Minimum word count: 1500 words
 
 **Dependencies:** W1 (paths settled), W2 (src-layout settled before bundle.py rewrite).
@@ -467,7 +467,7 @@ iao/
 
 ---
 
-### W4 — Universal Pipeline Scaffolding
+### W4 - Universal Pipeline Scaffolding
 
 **Goal:** Establish the canonical 10-phase pipeline pattern as a first-class iao primitive. Consumer projects can run `iao pipeline init <name>` to scaffold a new pipeline that conforms to the pattern. Eliminates the gap where every consumer project has to invent its own pipeline structure from scratch.
 
@@ -475,20 +475,20 @@ iao/
 
 **Deliverables:**
 
-**4.1 — New subpackage `iao/src/iao/pipelines/`:**
+**4.1 - New subpackage `iao/src/iao/pipelines/`:**
 - `__init__.py`
-- `pattern.py` — defines `PipelinePattern` class with the 10-phase abstract structure
-- `scaffold.py` — implements `iao pipeline init <name>` logic
-- `validate.py` — implements `iao pipeline validate` (checks an existing pipeline conforms to pattern)
-- `registry.py` — tracks which pipelines exist in the consumer project
+- `pattern.py` - defines `PipelinePattern` class with the 10-phase abstract structure
+- `scaffold.py` - implements `iao pipeline init <name>` logic
+- `validate.py` - implements `iao pipeline validate` (checks an existing pipeline conforms to pattern)
+- `registry.py` - tracks which pipelines exist in the consumer project
 
-**4.2 — New CLI subparser `iao pipeline`:**
-- `iao pipeline init <name>` — scaffolds a new pipeline at `pipelines/<name>/` in the consumer project
-- `iao pipeline list` — lists all pipelines in the current project
-- `iao pipeline validate [<name>]` — validates one or all pipelines against the pattern
-- `iao pipeline status [<name>]` — shows current phase + checkpoint status
+**4.2 - New CLI subparser `iao pipeline`:**
+- `iao pipeline init <name>` - scaffolds a new pipeline at `pipelines/<name>/` in the consumer project
+- `iao pipeline list` - lists all pipelines in the current project
+- `iao pipeline validate [<name>]` - validates one or all pipelines against the pattern
+- `iao pipeline status [<name>]` - shows current phase + checkpoint status
 
-**4.3 — New template directory `templates/pipelines/`:**
+**4.3 - New template directory `templates/pipelines/`:**
 - `templates/pipelines/skeleton/` containing:
   - `phase1_extract.py.template`
   - `phase2_transcribe.py.template` (or `phase2_transform.py.template` for non-audio)
@@ -504,21 +504,21 @@ iao/
   - `README.md.template`
 - Each template is a real Python file with a top-level docstring, a `main()` function, a checkpoint read/write pattern, and a TODO marker for project-specific logic
 
-**4.4 — New harness doc `docs/harness/pipeline-pattern.md`:**
+**4.4 - New harness doc `docs/harness/pipeline-pattern.md`:**
 - Describes the 10-phase pattern in abstract terms
 - Maps kjtcom's concrete pipeline implementations onto each phase
 - Shows how a non-kjtcom project (e.g., a PDF book OCR pipeline) maps onto the pattern
 - Lists the universal pre/post-flight checks that apply to every pipeline regardless of content
 
-**4.5 — New post-flight check `pipeline_present.py`:**
+**4.5 - New post-flight check `pipeline_present.py`:**
 - For projects with `pipelines: true` in `.iao.json`, verifies at least one pipeline exists in `pipelines/`
 - Validates each pipeline against the pattern
 - Returns SKIP if `.iao.json` does not declare pipelines (iao itself, for example)
 
-**4.6 — base.md addition:**
+**4.6 - base.md addition:**
 - New `iaomw-ADR-030: Universal Pipeline Pattern` documenting the 10-phase abstract structure as a harness primitive
 
-**Dependencies:** W2 (src-layout settled — new subpackage goes under `src/iao/pipelines/`).
+**Dependencies:** W2 (src-layout settled - new subpackage goes under `src/iao/pipelines/`).
 
 **Agent owner:** Gemini CLI.
 
@@ -534,7 +534,7 @@ iao/
 
 ---
 
-### W5 — Human Feedback Loop + Run Report
+### W5 - Human Feedback Loop + Run Report
 
 **Goal:** Establish the mechanism that lets the iteration close with a real human-in-the-loop checkpoint. Replaces the current workflow ("Kyle reads everything in chat, types next iteration design from scratch") with a structured run report that contains a workstream summary table, agent questions for Kyle, and a "Kyle's notes for next iteration" section that seeds the next iteration design when Qwen generates it.
 
@@ -542,20 +542,20 @@ iao/
 
 **Deliverables:**
 
-**5.1 — New subpackage `iao/src/iao/feedback/`:**
+**5.1 - New subpackage `iao/src/iao/feedback/`:**
 - `__init__.py`
-- `run_report.py` — generates the run report artifact
-- `seed.py` — reads the previous run report's "Kyle's notes" section and produces a seed file for the next iteration's design generation
-- `summary.py` — produces the stdout workstream summary table at iteration close
-- `prompt.py` — handles the interactive close prompts
+- `run_report.py` - generates the run report artifact
+- `seed.py` - reads the previous run report's "Kyle's notes" section and produces a seed file for the next iteration's design generation
+- `summary.py` - produces the stdout workstream summary table at iteration close
+- `prompt.py` - handles the interactive close prompts
 
-**5.2 — Run Report artifact (new artifact type):**
+**5.2 - Run Report artifact (new artifact type):**
 
 The Run Report is a new canonical artifact that sits between Report and Bundle in the loop. It is the *operational* document the human reviews at session close, distinct from the Report (which is the evaluator's audit) and the Bundle (which is the forensic recovery package).
 
 Run Report structure:
 ```markdown
-# iao — Run Report 0.1.3.1
+# iao - Run Report 0.1.3.1
 
 **Iteration:** 0.1.3.1
 **Date:** 2026-04-09
@@ -583,13 +583,13 @@ Run Report structure:
 
 ## Kyle's Notes for Next Iteration
 
-(EMPTY — Kyle fills this in during review. These notes seed the next iteration's design when Qwen generates it via `iao iteration design`.)
+(EMPTY - Kyle fills this in during review. These notes seed the next iteration's design when Qwen generates it via `iao iteration design`.)
 
 > _Kyle types thoughts, requirements, scope changes here. The Qwen artifact loop reads this section when generating the next design doc and includes it as input context._
 
 ## Kyle's Answers to Agent Questions
 
-(EMPTY — Kyle fills this in. Each answer is paired with the question above by number.)
+(EMPTY - Kyle fills this in. Each answer is paired with the question above by number.)
 
 ## Sign-off
 
@@ -600,28 +600,28 @@ Run Report structure:
 (Kyle ticks the boxes by editing the file before running `iao iteration close --confirm`.)
 ```
 
-**5.3 — New CLI commands:**
-- `iao iteration close` — generates the run report, prints the workstream summary table to stdout, generates the bundle, prints the bundle path and size, then prints "Open the run report at <path>, fill in your notes, then run `iao iteration close --confirm` to finalize"
-- `iao iteration close --confirm` — reads the run report, validates that the sign-off boxes are checked, marks the iteration complete in `.iao.json`, increments to the next iteration version
-- `iao iteration seed` — reads the previous iteration's run report and produces a seed JSON for the next iteration's design generation (Qwen reads this seed as input context)
+**5.3 - New CLI commands:**
+- `iao iteration close` - generates the run report, prints the workstream summary table to stdout, generates the bundle, prints the bundle path and size, then prints "Open the run report at <path>, fill in your notes, then run `iao iteration close --confirm` to finalize"
+- `iao iteration close --confirm` - reads the run report, validates that the sign-off boxes are checked, marks the iteration complete in `.iao.json`, increments to the next iteration version
+- `iao iteration seed` - reads the previous iteration's run report and produces a seed JSON for the next iteration's design generation (Qwen reads this seed as input context)
 
-**5.4 — New post-flight check `run_report_complete.py`:**
+**5.4 - New post-flight check `run_report_complete.py`:**
 - Verifies a run report exists at `docs/iterations/<version>/iao-run-report-<version>.md`
 - Verifies the workstream summary table is populated (at least one row per declared W)
-- Returns DEFERRED (not FAIL) if "Kyle's Notes" section is empty — that's expected at first close, only required for `--confirm`
+- Returns DEFERRED (not FAIL) if "Kyle's Notes" section is empty - that's expected at first close, only required for `--confirm`
 
-**5.5 — base.md addition:**
+**5.5 - base.md addition:**
 - New `iaomw-Pillar-10` reframing: pillar 10 was previously "Continuous Improvement" with vague "iao push feedback loop." Reframe to: "Run Report → Kyle's notes → seed next iteration design. Feedback loop is first-class artifact, not optional."
 - New `iaomw-ADR-031: Run Report as Canonical Artifact` documenting the new artifact type
 - New `iaomw-ADR-032: Human Sign-off Required for Iteration Close` documenting the `--confirm` requirement
 
-**5.6 — prompts/run-report.md.j2:**
+**5.6 - prompts/run-report.md.j2:**
 - New Jinja template for the run report
-- Rendered by `iao iteration close` (not by Qwen — this is mechanical assembly from the build log + report + bundle metadata)
+- Rendered by `iao iteration close` (not by Qwen - this is mechanical assembly from the build log + report + bundle metadata)
 
-**Dependencies:** W2 (src-layout), W3 (bundle spec — run report references bundle path).
+**Dependencies:** W2 (src-layout), W3 (bundle spec - run report references bundle path).
 
-**Agent owner:** Gemini CLI for scaffolding (5.1, 5.6), Claude Code for the interactive prompt logic (5.3) — actually, all of W5 is Gemini because the prompt logic is straightforward Python click/typer code, not artifact generation. Reassigning to Gemini.
+**Agent owner:** Gemini CLI for scaffolding (5.1, 5.6), Claude Code for the interactive prompt logic (5.3) - actually, all of W5 is Gemini because the prompt logic is straightforward Python click/typer code, not artifact generation. Reassigning to Gemini.
 
 **Agent owner:** Gemini CLI.
 
@@ -637,20 +637,20 @@ Run Report structure:
 
 ---
 
-### W6 — README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
+### W6 - README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
 
 **Goal:** Bring iao's own README into compliance with the kjtcom convention (trident, 10 pillars, component review, data architecture, etc.). Commit the Phase 0 charter to canonical history. Add post-flight checks that enforce 10 pillars + trident presence in design docs and README on every iteration.
 
 **Deliverables:**
 
-**6.1 — README rewrite:**
+**6.1 - README rewrite:**
 - New `README.md` modeled on kjtcom's README structure:
   - Hero paragraph (what is iao, novice-operability)
   - Status line (current phase, current iteration, current state)
   - Trident mermaid block (verbatim from base.md)
   - The Ten Pillars of IAO (verbatim from base.md, numbered list with bold names)
   - "What iao Does" section (the harness is the product, the model is the engine)
-  - Component Review (chip count for iao itself — secrets backend, artifact loop, pipeline scaffold, post-flight, pre-flight, run report, bundle, etc.)
+  - Component Review (chip count for iao itself - secrets backend, artifact loop, pipeline scaffold, post-flight, pre-flight, run report, bundle, etc.)
   - Architecture (Python package layout, CLI surface, harness file locations)
   - Active iao Projects (table: iaomw, kjtco, tripl + paths)
   - Phase 0 Status (current phase from charter, exit criteria checklist)
@@ -659,12 +659,12 @@ Run Report structure:
   - Contributing (Phase 0 is single-author, contributions reopen at 0.6.x)
   - License
 
-**6.2 — Phase 0 charter committed to history:**
+**6.2 - Phase 0 charter committed to history:**
 - Copy §1 of this design doc into `docs/phase-charters/iao-phase-0.md`
 - Add front-matter: phase number, charter version, charter date, iteration where charter was written
 - This is the canonical phase charter location going forward; design doc §1 references it
 
-**6.3 — Post-flight check `ten_pillars_present.py`:**
+**6.3 - Post-flight check `ten_pillars_present.py`:**
 - For each design doc in `docs/iterations/<current_version>/`:
   - Verify §3 contains the trident mermaid block (grep for `graph BT` and `IAO\["<b>I A O</b>`)
   - Verify §4 contains all 10 pillars (grep for `iaomw-Pillar-1` through `iaomw-Pillar-10`)
@@ -674,19 +674,19 @@ Run Report structure:
   - Verify it lists all 10 pillars by name
   - Returns FAIL if any are missing
 
-**6.4 — Post-flight check `readme_current.py`:**
+**6.4 - Post-flight check `readme_current.py`:**
 - Verifies `README.md` mtime is within the current iteration window (between W0 start and W7 close)
 - Returns FAIL if README has not been touched in current iteration
 - Returns DEFERRED if `.iao.json.skip_readme_check: true` (escape hatch for genuinely no-README-change iterations)
 
-**6.5 — base.md additions:**
+**6.5 - base.md additions:**
 - New `iaomw-ADR-033: README Currency Enforcement` documenting the readme_current check
 - New `iaomw-ADR-034: Trident and Pillars Verbatim Requirement` documenting the ten_pillars_present check
 - New `iaomw-Pattern-33: README Drift` documenting the failure mode where README falls behind reality
 
-**6.6 — prompts/design.md.j2 enforcement:**
+**6.6 - prompts/design.md.j2 enforcement:**
 - Template includes mandatory placeholders for `{{ trident_block }}` and `{{ ten_pillars_block }}`
-- Both blocks are loaded from base.md verbatim — Qwen does not author them, just embeds them
+- Both blocks are loaded from base.md verbatim - Qwen does not author them, just embeds them
 - Validation step in `iao iteration design` rejects output that does not contain the placeholders
 
 **Dependencies:** W1 (paths), W3 (template hardening), W5 (run report exists for the workstream where Kyle reviews the new README).
@@ -705,13 +705,13 @@ Run Report structure:
 
 ---
 
-### W7 — Qwen Loop Hardening + Dogfood + Closing Sequence
+### W7 - Qwen Loop Hardening + Dogfood + Closing Sequence
 
 **Goal:** Bring the Qwen artifact loop up to a quality bar where it can produce production-weight artifacts. Run the dogfood test that 0.1.2 W7 was supposed to run but didn't (because the success criterion was set to "file exists"). Execute the closing sequence including run report, bundle generation, and human sign-off prompt.
 
 **Deliverables:**
 
-**7.1 — Qwen loop hardening:**
+**7.1 - Qwen loop hardening:**
 - `iao/src/iao/artifacts/loop.py` updated:
   - Reads the new template requirements from W3 (minimum word counts, required sections)
   - On Qwen output below word count, prompts Qwen to expand with specific guidance
@@ -727,34 +727,34 @@ Run Report structure:
   - JSON schemas for design, plan, build log, report, run report, bundle metadata
   - Validation called from loop.py after each Qwen output
 
-**7.2 — Dogfood test (the real one):**
-- Run `iao iteration build-log 0.1.3.1` — Qwen generates a build log from the actual W0–W6 execution events in the event log
-- Run `iao iteration report 0.1.3.1` — Qwen generates a report with actual workstream scores
-- Run `iao iteration close` — generates run report, prints workstream summary table
+**7.2 - Dogfood test (the real one):**
+- Run `iao iteration build-log 0.1.3.1` - Qwen generates a build log from the actual W0–W6 execution events in the event log
+- Run `iao iteration report 0.1.3.1` - Qwen generates a report with actual workstream scores
+- Run `iao iteration close` - generates run report, prints workstream summary table
 - Verify bundle weight ≥ 50 KB (the W3 quality gate)
 - Verify all 20 sections present in bundle
 - Verify build log contains entries for W0–W7
 - Verify report has populated workstream scores table
 
-**7.3 — ADR-012 immutability enforcement:**
-- The dogfood does NOT regenerate design or plan — those are immutable per ADR-012 amendment in W3
+**7.3 - ADR-012 immutability enforcement:**
+- The dogfood does NOT regenerate design or plan - those are immutable per ADR-012 amendment in W3
 - This resolves the 0.1.2 Open Question 5 contradiction in favor of immutability
 - The Qwen loop only generates: build log, report, run report, bundle
 - Design and plan are read-only inputs
 
-**7.4 — Closing sequence:**
-- Run `iao doctor postflight` — must pass all gates including bundle_quality, ten_pillars_present, readme_current, run_report_complete, pipeline_present (deferred for iao itself), build_log_complete
-- Run `iao iteration close` — generates run report
+**7.4 - Closing sequence:**
+- Run `iao doctor postflight` - must pass all gates including bundle_quality, ten_pillars_present, readme_current, run_report_complete, pipeline_present (deferred for iao itself), build_log_complete
+- Run `iao iteration close` - generates run report
 - Print workstream summary table to stdout
 - Print message: "Open the run report at <path>. Review the bundle at <path>. Fill in your notes for the next iteration. Then run `iao iteration close --confirm`."
 - **This is where the agent stops.** The human takes the bundle offline, reviews, fills in notes, comes back, and runs `--confirm`.
 
-**7.5 — Phase 0 graduation analysis:**
-- Run `iao iteration graduate 0.1.3.1 --analyze` — Qwen produces a Phase 0 progress assessment
+**7.5 - Phase 0 graduation analysis:**
+- Run `iao iteration graduate 0.1.3.1 --analyze` - Qwen produces a Phase 0 progress assessment
 - Outputs a recommendation: continue Phase 0 with 0.1.4, or graduate early
 - Expected output: continue with 0.1.4 (telegram framework + cross-platform installer remain)
 
-**7.6 — Update CHANGELOG:**
+**7.6 - Update CHANGELOG:**
 - Append 0.1.3 entry with all 8 workstreams summarized
 - Update VERSION file to 0.1.3
 - Update `.iao.json` `current_iteration` to `0.1.4.0` (next planning draft)
@@ -782,7 +782,7 @@ Run Report structure:
 
 **Likelihood:** Medium. Qwen's compliance with length constraints is variable per ADR-014 (context-over-constraint). Larger templates with more in-context examples generally improve compliance, but there's no guarantee.
 
-**Mitigation:** Three-tier fallback. If Qwen produces an artifact below the minimum word count after 3 retries, the loop surfaces it to the run report as an "Agent Question" — Kyle decides whether to ship the undersized artifact, hand-author a replacement, or escalate to a stronger model in the next iteration. This prevents the iteration from being blocked but also prevents the failure from being silently masked the way 0.1.2 W7 was.
+**Mitigation:** Three-tier fallback. If Qwen produces an artifact below the minimum word count after 3 retries, the loop surfaces it to the run report as an "Agent Question" - Kyle decides whether to ship the undersized artifact, hand-author a replacement, or escalate to a stronger model in the next iteration. This prevents the iteration from being blocked but also prevents the failure from being silently masked the way 0.1.2 W7 was.
 
 **Detection:** W7 dogfood test will surface this. If Qwen can't hit 5000 words for design, the loop logs the actual word count and the post-flight check reports it.
 
@@ -790,9 +790,9 @@ Run Report structure:
 
 **Likelihood:** Medium-high. There are 8 test files and an unknown number of import statements that may reference `iao.X` in ways that depend on the flat layout.
 
-**Mitigation:** W2 includes "run full test suite" as an acceptance check. If tests fail, the agent runs them with verbose output, identifies the broken imports, and fixes them. Pillar 7 self-healing applies — max 3 retries on test failures, then escalate.
+**Mitigation:** W2 includes "run full test suite" as an acceptance check. If tests fail, the agent runs them with verbose output, identifies the broken imports, and fixes them. Pillar 7 self-healing applies - max 3 retries on test failures, then escalate.
 
-**Rollback:** `~/dev/projects/iao.backup-pre-0.1.3` (Kyle creates this before launch — added as pre-flight check).
+**Rollback:** `~/dev/projects/iao.backup-pre-0.1.3` (Kyle creates this before launch - added as pre-flight check).
 
 ### Risk: Folder consolidation breaks references in places we didn't grep
 
@@ -816,7 +816,7 @@ Run Report structure:
 
 **Likelihood:** Medium. Eight workstreams, four of which are non-trivial (W1 folder refactor, W2 src-layout, W3 bundle spec, W4 pipeline scaffolding). 6–8 hours is the target but the soft cap could blow.
 
-**Mitigation:** Per the kjtcom convention, no hard cap. The split-agent model lets Gemini run W0–W5 unattended (5 of 8 workstreams) and Claude Code picks up W6–W7 from a checkpoint. Kyle can launch Gemini and walk away. If the iteration runs long, the bundle quality gates in W3 still apply — the closing sequence won't ship a broken artifact just because the clock ran out.
+**Mitigation:** Per the kjtcom convention, no hard cap. The split-agent model lets Gemini run W0–W5 unattended (5 of 8 workstreams) and Claude Code picks up W6–W7 from a checkpoint. Kyle can launch Gemini and walk away. If the iteration runs long, the bundle quality gates in W3 still apply - the closing sequence won't ship a broken artifact just because the clock ran out.
 
 ### Risk: W3's bundle spec changes contradict 0.1.2 Open Question 5
 
@@ -828,20 +828,20 @@ Run Report structure:
 
 These items are out of scope for 0.1.3 and explicitly deferred:
 
-1. **Telegram framework generalization** — kjtcom-telegram-bot.service and the bot Python code stay where they are. iao 0.1.4 generalizes the bot framework. This is the largest deferred item.
-2. **MCP global install** — kjtcom's `.mcp.json` remains the source of truth. The 12-package global install via sudo npm is iao 0.1.4 work. World A architecture not implemented in 0.1.3.
-3. **Ambient agent briefings** — the `~/.claude/CLAUDE.md` and `~/.gemini/GEMINI.md` global briefings concept is iao 0.1.4. iao 0.1.3 only updates project-local CLAUDE.md and GEMINI.md.
-4. **Cross-platform installer** — install.bash, install.ps1, install.command are iao 0.1.4 deliverables.
-5. **Secret rotation automation** — manual rotation per 0.1.2 W1 stands. Automation is a future iteration.
-6. **kjtcom modifications** — kjtcom is in steady state per 10.69.1. No migrations into or out of kjtcom in 0.1.3.
-7. **Public push to soc-foundry/iao** — Phase 0 stays entirely on NZXT. First push is iao 0.6.x.
-8. **TachTech production fork** — iao 0.7.x.
-9. **P3 onboarding** — Phase 1 work, not Phase 0.
-10. **Telegram bot migration to iao secrets** — Path C deferral from 0.1.2 stands. bot.env stays mode 600 plaintext until a future iao 0.1.X iteration migrates it.
-11. **ChromaDB collection naming convention** — 0.1.2 Open Question 4. RAG layer works as migrated; naming convention can wait.
-12. **Iteration state field in `.iao.json`** — 0.1.2 Open Question 3. The current_iteration field is sufficient for now.
-13. **Phase boundary automation for Qwen artifact loop** — explicit CLI commands only. 0.1.X+ work.
-14. **Evaluator integration into iao loop** — iao currently has no evaluator. kjtcom uses the three-tier evaluator (Qwen → Gemini Flash → self-eval). Porting that into iao is a future iteration. For 0.1.3, the closing sequence uses post-flight checks as the gate, not evaluator scores.
+1. **Telegram framework generalization** - kjtcom-telegram-bot.service and the bot Python code stay where they are. iao 0.1.4 generalizes the bot framework. This is the largest deferred item.
+2. **MCP global install** - kjtcom's `.mcp.json` remains the source of truth. The 12-package global install via sudo npm is iao 0.1.4 work. World A architecture not implemented in 0.1.3.
+3. **Ambient agent briefings** - the `~/.claude/CLAUDE.md` and `~/.gemini/GEMINI.md` global briefings concept is iao 0.1.4. iao 0.1.3 only updates project-local CLAUDE.md and GEMINI.md.
+4. **Cross-platform installer** - install.bash, install.ps1, install.command are iao 0.1.4 deliverables.
+5. **Secret rotation automation** - manual rotation per 0.1.2 W1 stands. Automation is a future iteration.
+6. **kjtcom modifications** - kjtcom is in steady state per 10.69.1. No migrations into or out of kjtcom in 0.1.3.
+7. **Public push to soc-foundry/iao** - Phase 0 stays entirely on NZXT. First push is iao 0.6.x.
+8. **TachTech production fork** - iao 0.7.x.
+9. **P3 onboarding** - Phase 1 work, not Phase 0.
+10. **Telegram bot migration to iao secrets** - Path C deferral from 0.1.2 stands. bot.env stays mode 600 plaintext until a future iao 0.1.X iteration migrates it.
+11. **ChromaDB collection naming convention** - 0.1.2 Open Question 4. RAG layer works as migrated; naming convention can wait.
+12. **Iteration state field in `.iao.json`** - 0.1.2 Open Question 3. The current_iteration field is sufficient for now.
+13. **Phase boundary automation for Qwen artifact loop** - explicit CLI commands only. 0.1.X+ work.
+14. **Evaluator integration into iao loop** - iao currently has no evaluator. kjtcom uses the three-tier evaluator (Qwen → Gemini Flash → self-eval). Porting that into iao is a future iteration. For 0.1.3, the closing sequence uses post-flight checks as the gate, not evaluator scores.
 
 ---
 
@@ -878,16 +878,16 @@ This design document is the canonical input for iao 0.1.3.1. It is immutable per
 
 This is the **last** chat-authored design doc for iao iterations under normal conditions. Starting with iao 0.1.4, the design doc is generated by the Qwen artifact loop, seeded from this iteration's run report "Kyle's notes" section. The chat (this conversation, future Claude web sessions) reverts to forensic debugging only.
 
-— Bootstrap planning chat, 2026-04-09
+- Bootstrap planning chat, 2026-04-09
 ```
 
 ## §2. Plan
 
 ### PLAN (iao-plan-0.1.3.md)
 ```markdown
-# iao — Plan 0.1.3
+# iao - Plan 0.1.3
 
-**Iteration:** 0.1.3.1 (phase 0, iteration 1, run 1 — first execution of 0.1.3)
+**Iteration:** 0.1.3.1 (phase 0, iteration 1, run 1 - first execution of 0.1.3)
 **Phase:** 0 (NZXT-only authoring)
 **Date:** April 09, 2026
 **Machine:** NZXTcos
@@ -908,11 +908,11 @@ iao is the methodology and Python package for running disciplined LLM-driven eng
 
 ---
 
-## Section A — Pre-flight
+## Section A - Pre-flight
 
 The pre-flight phase runs before any workstream begins. Every check must pass (or be explicitly noted-and-proceeded per Pillar 6 + Pattern-22) before launch.
 
-### A.0 — Working directory and shell state
+### A.0 - Working directory and shell state
 
 ```fish
 cd ~/dev/projects/iao
@@ -925,11 +925,11 @@ command ls -la .iao.json VERSION pyproject.toml
 
 **Failure remediation:** If any file missing, you are in the wrong directory or the project is corrupted. Restore from `~/dev/projects/iao.backup-pre-0.1.3` and re-investigate.
 
-### A.1 — Backup the project before launch
+### A.1 - Backup the project before launch
 
 ```fish
 test -d ~/dev/projects/iao.backup-pre-0.1.3
-# Expected: nothing (no output) on first run — we're about to create it
+# Expected: nothing (no output) on first run - we're about to create it
 
 cp -a ~/dev/projects/iao ~/dev/projects/iao.backup-pre-0.1.3
 test -d ~/dev/projects/iao.backup-pre-0.1.3
@@ -941,7 +941,7 @@ du -sh ~/dev/projects/iao.backup-pre-0.1.3
 
 **Failure remediation:** If backup fails (disk space, permissions), do not launch. Free space or fix permissions first.
 
-### A.2 — Git state clean
+### A.2 - Git state clean
 
 ```fish
 cd ~/dev/projects/iao
@@ -954,7 +954,7 @@ git log --oneline -5
 
 **Failure remediation:** If working tree is dirty, Kyle must commit or stash before launch. Per Pillar 0, the agent does NOT run git commit. Surface the dirty state and stop.
 
-### A.3 — Python environment
+### A.3 - Python environment
 
 ```fish
 python3 --version
@@ -972,7 +972,7 @@ which iao
 
 **Failure remediation:** If Python is missing or wrong version, reinstall. If pip is missing, `sudo pacman -S python-pip`.
 
-### A.4 — iao package installed
+### A.4 - iao package installed
 
 ```fish
 iao --version
@@ -987,7 +987,7 @@ iao doctor quick
 
 **Failure remediation:** If `iao --version` fails, `cd ~/dev/projects/iao && pip install -e . --break-system-packages`. If `iao doctor quick` fails, read the error and fix before launch.
 
-### A.5 — Ollama daemon and models
+### A.5 - Ollama daemon and models
 
 ```fish
 curl -s http://localhost:11434/api/tags | head -5
@@ -999,7 +999,7 @@ ollama list | grep -E "qwen3.5:9b|nomic-embed-text"
 
 **Failure remediation:** If Ollama not running, `systemctl --user start ollama` or `ollama serve &`. If models missing, `ollama pull qwen3.5:9b` and/or `ollama pull nomic-embed-text`.
 
-### A.6 — Disk space
+### A.6 - Disk space
 
 ```fish
 df -h ~/dev/projects/iao | tail -1
@@ -1008,7 +1008,7 @@ df -h ~/dev/projects/iao | tail -1
 
 **Failure remediation:** Free space before launch. iao 0.1.3 doesn't write much but the bundle generation in W7 needs headroom.
 
-### A.7 — Sleep/suspend masked
+### A.7 - Sleep/suspend masked
 
 ```fish
 systemctl status sleep.target suspend.target hibernate.target hybrid-sleep.target | grep "Active:"
@@ -1020,7 +1020,7 @@ systemctl status sleep.target | grep "Loaded:"
 
 **Failure remediation:** If not masked, run `sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target` per the standard NZXT pre-flight from previous iterations.
 
-### A.8 — `.iao.json` reflects 0.1.2 close state
+### A.8 - `.iao.json` reflects 0.1.2 close state
 
 ```fish
 cat .iao.json | jq .current_iteration
@@ -1032,7 +1032,7 @@ cat .iao.json | jq .name
 
 **Failure remediation:** If iteration field is wrong, edit `.iao.json` manually before launch (this is W0's first action anyway; if it's already done, skip to W1).
 
-### A.9 — No active tmux session for this iteration
+### A.9 - No active tmux session for this iteration
 
 ```fish
 tmux ls 2>/dev/null | grep "iao-0.1.3"
@@ -1041,7 +1041,7 @@ tmux ls 2>/dev/null | grep "iao-0.1.3"
 
 **Failure remediation:** If a session named `iao-0.1.3` exists, kill it: `tmux kill-session -t iao-0.1.3`. Then verify the bundle from any previous attempt is moved aside before relaunching.
 
-### A.10 — Required tools present
+### A.10 - Required tools present
 
 ```fish
 which git python3 pip ollama jq age keyctl
@@ -1053,7 +1053,7 @@ age --version
 
 **Failure remediation:** Install any missing tool. `age` should already be present from 0.1.2 W1; if not, `sudo pacman -S age`.
 
-### A.11 — Pre-flight summary
+### A.11 - Pre-flight summary
 
 After all 11 pre-flight checks pass, print:
 
@@ -1079,16 +1079,16 @@ If any check failed, do NOT launch. Surface the failure to Kyle, fix, re-run pre
 
 ---
 
-## Section B — Launch Protocol
+## Section B - Launch Protocol
 
-### B.1 — Open tmux session
+### B.1 - Open tmux session
 
 ```fish
 tmux new-session -d -s iao-0.1.3 -c ~/dev/projects/iao
 tmux send-keys -t iao-0.1.3 'cd ~/dev/projects/iao && set -x IAO_ITERATION 0.1.3.1 && set -x IAO_PROJECT_NAME iao' Enter
 ```
 
-### B.2 — Initialize checkpoint
+### B.2 - Initialize checkpoint
 
 ```fish
 printf '%s\n' '{
@@ -1113,7 +1113,7 @@ printf '%s\n' '{
 
 The launching shell replaces the timestamp placeholder with `(date -u +%Y-%m-%dT%H:%M:%SZ)`.
 
-### B.3 — Launch Gemini CLI for W0–W5
+### B.3 - Launch Gemini CLI for W0–W5
 
 ```fish
 tmux send-keys -t iao-0.1.3 'gemini --yolo' Enter
@@ -1123,7 +1123,7 @@ Gemini reads `GEMINI.md` (project root) and `CLAUDE.md` (project root) for conte
 
 Kyle's role during Gemini's run: monitor occasionally, intervene only on Pillar 6 violations (Gemini asking permission for non-destructive actions). The expected wall clock for W0–W5 is ~4 hours.
 
-### B.4 — Handoff to Claude Code for W6–W7
+### B.4 - Handoff to Claude Code for W6–W7
 
 When Gemini's W5 completes and the checkpoint shows `"current_workstream": "handoff"`, attach to the tmux session:
 
@@ -1150,7 +1150,7 @@ claude --dangerously-skip-permissions
 
 Claude Code reads `CLAUDE.md`, picks up at W6, completes W6 and W7. Expected wall clock for W6–W7 is ~2.5 hours.
 
-### B.5 — Iteration close
+### B.5 - Iteration close
 
 When Claude Code completes W7 (the dogfood test + closing sequence), it stops and prints:
 
@@ -1175,9 +1175,9 @@ This is where the agent stops. The human takes over.
 
 ---
 
-## Section C — Workstream Execution Details
+## Section C - Workstream Execution Details
 
-### W0 — Iteration Bookkeeping
+### W0 - Iteration Bookkeeping
 
 **Agent:** Gemini CLI
 **Wall clock target:** 5 min
@@ -1221,7 +1221,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W1 — Folder Consolidation
+### W1 - Folder Consolidation
 
 **Agent:** Gemini CLI
 **Wall clock target:** 45 min
@@ -1324,7 +1324,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W2 — src-layout Refactor
+### W2 - src-layout Refactor
 
 **Agent:** Gemini CLI
 **Wall clock target:** 40 min
@@ -1434,7 +1434,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W3 — Universal Bundle Spec + Quality Gates
+### W3 - Universal Bundle Spec + Quality Gates
 
 **Agent:** Gemini CLI
 **Wall clock target:** 90 min
@@ -1470,9 +1470,9 @@ This is where the agent stops. The human takes over.
 
    Documents the 0.1.2 W7 failure mode. Prevention: every success criterion must include a content check, not just an existence check.
 
-6. **Append iaomw-G104 to gotcha registry:** (also done in W2 for src-layout — this is a different gotcha)
+6. **Append iaomw-G104 to gotcha registry:** (also done in W2 for src-layout - this is a different gotcha)
 
-   Wait — re-checking. W2 already used G104 for src-layout. W3's gotcha is **iaomw-G105**: "Existence-Only Acceptance Criteria":
+   Wait - re-checking. W2 already used G104 for src-layout. W3's gotcha is **iaomw-G105**: "Existence-Only Acceptance Criteria":
 
    ```json
    {
@@ -1554,7 +1554,7 @@ This is where the agent stops. The human takes over.
 
 8. **Rewrite `prompts/bundle.md.j2`:**
 
-   Jinja template that loops over the 20 sections and embeds each source file's content as a fenced code block under a `## §N. <Title>` header. The template does NOT call out to Qwen — it's pure Jinja rendering of real file content.
+   Jinja template that loops over the 20 sections and embeds each source file's content as a fenced code block under a `## §N. <Title>` header. The template does NOT call out to Qwen - it's pure Jinja rendering of real file content.
 
 9. **Update `prompts/design.md.j2`:**
 
@@ -1567,7 +1567,7 @@ This is where the agent stops. The human takes over.
    {{ ten_pillars_block }}
    ```
 
-   The `trident_block` and `ten_pillars_block` variables are loaded from `docs/harness/base.md` at template render time. Qwen does NOT generate these — they're loaded verbatim.
+   The `trident_block` and `ten_pillars_block` variables are loaded from `docs/harness/base.md` at template render time. Qwen does NOT generate these - they're loaded verbatim.
 
    Add minimum word count: 5000. The Qwen generation loop in `src/iao/artifacts/loop.py` checks output length and re-prompts if under.
 
@@ -1632,7 +1632,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W4 — Universal Pipeline Scaffolding
+### W4 - Universal Pipeline Scaffolding
 
 **Agent:** Gemini CLI
 **Wall clock target:** 90 min
@@ -1717,7 +1717,7 @@ This is where the agent stops. The human takes over.
 
    Example for `phase1_extract.py.template`:
    ```python
-   """{{ pipeline_name }} — Phase 1: Extract.
+   """{{ pipeline_name }} - Phase 1: Extract.
 
    Acquires raw data from source. Project-specific implementation
    replaces the TODO block.
@@ -1827,7 +1827,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W5 — Human Feedback Loop + Run Report
+### W5 - Human Feedback Loop + Run Report
 
 **Agent:** Gemini CLI
 **Wall clock target:** 75 min
@@ -1859,7 +1859,7 @@ This is where the agent stops. The human takes over.
 
 6. **Create `prompts/run-report.md.j2`:**
 
-   Jinja template for the run report. Variables: iteration version, workstream list, build log path, bundle path, agent questions list. Does NOT call Qwen — pure mechanical assembly.
+   Jinja template for the run report. Variables: iteration version, workstream list, build log path, bundle path, agent questions list. Does NOT call Qwen - pure mechanical assembly.
 
 7. **Add `iao iteration close` and `iao iteration close --confirm` to `src/iao/cli.py`:**
 
@@ -1919,7 +1919,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W6 — README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
+### W6 - README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
 
 **Agent:** Claude Code
 **Wall clock target:** 75 min
@@ -1944,7 +1944,7 @@ This is where the agent stops. The human takes over.
    - **Trident mermaid** (verbatim from base.md)
    - **The Ten Pillars of IAO** (verbatim from base.md, numbered list)
    - **What iao Does** (the harness is the product, the model is the engine)
-   - **Component Review** (chip count: secrets backend, artifact loop, pipeline scaffold, post-flight, pre-flight, run report, bundle, doctor, registry, harness, install — count actual subpackages and modules)
+   - **Component Review** (chip count: secrets backend, artifact loop, pipeline scaffold, post-flight, pre-flight, run report, bundle, doctor, registry, harness, install - count actual subpackages and modules)
    - **Architecture** (Python package layout, CLI surface, harness file locations, bundle structure)
    - **Active iao Projects** (table)
    - **Phase 0 Status** (current phase, exit criteria checklist with checkboxes)
@@ -1957,9 +1957,9 @@ This is where the agent stops. The human takes over.
 
    Copy §1 of `docs/iterations/0.1.3/iao-design-0.1.3.md` (the Phase 0 Charter section). Add front-matter:
    ```markdown
-   # Phase 0 Charter — iao
+   # Phase 0 Charter - iao
 
-   **Phase:** 0 — NZXT-only authoring
+   **Phase:** 0 - NZXT-only authoring
    **Charter author:** iao planning chat (retroactive)
    **Charter version:** 0.1
    **Charter date:** 2026-04-09
@@ -2030,7 +2030,7 @@ This is where the agent stops. The human takes over.
 
 ---
 
-### W7 — Qwen Loop Hardening + Dogfood + Closing Sequence
+### W7 - Qwen Loop Hardening + Dogfood + Closing Sequence
 
 **Agent:** Claude Code
 **Wall clock target:** 90 min
@@ -2065,7 +2065,7 @@ This is where the agent stops. The human takes over.
 
    - JSON schemas for build log, report, run report, bundle metadata
    - Validation called from loop.py after each Qwen output
-   - Design and plan have NO schema validation in W7 — they are immutable inputs per ADR-012 amendment
+   - Design and plan have NO schema validation in W7 - they are immutable inputs per ADR-012 amendment
 
 5. **Run dogfood test:**
    ```fish
@@ -2128,7 +2128,7 @@ This is where the agent stops. The human takes over.
 
 10. **Update VERSION:**
 
-    Already done in W0 — verify it's still `0.1.3`.
+    Already done in W0 - verify it's still `0.1.3`.
 
 11. **Update `.iao.json` to next iteration draft:**
     ```fish
@@ -2166,11 +2166,11 @@ This is where the agent stops. The human takes over.
 
 ---
 
-## Section D — Post-flight (After Kyle's --confirm)
+## Section D - Post-flight (After Kyle's --confirm)
 
 When Kyle returns, fills in his notes, ticks the sign-off boxes, and runs `iao iteration close --confirm`, the post-flight sequence runs:
 
-### D.1 — Validate sign-off
+### D.1 - Validate sign-off
 
 ```fish
 iao iteration close --confirm
@@ -2181,14 +2181,14 @@ iao iteration close --confirm
 # 4. If yes, marks iteration complete in .iao.json
 ```
 
-### D.2 — Final post-flight check pass
+### D.2 - Final post-flight check pass
 
 ```fish
 iao doctor postflight
 # Expected: all checks PASS (no DEFERRED for run_report_complete now that Kyle filled it in)
 ```
 
-### D.3 — Seed next iteration
+### D.3 - Seed next iteration
 
 ```fish
 iao iteration seed
@@ -2197,7 +2197,7 @@ iao iteration seed
 # (Used by 0.1.4 W7's Qwen design generation)
 ```
 
-### D.4 — Final state verification
+### D.4 - Final state verification
 
 ```fish
 cat .iao.json | jq .current_iteration
@@ -2211,7 +2211,7 @@ command ls docs/iterations/0.1.3/
 #           iao-report-0.1.3.1.md, iao-run-report-0.1.3.1.md, iao-bundle-0.1.3.1.md
 ```
 
-### D.5 — Manual git commit (Kyle, per Pillar 0)
+### D.5 - Manual git commit (Kyle, per Pillar 0)
 
 ```fish
 git status
@@ -2225,7 +2225,7 @@ git commit -m "iao 0.1.3.1: bundle quality, folder consolidation, src-layout, pi
 
 ---
 
-## Section E — Rollback Procedure
+## Section E - Rollback Procedure
 
 If iao 0.1.3.1 fails catastrophically at any point:
 
@@ -2260,12 +2260,12 @@ exec fish
 **When NOT to rollback:**
 - Single test failure that has a clear fix (just fix it)
 - Wall clock running long but workstreams still completing (let it run)
-- Qwen producing undersized artifacts (the run report mechanism handles this — surface to Kyle, don't roll back)
-- Kyle hasn't filled in run report notes yet (this is expected — wait for him)
+- Qwen producing undersized artifacts (the run report mechanism handles this - surface to Kyle, don't roll back)
+- Kyle hasn't filled in run report notes yet (this is expected - wait for him)
 
 ---
 
-## Section F — Wall Clock Targets
+## Section F - Wall Clock Targets
 
 | Workstream | Target | Cumulative |
 |---|---|---|
@@ -2285,20 +2285,20 @@ Soft cap is 8 hours, with the understanding that 50 minutes of overrun is within
 
 ---
 
-## Section G — Sign-off
+## Section G - Sign-off
 
 This plan is the operational instruction set for iao 0.1.3.1. It is read by both Gemini CLI (W0–W5) and Claude Code (W6–W7). Both agents have separate briefings: GEMINI.md for Gemini, CLAUDE.md for Claude Code. Both briefings reference this plan for execution detail.
 
 This plan is immutable per ADR-012 once W0 begins. The build log records what actually happened. The report grades it. The run report is where Kyle's voice enters the loop.
 
-— Bootstrap planning chat, 2026-04-09
+- Bootstrap planning chat, 2026-04-09
 ```
 
 ## §3. Build Log
 
 ### BUILD LOG (iao-build-log-0.1.3.1.md)
 ```markdown
-# Build Log — iao 0.1.3.1
+# Build Log - iao 0.1.3.1
 
 **Start:** 2026-04-09T14:00:00Z
 **Agent:** claude-code (Claude Opus 4.6)
@@ -2312,7 +2312,7 @@ This plan is immutable per ADR-012 once W0 begins. The build log records what ac
 ## Pre-flight
 
 Pre-flight checks completed with the following state:
-- Working directory: `/home/kthompson/dev/projects/iao` — confirmed
+- Working directory: `/home/kthompson/dev/projects/iao` - confirmed
 - Backup created: `~/dev/projects/iao.backup-pre-0.1.3` (1.2 MB)
 - Git state: not a git repository (Phase 0, no remote yet)
 - Python: 3.14.3 at `/usr/bin/python3`
@@ -2322,15 +2322,15 @@ Pre-flight checks completed with the following state:
 - Tools: jq present, age not found (non-blocking)
 
 **Discrepancies encountered:**
-- `.iao-checkpoint.json` showed iteration 0.1.2 (not 0.1.3.1) — Gemini CLI W0–W5 had not been executed. The design and plan docs existed at `artifacts/docs/iterations/0.1.3/` in the pre-W1 location, confirming the planning phase completed but execution hadn't started.
-- `iao doctor quick` command does not exist in the CLI — the `doctor` subcommand was never added to argparse, though `doctor.py` has `run_all()`. Post-flight and pre-flight work via separate subcommands.
+- `.iao-checkpoint.json` showed iteration 0.1.2 (not 0.1.3.1) - Gemini CLI W0–W5 had not been executed. The design and plan docs existed at `artifacts/docs/iterations/0.1.3/` in the pre-W1 location, confirming the planning phase completed but execution hadn't started.
+- `iao doctor quick` command does not exist in the CLI - the `doctor` subcommand was never added to argparse, though `doctor.py` has `run_all()`. Post-flight and pre-flight work via separate subcommands.
 - The `age` binary was not found, though the secrets backend module exists. Non-blocking for this iteration.
 
 **Decision:** Execute all 8 workstreams (W0–W7) as a single-agent run with Claude Code, since Gemini's W0–W5 was not completed. Kyle confirmed this approach.
 
 ---
 
-## W0 — Iteration Bookkeeping
+## W0 - Iteration Bookkeeping
 
 **Status:** COMPLETE
 **Wall clock:** ~2 min
@@ -2345,7 +2345,7 @@ Actions:
 
 ---
 
-## W1 — Folder Consolidation
+## W1 - Folder Consolidation
 
 **Status:** COMPLETE
 **Wall clock:** ~10 min
@@ -2354,7 +2354,7 @@ Actions:
 - Created `docs/{iterations,phase-charters,archive,drafts}` directories
 - Moved `artifacts/docs/iterations/*` → `docs/iterations/` (0.1.2 and 0.1.3 directories)
 - Removed empty `artifacts/docs/iterations`, `artifacts/docs`, `artifacts/` via rmdir
-- `iao/docs/harness/` not empty (contains `local-global-model.md`) — left intact as package-internal doc
+- `iao/docs/harness/` not empty (contains `local-global-model.md`) - left intact as package-internal doc
 - Updated path references:
   - `iao/artifacts/loop.py`: `_iteration_dir()` now reads from `docs/iterations/`
   - `iao/logger.py`: build log path updated to `docs/iterations/<version>/`
@@ -2363,7 +2363,7 @@ Actions:
 
 ---
 
-## W2 — src-layout Refactor
+## W2 - src-layout Refactor
 
 **Status:** COMPLETE
 **Wall clock:** ~8 min
@@ -2381,7 +2381,7 @@ Actions:
 
 ---
 
-## W3 — Universal Bundle Spec + Quality Gates
+## W3 - Universal Bundle Spec + Quality Gates
 
 **Status:** COMPLETE
 **Wall clock:** ~20 min
@@ -2406,7 +2406,7 @@ Actions:
 
 ---
 
-## W4 — Universal Pipeline Scaffolding
+## W4 - Universal Pipeline Scaffolding
 
 **Status:** COMPLETE
 **Wall clock:** ~15 min
@@ -2418,14 +2418,14 @@ Actions:
   - `validate.py`: `validate_pipeline()` checks all phases have files with `main()`
   - `registry.py`: `list_pipelines()` and `get_pipeline_status()` from `.iao.json`
 - Added `iao pipeline` CLI subparser with `init`, `list`, `validate`, `status` commands
-- Created `src/iao/postflight/pipeline_present.py` — returns SKIP for projects without pipelines
+- Created `src/iao/postflight/pipeline_present.py` - returns SKIP for projects without pipelines
 - Appended `iaomw-ADR-030` (Universal Pipeline Pattern) to base.md
 - Smoke test: `iao pipeline init demo` in `/tmp` → 10 phase files + checkpoint + README, `iao pipeline validate demo` passes
 - All 30 tests pass
 
 ---
 
-## W5 — Human Feedback Loop + Run Report
+## W5 - Human Feedback Loop + Run Report
 
 **Status:** COMPLETE
 **Wall clock:** ~15 min
@@ -2439,14 +2439,14 @@ Actions:
 - Created `prompts/run-report.md.j2` Jinja template
 - Added `iao iteration close` (generates run report + bundle + summary) and `iao iteration close --confirm` (validates sign-off) to CLI
 - Added `iao iteration seed` command
-- Created `src/iao/postflight/run_report_complete.py` — returns DEFERRED until Kyle fills in notes
+- Created `src/iao/postflight/run_report_complete.py` - returns DEFERRED until Kyle fills in notes
 - Appended `iaomw-ADR-031` (Run Report as Canonical Artifact) and `iaomw-ADR-032` (Human Sign-off Required) to base.md
 - Reframed `iaomw-Pillar-10` text in base.md to reference run report feedback loop
 - All 30 tests pass
 
 ---
 
-## W6 — README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
+## W6 - README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
 
 **Status:** COMPLETE
 **Wall clock:** ~20 min
@@ -2459,8 +2459,8 @@ Actions:
   - Roadmap, installation, contributing, license
 - Created `docs/phase-charters/iao-phase-0.md` from design doc §1 with updated exit criteria checkboxes
 - Created 2 new post-flight checks:
-  - `src/iao/postflight/ten_pillars_present.py` — verifies trident + all 10 pillars in design doc and README
-  - `src/iao/postflight/readme_current.py` — verifies README mtime > iteration start
+  - `src/iao/postflight/ten_pillars_present.py` - verifies trident + all 10 pillars in design doc and README
+  - `src/iao/postflight/readme_current.py` - verifies README mtime > iteration start
 - Updated `src/iao/artifacts/templates.py` with `_load_harness_blocks()` to extract trident and pillars from base.md at render time
 - Appended to base.md: `iaomw-ADR-033` (README Currency), `iaomw-ADR-034` (Trident/Pillars Verbatim), `iaomw-Pattern-33` (README Drift)
 - Added `iaomw-G106` to gotcha registry (README falls behind)
@@ -2469,7 +2469,7 @@ Actions:
 
 ---
 
-## W7 — Qwen Loop Hardening + Dogfood + Closing Sequence
+## W7 - Qwen Loop Hardening + Dogfood + Closing Sequence
 
 **Status:** COMPLETE
 **Wall clock:** ~30 min
@@ -2515,7 +2515,7 @@ Actions:
 
 ### REPORT (iao-report-0.1.3.1.md)
 ```markdown
-# Report — iao 0.1.3.1
+# Report - iao 0.1.3.1
 
 **Status:** COMPLETE
 **Date:** 2026-04-09
@@ -2529,7 +2529,7 @@ Actions:
 
 iao 0.1.3.1 delivered all 10 structural debts identified in the design document. The iteration consolidated the folder layout from 3 docs locations to 1, migrated the Python package to src-layout, established the §1–§20 universal bundle specification with quality gates, scaffolded a 10-phase pipeline pattern, created the human feedback loop, synced the README to kjtcom conventions, and hardened the Qwen artifact loop with word count enforcement and retry logic. All 30 existing tests pass. 42 Python components are verified across 4 functional groups.
 
-The single-agent execution (Claude Code for all 8 workstreams) replaced the planned split-agent model (Gemini W0–W5, Claude W6–W7) after the Gemini handoff was found incomplete. This deviation did not affect deliverable quality — all acceptance criteria from the design document are met.
+The single-agent execution (Claude Code for all 8 workstreams) replaced the planned split-agent model (Gemini W0–W5, Claude W6–W7) after the Gemini handoff was found incomplete. This deviation did not affect deliverable quality - all acceptance criteria from the design document are met.
 
 ---
 
@@ -2558,7 +2558,7 @@ The single-agent execution (Claude Code for all 8 workstreams) replaced the plan
 
 3. **Test suite resilience.** All 30 existing tests continued to pass through every workstream. Only 3 intentional failures in W3 (higher word count thresholds) needed test updates.
 
-4. **Bundle mechanical aggregation.** The bundle reads real files and assembles them — no LLM synthesis. This is fundamentally more reliable than Qwen-synthesized bundles.
+4. **Bundle mechanical aggregation.** The bundle reads real files and assembles them - no LLM synthesis. This is fundamentally more reliable than Qwen-synthesized bundles.
 
 5. **Pipeline scaffold smoke test.** `iao pipeline init demo` + `iao pipeline validate demo` both work end-to-end in a clean temp directory.
 
@@ -2582,11 +2582,11 @@ The single-agent execution (Claude Code for all 8 workstreams) replaced the plan
 
 2. **`iao doctor` CLI subcommand.** Wire `doctor.py` into argparse so documented commands work.
 
-3. **Telegram framework + MCP global install** — the 0.1.4 primary theme.
+3. **Telegram framework + MCP global install** - the 0.1.4 primary theme.
 
-4. **Cross-platform installer** — fish/bash/zsh/PowerShell support.
+4. **Cross-platform installer** - fish/bash/zsh/PowerShell support.
 
-5. **`age` installation** — ensure secrets backend dependency present.
+5. **`age` installation** - ensure secrets backend dependency present.
 
 ---
 
@@ -2594,7 +2594,7 @@ The single-agent execution (Claude Code for all 8 workstreams) replaced the plan
 
 | Prong | Target | Result |
 |---|---|---|
-| Cost | Zero external API cost | Achieved — Claude Code subscription + local Ollama Qwen |
+| Cost | Zero external API cost | Achieved - Claude Code subscription + local Ollama Qwen |
 | Delivery | 8/8 workstreams | 8/8 complete |
 | Performance | Bundle ≥ 50 KB, quality gates pass | Bundle generated with all §1–§20 sections |
 
@@ -2742,11 +2742,11 @@ graph BT
 **Goal:** Define binary readiness for standalone repo extraction.
 
 Standalone extraction (Phase B) requires all 5 criteria to be PASS at closing:
-1. **Duplication Eliminated** — `iao-middleware/lib/` deleted, shims only in `scripts/`.
-2. **Doctor Unified** — `pre_flight.py`, `post_flight.py`, and `iao` CLI use shared `doctor.run_all`.
-3. **CLI Stable** — `iao --version` returns 0.1.0, entry points verified.
-4. **Installer Idempotent** — `install.fish` marker block check passes.
-5. **Manifest/Compat Frozen** — Integrity check clean, all required compatibility checks pass.
+1. **Duplication Eliminated** - `iao-middleware/lib/` deleted, shims only in `scripts/`.
+2. **Doctor Unified** - `pre_flight.py`, `post_flight.py`, and `iao` CLI use shared `doctor.run_all`.
+3. **CLI Stable** - `iao --version` returns 0.1.0, entry points verified.
+4. **Installer Idempotent** - `install.fish` marker block check passes.
+5. **Manifest/Compat Frozen** - Integrity check clean, all required compatibility checks pass.
 
 ### iaomw-ADR-027: Doctor Unification
 
@@ -2908,7 +2908,7 @@ When Qwen Tier 1 fell through on synthesis ratio, Gemini Flash Tier 2 produced s
 
 ---
 
-## ADRs (continued — iao 0.1.3)
+## ADRs (continued - iao 0.1.3)
 
 ### iaomw-ADR-028: Universal Bundle Specification
 
@@ -2969,16 +2969,16 @@ Design and plan are immutable inputs from W0 onward. The Qwen artifact loop prod
 **Goal:** Provide a reusable 10-phase pipeline scaffold for all iao consumer projects.
 
 Every iao consumer project that processes data follows the same 10-phase pattern:
-1. Extract — acquire raw data
-2. Transform — convert to intermediate format
-3. Normalize — apply schema
-4. Enrich — add derived data from external sources
-5. Production Run — full pipeline at scale
-6. Frontend — consumer-facing interface
-7. Production Load — load into production storage
-8. Hardening — gap filling, schema upgrades
-9. Optimization — performance, cost, monitoring
-10. Retrospective — lessons, ADRs, next phase plan
+1. Extract - acquire raw data
+2. Transform - convert to intermediate format
+3. Normalize - apply schema
+4. Enrich - add derived data from external sources
+5. Production Run - full pipeline at scale
+6. Frontend - consumer-facing interface
+7. Production Load - load into production storage
+8. Hardening - gap filling, schema upgrades
+9. Optimization - performance, cost, monitoring
+10. Retrospective - lessons, ADRs, next phase plan
 
 `iao pipeline init <name>` scaffolds this structure. `iao pipeline validate <name>` verifies completeness.
 
@@ -3021,9 +3021,9 @@ Every iteration close produces a run report containing: workstream summary table
 ```markdown
 # iao
 
-**Iterative Agentic Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Iterative Agentic Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-iao treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology was developed inside [kjtcom](https://kylejeromethompson.com), a location-intelligence platform, and graduated to a standalone Python package during kjtcom Phase 10. A junior engineer reading this should know that iao is a *system for getting LLM agents to ship working software without supervision*.
+iao treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology was developed inside [kjtcom](https://kylejeromethompson.com), a location-intelligence platform, and graduated to a standalone Python package during kjtcom Phase 10. A junior engineer reading this should know that iao is a *system for getting LLM agents to ship working software without supervision*.
 
 **Phase 0 (NZXT-only authoring)** | **Iteration 0.1.3.1** | **Status: Bundle quality hardening + folder consolidation + src-layout + pipeline scaffolding + human feedback loop**
 
@@ -3039,16 +3039,16 @@ graph BT
 
 ### The Ten Pillars of IAO
 
-1. **iaomw-Pillar-1 (Trident)** — Cost / Delivery / Performance triangle governs every decision.
-2. **iaomw-Pillar-2 (Artifact Loop)** — design → plan → build → report → bundle. Every iteration produces all five.
-3. **iaomw-Pillar-3 (Diligence)** — First action: `iao registry query "<topic>"`. Read before you code.
-4. **iaomw-Pillar-4 (Pre-Flight Verification)** — Validate the environment before execution. Pre-flight failures block launch.
-5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** — The harness is the product; the model is the engine.
-6. **iaomw-Pillar-6 (Zero-Intervention Target)** — Interventions are failures in planning. The agent does not ask permission.
-7. **iaomw-Pillar-7 (Self-Healing Execution)** — Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
-8. **iaomw-Pillar-8 (Phase Graduation)** — Formalized via MUST-have deliverables + Qwen graduation analysis. Pattern-31 chartering.
-9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** — Build is a gatekeeper. Existence checks are necessary but insufficient (ADR-009).
-10. **iaomw-Pillar-10 (Continuous Improvement)** — Run report → Kyle's notes → next iteration design seed. Feedback loop is first-class.
+1. **iaomw-Pillar-1 (Trident)** - Cost / Delivery / Performance triangle governs every decision.
+2. **iaomw-Pillar-2 (Artifact Loop)** - design → plan → build → report → bundle. Every iteration produces all five.
+3. **iaomw-Pillar-3 (Diligence)** - First action: `iao registry query "<topic>"`. Read before you code.
+4. **iaomw-Pillar-4 (Pre-Flight Verification)** - Validate the environment before execution. Pre-flight failures block launch.
+5. **iaomw-Pillar-5 (Agentic Harness Orchestration)** - The harness is the product; the model is the engine.
+6. **iaomw-Pillar-6 (Zero-Intervention Target)** - Interventions are failures in planning. The agent does not ask permission.
+7. **iaomw-Pillar-7 (Self-Healing Execution)** - Max 3 retries per error with diagnostic feedback. Pattern-22 enforcement.
+8. **iaomw-Pillar-8 (Phase Graduation)** - Formalized via MUST-have deliverables + Qwen graduation analysis. Pattern-31 chartering.
+9. **iaomw-Pillar-9 (Post-Flight Functional Testing)** - Build is a gatekeeper. Existence checks are necessary but insufficient (ADR-009).
+10. **iaomw-Pillar-10 (Continuous Improvement)** - Run report → Kyle's notes → next iteration design seed. Feedback loop is first-class.
 
 ---
 
@@ -3056,13 +3056,13 @@ graph BT
 
 iao provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§20 spec (ADR-028, ADR-029).
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern (`iao pipeline init`) reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 3).
-- **Multi-Agent Orchestration** — Gemini CLI for W0–W5, Claude Code for W6–W7, Qwen for artifact generation.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§20 spec (ADR-028, ADR-029).
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern (`iao pipeline init`) reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 3).
+- **Multi-Agent Orchestration** - Gemini CLI for W0–W5, Claude Code for W6–W7, Qwen for artifact generation.
 
 ---
 
@@ -3116,7 +3116,7 @@ iao/
 
 ## Phase 0 Status
 
-**Phase:** 0 — NZXT-only authoring
+**Phase:** 0 - NZXT-only authoring
 **Charter:** [docs/phase-charters/iao-phase-0.md](docs/phase-charters/iao-phase-0.md)
 
 ### Exit Criteria
@@ -3179,7 +3179,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*iao v0.1.3 — Phase 0 — April 2026*
+*iao v0.1.3 - Phase 0 - April 2026*
 ```
 
 ## §7. CHANGELOG
@@ -3217,7 +3217,7 @@ First versioned release. Extracted from POC project to live as iao the project.
 
 ### CLAUDE.md (CLAUDE.md)
 ```markdown
-# CLAUDE.md — iao 0.1.3.1
+# CLAUDE.md - iao 0.1.3.1
 
 **This file briefs Claude Code on the iao 0.1.3.1 iteration. Read it end-to-end before doing anything.**
 
@@ -3227,9 +3227,9 @@ You are Claude Code (`@anthropic-ai/claude-code`). You are running on NZXTcos wi
 
 ## What is iao
 
-iao (Iterative Agentic Orchestration) is a methodology and Python package for running LLM-driven engineering iterations without human supervision. The harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — is the product. The model is the engine. iao was extracted from `kjtcom` (a location-intelligence platform) during kjtcom Phase 10. iao is currently in **Phase 0 — NZXT-only authoring** and will graduate to Phase 1 (multi-engineer onboarding) when 0.6.x ships to soc-foundry/iao.
+iao (Iterative Agentic Orchestration) is a methodology and Python package for running LLM-driven engineering iterations without human supervision. The harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - is the product. The model is the engine. iao was extracted from `kjtcom` (a location-intelligence platform) during kjtcom Phase 10. iao is currently in **Phase 0 - NZXT-only authoring** and will graduate to Phase 1 (multi-engineer onboarding) when 0.6.x ships to soc-foundry/iao.
 
-You are not authoring canonical artifacts. The design and plan documents are immutable inputs (per `iaomw-ADR-012`, amended in W3 of this iteration). You are executing W6 and W7, which produce code, configuration, and documentation updates — but NOT new design or plan content. The Qwen artifact loop (which you are hardening in W7) is responsible for generating build log, report, run report, and bundle.
+You are not authoring canonical artifacts. The design and plan documents are immutable inputs (per `iaomw-ADR-012`, amended in W3 of this iteration). You are executing W6 and W7, which produce code, configuration, and documentation updates - but NOT new design or plan content. The Qwen artifact loop (which you are hardening in W7) is responsible for generating build log, report, run report, and bundle.
 
 ---
 
@@ -3251,19 +3251,19 @@ You are not authoring canonical artifacts. The design and plan documents are imm
 
 ---
 
-## Hard rules — non-negotiable
+## Hard rules - non-negotiable
 
 These rules apply to every keystroke. Violations are iteration-blocking failures.
 
-### Pillar 0 — No git writes by agents
+### Pillar 0 - No git writes by agents
 
 You **never** run `git commit`, `git push`, `git rebase`, `git merge`, `git tag`, or any git command that writes to the repo. Read-only git is fine: `git status`, `git diff`, `git log`, `git show`.
 
 All git writes are performed manually by Kyle after he reviews the iteration output. This is a hard contract that has applied to every iao and kjtcom iteration since the methodology began. There are no exceptions.
 
-If you find yourself thinking "I should commit this work-in-progress to be safe" — you are wrong. The safety mechanism is the `~/dev/projects/iao.backup-pre-0.1.3` directory that was created in pre-flight, not a mid-iteration commit.
+If you find yourself thinking "I should commit this work-in-progress to be safe" - you are wrong. The safety mechanism is the `~/dev/projects/iao.backup-pre-0.1.3` directory that was created in pre-flight, not a mid-iteration commit.
 
-### iaomw-G001 — printf, not heredocs
+### iaomw-G001 - printf, not heredocs
 
 When writing multi-line content to files via shell commands, use `printf` with newline-separated arguments. Heredocs (`<<EOF`) break in fish shell. Examples:
 
@@ -3285,7 +3285,7 @@ EOF
 
 When writing Python or large markdown files, prefer using your `Write` tool directly rather than going through the shell at all. The printf rule applies to shell commands, not to your editor primitives.
 
-### iaomw-G022 — `command ls`, not bare `ls`
+### iaomw-G022 - `command ls`, not bare `ls`
 
 In fish shell, plain `ls` has color escape codes that break agent parsing of the output. Always use `command ls` to bypass shell aliases and get clean output.
 
@@ -3297,35 +3297,35 @@ command ls -la docs/iterations/0.1.3/
 ls docs/iterations/0.1.3/
 ```
 
-### iaomw-G031 — Pre-flight schema inspection
+### iaomw-G031 - Pre-flight schema inspection
 
-Before assuming you know the structure of a file, read it. The 0.1.2 W5 audit caught this in kjtcom — there were 11 undocumented enrichment fields in TripleDB Firestore that nobody knew about until the audit ran. The lesson generalizes: don't assume the on-disk structure matches your mental model. Read first, code second.
+Before assuming you know the structure of a file, read it. The 0.1.2 W5 audit caught this in kjtcom - there were 11 undocumented enrichment fields in TripleDB Firestore that nobody knew about until the audit ran. The lesson generalizes: don't assume the on-disk structure matches your mental model. Read first, code second.
 
 For W6 specifically: before rewriting `README.md`, read the current `README.md`. Before adding to `base.md`, read the current `base.md`. Before editing `prompts/design.md.j2`, read the current template.
 
-### Gemini security gotcha — never `cat ~/.config/fish/config.fish`
+### Gemini security gotcha - never `cat ~/.config/fish/config.fish`
 
-Don't print the contents of `~/.config/fish/config.fish` to your output. Gemini CLI has leaked API keys this way before. After the 0.1.2 W1 secrets migration, this matters less — but the discipline applies to you too.
+Don't print the contents of `~/.config/fish/config.fish` to your output. Gemini CLI has leaked API keys this way before. After the 0.1.2 W1 secrets migration, this matters less - but the discipline applies to you too.
 
 If you need to verify something in fish config, use `grep -v -E '(API_KEY|TOKEN|SECRET|PASSWORD)' ~/.config/fish/config.fish` or read specific sections by line range.
 
-### Pillar 6 — Zero-Intervention Target
+### Pillar 6 - Zero-Intervention Target
 
 You do not ask Kyle for permission to do non-destructive things. The plan tells you what to do. The design tells you why. If you find yourself drafting a question to ask Kyle mid-iteration, the answer is almost always: pick the safest interpretation, do it, and note the discrepancy in the build log.
 
 The exception is **destructive** actions that the plan does not authorize: deleting a file the plan didn't say to delete, force-pushing anything (which is doubly forbidden by Pillar 0), running `rm -rf` on a path the plan doesn't enumerate. Those, you stop and surface.
 
-The "Agent Questions for Kyle" section in the run report is for **post-execution** questions — things you noticed during the run that need a human decision before the *next* iteration. It is not for mid-iteration decision deferral.
+The "Agent Questions for Kyle" section in the run report is for **post-execution** questions - things you noticed during the run that need a human decision before the *next* iteration. It is not for mid-iteration decision deferral.
 
-### Pillar 7 — Self-Healing Execution, max 3 retries
+### Pillar 7 - Self-Healing Execution, max 3 retries
 
-When something fails — a test, a CLI command, a file operation — you retry with a different approach up to 3 times. Each retry should be informed by the previous failure (read the error, understand what changed, adjust). After 3 retries, you stop and surface the failure to the build log. You do not retry in a loop indefinitely.
+When something fails - a test, a CLI command, a file operation - you retry with a different approach up to 3 times. Each retry should be informed by the previous failure (read the error, understand what changed, adjust). After 3 retries, you stop and surface the failure to the build log. You do not retry in a loop indefinitely.
 
-### ADR-012 — Design and plan are immutable
+### ADR-012 - Design and plan are immutable
 
 The design document at `docs/iterations/0.1.3/iao-design-0.1.3.md` and the plan document at `docs/iterations/0.1.3/iao-plan-0.1.3.md` are immutable inputs to this iteration. You do not edit them. You do not "fix" them if you find a typo. You do not regenerate them with Qwen. They are read-only from the moment W0 began.
 
-If you find a genuine error in the design or plan — not a typo, but something that would block execution — you stop and surface the discrepancy in the build log under "Discrepancies Encountered." Kyle decides whether the discrepancy blocks the iteration.
+If you find a genuine error in the design or plan - not a typo, but something that would block execution - you stop and surface the discrepancy in the build log under "Discrepancies Encountered." Kyle decides whether the discrepancy blocks the iteration.
 
 In W7, when you harden the Qwen artifact loop, the loop is configured to **not** regenerate design and plan. It generates only build log, report, run report, and bundle. This resolves 0.1.2's Open Question 5 in favor of immutability.
 
@@ -3397,7 +3397,7 @@ iao log workstream-complete handoff "Picked up clean handoff from Gemini CLI. W0
 
 ---
 
-## W6 — README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
+## W6 - README Sync + Phase 0 Charter Retrofit + 10 Pillars Enforcement
 
 **Wall clock target:** 75 min
 
@@ -3409,7 +3409,7 @@ iao log workstream-complete handoff "Picked up clean handoff from Gemini CLI. W0
 
 2. **Read kjtcom's README** for structural reference. Two ways to access it:
    - Direct: `cat ~/dev/projects/kjtcom/README.md`
-   - Via kjtcom's bundle: there's a kjtcom bundle in chat upload history (10.69.1) that contains §6 README — but that's only available if Kyle pasted it; you can't fetch it. Use the direct file.
+   - Via kjtcom's bundle: there's a kjtcom bundle in chat upload history (10.69.1) that contains §6 README - but that's only available if Kyle pasted it; you can't fetch it. Use the direct file.
 
 3. **Rewrite `README.md`** following the kjtcom structure but with iao-specific content. The structure is:
    - Hero paragraph (what is iao, novice operability)
@@ -3429,10 +3429,10 @@ iao log workstream-complete handoff "Picked up clean handoff from Gemini CLI. W0
 4. **Create `docs/phase-charters/iao-phase-0.md`** by copying §1 of the design doc verbatim, with front-matter added at the top. The directory was created in W1.
 
 5. **Create the two new post-flight checks:**
-   - `src/iao/postflight/ten_pillars_present.py` — greps design docs and README for trident block + 10 pillars
-   - `src/iao/postflight/readme_current.py` — checks README mtime vs iteration start time
+   - `src/iao/postflight/ten_pillars_present.py` - greps design docs and README for trident block + 10 pillars
+   - `src/iao/postflight/readme_current.py` - checks README mtime vs iteration start time
 
-6. **Wire both checks into `iao doctor postflight`** by updating `src/iao/doctor.py` (or wherever the postflight check registry lives — read the file to find out).
+6. **Wire both checks into `iao doctor postflight`** by updating `src/iao/doctor.py` (or wherever the postflight check registry lives - read the file to find out).
 
 7. **Update `prompts/design.md.j2`** to include `{{ trident_block }}` and `{{ ten_pillars_block }}` placeholders. Loaded from base.md at render time.
 
@@ -3456,7 +3456,7 @@ iao log workstream-complete handoff "Picked up clean handoff from Gemini CLI. W0
 
 13. **Append to build log via `iao log workstream-complete W6 "..."`** with a summary of what you did.
 
-### W6 component review — count the chips
+### W6 component review - count the chips
 
 The component review section in the README needs an actual count of iao's components, similar to kjtcom's "47+ IC chips across 4 boards" framing. For iao, the boards/groupings are:
 
@@ -3465,7 +3465,7 @@ The component review section in the README needs an actual count of iao's compon
 - **Verification (board 3):** `doctor`, `preflight/checks`, `postflight/artifacts_present`, `postflight/build_gatekeeper`, `postflight/build_log_complete`, `postflight/bundle_quality`, `postflight/iteration_complete`, `postflight/pipeline_present`, `postflight/run_report_complete`, `postflight/ten_pillars_present`, `postflight/readme_current`
 - **Infrastructure (board 4):** `secrets/cli`, `secrets/session`, `secrets/store`, `secrets/backends`, `install/migrate_config_fish`, `install/secret_patterns`, `data/firestore`, `rag/query`, `rag/router`, `integrations/brave`, `ollama_config`, `pipelines/pattern`, `pipelines/scaffold`, `pipelines/validate`, `pipelines/registry`, `cli`, `push`
 
-That's roughly 40 components across 4 boards. **Count them yourself in the actual filesystem** before writing the README — the list above is approximate and may drift.
+That's roughly 40 components across 4 boards. **Count them yourself in the actual filesystem** before writing the README - the list above is approximate and may drift.
 
 ```fish
 find src/iao -name "*.py" -not -name "__init__.py" -not -name "test_*" | sort
@@ -3473,7 +3473,7 @@ find src/iao -name "*.py" -not -name "__init__.py" -not -name "test_*" | sort
 
 ---
 
-## W7 — Qwen Loop Hardening + Dogfood + Closing Sequence
+## W7 - Qwen Loop Hardening + Dogfood + Closing Sequence
 
 **Wall clock target:** 90 min
 
@@ -3483,7 +3483,7 @@ find src/iao -name "*.py" -not -name "__init__.py" -not -name "test_*" | sort
 
 This is the workstream where the bundle quality problem actually gets fixed and validated. The Qwen loop has been scaffolded since 0.1.2 W6 but it's never been asked to produce production-quality output. Your job is to make it produce production-quality output, then prove it did.
 
-### W7 step 1 — Harden the Qwen loop
+### W7 step 1 - Harden the Qwen loop
 
 Read these files first:
 ```fish
@@ -3506,7 +3506,7 @@ Then update each:
   - The trident mermaid block (verbatim from base.md)
   - The 10 pillars (verbatim from base.md)
   - The §1–§20 bundle structure as reference (from ADR-028 in base.md)
-  - Three few-shot examples from kjtcom's 10.69.1 iteration if accessible at `~/dev/projects/kjtcom/docs/iterations/10.69.1/` — read those files and embed them in the prompt context
+  - Three few-shot examples from kjtcom's 10.69.1 iteration if accessible at `~/dev/projects/kjtcom/docs/iterations/10.69.1/` - read those files and embed them in the prompt context
 - Use `ollama_config.py` for the API client (HTTP to localhost:11434)
 
 **`src/iao/artifacts/templates.py`:**
@@ -3517,11 +3517,11 @@ Then update each:
 **`src/iao/artifacts/schemas.py`:**
 - JSON schemas for build log, report, run report, bundle metadata
 - Validation called from `loop.py` after each Qwen output
-- **Design and plan have NO schema validation here** — they are immutable inputs per ADR-012 amendment. The Qwen loop never generates them.
+- **Design and plan have NO schema validation here** - they are immutable inputs per ADR-012 amendment. The Qwen loop never generates them.
 
-### W7 step 2 — Dogfood test (the real one)
+### W7 step 2 - Dogfood test (the real one)
 
-This is the test that 0.1.2 W7 was supposed to be but wasn't. The success criterion is **no longer "the file exists"** — it's "the file passes the W3 quality gates."
+This is the test that 0.1.2 W7 was supposed to be but wasn't. The success criterion is **no longer "the file exists"** - it's "the file passes the W3 quality gates."
 
 ```fish
 # Generate build log
@@ -3542,10 +3542,10 @@ grep -c "^| W" docs/iterations/0.1.3/iao-report-0.1.3.1.md
 
 If Qwen produces undersized output and the retry loop exhausts:
 - The `Agent Questions for Kyle` section in the run report gets populated
-- You **do not** block the iteration on this — you let the loop handle it per Pillar 7
+- You **do not** block the iteration on this - you let the loop handle it per Pillar 7
 - The bundle quality gate in the closing sequence will still catch a fundamentally broken bundle
 
-### W7 step 3 — Run the closing sequence
+### W7 step 3 - Run the closing sequence
 
 ```fish
 iao doctor postflight
@@ -3561,7 +3561,7 @@ iao iteration close
 # Exits 0
 ```
 
-### W7 step 4 — Verify bundle quality
+### W7 step 4 - Verify bundle quality
 
 ```fish
 wc -c docs/iterations/0.1.3/iao-bundle-0.1.3.1.md
@@ -3576,7 +3576,7 @@ iao bundle validate docs/iterations/0.1.3/iao-bundle-0.1.3.1.md
 
 If the bundle is under 50 KB or missing sections, **the iteration has failed**. This is the central thing 0.1.3 was supposed to fix and if you ship a sub-50KB bundle you've reproduced the 0.1.2 failure mode. Surface it to the build log as a hard failure and stop.
 
-### W7 step 5 — Phase 0 graduation analysis
+### W7 step 5 - Phase 0 graduation analysis
 
 ```fish
 iao iteration graduate 0.1.3.1 --analyze
@@ -3584,25 +3584,25 @@ iao iteration graduate 0.1.3.1 --analyze
 # Expected output: "continue with 0.1.4" (telegram + cross-platform installer remain)
 ```
 
-### W7 step 6 — Update CHANGELOG and bump iteration draft
+### W7 step 6 - Update CHANGELOG and bump iteration draft
 
 Append a 0.1.3 entry to `CHANGELOG.md` summarizing all 8 workstreams. Format:
 
 ```markdown
-## [0.1.3] — 2026-04-09
+## [0.1.3] - 2026-04-09
 
-### Phase 0 — NZXT-only authoring
+### Phase 0 - NZXT-only authoring
 
 **Iteration:** 0.1.3.1
 **Theme:** Bundle quality hardening, folder consolidation, src-layout refactor, pipeline scaffolding, human feedback loop
 
 **Workstreams:**
-- W0: Iteration bookkeeping — bumped .iao.json to 0.1.3.1
-- W1: Folder consolidation — moved artifacts/docs/iterations to docs/iterations
-- W2: src-layout refactor — moved iao/iao/ to iao/src/iao/
-- W3: Universal bundle spec — added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
-- W4: Universal pipeline scaffolding — new src/iao/pipelines/ subpackage + iao pipeline CLI
-- W5: Human feedback loop — new src/iao/feedback/ subpackage + run report artifact
+- W0: Iteration bookkeeping - bumped .iao.json to 0.1.3.1
+- W1: Folder consolidation - moved artifacts/docs/iterations to docs/iterations
+- W2: src-layout refactor - moved iao/iao/ to iao/src/iao/
+- W3: Universal bundle spec - added §1–§20 to base.md as ADR-028, ADR-029, ADR-012-amendment
+- W4: Universal pipeline scaffolding - new src/iao/pipelines/ subpackage + iao pipeline CLI
+- W5: Human feedback loop - new src/iao/feedback/ subpackage + run report artifact
 - W6: README sync + Phase 0 charter retrofit + 10 pillars enforcement
 - W7: Qwen loop hardening + dogfood + closing sequence
 
@@ -3616,7 +3616,7 @@ Then update `.iao.json` to draft the next iteration:
 jq '.current_iteration = "0.1.4.0"' .iao.json > .iao.json.tmp && mv .iao.json.tmp .iao.json
 ```
 
-### W7 step 7 — Mark complete and stop
+### W7 step 7 - Mark complete and stop
 
 ```fish
 # Mark W7 complete in checkpoint
@@ -3695,13 +3695,13 @@ These are the failure modes you should actively avoid. Most of them come from pr
 
 When you need more detail than this brief provides, read these in order:
 
-1. **Design:** `docs/iterations/0.1.3/iao-design-0.1.3.md` — what and why
-2. **Plan:** `docs/iterations/0.1.3/iao-plan-0.1.3.md` — how, especially §C (per-workstream execution detail)
-3. **Harness base:** `docs/harness/base.md` — universal ADRs, patterns, pillars (W3 added new content; W6 will add more)
-4. **Phase charter:** `docs/phase-charters/iao-phase-0.md` — only exists after W6 creates it; before that, read §1 of the design doc
-5. **Gotcha registry:** `data/gotcha_archive.json` — known failure modes
-6. **Roadmap:** `docs/roadmap/iao-roadmap-phase-0-and-1.md` — what comes after 0.1.3
-7. **Build log (in progress):** `docs/iterations/0.1.3/iao-build-log-0.1.3.1.md` — read what Gemini wrote in W0–W5 to understand the state you're picking up
+1. **Design:** `docs/iterations/0.1.3/iao-design-0.1.3.md` - what and why
+2. **Plan:** `docs/iterations/0.1.3/iao-plan-0.1.3.md` - how, especially §C (per-workstream execution detail)
+3. **Harness base:** `docs/harness/base.md` - universal ADRs, patterns, pillars (W3 added new content; W6 will add more)
+4. **Phase charter:** `docs/phase-charters/iao-phase-0.md` - only exists after W6 creates it; before that, read §1 of the design doc
+5. **Gotcha registry:** `data/gotcha_archive.json` - known failure modes
+6. **Roadmap:** `docs/roadmap/iao-roadmap-phase-0-and-1.md` - what comes after 0.1.3
+7. **Build log (in progress):** `docs/iterations/0.1.3/iao-build-log-0.1.3.1.md` - read what Gemini wrote in W0–W5 to understand the state you're picking up
 
 ---
 
@@ -3711,14 +3711,14 @@ You have read this brief. You understand the hard rules, the workstreams, the ha
 
 Begin with the pre-flight handoff checks at the top of this file. Then proceed to W6.
 
-— iao 0.1.3.1 bootstrap planning chat, 2026-04-09
+- iao 0.1.3.1 bootstrap planning chat, 2026-04-09
 ```
 
 ## §9. GEMINI.md
 
 ### GEMINI.md (GEMINI.md)
 ```markdown
-# iao authoring location — Gemini CLI briefing
+# iao authoring location - Gemini CLI briefing
 
 **Project:** iao (project code: iaomw)
 **Active iteration:** 0.1.2
@@ -3736,10 +3736,10 @@ iao was extracted from a real production project called kjtcom over Phases 1-10 
 
 iao 0.1.2 is the second authored iteration of iao itself. It establishes:
 
-  1. Secrets architecture — encryption-at-rest using age + OS keyring
-  2. New install.fish — replaces the broken v10.66 installer
-  3. kjtcom strip — moves iao-methodology code out of kjtcom into iao authoring location
-  4. Local-vs-global parameter model — what lives per-project vs per-workstation
+  1. Secrets architecture - encryption-at-rest using age + OS keyring
+  2. New install.fish - replaces the broken v10.66 installer
+  3. kjtcom strip - moves iao-methodology code out of kjtcom into iao authoring location
+  4. Local-vs-global parameter model - what lives per-project vs per-workstation
   5. Qwen artifact loop scaffolding (Phase 6, Claude Code's job)
   6. Dogfood test (Phase 7, Claude Code's job)
 
@@ -3756,25 +3756,25 @@ Read the roadmap at:
 
 You are running Phases 1-5 of iao 0.1.2:
 
-  **Phase 1 — W1: age + keyring detection and install**
+  **Phase 1 - W1: age + keyring detection and install**
     - Create iao/iao/secrets/ subpackage with backends/
     - Write age.py, keyring_linux.py, base.py
     - Update iao/iao/doctor.py to check secrets backends
     - Write tests/test_secrets_backends.py
 
-  **Phase 2 — W2: iao secret CLI subcommand surface**
+  **Phase 2 - W2: iao secret CLI subcommand surface**
     - Write iao/iao/secrets/cli.py, store.py, session.py
     - Modify iao/iao/cli.py to add the secret subparser with 10 subcommands
     - Write tests/test_secrets_cli.py
 
-  **Phase 3 — W3: Migration handler for plaintext secrets**
+  **Phase 3 - W3: Migration handler for plaintext secrets**
     - Create iao/iao/install/ subpackage
     - Write migrate_config_fish.py and secret_patterns.py
     - Update .gitignore to cover secrets paths
     - Add iaomw-G103 to gotcha registry
     - Write tests/test_migrate_config_fish.py
 
-  **Phase 4 — W4: install.fish + local/global model + preflight/postflight infrastructure**
+  **Phase 4 - W4: install.fish + local/global model + preflight/postflight infrastructure**
     - Replace install.fish with the new W4 version (already provided in bootstrap)
     - Create iao/iao/preflight/ subpackage
     - Write checks.py with all preflight check functions
@@ -3784,7 +3784,7 @@ You are running Phases 1-5 of iao 0.1.2:
     - Update iao/iao/cli.py to add preflight and postflight subcommands
     - Write tests/test_preflight.py
 
-  **Phase 5 — W5: kjtcom audit + classification + migration**
+  **Phase 5 - W5: kjtcom audit + classification + migration**
     - Run audit on ~/dev/projects/kjtcom
     - Write artifacts/docs/iterations/0.1.2/kjtcom-audit.md with classification table
     - Migrate IAO-METHODOLOGY files to iao authoring location
@@ -3793,7 +3793,7 @@ You are running Phases 1-5 of iao 0.1.2:
     - Reconcile iao/iao/logger.py with kjtcom/scripts/utils/iao_logger.py
     - kjtcom retains its own copies (additive migration, no breakage)
 
-## Critical constraints — read these before starting
+## Critical constraints - read these before starting
 
 **Pillar 0: No git writes by agents.** You never run git commit, git push, or git anything that writes to the repo. If a workstream requires a commit, stop and tell Kyle to do it manually.
 
@@ -3807,7 +3807,7 @@ You are running Phases 1-5 of iao 0.1.2:
 
 **No --start flag.** You execute workstreams in order via the checkpoint mechanism, not via explicit --start arguments.
 
-**Don't break kjtcom.** W5 is an additive migration. kjtcom retains its own copies of every file you migrate. Never delete or modify kjtcom source files. If you discover that a kjtcom file imports another kjtcom file that you migrated, do NOT change kjtcom's import — update iao's copy to be self-sufficient.
+**Don't break kjtcom.** W5 is an additive migration. kjtcom retains its own copies of every file you migrate. Never delete or modify kjtcom source files. If you discover that a kjtcom file imports another kjtcom file that you migrated, do NOT change kjtcom's import - update iao's copy to be self-sufficient.
 
 ## Pre-flight check expectations
 
@@ -3830,12 +3830,12 @@ Same as in CLAUDE.md. iao 0.1.2 formalizes the split between local state (per-pr
 
 ## Useful commands while you work
 
-  iao --version           — current iao version
-  iao status              — current project, iteration, env state
-  iao doctor              — health check across all backends
-  iao secret list         — list secret names (after W2 lands)
-  iao iteration status    — current iteration state (after W6 lands, but Claude handles W6)
-  iao project current     — currently active project
+  iao --version           - current iao version
+  iao status              - current project, iteration, env state
+  iao doctor              - health check across all backends
+  iao secret list         - list secret names (after W2 lands)
+  iao iteration status    - current iteration state (after W6 lands, but Claude handles W6)
+  iao project current     - currently active project
 
 ## Sign-off
 
@@ -4142,7 +4142,7 @@ end
 
 if test -d $HOME/dev/projects/kjtcom/iao
     _info "Found vendored iao copy at $HOME/dev/projects/kjtcom/iao (kjtcom's vendored copy)"
-    _info "This is intentional — kjtcom retains its own vendored copy in steady state."
+    _info "This is intentional - kjtcom retains its own vendored copy in steady state."
     _info "Not modifying kjtcom's vendored copy."
 end
 
@@ -4273,9 +4273,9 @@ if test "$uname_s" = "Linux"
         end
     end
 else if test "$uname_s" = "Darwin"
-    _info "Detected macOS — will use Keychain via 'security' CLI (built-in)"
+    _info "Detected macOS - will use Keychain via 'security' CLI (built-in)"
 else
-    _warn "Unknown OS: $uname_s — keyring backend may not be supported"
+    _warn "Unknown OS: $uname_s - keyring backend may not be supported"
 end
 
 _success "Keyring backend verified"
@@ -4310,14 +4310,14 @@ if test -f $config_fish
             _warn "  iao install migrate-config-fish"
         end
     else
-        _info "No plaintext secrets found in config.fish — nothing to migrate"
+        _info "No plaintext secrets found in config.fish - nothing to migrate"
     end
 else
-    _info "No config.fish found — skipping secrets migration"
+    _info "No config.fish found - skipping secrets migration"
 end
 
 # ─────────────────────────────────────────────────────────────────────────
-# Step 8: (Already handled in Step 3 — keeping numbered for clarity)
+# Step 8: (Already handled in Step 3 - keeping numbered for clarity)
 # ─────────────────────────────────────────────────────────────────────────
 
 _step "Step 8 of 13: ~/iao-middleware cleanup (handled in Step 3)"
@@ -4339,10 +4339,10 @@ if test -f $IAO_HOME/active.fish
         rm $IAO_HOME/active.fish
         _success "Stale active.fish removed"
     else
-        _info "active.fish exists and appears current — leaving in place"
+        _info "active.fish exists and appears current - leaving in place"
     end
 else
-    _info "No active.fish found — nothing to remove"
+    _info "No active.fish found - nothing to remove"
 end
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -4354,7 +4354,7 @@ _step "Step 10 of 13: Update global projects registry"
 mkdir -p $IAO_HOME
 
 if test -f $IAO_HOME/projects.json
-    _info "Found existing projects.json — will update to add tripledb"
+    _info "Found existing projects.json - will update to add tripledb"
 
     # Use Python to safely modify the JSON (avoiding fish JSON parsing complexity)
     python3 -c "
@@ -4398,7 +4398,7 @@ projects_path.write_text(json.dumps(data, indent=2))
     end
     _success "Projects registry updated"
 else
-    _info "No projects.json found — creating new one with iao, kjtcom, tripledb"
+    _info "No projects.json found - creating new one with iao, kjtcom, tripledb"
     python3 -c "
 import json
 from pathlib import Path
@@ -4479,7 +4479,7 @@ if not grep -q "$marker_begin" $config_fish
     printf '%s\n' "$marker_end" >> $config_fish
     _success "New iao block added"
 else
-    _info "iao block already present in config.fish — leaving in place"
+    _info "iao block already present in config.fish - leaving in place"
 end
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -4491,7 +4491,7 @@ _step "Step 12 of 13: Run pre-flight checks"
 _info "Running iao doctor to verify install..."
 iao doctor 2>&1
 or begin
-    _warn "iao doctor reported issues — see output above"
+    _warn "iao doctor reported issues - see output above"
     _warn "Install completed but environment is not fully ready"
 end
 

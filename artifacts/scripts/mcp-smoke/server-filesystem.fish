@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# mcp-smoke/server-filesystem.fish — CLI health check for @modelcontextprotocol/server-filesystem
+# mcp-smoke/server-filesystem.fish - CLI health check for @modelcontextprotocol/server-filesystem
 # Exit 0 if server responds to JSON-RPC initialize, 1 otherwise
 
 set -l server_name "server-filesystem"

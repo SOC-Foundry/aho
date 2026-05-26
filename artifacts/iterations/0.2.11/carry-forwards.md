@@ -1,4 +1,4 @@
-# Carry-Forwards — 0.2.11
+# Carry-Forwards - 0.2.11
 
 **Generated:** 2026-04-12 W0 | **Updated:** 2026-04-12 W9 close (strategic rescope)
 
@@ -10,15 +10,15 @@
 
 **Specific deliverables:**
 
-- Discovery: council inventory — which agents (Qwen, GLM, Nemotron, evaluator-agent, OpenClaw, Nemoclaw, MCP servers) are operational today, which have dispatch surfaces, which have ever executed a workstream task
+- Discovery: council inventory - which agents (Qwen, GLM, Nemotron, evaluator-agent, OpenClaw, Nemoclaw, MCP servers) are operational today, which have dispatch surfaces, which have ever executed a workstream task
 - Visibility: `aho council status` CLI enumerating operational agents, dispatch surfaces, queue depth, recent routing decisions
-- Design: workstream-level delegation pattern — dispatch contract for routing tasks to council members by capability
+- Design: workstream-level delegation pattern - dispatch contract for routing tasks to council members by capability
 - Implementation: minimum viable council dispatch, baselined via schema v3 efficacy against claude-code-only execution
 - Lego office visualization: council members as figures in an office, dispatch lines show work volume + health + state. Primary operational diagram, not decorative
 - Pattern framework bootstrap (was 0.2.11 W8.5): planner-discipline + age-fernet-keyring + install-surface + daemon-lifecycle + council-dispatch patterns; `artifacts/patterns/` folder; evolution-log per pattern
 - Tech-debt prune from W18 audit (slipped from 0.2.11)
-- Full README review — stale sections include "What aho Does" bullets, iteration roadmap, three-persona model (0.2.10 shipped this, README describes as future), Canonical Folder Layout (data/ reference stale post-W7)
-- Migration verify CLI (G076 — process census + fuser on old paths)
+- Full README review - stale sections include "What aho Does" bullets, iteration roadmap, three-persona model (0.2.10 shipped this, README describes as future), Canonical Folder Layout (data/ reference stale post-W7)
+- Migration verify CLI (G076 - process census + fuser on old paths)
 - AcceptanceCheck enhancements beyond MVP (richer assertion types, timeout tuning)
 
 ## TO 0.2.13: PERSONA 3 VALIDATION
@@ -26,7 +26,7 @@
 Now meaningful because council can carry the work, not just claude-code.
 
 - 4 fixture tasks from 0.2.9 W8 spec: PDF summarize, SOW generate, risk review, email extract (exact-match 7 unique)
-- Fixtures at /tmp/aho-persona-3-test/ — regenerate via reportlab per 0.2.9 spec
+- Fixtures at /tmp/aho-persona-3-test/ - regenerate via reportlab per 0.2.9 spec
 - Measure council vs claude-code delegate ratio on each task
 - Persona 2 framework-mode validation (confirm no silent dependencies before prune execution)
 - P3 (ThinkStation) clone-to-deploy validation

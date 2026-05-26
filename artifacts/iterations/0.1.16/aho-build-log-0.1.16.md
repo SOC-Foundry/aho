@@ -1,4 +1,4 @@
-# aho 0.1.16 — Build Log (Stub)
+# aho 0.1.16 - Build Log (Stub)
 
 **Run Type:** mixed
 **Generated:** 2026-04-11T13:47:05.110978+00:00

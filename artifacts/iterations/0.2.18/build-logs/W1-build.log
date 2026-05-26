@@ -125,7 +125,28 @@ debconf: (This frontend requires a controlling tty.)
 debconf: falling back to frontend: Noninteractive
 Preconfiguring packages ...
 Fetched 85.9 MB in 2s (34.7 MB/s)
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
 Preparing to unpack .../libc6_2.41-12+deb13u3_amd64.deb ...
 debconf: unable to initialize frontend: Dialog
 debconf: (TERM is not set, so the dialog frontend is not usable.)
@@ -147,12 +168,54 @@ debconf: falling back to frontend: Teletype
 debconf: unable to initialize frontend: Teletype
 debconf: (This frontend requires a controlling tty.)
 debconf: falling back to frontend: Noninteractive
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
 Preparing to unpack .../libc-bin_2.41-12+deb13u3_amd64.deb ...
 Unpacking libc-bin (2.41-12+deb13u3) over (2.41-12+deb13u2) ...
 Setting up libc-bin (2.41-12+deb13u3) ...
 Selecting previously unselected package bzip2.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
 Preparing to unpack .../00-bzip2_1.0.8-6_amd64.deb ...
 Unpacking bzip2 (1.0.8-6) ...
 Selecting previously unselected package perl-modules-5.40.
@@ -695,7 +758,28 @@ debconf: (This frontend requires a controlling tty.)
 debconf: falling back to frontend: Noninteractive
 Fetched 4884 kB in 0s (20.8 MB/s)
 Selecting previously unselected package libbrotli1:amd64.
-(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
 Preparing to unpack .../00-libbrotli1_1.1.0-2+b7_amd64.deb ...
 Unpacking libbrotli1:amd64 (1.1.0-2+b7) ...
 Selecting previously unselected package libkrb5support0:amd64.
@@ -799,7 +883,7 @@ Processing triggers for libc-bin (2.41-12+deb13u2) ...
 --> 08c4c1c799bc
 [2/2] STEP 10/13: EXPOSE 8080
 --> bdad3c377c8f
-[2/2] STEP 11/13: LABEL org.opencontainers.image.source="https://github.com/soc-foundry/aho"       org.opencontainers.image.description="aho base-tier container — 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix)"       io.aho.iteration="0.2.18"       io.aho.workstream="W1"
+[2/2] STEP 11/13: LABEL org.opencontainers.image.source="https://github.com/soc-foundry/aho"       org.opencontainers.image.description="aho base-tier container - 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix)"       io.aho.iteration="0.2.18"       io.aho.workstream="W1"
 --> d64334503474
 [2/2] STEP 12/13: ENTRYPOINT ["aho"]
 --> 0a6b38d75cbf

@@ -1,4 +1,4 @@
-# Report — aho 0.2.9
+# Report - aho 0.2.9
 
 **Generated:** 2026-04-12T04:43:34Z
 **Iteration:** 0.2.9
@@ -149,7 +149,7 @@ Artifacts: Missing artifacts: report.md, bundle.md |
 | mcp_canonical_registry_verify | ok | all 9 MCP packages registry-verified |
 | mcp_sources_aligned | ok | MCP sources aligned: 9 entries match |
 | pillars_present | fail | 3 errors: Design doc missing Pillar 10; Design doc missing Pillar 11; Design doc missing §3 (Trident) |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-12T04:43:22.776237+00:00 < iteration start 2026-04-12T05:00:00Z |
 | run_complete | deferred | Sign-off incomplete: Kyle reviewed and approved |
 | run_quality | fail | 1 quality check failures |
@@ -190,7 +190,7 @@ consequential. Five real discoveries landed as shipped fixes:
    recurrence.
 
 3. harness-watcher daemon active. Root cause was Branch A installer
-   bug — bin/aho-systemd enabled but did not start. One-line fix.
+   bug - bin/aho-systemd enabled but did not start. One-line fix.
 
 4. Bundle generator fixed. §4 Report no longer hollow, §12 Sidecars
    populated (4 entries), §6 includes iteration-window ADRs. New
@@ -201,7 +201,7 @@ consequential. Five real discoveries landed as shipped fixes:
    to Kyle's phone. Single-user allow-list, 30s sync wait with async
    ack fallback. First daemon to operate the harness from off-keyboard.
 
-Four new gotchas form a coherent family — a pattern language for
+Four new gotchas form a coherent family - a pattern language for
 "things that pretend to work but don't":
 - aho-G066: declared != exercised
 - aho-G067: declared != populated

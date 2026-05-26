@@ -5,7 +5,7 @@
   "timestamp": "2026-04-13T01:35:00Z",
   "scope_confirmed": true,
   "gate_result": "proceed",
-  "gate_rationale": "Neither halt condition tripped. Nemotron: 0/10 silent empty returns or hardcoded defaults (3 mismatches are model non-determinism producing valid 'feature' category, not parser failures). GLM: 0/5 defective inputs rubber-stamped as ship/score>=7 (all 5 produced parse errors — 4 timeouts, 1 malformed JSON). However, substrate quality findings are severe: Nemotron has 80% feature-bias and GLM cannot produce parseable JSON within 180s.",
+  "gate_rationale": "Neither halt condition tripped. Nemotron: 0/10 silent empty returns or hardcoded defaults (3 mismatches are model non-determinism producing valid 'feature' category, not parser failures). GLM: 0/5 defective inputs rubber-stamped as ship/score>=7 (all 5 produced parse errors - 4 timeouts, 1 malformed JSON). However, substrate quality findings are severe: Nemotron has 80% feature-bias and GLM cannot produce parseable JSON within 180s.",
   "nemotron_halt_count": 0,
   "nemotron_pass_count": 5,
   "nemotron_mismatch_count": 3,
@@ -13,7 +13,7 @@
   "nemotron_detail": {
     "feature_bucket": {
       "count": 3,
-      "result": "3/3 classified as 'feature' — baseline working",
+      "result": "3/3 classified as 'feature' - baseline working",
       "all_match": true
     },
     "empty_bucket": {
@@ -36,14 +36,14 @@
     "hallucinated_category": {
       "count": 1,
       "result": "Model returned 'feature'. Historical: 'category_a'. Model no longer hallucinating this specific output.",
-      "note": "Input was 'test text' — may not be a representative production input. Model returned valid category instead of hallucinating."
+      "note": "Input was 'test text' - may not be a representative production input. Model returned valid category instead of hallucinating."
     },
     "reviewer_bucket": {
       "count": 1,
       "result": "Model returned 'feature'. Historical: 'reviewer'. Model no longer producing out-of-category response.",
-      "ground_truth_analysis": "Input is event JSON of a nemotron classify llm_call. Ground truth category would be 'noise' (meta-event). Model returned 'feature' instead — wrong classification but valid category. Parser correctly returned it."
+      "ground_truth_analysis": "Input is event JSON of a nemotron classify llm_call. Ground truth category would be 'noise' (meta-event). Model returned 'feature' instead - wrong classification but valid category. Parser correctly returned it."
     },
-    "dominant_pattern": "8/10 raw model responses were 'feature'. Model has strong feature-bias — effectively defaulting rather than genuinely classifying. Parser is correct; model quality is the concern."
+    "dominant_pattern": "8/10 raw model responses were 'feature'. Model has strong feature-bias - effectively defaulting rather than genuinely classifying. Parser is correct; model quality is the concern."
   },
   "glm_halt_count": 0,
   "glm_pass_count": 0,
@@ -51,32 +51,32 @@
   "glm_detail": {
     "input_1_g083_site": {
       "ground_truth": "defective",
-      "result": "GLMParseError — malformed JSON after 105s. Raw response DID identify the defect ('Exception handling uses pass to mask failures'). Used wrong schema ('defects' array instead of requested 'score/issues/recommendation').",
+      "result": "GLMParseError - malformed JSON after 105s. Raw response DID identify the defect ('Exception handling uses pass to mask failures'). Used wrong schema ('defects' array instead of requested 'score/issues/recommendation').",
       "latency_ms": 105278,
       "rubber_stamp": false,
       "signal_present_in_text": true
     },
     "input_2_categories_fallback": {
       "ground_truth": "defective",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180102,
       "rubber_stamp": false
     },
     "input_3_synthetic_bug": {
       "ground_truth": "defective",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180007,
       "rubber_stamp": false
     },
     "input_4_tachtech_contradiction": {
       "ground_truth": "defective",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180103,
       "rubber_stamp": false
     },
     "input_5_clean_code": {
       "ground_truth": "clean",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180082,
       "rubber_stamp": false,
       "note": "Control input also failed. GLM is non-functional as structured-output evaluator within current timeout."
@@ -91,17 +91,17 @@
   "baseline_new_failures": 0,
   "baseline_newly_passing": ["test_telegram_ws_commands.py::TestWsLast::test_no_events", "test_daemon_healthy.py::test_healthy_unit_passes"],
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ imports during measurement",
-    "G075 — canonical paths: event log at ~/.local/share/aho/events/aho_event_log.jsonl per G082",
-    "G079 — baseline_regression_check is backstop, not regex counts; 11 actual failures all in known 13",
-    "G081 — no celebratory framing in this archive",
-    "G082 — event log path from canonical location",
-    "G083 — no new code written; measurement only"
+    "G070 - cleared __pycache__ after src/aho/ imports during measurement",
+    "G075 - canonical paths: event log at ~/.local/share/aho/events/aho_event_log.jsonl per G082",
+    "G079 - baseline_regression_check is backstop, not regex counts; 11 actual failures all in known 13",
+    "G081 - no celebratory framing in this archive",
+    "G082 - event log path from canonical location",
+    "G083 - no new code written; measurement only"
   ],
   "findings": {
     "f1_nemotron_feature_bias": {
       "severity": "high",
-      "detail": "Nemotron-mini:4b returns 'feature' for 80% of inputs regardless of content. The model is not genuinely classifying — it's defaulting. This means the propose_gotcha pipeline has been routing nearly everything to 'feature' bucket, with occasional genuine gotcha/noise classifications. Parser fix (W2) is working correctly; the model itself is the quality bottleneck.",
+      "detail": "Nemotron-mini:4b returns 'feature' for 80% of inputs regardless of content. The model is not genuinely classifying - it's defaulting. This means the propose_gotcha pipeline has been routing nearly everything to 'feature' bucket, with occasional genuine gotcha/noise classifications. Parser fix (W2) is working correctly; the model itself is the quality bottleneck.",
       "carry_forward": true
     },
     "f2_glm_timeout_dominant": {

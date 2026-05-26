@@ -1,4 +1,4 @@
-"""Tests for pillars_present gate — §3 Trident verification.
+"""Tests for pillars_present gate - §3 Trident verification.
 
 Minimum 6 cases per W6 plan:
 1. Valid Trident passes all checks

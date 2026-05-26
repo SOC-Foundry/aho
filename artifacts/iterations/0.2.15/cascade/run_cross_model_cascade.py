@@ -1,4 +1,4 @@
-"""Cross-model cascade integration test runner — 0.2.15 W4.
+"""Cross-model cascade integration test runner - 0.2.15 W4.
 
 Executes the 5-stage cascade with distinct models in distinct roles. This is
 the Pillar 7 restoration attempt: Producer (Qwen) is not the same model as
@@ -71,7 +71,7 @@ def _dispatch_capture(model_id: str, prompt: str, system: str,
     """Single-attempt dispatch that captures raw body + thinking field.
 
     Mirrors dispatcher.dispatch() core logic but returns richer metadata.
-    No retries — cascade stages are long-running and a failure is a failure.
+    No retries - cascade stages are long-running and a failure is a failure.
     """
     num_ctx = _validate_num_ctx(num_ctx)
     family_config = get_family_config(model_id)

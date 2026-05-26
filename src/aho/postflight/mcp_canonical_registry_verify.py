@@ -1,6 +1,6 @@
 """Postflight gate: verify all MCP canonical packages exist on npm registry.
 
-G-mcp-canonical-drift defense — catches 404s and deprecations before they
+G-mcp-canonical-drift defense - catches 404s and deprecations before they
 reach bin/aho-mcp install on a fresh clone.
 """
 import subprocess
@@ -41,7 +41,7 @@ def check():
             elif "deprecated" in r.stderr.lower():
                 failures.append(f"{pkg}: deprecated")
         except subprocess.TimeoutExpired:
-            return ("skip", f"npm view timed out on {pkg} — network issue?")
+            return ("skip", f"npm view timed out on {pkg} - network issue?")
         except Exception as e:
             return ("skip", f"npm view failed: {e}")
 

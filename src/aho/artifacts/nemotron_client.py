@@ -2,7 +2,7 @@
 
 Uses nemotron-mini:4b via Ollama.
 
-0.2.13 W2: Parse fix — raise NemotronParseError on unparseable classification,
+0.2.13 W2: Parse fix - raise NemotronParseError on unparseable classification,
 raise NemotronConnectionError on Ollama connection failure, instead of
 silently returning categories[-1] (G083).
 

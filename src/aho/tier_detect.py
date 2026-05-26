@@ -1,4 +1,4 @@
-"""tier_detect — VRAM-based tier classification for the containerized harness.
+"""tier_detect - VRAM-based tier classification for the containerized harness.
 
 Probes nvidia-smi at startup, classifies host as base / partial / full per
 ADR 0007 thresholds (<12GB, 12-32GB, >=32GB). Honours AHO_TIER override env
@@ -113,6 +113,6 @@ def _emit_tier_span(tier: Tier) -> None:
         with tracer.start_as_current_span("aho.tier_detect") as span:
             span.set_attribute("aho.tier", tier)
     except Exception:
-        # OTEL unavailable / not configured — soft fail; the marker file is
+        # OTEL unavailable / not configured - soft fail; the marker file is
         # the durable record.
         pass

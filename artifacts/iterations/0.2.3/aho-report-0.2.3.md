@@ -1,4 +1,4 @@
-# Report — aho 0.2.3
+# Report - aho 0.2.3
 
 **Generated:** 2026-04-11T16:53:47Z
 **Iteration:** 0.2.3
@@ -145,7 +145,7 @@ install.fish: install.fish syntax OK
 Artifacts: Missing artifacts: report.md |
 | manifest_current | fail | stale hashes: .aho-checkpoint.json, .aho.json, .gitignore |
 | pillars_present | ok | Eleven pillars present in design and README |
-| pipeline_present | ok | SKIP — no pipelines declared in .aho.json |
+| pipeline_present | ok | SKIP - no pipelines declared in .aho.json |
 | readme_current | fail | README.md last modified 2026-04-11T16:36:30.733527+00:00 < iteration start 2026-04-11T17:00:00Z |
 | run_complete | deferred | Sign-off incomplete: Manual conductor smoke test (7-span trace), Kyle git commit + push |
 | run_quality | ok | Run file passes quality gate |

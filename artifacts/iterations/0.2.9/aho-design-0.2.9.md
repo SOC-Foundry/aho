@@ -1,4 +1,4 @@
-# aho Design — 0.2.9
+# aho Design - 0.2.9
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 9
 **Theme:** Remote operability plumbing + P3 clone
@@ -8,7 +8,7 @@
 
 Two goals that share one dependency: you need `/ws` streaming working before P3 clone so you can monitor the clone from your phone, AND you need the clone to happen tonight because the calendar is pressing and P3 is the Phase 0 graduation test substrate.
 
-0.2.9 ships the plumbing, clones to P3, documents whatever P3 reveals. Scope is deliberately bounded to plumbing — not the full remote-executor architecture (that crystallizes in 0.2.11 after you've lived with the simpler `/ws` streaming for a while).
+0.2.9 ships the plumbing, clones to P3, documents whatever P3 reveals. Scope is deliberately bounded to plumbing - not the full remote-executor architecture (that crystallizes in 0.2.11 after you've lived with the simpler `/ws` streaming for a while).
 
 ## Goals
 
@@ -33,10 +33,10 @@ Two goals that share one dependency: you need `/ws` streaming working before P3 
 
 **User-facing surface from Telegram chat:**
 
-- `/ws status` — current iteration + current workstream + last event timestamp
-- `/ws pause` — sets checkpoint proceed_awaited=true, causes next workstream boundary to halt
-- `/ws proceed` — sets checkpoint proceed_awaited=false, releases halted agent
-- `/ws last` — last completed workstream summary from event log
+- `/ws status` - current iteration + current workstream + last event timestamp
+- `/ws pause` - sets checkpoint proceed_awaited=true, causes next workstream boundary to halt
+- `/ws proceed` - sets checkpoint proceed_awaited=false, releases halted agent
+- `/ws last` - last completed workstream summary from event log
 
 **Auto-push:** every `workstream_complete` event in aho_event_log.jsonl triggers a short summary push to the configured chat_id. Format: workstream ID, status, one-line outcome, iteration version. Truncated to fit one Telegram message.
 
@@ -47,7 +47,7 @@ Two goals that share one dependency: you need `/ws` streaming working before P3 
 ## The P3 clone plan
 
 **Preconditions:**
-- P3 is a fresh CachyOS install (or close to fresh — state acceptable if it's already Kyle's dev machine)
+- P3 is a fresh CachyOS install (or close to fresh - state acceptable if it's already Kyle's dev machine)
 - SSH access from NZXTcos to P3 works
 - Kyle has GitHub SSH key deployed on P3 (github.com-sockjt host alias per existing conventions)
 - /ws streaming is live on NZXTcos so Kyle can watch the clone from phone if needed
@@ -57,9 +57,9 @@ Two goals that share one dependency: you need `/ws` streaming working before P3 
 2. `cd ~/Development/Projects/` (P3 path convention per user memory)
 3. `git clone git@github.com-sockjt:SOC-Foundry/aho.git`
 4. `cd aho`
-5. `./bin/aho-bootstrap` — expect capability gaps for age passphrase + telegram token entry
-6. `./install.fish` — 9 steps
-7. `aho doctor` — full preflight
+5. `./bin/aho-bootstrap` - expect capability gaps for age passphrase + telegram token entry
+6. `./install.fish` - 9 steps
+7. `aho doctor` - full preflight
 8. Verify dashboard reachable at http://127.0.0.1:7800/ from P3 browser
 9. Verify Telegram `/status` works from P3 (the daemon on P3 should be its own instance, separate from NZXTcos)
 
@@ -84,7 +84,7 @@ Two goals that share one dependency: you need `/ws` streaming working before P3 
 
 Those are 0.2.10 targets. Tonight is "clone and document reality."
 
-## §3. Trident — Cost Model
+## §3. Trident - Cost Model
 
 aho 0.2.9 is a single-agent Claude Code iteration. No local fleet delegation for workstream execution (Gemini CLI not used). Local fleet (Qwen, Nemotron, GLM) active for daemon services (openclaw, nemoclaw, harness-watcher). Cost model:
 
@@ -105,7 +105,7 @@ All eleven pillars apply. Key pillars for 0.2.9:
 
 1. **P3 clone filesystem allowed-dir in .mcp.json.** Current NZXTcos value is `/home/kthompson/dev/projects/aho`. P3 value per your memory is `/home/kthompson/Development/Projects/aho` (capitalized, different structure). W1 decision: hard-code both paths as allowed-dirs? Template substitution at bootstrap? Detect at runtime? Lean: template substitution driven by `aho_paths.find_project_root()` at bootstrap time, file regenerated per-machine. Same pattern as systemd service templates.
 
-2. **Telegram bot for P3.** Same bot (@aho_run_bot) with chat_id allow-list allowing both daemons to receive, or a second bot for P3? If same bot, getUpdates will race between NZXTcos daemon and P3 daemon — Telegram locks the update stream to one consumer. Must decide. Lean: P3 skips Telegram daemon entirely for 0.2.9; NZXTcos stays the only inbound bridge. P3 runs outbound-only. 0.2.11 solves multi-machine properly.
+2. **Telegram bot for P3.** Same bot (@aho_run_bot) with chat_id allow-list allowing both daemons to receive, or a second bot for P3? If same bot, getUpdates will race between NZXTcos daemon and P3 daemon - Telegram locks the update stream to one consumer. Must decide. Lean: P3 skips Telegram daemon entirely for 0.2.9; NZXTcos stays the only inbound bridge. P3 runs outbound-only. 0.2.11 solves multi-machine properly.
 
 3. **P3 cold clone vs already-has-state.** Is P3 literally fresh, or does it have some aho state from earlier testing? Affects install.fish idempotency path exercised.
 

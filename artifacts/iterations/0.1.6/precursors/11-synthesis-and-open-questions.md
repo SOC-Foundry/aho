@@ -1,23 +1,23 @@
-# Investigation 11 — Synthesis and Open Questions
+# Investigation 11 - Synthesis and Open Questions
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
 
 ---
 
-## Part A — What 0.1.4 Actually Shipped
+## Part A - What 0.1.4 Actually Shipped
 
-iao 0.1.4 delivered a functional but incomplete system. The wins are real: the local model fleet (Qwen, Nemotron, GLM, nomic-embed) is installed, reachable, and smoke-tested. ChromaDB is seeded with 443 documents across three project archives. The artifact loop works — it generated the 0.1.5 design (5132 words) and plan (3274 words) documents, proving the template→Qwen→validation pipeline is functional end-to-end. All 8 W1 cleanup deliverables shipped, including the run-report checkpoint-read fix, question extraction, doctor CLI, version validation, and age binary. The closing sequence produced all four W7 artifacts (build-log, report, run-report, bundle). What did NOT ship: OpenClaw and NemoClaw are stubs that raise NotImplementedError (blocked by Python 3.14 / tiktoken). The kjtcom gotcha migration ported 8 entries but the ambiguous-pile pause mechanism never fired. The Telegram integration is notifications-only (one-way send, no bot framework). Three ADRs (036-038) were never written. `.iao.json` was never formally closed — it still says `current_iteration: "0.1.4"` with `completed_at: null`.
-
----
-
-## Part B — Why 0.1.5 Got Stuck
-
-0.1.5 never truly started — it generated artifacts but never executed. The sequence was: a Gemini CLI session ran the artifact loop, which produced `iao-design-0.1.5.md` (~10 min generation time) and `iao-plan-0.1.5.md`. The Gemini session then either timed out waiting for a subsequent artifact or ended its session. A Claude Code session was started but focused on 0.1.4 cleanup rather than 0.1.5 execution. The fundamental issue is not a broken loop — the loop works — but three compounding factors: (1) Qwen generation is slow (~5-15 min per artifact) with zero progress output (`stream: false`, `timeout: 1800s`), making it impossible for agents or operators to tell if the process is generating or hung; (2) `.iao.json` was never bumped past 0.1.4, so no clean starting state existed for 0.1.5; (3) the generated 0.1.5 design is a Qwen hallucination of 0.1.4's scope — it describes work already done rather than work that needs doing, and claims Phase 1 status when the project is still in Phase 0. There was no human-authored iteration brief to ground 0.1.5, so the loop produced a plausible-sounding but incorrect design.
+iao 0.1.4 delivered a functional but incomplete system. The wins are real: the local model fleet (Qwen, Nemotron, GLM, nomic-embed) is installed, reachable, and smoke-tested. ChromaDB is seeded with 443 documents across three project archives. The artifact loop works - it generated the 0.1.5 design (5132 words) and plan (3274 words) documents, proving the template→Qwen→validation pipeline is functional end-to-end. All 8 W1 cleanup deliverables shipped, including the run-report checkpoint-read fix, question extraction, doctor CLI, version validation, and age binary. The closing sequence produced all four W7 artifacts (build-log, report, run-report, bundle). What did NOT ship: OpenClaw and NemoClaw are stubs that raise NotImplementedError (blocked by Python 3.14 / tiktoken). The kjtcom gotcha migration ported 8 entries but the ambiguous-pile pause mechanism never fired. The Telegram integration is notifications-only (one-way send, no bot framework). Three ADRs (036-038) were never written. `.iao.json` was never formally closed - it still says `current_iteration: "0.1.4"` with `completed_at: null`.
 
 ---
 
-## Part C — Answers to 11 Questions
+## Part B - Why 0.1.5 Got Stuck
+
+0.1.5 never truly started - it generated artifacts but never executed. The sequence was: a Gemini CLI session ran the artifact loop, which produced `iao-design-0.1.5.md` (~10 min generation time) and `iao-plan-0.1.5.md`. The Gemini session then either timed out waiting for a subsequent artifact or ended its session. A Claude Code session was started but focused on 0.1.4 cleanup rather than 0.1.5 execution. The fundamental issue is not a broken loop - the loop works - but three compounding factors: (1) Qwen generation is slow (~5-15 min per artifact) with zero progress output (`stream: false`, `timeout: 1800s`), making it impossible for agents or operators to tell if the process is generating or hung; (2) `.iao.json` was never bumped past 0.1.4, so no clean starting state existed for 0.1.5; (3) the generated 0.1.5 design is a Qwen hallucination of 0.1.4's scope - it describes work already done rather than work that needs doing, and claims Phase 1 status when the project is still in Phase 0. There was no human-authored iteration brief to ground 0.1.5, so the loop produced a plausible-sounding but incorrect design.
+
+---
+
+## Part C - Answers to 11 Questions
 
 ### 1. What is Claw3D?
 
@@ -27,13 +27,13 @@ iao 0.1.4 delivered a functional but incomplete system. The wins are real: the l
 
 **No.** `/tmp/iao-0.1.4-ambiguous-gotchas.md` was never created. The `iao iteration resume` CLI command was never implemented. The checkpoint records W3 as `"paused"` with `"reason": "ambiguous_review"`, but this appears to be a manual checkpoint update rather than the result of the designed pause flow actually executing. 8 kjtcom entries were migrated (with `kjtcom_source_id` markers), but the Nemotron classification and pause mechanism never fired. See Investigation 5.
 
-### 3. Gotcha registry refactor — Option A or Option B?
+### 3. Gotcha registry refactor - Option A or Option B?
 
 **Recommendation: Option A (single file with `project_code` field).**
 
 Rationale: The registry has 13 entries. Even with full kjtcom migration, we're looking at ~100 entries. A single file with a `project_code` field on each entry is simpler to implement, simpler to query, and serves the primary use case (cross-project gotcha lookup). Option B (one file per project) adds complexity for a problem that doesn't exist yet (file size, concurrent writes). Option B becomes attractive at Phase 1+ if the registry exceeds ~500 entries. See Investigation 6.
 
-### 4. Cross-project gotcha lookup — auto-include or only on empty result?
+### 4. Cross-project gotcha lookup - auto-include or only on empty result?
 
 **Recommendation: Always include, with project_code ranking.**
 
@@ -54,7 +54,7 @@ Return all matching gotchas across all projects, sorted by relevance, with the h
 
 The document is structurally coherent (5132 words, proper heading hierarchy, trident and pillars included) but substantively wrong:
 - It claims Phase 1 ("Production Readiness") when the project is still in Phase 0
-- It describes 0.1.4's scope (model fleet integration, kjtcom migration, run-report fixes) as if these are 0.1.5 work — but they were already done
+- It describes 0.1.4's scope (model fleet integration, kjtcom migration, run-report fixes) as if these are 0.1.5 work - but they were already done
 - It references non-existent files (`iao-version.py`, `projects.json`)
 - Its workstream descriptions are generic paraphrases of 0.1.4's plan, not forward-looking
 - It doesn't address any of the actual 0.1.5/0.1.6 needs (artifact loop UX, OpenClaw beyond stubs, Claw3D scoping, gotcha schema refactor)
@@ -63,26 +63,26 @@ The document demonstrates that the Qwen loop can produce structurally valid arti
 
 **Salvage path:** Keep the files as evidence of the loop's capabilities but do not use them as input for 0.1.6 planning. Write a human-authored 0.1.6 design brief instead.
 
-### 7. Agentic component checklist — new BUNDLE_SPEC section, new file per iteration, or subsection in run report?
+### 7. Agentic component checklist - new BUNDLE_SPEC section, new file per iteration, or subsection in run report?
 
 **Recommendation: Subsection in run report.**
 
 Rationale:
 - The run report is already the canonical human↔agent feedback interface
-- Kyle's note asking for this checklist was written IN the run report — it's the natural location
+- Kyle's note asking for this checklist was written IN the run report - it's the natural location
 - A new BUNDLE_SPEC section (§22) adds structural overhead to every iteration, even ones that don't touch agentic components
-- A separate file per iteration fragments the feedback loop — the checklist should be visible alongside workstream status and agent questions
+- A separate file per iteration fragments the feedback loop - the checklist should be visible alongside workstream status and agent questions
 
 Implementation: Add a "## Agentic Component Status" section to the run-report template (`prompts/run-report.md.j2`) with columns: Component | Model/Version | Tasks Assigned | Status | Notes. The data can be populated from the checkpoint and system state at render time.
 
 ### 8. What should be explicitly deferred from 0.1.6 to 0.1.7?
 
-- **Telegram bot framework** — notifications work; two-way bot is nice-to-have
-- **Model fleet benchmark capture** — fleet works; formal benchmarks can wait
-- **Architecture documentation** (`agents-architecture.md`) — write after implementation stabilizes
-- **`model-fleet.md` expansion** to 1500 words — functional fleet > documented fleet
-- **Postflight plugin system** for kjtcom-specific checks — complex refactor, not blocking
-- **Phase graduation evaluation** — still in Phase 0, graduation criteria not met
+- **Telegram bot framework** - notifications work; two-way bot is nice-to-have
+- **Model fleet benchmark capture** - fleet works; formal benchmarks can wait
+- **Architecture documentation** (`agents-architecture.md`) - write after implementation stabilizes
+- **`model-fleet.md` expansion** to 1500 words - functional fleet > documented fleet
+- **Postflight plugin system** for kjtcom-specific checks - complex refactor, not blocking
+- **Phase graduation evaluation** - still in Phase 0, graduation criteria not met
 
 ### 9. Single executor or allow Claude Code fallback for 0.1.6?
 
@@ -96,11 +96,11 @@ Rationale:
 
 However: if the artifact loop UX is fixed (streaming output, heartbeat logging), a single Gemini executor may be sufficient. The "dual executor" recommendation is conditional on the loop remaining opaque.
 
-### 10. Stale global `iao` install — root cause and minimum fix?
+### 10. Stale global `iao` install - root cause and minimum fix?
 
 **Root cause:** `/home/kthompson/iao-middleware/bin/` is on the fish PATH and contains a legacy v0.1.0 bash dispatcher script called `iao`. This shadows the pip-installed entry point at `~/.local/bin/iao`.
 
-**Minimum fix:** Remove `~/iao-middleware/bin/` from fish PATH (edit the PATH-setting line in fish config). Then `which iao` will resolve to `~/.local/bin/iao` → `iao.cli:main` → current v0.1.4 source. No reinstall needed — the editable install is already in place.
+**Minimum fix:** Remove `~/iao-middleware/bin/` from fish PATH (edit the PATH-setting line in fish config). Then `which iao` will resolve to `~/.local/bin/iao` → `iao.cli:main` → current v0.1.4 source. No reinstall needed - the editable install is already in place.
 
 ### 11. What are the unknowns this audit could NOT answer?
 
@@ -122,7 +122,7 @@ However: if the artifact loop UX is fixed (streaming output, heartbeat logging),
 
 ---
 
-## Part D — Recommended Shape for 0.1.6
+## Part D - Recommended Shape for 0.1.6
 
 - **W0: Iteration bookkeeping and prerequisite fixes**
   - Fix fish PATH (remove iao-middleware shadow)
@@ -176,7 +176,7 @@ However: if the artifact loop UX is fixed (streaming output, heartbeat logging),
 
 ---
 
-## Part E — Things Kyle Should Decide Before 0.1.6 Planning Begins
+## Part E - Things Kyle Should Decide Before 0.1.6 Planning Begins
 
 1. **Is Claw3D in iao's scope or kjtcom's?** Evidence says kjtcom. If Kyle agrees, remove from 0.1.6 scope.
 2. **Which file is the authoritative kjtcom gotcha source?** `data/gotcha_archive.json` is empty; is `template/gotcha/gotcha_registry.json` the right source?

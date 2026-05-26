@@ -1,4 +1,4 @@
-"""W6 D3 — final 0.2.17 self-audit with the stabilized auditor primitive
+"""W6 D3 - final 0.2.17 self-audit with the stabilized auditor primitive
 (bootstrap test 7).
 
 Runs `aho.council.audit` against the W6 acceptance archive itself with
@@ -67,7 +67,7 @@ def main() -> int:
         result = council_audit(
             artifact_text,
             contract=(
-                "W6 acceptance archive — F-0.2.17-W1-001 secrets-test"
+                "W6 acceptance archive - F-0.2.17-W1-001 secrets-test"
                 " hash-fingerprint redesign closure + F-0.2.17-W4-001"
                 " ChromaDB re-index hook closure + final 0.2.17 self-audit."
                 " Auditor must spot-check whether D1 closure evidence"
@@ -125,7 +125,7 @@ def main() -> int:
             flush=True,
         )
 
-    # RAG enrichment summary — explicitly check W4-001 / W1-001 status
+    # RAG enrichment summary - explicitly check W4-001 / W1-001 status
     rag = result.get("rag_enrichment") or {}
     print(
         f"[W6 self-audit] rag detected={rag.get('detected_count')} "

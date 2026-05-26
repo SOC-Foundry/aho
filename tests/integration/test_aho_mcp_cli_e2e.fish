@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
-# test_aho_mcp_cli_e2e.fish — End-to-end CLI test for bin/aho-mcp
-# 0.2.4 W2 — catches the empty-list and empty-parens regressions from 0.2.3.
+# test_aho_mcp_cli_e2e.fish - End-to-end CLI test for bin/aho-mcp
+# 0.2.4 W2 - catches the empty-list and empty-parens regressions from 0.2.3.
 
 set -l test_pass 0
 set -l test_fail 0
@@ -22,7 +22,7 @@ if string match -q '*MCP Server Fleet (0.2.4)*' -- $output
     echo "PASS: header contains 'MCP Server Fleet (0.2.4)'"
 else
     set test_fail (math $test_fail + 1)
-    echo "FAIL: header missing version — got:"
+    echo "FAIL: header missing version - got:"
     echo $output[1]
 end
 

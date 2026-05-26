@@ -1,4 +1,4 @@
-"""Integration test — cascade pipeline on dummy document (0.2.14 W1).
+"""Integration test - cascade pipeline on dummy document (0.2.14 W1).
 
 Runs end-to-end against Ollama with qwen3.5:9b.
 Requires Ollama running locally with qwen3.5:9b available.

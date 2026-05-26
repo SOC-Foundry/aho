@@ -1,10 +1,10 @@
-"""audit_disposition_emitter — write council audit dispositions to disk.
+"""audit_disposition_emitter - write council audit dispositions to disk.
 
 Produces a single .json file with two logical parts:
 
-1. Machine-parseable header — top-level fields covering disposition,
+1. Machine-parseable header - top-level fields covering disposition,
    confidence, target sha, timestamps, finding counts. Schema-validatable.
-2. Human-readable body — `body_md` field with per-finding markdown
+2. Human-readable body - `body_md` field with per-finding markdown
    sections written for drafter (Claude web) consumption on next planning
    turn. No raw JSON dumps embedded in prose.
 
@@ -103,7 +103,7 @@ def _render_evidence_section(traces: List[str]) -> str:
         cleaned = (t or "").strip()
         if not cleaned:
             continue
-        # Single-line bulleted quote — quote-safe even if the trace itself
+        # Single-line bulleted quote - quote-safe even if the trace itself
         # contains JSON, since the body never embeds raw JSON dumps.
         cleaned = cleaned.replace("\n", " ")
         if len(cleaned) > 400:
@@ -129,7 +129,7 @@ def render_body_md(
         "replay": "Audit Replay",
         "self": "Self-Audit",
     }.get(audit_kind, audit_kind)
-    parts.append(f"# {title_kind} — {iteration} {workstream}\n")
+    parts.append(f"# {title_kind} - {iteration} {workstream}\n")
     parts.append(f"**Disposition:** {audit['disposition']}\n")
     parts.append(f"**Confidence:** {audit['confidence']}\n")
     parts.append(f"**Auditor:** {audit['auditor_model_id']}\n")
@@ -228,7 +228,7 @@ def _emit_span(
             span.set_attribute("aho.audit.kind", audit_kind)
             span.set_attribute("aho.audit.disposition", disposition)
             span.set_attribute("aho.audit.findings_count", findings_count)
-            # Materiality bucket — emitter is the count-emission point for
+            # Materiality bucket - emitter is the count-emission point for
             # llama-caught mismatches so D12 doesn't double-count.
             span.set_attribute(
                 "aho.materiality.bucket",
@@ -353,7 +353,7 @@ def emit_disposition(
     if audit.get("rag_enrichment") is not None:
         document["rag_enrichment"] = audit["rag_enrichment"]
     # W4 D1: surface the deterministic post-hoc filter outcome alongside
-    # the disposition. `suppressed_findings` is auditable / falsifiable —
+    # the disposition. `suppressed_findings` is auditable / falsifiable -
     # drafter or downstream review can inspect what was suppressed and why.
     if audit.get("suppressed_findings") is not None:
         document["suppressed_findings"] = audit["suppressed_findings"]

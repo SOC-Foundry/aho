@@ -1,18 +1,18 @@
-# Investigation 9 — Telegram + OpenClaw + NemoClaw Partial State
+# Investigation 9 - Telegram + OpenClaw + NemoClaw Partial State
 
 **Date:** 2026-04-09
 **Auditor:** Claude Code (Opus 4.6)
 
 ---
 
-## W4 — Telegram Framework (Partial)
+## W4 - Telegram Framework (Partial)
 
 ### File Inventory
 
 ```
 src/iao/telegram/
-├── __init__.py        (129 bytes) — imports send_message, send_iteration_complete
-└── notifications.py   (1,958 bytes) — notification logic
+├── __init__.py        (129 bytes) - imports send_message, send_iteration_complete
+└── notifications.py   (1,958 bytes) - notification logic
 ```
 
 Two files total. No bot framework, no handler modules, no configuration.
@@ -21,9 +21,9 @@ Two files total. No bot framework, no handler modules, no configuration.
 
 **`notifications.py`** contains:
 
-- `_get_creds(project_code)` — retrieves Telegram bot token and chat ID from iao secrets store, with fallback to environment variables (`KJTCO_TELEGRAM_BOT_TOKEN`, `KJTCOM_TELEGRAM_CHAT_ID`).
-- `send_message(project_code, text)` — sends a plain text message to a Telegram chat via the Bot API.
-- `send_iteration_complete(project_code, iteration, bundle_path, run_report_path)` — sends a structured completion notification.
+- `_get_creds(project_code)` - retrieves Telegram bot token and chat ID from iao secrets store, with fallback to environment variables (`KJTCO_TELEGRAM_BOT_TOKEN`, `KJTCOM_TELEGRAM_CHAT_ID`).
+- `send_message(project_code, text)` - sends a plain text message to a Telegram chat via the Bot API.
+- `send_iteration_complete(project_code, iteration, bundle_path, run_report_path)` - sends a structured completion notification.
 
 The code is clean and functional for its narrow scope. It uses the `requests` library directly (not python-telegram-bot) for simple message sending.
 
@@ -34,7 +34,7 @@ $ ./bin/iao telegram --help
 usage: iao telegram [-h] {test} ...
 ```
 
-Only one subcommand: `test`. No `init`, `status`, `start`, `stop`, or `configure` commands. The telegram CLI is minimal — it can send a test message but cannot manage a bot lifecycle.
+Only one subcommand: `test`. No `init`, `status`, `start`, `stop`, or `configure` commands. The telegram CLI is minimal - it can send a test message but cannot manage a bot lifecycle.
 
 ### Dependencies
 
@@ -56,18 +56,18 @@ No `kjtcom-telegram-bot` systemd user service was found (the legacy kjtcom bot i
 
 ---
 
-## W5 — OpenClaw + NemoClaw (Stubs)
+## W5 - OpenClaw + NemoClaw (Stubs)
 
 ### File Inventory
 
 ```
 src/iao/agents/
 ├── __init__.py      (115 bytes)
-├── openclaw.py      (476 bytes) — stub
-├── nemoclaw.py      (1,033 bytes) — stub
+├── openclaw.py      (476 bytes) - stub
+├── nemoclaw.py      (1,033 bytes) - stub
 └── roles/
-    ├── base_role.py    (283 bytes) — BaseRole class
-    └── assistant.py    (297 bytes) — AssistantRole class
+    ├── base_role.py    (283 bytes) - BaseRole class
+    └── assistant.py    (297 bytes) - AssistantRole class
 ```
 
 ### Code Analysis
@@ -109,29 +109,29 @@ class NemoClawOrchestrator:
             return f"Error: {e}"
 ```
 
-NemoClaw creates OpenClaw sessions and dispatches tasks to them. Since OpenClaw is a stub, NemoClaw is effectively non-functional — every `dispatch()` call returns an error string.
+NemoClaw creates OpenClaw sessions and dispatches tasks to them. Since OpenClaw is a stub, NemoClaw is effectively non-functional - every `dispatch()` call returns an error string.
 
 The Nemotron classification step (routing tasks to appropriate sessions) is commented out with a note "In a real implementation, we would classify the task type."
 
-**`roles/base_role.py`** and **`roles/assistant.py`** are minimal scaffolding — a base class with `name` and `instructions` fields, and a single `AssistantRole` implementation.
+**`roles/base_role.py`** and **`roles/assistant.py`** are minimal scaffolding - a base class with `name` and `instructions` fields, and a single `AssistantRole` implementation.
 
 ### Import Tests
 
 ```python
 >>> from iao.agents.openclaw import OpenClaw
-# Works — class is importable
+# Works - class is importable
 
 >>> from iao.agents.nemoclaw import NemoClawOrchestrator
-# Works — class is importable
+# Works - class is importable
 ```
 
-Both import successfully. The imports don't fail because the stubs don't actually use open-interpreter at import time — they only fail when `.chat()` is called.
+Both import successfully. The imports don't fail because the stubs don't actually use open-interpreter at import time - they only fail when `.chat()` is called.
 
 ### open-interpreter Status
 
 ```python
 >>> import interpreter
-# Works — module imports
+# Works - module imports
 
 >>> interpreter.__version__
 'unknown'
@@ -156,7 +156,7 @@ The `interpreter` module is importable, but its version is unknown. This suggest
 
 | Component | Current State | What Would Complete It in 0.1.6 |
 |---|---|---|
-| **Telegram notifications** | Functional (send_message, send_iteration_complete) | Nothing — this works for its current scope |
+| **Telegram notifications** | Functional (send_message, send_iteration_complete) | Nothing - this works for its current scope |
 | **Telegram bot framework** | Missing entirely | Build TelegramBotFramework with init/start/stop/status; add command handlers; wire to iao CLI |
 | **Telegram CLI** | Only `test` subcommand | Add `init`, `status`, `configure` subcommands |
 | **OpenClaw** | Stub (NotImplementedError) | Resolve tiktoken/Python 3.14 issue OR switch to an alternative to open-interpreter |
@@ -176,4 +176,4 @@ The fundamental blocker for OpenClaw/NemoClaw is the Python 3.14 + tiktoken inco
 3. **Use a different code interpreter backend** that doesn't depend on tiktoken. Alternatives include direct Qwen integration via Ollama (which already works) or a custom REPL wrapper.
 4. **Pin Python to 3.13** for iao. Significant environment change.
 
-Option 3 is likely the most pragmatic for 0.1.6 — build OpenClaw as a thin Qwen-based code execution agent using Ollama directly, without depending on open-interpreter. This would bypass the tiktoken dependency entirely and leverage the model fleet that's already functional.
+Option 3 is likely the most pragmatic for 0.1.6 - build OpenClaw as a thin Qwen-based code execution agent using Ollama directly, without depending on open-interpreter. This would bypass the tiktoken dependency entirely and leverage the model fleet that's already functional.

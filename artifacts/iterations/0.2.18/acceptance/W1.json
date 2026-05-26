@@ -5,8 +5,8 @@
   "audit_status": "operator_arbitrated_after_narrative_lift_halt",
   "audit_status_history": [
     {"status": "pending_audit", "at": "2026-05-17T02:30:00Z", "note": "v1 acceptance archive written"},
-    {"status": "operator_arbitrated_after_narrative_lift_halt", "at": "2026-05-17T02:50:00Z", "note": "v1 audit returned halt at conf 0.90 with 1 finding whose description is verbatim my own W1-003 title. Exact narrative-lift shape of F-0.2.18-W0-008. Same operator-arbitration disposition: known small-model semantic-discrimination limitation carried forward to 0.3.x. No re-audit warranted — three structural false-positive shapes (W0-005/006/007) are already closed; only narrative-lift residual remains."},
-    {"status": "amended_post_close_for_substrate_drift_rebuild", "at": "2026-05-17T03:30:00Z", "note": "Post-close W2 pre-flight discovered the tail78a311.ts.net FQDN baked into v1 image no longer exists (tailnet was re-keyed to tail8492.ts.net; a8 host was also rebuilt — verified via SSH ed25519 fingerprint change). v1 image would have failed OTLP resolution from a8cos. Rebuild executed in-session: Dockerfile FQDN corrected to nzxtcos.tail8492.ts.net, image rebuilt (new digest sha256:9f6b5844d365...). Filed as F-0.2.18-W1-004."}
+    {"status": "operator_arbitrated_after_narrative_lift_halt", "at": "2026-05-17T02:50:00Z", "note": "v1 audit returned halt at conf 0.90 with 1 finding whose description is verbatim my own W1-003 title. Exact narrative-lift shape of F-0.2.18-W0-008. Same operator-arbitration disposition: known small-model semantic-discrimination limitation carried forward to 0.3.x. No re-audit warranted - three structural false-positive shapes (W0-005/006/007) are already closed; only narrative-lift residual remains."},
+    {"status": "amended_post_close_for_substrate_drift_rebuild", "at": "2026-05-17T03:30:00Z", "note": "Post-close W2 pre-flight discovered the tail78a311.ts.net FQDN baked into v1 image no longer exists (tailnet was re-keyed to tail8492.ts.net; a8 host was also rebuilt - verified via SSH ed25519 fingerprint change). v1 image would have failed OTLP resolution from a8cos. Rebuild executed in-session: Dockerfile FQDN corrected to nzxtcos.tail8492.ts.net, image rebuilt (new digest sha256:9f6b5844d365...). Filed as F-0.2.18-W1-004."}
   ],
   "timestamp": "2026-05-17T02:30:00Z",
   "agents_involved": [
@@ -25,7 +25,7 @@
   ],
   "scope_notes": {
     "deliverable": "Image aho:0.2.18 built locally on NZXTcos with cross-host OTLP endpoint baked, version strings consolidated to 0.2.18 across 5 source locations, k8s-readiness five-check pass against ADR-0007. Push to ghcr.io/soc-foundry/aho:0.2.18 is OPR-W1-001 (operator-only per Pillar 11).",
-    "plan_doc_gaps_discovered_during_W1_recon": "Three gaps between plan-doc §W1 and repository reality: (1) Dockerfile path is ./Dockerfile not containers/Dockerfile (containers/ holds only Dockerfile.hello); (2) version-string drift wider than plan-doc's singular 'aho package version bumped to 0.2.18' — 5 locations needed bumping, several drifted across multiple iterations; (3) plan-doc §W1 step 5 references artifacts/tests/test_container_k8s_readiness.py as 'the 0.2.17 W1 test' but file does not exist — same shape as F-0.2.18-W0-003 (plan-doc assumed test that was never written).",
+    "plan_doc_gaps_discovered_during_W1_recon": "Three gaps between plan-doc §W1 and repository reality: (1) Dockerfile path is ./Dockerfile not containers/Dockerfile (containers/ holds only Dockerfile.hello); (2) version-string drift wider than plan-doc's singular 'aho package version bumped to 0.2.18' - 5 locations needed bumping, several drifted across multiple iterations; (3) plan-doc §W1 step 5 references artifacts/tests/test_container_k8s_readiness.py as 'the 0.2.17 W1 test' but file does not exist - same shape as F-0.2.18-W0-003 (plan-doc assumed test that was never written).",
     "operator_arbitration_summary": "Operator (Kyle) directive 'just move on to w1' + 'skip restart i need the base container in the next 2 hours' arbitrated: (a) take agent-recommended defaults on Gap 2 (wider bump + carry-forward) and Gap 3 (manual ADR-0007 five-check at acceptance + carry-forward for pytest); (b) accept skip-restart attribution gap as W1 finding rather than block for session restart."
   },
   "deliverable_evidence": {
@@ -34,7 +34,7 @@
     "image_digest": "sha256:9f6b5844d365aaaebf4a4c558bc5857643482a786fb734b634a3bac7b0569d79",
     "image_id_v1_superseded": "c45480d0f3acef054c2aaecb5dada136102a33a1f9aa7700b3aaef10549d1fc3",
     "image_digest_v1_superseded": "sha256:46ef5a13ae5c12f700558513afd2c7d788e370a7d576dc6559c24946fa18348f",
-    "image_v1_supersede_reason": "tail78a311.ts.net FQDN bake stale — see F-0.2.18-W1-004",
+    "image_v1_supersede_reason": "tail78a311.ts.net FQDN bake stale - see F-0.2.18-W1-004",
     "image_size_bytes": 357111875,
     "image_size_delta_vs_0_2_17_rc2_bytes": 519556,
     "image_size_delta_budget_bytes": 52428800,
@@ -55,7 +55,7 @@
       "Header comment 0.2.17 W1 → 0.2.18 W1 with 0.2.18-delta-from-0.2.17-rc2 enumeration appended",
       "Runtime ENV block extended with OTEL_EXPORTER_OTLP_ENDPOINT=http://nzxtcos.tail78a311.ts.net:4317 and OTEL_EXPORTER_OTLP_PROTOCOL=grpc (cross-host posture per CLAUDE.md §OTEL Environment)",
       "LABEL block updated: org.opencontainers.image.description bumped to 0.2.18 (W1 cross-host OTLP endpoint default + W0 embed-timeout fix), io.aho.iteration=0.2.18, io.aho.workstream=W1",
-      "Source layer (COPY pyproject.toml + COPY src) automatically pulls W0 embed-timeout fix (DEFAULT_TIMEOUT_S=120 in src/aho/council/embed.py) — no explicit Dockerfile edit needed for that delta"
+      "Source layer (COPY pyproject.toml + COPY src) automatically pulls W0 embed-timeout fix (DEFAULT_TIMEOUT_S=120 in src/aho/council/embed.py) - no explicit Dockerfile edit needed for that delta"
     ],
     "build_log_path": "artifacts/iterations/0.2.18/build-logs/W1-build.log",
     "build_log_sha256": "1afb29320ff39fe4c50a8bf929cd1925946fbd3dd9de5a4842ea3b5c9dc47164",
@@ -63,27 +63,27 @@
   },
   "acceptance_checks": [
     {
-      "check": "Image builds clean — podman build -t aho:0.2.18 -f Dockerfile .",
+      "check": "Image builds clean - podman build -t aho:0.2.18 -f Dockerfile .",
       "result": "pass",
       "evidence": "Build succeeded; image ID c45480d0f3ac; runtime stage completed 13/13 steps; manifest digest sha256:46ef5a13...; build log at artifacts/iterations/0.2.18/build-logs/W1-build.log (sha256 1afb29320ff39fe4...)."
     },
     {
-      "check": "Smoke 1 — podman images aho:0.2.18 | grep -q '0.2.18'",
+      "check": "Smoke 1 - podman images aho:0.2.18 | grep -q '0.2.18'",
       "result": "pass",
       "evidence": "PASS: tag present (localhost/aho:0.2.18 357 MB)."
     },
     {
-      "check": "Smoke 2 — podman run --rm aho:0.2.18 --version → 0.2.18",
+      "check": "Smoke 2 - podman run --rm aho:0.2.18 --version → 0.2.18",
       "result": "pass",
       "evidence": "Output: 'aho 0.2.18' (exit 0). VERSION constant in src/aho/cli.py:9 bumped from 0.2.14 → 0.2.18; pyproject.toml metadata also bumped for installed-package consistency."
     },
     {
-      "check": "Smoke 3 — OTEL_EXPORTER_OTLP_ENDPOINT default contains nzxtcos magicdns + :4317",
+      "check": "Smoke 3 - OTEL_EXPORTER_OTLP_ENDPOINT default contains nzxtcos magicdns + :4317",
       "result": "pass",
       "evidence": "podman run --rm --entrypoint sh aho:0.2.18 -c 'echo $OTEL_EXPORTER_OTLP_ENDPOINT' → 'http://nzxtcos.tail78a311.ts.net:4317' (canonical value per artifacts/iterations/0.2.18/probes/a8geekomCos-baseline.md:21)."
     },
     {
-      "check": "Smoke 4 — OTEL_EXPORTER_OTLP_PROTOCOL=grpc default",
+      "check": "Smoke 4 - OTEL_EXPORTER_OTLP_PROTOCOL=grpc default",
       "result": "pass",
       "evidence": "podman run output: 'grpc'."
     },
@@ -93,37 +93,37 @@
       "evidence": "old=356592319 bytes, new=357111875 bytes, delta=519556 bytes (0.50 MB / 0.99% of 50 MB budget). No regression."
     },
     {
-      "check": "k8s-readiness #1 — Configuration via environment variables",
+      "check": "k8s-readiness #1 - Configuration via environment variables",
       "result": "pass",
       "evidence": "All aho config via AHO_/OTEL_ env vars (AHO_HEALTH_PORT, AHO_SECRETS_SOCKET, AHO_TIER_FILE, OTEL_EXPORTER_OTLP_ENDPOINT, OTEL_EXPORTER_OTLP_PROTOCOL). No in-image config files mounted in /etc/aho/ or /opt/aho/config/. Volume-mountable for k8s ConfigMaps."
     },
     {
-      "check": "k8s-readiness #2 — Secrets from filesystem paths, no baked credentials",
+      "check": "k8s-readiness #2 - Secrets from filesystem paths, no baked credentials",
       "result": "pass",
-      "evidence": "AHO_SECRETS_SOCKET=/run/host-services/aho-secrets.sock (mountable by k8s Secrets-as-volume). Image filesystem scan for .pem/.key/.crt/.env/credentials* turned up only third-party library files: certifi CA bundle, grpc roots.pem, litellm proxy infrastructure modules (sap/credentials.py, proxy/auth/public_key.pem, etc — these are code modules + bundled CA roots, NOT aho secrets). No aho-issued credentials baked."
+      "evidence": "AHO_SECRETS_SOCKET=/run/host-services/aho-secrets.sock (mountable by k8s Secrets-as-volume). Image filesystem scan for .pem/.key/.crt/.env/credentials* turned up only third-party library files: certifi CA bundle, grpc roots.pem, litellm proxy infrastructure modules (sap/credentials.py, proxy/auth/public_key.pem, etc - these are code modules + bundled CA roots, NOT aho secrets). No aho-issued credentials baked."
     },
     {
-      "check": "k8s-readiness #3 — Logs to stdout/stderr",
+      "check": "k8s-readiness #3 - Logs to stdout/stderr",
       "result": "pass",
       "evidence": "PYTHONUNBUFFERED=1 in runtime ENV. /var/log/aho/ exists but is empty at startup (created via mkdir in Dockerfile for future host-mount compatibility). Container logs verified routing to stdout via 'podman logs' (TIER/HEALTH/READY lines from aho serve startup)."
     },
     {
-      "check": "k8s-readiness #4 — Graceful SIGTERM handling ≤30s",
+      "check": "k8s-readiness #4 - Graceful SIGTERM handling ≤30s",
       "result": "pass",
       "evidence": "podman kill --signal=TERM on running 'aho serve' container: container exited 8s after SIGTERM (budget: 30s). Well within terminationGracePeriodSeconds default."
     },
     {
-      "check": "k8s-readiness #5 — HTTP /healthz on AHO_HEALTH_PORT (8080)",
+      "check": "k8s-readiness #5 - HTTP /healthz on AHO_HEALTH_PORT (8080)",
       "result": "pass",
-      "evidence": "src/aho/health.py:78-91 binds 0.0.0.0:AHO_HEALTH_PORT via ThreadingHTTPServer. EXPOSE 8080 in Dockerfile. In-container probe: curl http://127.0.0.1:8080/healthz → {\"status\": \"ok\"} HTTP 200. server_version=aho-health/0.2.18. (Host-side port-forward via -p 18080:8080 returned 'connection reset by peer' — unrelated rootless-podman networking quirk on NZXTcos, not an image defect; in-container probe is the canonical test for the bind contract.)"
+      "evidence": "src/aho/health.py:78-91 binds 0.0.0.0:AHO_HEALTH_PORT via ThreadingHTTPServer. EXPOSE 8080 in Dockerfile. In-container probe: curl http://127.0.0.1:8080/healthz → {\"status\": \"ok\"} HTTP 200. server_version=aho-health/0.2.18. (Host-side port-forward via -p 18080:8080 returned 'connection reset by peer' - unrelated rootless-podman networking quirk on NZXTcos, not an image defect; in-container probe is the canonical test for the bind contract.)"
     },
     {
-      "check": "G070 hygiene — __pycache__ cleared after src/aho/ touch",
+      "check": "G070 hygiene - __pycache__ cleared after src/aho/ touch",
       "result": "pass",
       "evidence": "find src/aho -type d -name __pycache__ -exec rm -rf {} + run after each src/aho/ edit (cli.py, __init__.py, health.py)."
     },
     {
-      "check": "Pillar 11 — no commits, pushes, merges, adds, secret reads from W1",
+      "check": "Pillar 11 - no commits, pushes, merges, adds, secret reads from W1",
       "result": "pass",
       "evidence": "No git commit/push/merge/add/rm operations from this session. No secret bytes materialized in agent context (Telegram diagnostic earlier used shell-substitution; tokens never entered tool-result text). ghcr.io push deferred to operator per OPR-W1-001."
     }
@@ -133,28 +133,28 @@
       "id": "F-0.2.18-W1-001",
       "severity": "important",
       "title": "Skip-restart deviation: W1 work executed in W0-tagged session (operator-arbitrated)",
-      "detail": "After W0 close, the canonical protocol step is: update .claude/settings.json AHO_WORKSTREAM W0→W1, then operator runs `claude --continue` to restart the session so the new env value flows into OTEL_RESOURCE_ATTRIBUTES. Operator (Kyle) directive 'skip restart i need the base container in the next 2 hours' arbitrated proceeding without restart to meet the 2-hour ship window. Consequence: claude-code's own OTEL emissions during W1 work (Bash tool spans, cost.usage metrics, etc.) carry aho.workstream=W0 in resource attrs. Aho-emitted structured events (workstream_start, this acceptance archive, future workstream_complete) correctly carry workstream='W1' as event-content attribution. Cost-attribution per Pillar 8 will incorrectly land W1 spend on W0 for this session — recoverable via post-hoc reconciliation of session start/end timestamps if needed. Materiality (ADR-0010) unaffected — it counts audit cycles by content, not span tags. Pattern: future workstreams that change inside an active session should default to restart unless an explicit time-pressure arbitration is recorded.",
+      "detail": "After W0 close, the canonical protocol step is: update .claude/settings.json AHO_WORKSTREAM W0→W1, then operator runs `claude --continue` to restart the session so the new env value flows into OTEL_RESOURCE_ATTRIBUTES. Operator (Kyle) directive 'skip restart i need the base container in the next 2 hours' arbitrated proceeding without restart to meet the 2-hour ship window. Consequence: claude-code's own OTEL emissions during W1 work (Bash tool spans, cost.usage metrics, etc.) carry aho.workstream=W0 in resource attrs. Aho-emitted structured events (workstream_start, this acceptance archive, future workstream_complete) correctly carry workstream='W1' as event-content attribution. Cost-attribution per Pillar 8 will incorrectly land W1 spend on W0 for this session - recoverable via post-hoc reconciliation of session start/end timestamps if needed. Materiality (ADR-0010) unaffected - it counts audit cycles by content, not span tags. Pattern: future workstreams that change inside an active session should default to restart unless an explicit time-pressure arbitration is recorded.",
       "disposition": "operator_arbitrated_accepted_with_finding"
     },
     {
       "id": "F-0.2.18-W1-002",
       "severity": "low",
       "title": "Version-string drift across 5 source locations, no single source of truth",
-      "detail": "W1 recon found aho version strings drifted across 5 independent locations: pyproject.toml (0.2.14 → 0.2.18), src/aho/__init__.py (0.1.0 → 0.2.18 — never updated since 0.1.0), src/aho/health.py (0.2.17 → 0.2.18), src/aho/cli.py:9 VERSION (0.2.14 → 0.2.18), and Dockerfile LABEL block (0.2.17 → 0.2.18). cli.py:112 'aho_version: 0.1' is unrelated (it's the .aho.json schema version). The drift pattern means past iteration-close rituals have not consistently bumped every string. Plan-doc §W1 said 'aho package version bumped to 0.2.18 in source' (singular), masking the actual scope. Recommended structural fix (carry-forward): consolidate to single source via importlib.metadata.version('aho') read in __init__.py + cli.py + health.py so future iterations only need to bump pyproject.toml. Defer the refactor to a maintenance workstream — W1 deliverable here is just the bump.",
+      "detail": "W1 recon found aho version strings drifted across 5 independent locations: pyproject.toml (0.2.14 → 0.2.18), src/aho/__init__.py (0.1.0 → 0.2.18 - never updated since 0.1.0), src/aho/health.py (0.2.17 → 0.2.18), src/aho/cli.py:9 VERSION (0.2.14 → 0.2.18), and Dockerfile LABEL block (0.2.17 → 0.2.18). cli.py:112 'aho_version: 0.1' is unrelated (it's the .aho.json schema version). The drift pattern means past iteration-close rituals have not consistently bumped every string. Plan-doc §W1 said 'aho package version bumped to 0.2.18 in source' (singular), masking the actual scope. Recommended structural fix (carry-forward): consolidate to single source via importlib.metadata.version('aho') read in __init__.py + cli.py + health.py so future iterations only need to bump pyproject.toml. Defer the refactor to a maintenance workstream - W1 deliverable here is just the bump.",
       "disposition": "carry_forward_to_0.3.x_consolidation_workstream"
     },
     {
       "id": "F-0.2.18-W1-003",
       "severity": "low",
       "title": "Plan-doc references non-existent k8s-readiness pytest (same shape as F-0.2.18-W0-003)",
-      "detail": "Plan-doc artifacts/iterations/0.2.18/aho-plan-0.2.18.md §W1 step 5 says: 'The 0.2.17 W1 test (artifacts/tests/test_container_k8s_readiness.py) re-runs against the new image.' That test file does not exist; find . -name '*k8s*' returns nothing. Same failure shape as F-0.2.18-W0-003 (plan-doc Bucket 1 #3 'unit-test amendment' — the test was never written). Disposition: executed manual ADR-0007 five-check at acceptance time (all five PASS — see acceptance_checks). Recommend creating the canonical pytest in a future maintenance workstream so the contract is reproducibly verifiable in CI rather than via per-iteration manual probe. Pattern (recurring): plan-docs should not reference test files without verifying existence at drafting time — same convention input as F-0.2.18-W0-003.",
+      "detail": "Plan-doc artifacts/iterations/0.2.18/aho-plan-0.2.18.md §W1 step 5 says: 'The 0.2.17 W1 test (artifacts/tests/test_container_k8s_readiness.py) re-runs against the new image.' That test file does not exist; find . -name '*k8s*' returns nothing. Same failure shape as F-0.2.18-W0-003 (plan-doc Bucket 1 #3 'unit-test amendment' - the test was never written). Disposition: executed manual ADR-0007 five-check at acceptance time (all five PASS - see acceptance_checks). Recommend creating the canonical pytest in a future maintenance workstream so the contract is reproducibly verifiable in CI rather than via per-iteration manual probe. Pattern (recurring): plan-docs should not reference test files without verifying existence at drafting time - same convention input as F-0.2.18-W0-003.",
       "disposition": "carry_forward_to_test_consolidation_workstream"
     },
     {
       "id": "F-0.2.18-W1-004",
       "severity": "important",
       "title": "Substrate drift discovered post-W1-close: tailnet re-keyed + a8 host rebuilt → v1 image FQDN stale",
-      "detail": "W2 pre-flight reachability probes uncovered three substrate-level changes since the W0 a8geekomCos probe (probe was ~7 days prior): (1) Tailnet domain rolled from `tail78a311.ts.net` -> `tail8492.ts.net` (Tailscale-side re-key/migration); (2) a8 short name changed from `a8geekomcos` -> `a8cos`; (3) a8 Tailscale IP changed `100.74.161.116` -> `100.124.234.113`; (4) a8 SSH ed25519 host key fingerprint changed from `SHA256:8u4F8JRWIbu3AXE8x5vzDtgQ7U1YGwQcS7W8P5IogNs` -> `SHA256:hKOJnbihqRQB0jpGLzNW0xaB/1Xdlhm2V4oVqf80gmg`. The host-key change confirms a8 was rebuilt (OS reinstall or replacement), not just renamed at the Tailscale layer. Consequence: the v1 W1 image (digest sha256:46ef5a13...) baked `OTEL_EXPORTER_OTLP_ENDPOINT=http://nzxtcos.tail78a311.ts.net:4317` which a8cos can no longer resolve. Rebuild executed in-session with corrected FQDN `nzxtcos.tail8492.ts.net`; new image digest sha256:9f6b5844d365...; smoke re-verified (OTEL endpoint env reads new value, aho --version unchanged at 0.2.18). v1 image was never pushed to ghcr.io, so the supersede is cost-free. Pattern: substrate-fact captures in probe artifacts (tailnet domain, IPs, hostnames, host keys) decay rapidly and must be re-verified at consumption time, not trusted from probe age. Same convention input as F-0.2.18-W0-003 (test-file-existence) and F-0.2.18-W1-003 — recurring shape: 'artifact references a substrate fact that has drifted since capture'.",
+      "detail": "W2 pre-flight reachability probes uncovered three substrate-level changes since the W0 a8geekomCos probe (probe was ~7 days prior): (1) Tailnet domain rolled from `tail78a311.ts.net` -> `tail8492.ts.net` (Tailscale-side re-key/migration); (2) a8 short name changed from `a8geekomcos` -> `a8cos`; (3) a8 Tailscale IP changed `100.74.161.116` -> `100.124.234.113`; (4) a8 SSH ed25519 host key fingerprint changed from `SHA256:8u4F8JRWIbu3AXE8x5vzDtgQ7U1YGwQcS7W8P5IogNs` -> `SHA256:hKOJnbihqRQB0jpGLzNW0xaB/1Xdlhm2V4oVqf80gmg`. The host-key change confirms a8 was rebuilt (OS reinstall or replacement), not just renamed at the Tailscale layer. Consequence: the v1 W1 image (digest sha256:46ef5a13...) baked `OTEL_EXPORTER_OTLP_ENDPOINT=http://nzxtcos.tail78a311.ts.net:4317` which a8cos can no longer resolve. Rebuild executed in-session with corrected FQDN `nzxtcos.tail8492.ts.net`; new image digest sha256:9f6b5844d365...; smoke re-verified (OTEL endpoint env reads new value, aho --version unchanged at 0.2.18). v1 image was never pushed to ghcr.io, so the supersede is cost-free. Pattern: substrate-fact captures in probe artifacts (tailnet domain, IPs, hostnames, host keys) decay rapidly and must be re-verified at consumption time, not trusted from probe age. Same convention input as F-0.2.18-W0-003 (test-file-existence) and F-0.2.18-W1-003 - recurring shape: 'artifact references a substrate fact that has drifted since capture'.",
       "disposition": "in_session_remediation_completed",
       "operator_known_hosts_cleanup_run": "ssh-keygen -R a8geekomcos + ssh-keygen -R a8geekomcos.tail78a311.ts.net at 2026-05-17T03:18:33Z (stale ed25519 entry on line 7 removed; .old backup retained)."
     },
@@ -162,7 +162,7 @@
       "id": "F-0.2.18-W1-005",
       "severity": "info",
       "title": "W2 prep work (collector rebind + ufw rules) executed in W1 session",
-      "detail": "Per plan-doc, the OTEL collector rebind from 127.0.0.1:4317 to the Tailscale interface and the corresponding ufw allow-in rules belong to W2 D1. Operator directive 'let's also make sure the required ports open with ufw and fix dns before rebuilding image' arbitrated landing these in the W1 session as pre-flight for the W1 image rebuild + W2 launch. Substantive changes: (a) /home/kthompson/.config/aho/otel-collector.yaml lines 5+7 changed from 127.0.0.1:4317/4318 to 0.0.0.0:4317/4318 (new sha256 ea30631e305d46005aebbaebdd077104b12104212e24dc7fbeee09359b773df0); (b) aho-otel-collector.service user-systemd restart picked up new bind (verified via ss -tlnp showing *:4317 + *:4318); (c) operator added ufw rules on NZXTcos: 4317/tcp + 4318/tcp ALLOW IN on tailscale0 (both v4 + v6); (d) a8cos egress is default-allow per a8cos ufw status — no rule additions needed there. End-to-end verification: bash /dev/tcp probe from a8cos to nzxtcos:4317 and :4318 returned OPEN for both FQDN and IP after the changes. Same attribution-gap shape as F-0.2.18-W1-001 — these W2-flavored changes carry aho.workstream=W0 in this session's claude-code OTEL resource attrs, while content-side attribution remains correct.",
+      "detail": "Per plan-doc, the OTEL collector rebind from 127.0.0.1:4317 to the Tailscale interface and the corresponding ufw allow-in rules belong to W2 D1. Operator directive 'let's also make sure the required ports open with ufw and fix dns before rebuilding image' arbitrated landing these in the W1 session as pre-flight for the W1 image rebuild + W2 launch. Substantive changes: (a) /home/kthompson/.config/aho/otel-collector.yaml lines 5+7 changed from 127.0.0.1:4317/4318 to 0.0.0.0:4317/4318 (new sha256 ea30631e305d46005aebbaebdd077104b12104212e24dc7fbeee09359b773df0); (b) aho-otel-collector.service user-systemd restart picked up new bind (verified via ss -tlnp showing *:4317 + *:4318); (c) operator added ufw rules on NZXTcos: 4317/tcp + 4318/tcp ALLOW IN on tailscale0 (both v4 + v6); (d) a8cos egress is default-allow per a8cos ufw status - no rule additions needed there. End-to-end verification: bash /dev/tcp probe from a8cos to nzxtcos:4317 and :4318 returned OPEN for both FQDN and IP after the changes. Same attribution-gap shape as F-0.2.18-W1-001 - these W2-flavored changes carry aho.workstream=W0 in this session's claude-code OTEL resource attrs, while content-side attribution remains correct.",
       "disposition": "operator_arbitrated_W2_prep_in_W1_session"
     }
   ],
@@ -170,17 +170,17 @@
     {
       "id": "OPR-W1-001",
       "title": "Push aho:0.2.18 to ghcr.io/soc-foundry/aho:0.2.18 (Pillar 11)",
-      "context": "Plan-doc §W1 step 4 — agents prepare, operator pushes. Image is built locally; tagging + push is operator-side per Pillar 11.",
+      "context": "Plan-doc §W1 step 4 - agents prepare, operator pushes. Image is built locally; tagging + push is operator-side per Pillar 11.",
       "resolution": {
         "status": "resolved",
         "resolved_at_utc": "2026-05-17T15:30:00Z",
         "actions_taken": [
           "Operator authenticated via `gh auth token | podman login ghcr.io -u sockjt --password-stdin` (Login Succeeded)",
           "Operator tagged: `podman tag aho:0.2.18 ghcr.io/soc-foundry/aho:0.2.18`",
-          "Operator pushed: `podman push ghcr.io/soc-foundry/aho:0.2.18` — 10 blobs + config uploaded, manifest written, no errors"
+          "Operator pushed: `podman push ghcr.io/soc-foundry/aho:0.2.18` - 10 blobs + config uploaded, manifest written, no errors"
         ],
         "pushed_manifest_digest": "sha256:9f6b5844d365aaaebf4a4c558bc5857643482a786fb734b634a3bac7b0569d79",
-        "digest_match_note": "Registry-side digest is IDENTICAL to local digest. podman preserved the manifest exactly during push — no re-serialization. (The runbook warned digests might differ; in this case they didn't. Both are valid; identical is cleaner verification.)",
+        "digest_match_note": "Registry-side digest is IDENTICAL to local digest. podman preserved the manifest exactly during push - no re-serialization. (The runbook warned digests might differ; in this case they didn't. Both are valid; identical is cleaner verification.)",
         "runbook_path": "GHCR-PUSH-0.2.18.md (repo root; can be archived to artifacts/iterations/0.2.18/ at iteration close)"
       }
     }
@@ -206,15 +206,15 @@
       "findings_count": 1,
       "structural_pre_checks": "all pass (g081_banned_phrases, git_ops_referenced, three_octet_versioning_present)",
       "halt_drivers": [
-        "F-0.2.18-W1-003 important — description is verbatim quote from this acceptance archive's findings[F-0.2.18-W1-003].title ('Plan-doc references non-existent k8s-readiness pytest (same shape as F-0.2.18-W0-003)'). Same narrative-lift shape as F-0.2.18-W0-008."
+        "F-0.2.18-W1-003 important - description is verbatim quote from this acceptance archive's findings[F-0.2.18-W1-003].title ('Plan-doc references non-existent k8s-readiness pytest (same shape as F-0.2.18-W0-003)'). Same narrative-lift shape as F-0.2.18-W0-008."
       ],
       "narrative_lift_observed": true,
-      "narrative_lift_note": "Model lifted the title of my own W1 finding (which itself documents the plan-doc/reality gap I discovered during recon and resolved via manual ADR-0007 five-check) and re-emitted it as a halt-driver. The structural filters (audit_finding_filter._RAG_STATUS_ECHO_PATTERN, audit unsupported_halt_downgrade) do not catch this shape — it's prose, not template echo. This is the F-0.2.18-W0-008 residual carried forward to 0.3.x or a dedicated audit-machinery iteration.",
-      "operator_disposition": "Operator-arbitrate per F-0.2.18-W0-008 precedent. Treat as surface_to_drafter equivalent. No re-audit warranted — re-running llama3.2:3b on this same artifact will likely produce another narrative-lift halt (the input shape is what triggers it). Three structural false-positive shapes (W0-005/006/007) already closed structurally; narrative-lift is the residual."
+      "narrative_lift_note": "Model lifted the title of my own W1 finding (which itself documents the plan-doc/reality gap I discovered during recon and resolved via manual ADR-0007 five-check) and re-emitted it as a halt-driver. The structural filters (audit_finding_filter._RAG_STATUS_ECHO_PATTERN, audit unsupported_halt_downgrade) do not catch this shape - it's prose, not template echo. This is the F-0.2.18-W0-008 residual carried forward to 0.3.x or a dedicated audit-machinery iteration.",
+      "operator_disposition": "Operator-arbitrate per F-0.2.18-W0-008 precedent. Treat as surface_to_drafter equivalent. No re-audit warranted - re-running llama3.2:3b on this same artifact will likely produce another narrative-lift halt (the input shape is what triggers it). Three structural false-positive shapes (W0-005/006/007) already closed structurally; narrative-lift is the residual."
     }
   },
   "operator_arbitration": {
-    "reason": "v1 halt is narrative-lift residual (F-0.2.18-W0-008 known shape). Operator directive 'ship the base fucking container in the next 2 hours' established arbitration authority for known false-positive shapes — narrative-lift qualifies. All 13 acceptance checks pass on substance; image is built, smoke-tested, ADR-0007 five-checked, and ready for operator push. Substantive blockers: zero.",
+    "reason": "v1 halt is narrative-lift residual (F-0.2.18-W0-008 known shape). Operator directive 'ship the base fucking container in the next 2 hours' established arbitration authority for known false-positive shapes - narrative-lift qualifies. All 13 acceptance checks pass on substance; image is built, smoke-tested, ADR-0007 five-checked, and ready for operator push. Substantive blockers: zero.",
     "arbitrated_disposition": "surface_to_drafter (effective)",
     "operator_signature_required": true,
     "fresh_session_executor_instruction": "Read audit archive + this operator_arbitration block. Emit workstream_complete with note: 'audit chain ended at operator-arbitrated surface_to_drafter, narrative-lift residual per F-0.2.18-W0-008 known shape.'"

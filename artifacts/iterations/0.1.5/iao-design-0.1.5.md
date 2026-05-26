@@ -1,4 +1,4 @@
-# iao 0.1.5 — Design Document
+# iao 0.1.5 - Design Document
 
 **Iteration:** 0.1.5
 **Project:** iao (code: iaomw)

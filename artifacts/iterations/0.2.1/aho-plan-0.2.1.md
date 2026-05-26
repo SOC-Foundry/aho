@@ -1,4 +1,4 @@
-# aho 0.2.1 — Plan
+# aho 0.2.1 - Plan
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 1 | **run_type:** mixed
 **Agent:** Claude Code single-agent throughout
@@ -16,7 +16,7 @@ tmux new-session -d -s aho-0.2.1 -c ~/dev/projects/aho
 tmux send-keys -t aho-0.2.1 'cd ~/dev/projects/aho; claude --dangerously-skip-permissions' Enter
 ```
 
-## W0 — Hygiene + carryovers
+## W0 - Hygiene + carryovers
 
 ```fish
 # .gitignore additions
@@ -26,13 +26,13 @@ printf '\ndata/chroma/\napp/build/\n__pycache__/\n*.pyc\n.venv/\n' >> .gitignore
 sed -i 's|^version = "0\.1\.16"|version = "0.2.1"|' pyproject.toml
 
 # Verify 0.15.1 directory absent
-test -d artifacts/iterations/0.15.1; and echo "STILL EXISTS — investigate"; or echo "OK clean"
+test -d artifacts/iterations/0.15.1; and echo "STILL EXISTS - investigate"; or echo "OK clean"
 
 # build_log_complete fix
 rg -n "design.*path\|design_path" src/aho/postflight/build_log_complete.py
 ```
 
-Edit `src/aho/postflight/build_log_complete.py` — locate the design doc path computation and replace with:
+Edit `src/aho/postflight/build_log_complete.py` - locate the design doc path computation and replace with:
 ```python
 from aho.paths import get_artifacts_root
 design_path = get_artifacts_root() / "iterations" / iteration / f"aho-design-{iteration}.md"
@@ -41,10 +41,10 @@ design_path = get_artifacts_root() / "iterations" / iteration / f"aho-design-{it
 Bump 7 canonical artifacts to 0.2.1:
 ```fish
 sed -i 's|\*\*Version:\*\* 0\.1\.16|**Version:** 0.2.1|' artifacts/harness/base.md
-sed -i 's|aho 0\.1\.16 W0 — close sequence repair|aho 0.2.1 W0 — global deployment|' artifacts/harness/base.md
+sed -i 's|aho 0\.1\.16 W0 - close sequence repair|aho 0.2.1 W0 - global deployment|' artifacts/harness/base.md
 
 sed -i 's|\*\*Version:\*\* 0\.1\.16|**Version:** 0.2.1|' artifacts/harness/agents-architecture.md
-sed -i 's|^# Agents Architecture — aho 0\.1\.16|# Agents Architecture — aho 0.2.1|' artifacts/harness/agents-architecture.md
+sed -i 's|^# Agents Architecture - aho 0\.1\.16|# Agents Architecture - aho 0.2.1|' artifacts/harness/agents-architecture.md
 sed -i 's|Iteration 0\.1\.13 marks the final realignment|Iteration 0.2.1 begins global deployment phase|' artifacts/harness/agents-architecture.md
 
 sed -i 's|\*\*Version:\*\* 0\.1\.16|**Version:** 0.2.1|' artifacts/harness/model-fleet.md
@@ -79,15 +79,15 @@ python -c "from aho.postflight.canonical_artifacts_current import check; r = che
 python -m pytest artifacts/tests/ -x
 ```
 
-## W1 — Global install architecture design
+## W1 - Global install architecture design
 
 Create `artifacts/harness/global-deployment.md` with the seven sections from the design doc: hybrid systemd model, install paths table, component lifecycle (install/enable/start/status/stop/restart/uninstall), capability gap inventory, uninstall safety contract, idempotency contract, P3 prereqs.
 
-Add to canonical artifacts list (`artifacts/harness/canonical_artifacts.yaml`) — this becomes the 8th canonical artifact, version-tracked from now on.
+Add to canonical artifacts list (`artifacts/harness/canonical_artifacts.yaml`) - this becomes the 8th canonical artifact, version-tracked from now on.
 
 **W1 Gate:** file exists, canonical artifacts gate updated to 8 entries, gate runs green.
 
-## W2 — `bin/aho-install` real implementation
+## W2 - `bin/aho-install` real implementation
 
 ```fish
 # Backup existing skeleton
@@ -115,7 +115,7 @@ diff /tmp/aho-install.log /tmp/aho-install-2.log  # should show only timestamps
 
 **W2 Gate:** install runs idempotently, uninstall script exists, doctor wires both.
 
-## W3 — Native OTEL collector as systemd user service
+## W3 - Native OTEL collector as systemd user service
 
 ```fish
 # Latest stable detection
@@ -175,7 +175,7 @@ echo "Trace count: $(wc -l < ~/.local/share/aho/traces/traces.jsonl 2>/dev/null 
 
 **W3 Gate:** collector running as user service, smoke send appears in traces.jsonl, logger defaults to always-on.
 
-## W4 — Global Ollama + model fleet pre-pull
+## W4 - Global Ollama + model fleet pre-pull
 
 ```fish
 which ollama
@@ -222,7 +222,7 @@ Add to `src/aho/doctor.py` quick checks: query `localhost:11434/api/tags`, verif
 
 **W4 Gate:** all 4 models present, doctor check green, models-status wrapper works.
 
-## W5 — Component instrumentation pass
+## W5 - Component instrumentation pass
 
 For each of 6 files, wrap primary methods in OTEL spans. Pattern (qwen_client.py example):
 
@@ -250,17 +250,17 @@ def generate(self, prompt: str, **kwargs):
 ```
 
 Apply same pattern (with appropriate attributes) to:
-- `src/aho/artifacts/nemotron_client.py` — `classify()` method
-- `src/aho/artifacts/glm_client.py` — `analyze()` and `vision()` methods
-- `src/aho/agents/openclaw.py` — `dispatch()` and `execute_code()` methods
-- `src/aho/agents/nemoclaw.py` — `route()` and `dispatch()` methods
-- `src/aho/telegram/notifications.py` — `send()` method (stub still emits span)
+- `src/aho/artifacts/nemotron_client.py` - `classify()` method
+- `src/aho/artifacts/glm_client.py` - `analyze()` and `vision()` methods
+- `src/aho/agents/openclaw.py` - `dispatch()` and `execute_code()` methods
+- `src/aho/agents/nemoclaw.py` - `route()` and `dispatch()` methods
+- `src/aho/telegram/notifications.py` - `send()` method (stub still emits span)
 
 Create `artifacts/tests/test_otel_instrumentation.py` with mock OTLP receiver verifying span emission for each of the 6 components.
 
 **W5 Gate:** new test file passes, smoke sends produce 6 distinct span types in traces.jsonl.
 
-## W6 — Dogfood + close
+## W6 - Dogfood + close
 
 ```fish
 python -m pytest artifacts/tests/ -v
@@ -312,7 +312,7 @@ KT completed 0.2.1: global deployment architecture, native OTEL collector, model
 
 ## Capability gaps expected
 
-- **W2:** Linger verification — should pass (already enabled)
+- **W2:** Linger verification - should pass (already enabled)
 - **W4:** Ollama install (if absent), model pulls (if disk/network constrained), `sudo systemctl enable ollama`
 - **W6:** Kyle manual git add/commit/push (Pillar 11)
 

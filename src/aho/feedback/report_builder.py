@@ -55,7 +55,7 @@ def _section_header(iteration: str, checkpoint: dict, config: dict) -> str:
     run_type = checkpoint.get("run_type", "unknown")
     phase = checkpoint.get("phase", config.get("phase", 0))
     return (
-        f"# Report — {prefix} {iteration}\n\n"
+        f"# Report - {prefix} {iteration}\n\n"
         f"**Generated:** {now}\n"
         f"**Iteration:** {iteration}\n"
         f"**Phase:** {phase}\n"

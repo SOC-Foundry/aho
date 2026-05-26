@@ -127,7 +127,7 @@
     {
       "id": "F007",
       "severity": "info",
-      "description": "GLM CUDA OOM crash kills ALL loaded models — VRAM drops to baseline. Destructive to concurrent model state. W2 dispatcher must verify model presence after GLM operations."
+      "description": "GLM CUDA OOM crash kills ALL loaded models - VRAM drops to baseline. Destructive to concurrent model state. W2 dispatcher must verify model presence after GLM operations."
     },
     {
       "id": "F008",

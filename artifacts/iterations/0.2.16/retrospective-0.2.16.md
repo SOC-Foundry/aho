@@ -1,4 +1,4 @@
-# Retrospective — aho 0.2.16
+# Retrospective - aho 0.2.16
 
 **Phase:** 0 | **Iteration:** 0.2.16 | **Executor:** claude-code (drafter) | **Auditor:** gemini-cli
 **Theme:** Claude Code OTEL Integration & 0.2.15 Close-Out
@@ -7,13 +7,13 @@
 
 ---
 
-## §1 Iteration deliverable (retroactive — ADR 0006 applied)
+## §1 Iteration deliverable (retroactive - ADR 0006 applied)
 
 ADR 0006 ("Iteration Deliverable + Graduation Criterion Discipline") landed in
 W4 of this iteration. It mandates that every aho-plan-{iter}.md open with
 (a) a one-paragraph iteration deliverable and (b) a graduation criterion in
 one of three forms (runnable test / artifact-existence-and-content /
-manual checklist). 0.2.16's plan does not have these — it predates the
+manual checklist). 0.2.16's plan does not have these - it predates the
 convention. This section reconstructs them retroactively so the
 retrospective and the carry-forwards have an unambiguous answer to the
 question "what was 0.2.16 supposed to ship, in one paragraph."
@@ -25,7 +25,7 @@ question "what was 0.2.16 supposed to ship, in one paragraph."
 > Code session through the existing collector + Jaeger stack with
 > `aho.iteration`, `aho.workstream`, and `aho.role` resource attribution
 > set by managed `.claude/settings.json`. Cost attribution is
-> first-class — Pillar 8 ground truth, not parsed-log estimation. Pillar
+> first-class - Pillar 8 ground truth, not parsed-log estimation. Pillar
 > 11 promotes from convention to monitored invariant: a commit or PR
 > from an agent context fires a real-time alert to a dedicated channel
 > via a webhook bridge. Five anomaly rules ship as YAML alongside the
@@ -35,10 +35,10 @@ question "what was 0.2.16 supposed to ship, in one paragraph."
 The cross-model-cascade re-run and Mercor reference-pack assembly that
 the original plan listed for W4 are **out of scope** by mid-iteration
 re-scoping (see §4). The retroactive deliverable paragraph above
-reflects what 0.2.16 actually shipped — not what the original plan
+reflects what 0.2.16 actually shipped - not what the original plan
 proposed.
 
-### §1.2 Graduation criterion (retroactive — Form 2: artifact existence + content)
+### §1.2 Graduation criterion (retroactive - Form 2: artifact existence + content)
 
 0.2.16 graduates when **all of the following artifacts exist and pass
 content checks**:
@@ -87,7 +87,7 @@ content checks**:
 This list is the close-time gate. Each line is a check the
 close-confirm command (post ADR 0004 redesign in 0.2.x cleanup) would
 mechanically verify. The retrospective is honest by reading these
-checks out one at a time — see §3.
+checks out one at a time - see §3.
 
 ---
 
@@ -97,7 +97,7 @@ Five workstreams executed across approximately seven Claude sessions.
 W4 was re-scoped mid-iteration; the other four executed against their
 plan-as-written.
 
-- **W0 — 0.2.15 close-out + substrate closure + OTEL scaffolding.**
+- **W0 - 0.2.15 close-out + substrate closure + OTEL scaffolding.**
   0.2.15 sign-off drift repaired (counts reconciled: 21 → 27 carry-
   forwards, footer corrected, bundle count claim verified at 9
   sections). `aho iteration close --confirm` executed for 0.2.15;
@@ -106,18 +106,18 @@ plan-as-written.
   `EmptyContentError` halt semantics added to the orchestrator;
   `template_leak_detected` normalized to bool (AF002 closure);
   orchestrator `workstream_id` parameterized (F006 closure);
-  `test_workstream_events.py` fixture corrupting checkpoint —
-  third-recurrence — fixed via `conftest.py` autouse mock for
+  `test_workstream_events.py` fixture corrupting checkpoint -
+  third-recurrence - fixed via `conftest.py` autouse mock for
   `find_project_root`. G083 sites in `nemoclaw.py:77,134` narrowed.
   OTEL scaffolding: `.claude/settings.json` env block configured;
   `aho.iteration`, `aho.workstream`, `aho.role` resource attrs
   emitted; collector pipelines verified for metrics + events + (W2-
   deferred) traces. ADR 0003 published. Found and documented: Claude
-  Code does not shell-expand `${VAR}` in settings.json env values —
+  Code does not shell-expand `${VAR}` in settings.json env values -
   literal values shipped, expansion-wrapper carried forward (F-W1-001).
   **Audit: pass.**
 
-- **W1 — Pillar 8 cost + token dashboard.** Three dashboard surfaces
+- **W1 - Pillar 8 cost + token dashboard.** Three dashboard surfaces
   shipped: native Flutter dashboard in the harness-watcher with four
   cost/token panels, Grafana-compatible JSON for the export pack, and
   the underlying `/api/otel` aggregator endpoint that consumes raw
@@ -126,41 +126,41 @@ plan-as-written.
   visible as separate series (verifies the OTEL `type` label split).
   Dashboard load-time well under the 2s target on NZXTcos. Found
   during audit: two dead/aliased fields in `otel_aggregator.py`
-  (`api_error_count`, `api_retries_exhausted_count` — AF004/AF005),
-  baseline-count typo (AF003 — 14 vs 13) and tests-collected drift
-  (AF003 W2 — 421 vs 427 from independent collection). All carried
+  (`api_error_count`, `api_retries_exhausted_count` - AF004/AF005),
+  baseline-count typo (AF003 - 14 vs 13) and tests-collected drift
+  (AF003 W2 - 421 vs 427 from independent collection). All carried
   forward; sealed archive not edited. **Audit: pass_with_findings.**
 
-- **W2 — Distributed tracing — `TRACEPARENT` propagation.** Traces
+- **W2 - Distributed tracing - `TRACEPARENT` propagation.** Traces
   beta enabled (`CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1`,
   `OTEL_TRACES_EXPORTER=otlp`). Dispatcher and router both read
   `TRACEPARENT`, parse the W3C trace context, and create child spans
   with `aho.dispatch.{family}` / `aho.route.classify` span names.
   `dispatch.duration_ms` measured at 0.11ms drift on the success path
-  (effectively zero — same wall-clock source as the event log). Error
+  (effectively zero - same wall-clock source as the event log). Error
   path uses a span-local monotonic delta with theoretical
-  measurement-site divergence — carry-forward (W2-AF004). End-to-end
+  measurement-site divergence - carry-forward (W2-AF004). End-to-end
   trace captured: Claude Code root → API request → tool_use → bash
   subprocess → `aho.dispatch.qwen` child → response. Backward
   compatibility tests pass (no-`TRACEPARENT` callers still get root
-  spans). ADR 0005 (Gemini OTEL asymmetry) published — Gemini has no
+  spans). ADR 0005 (Gemini OTEL asymmetry) published - Gemini has no
   OTEL equivalent; harness-watcher event wrappers capture wall-clock
   only; no half-measure timing wrappers. Found during audit: classifier
   category-mapping drift on nemotron-mini (carried forward as info-only
   observation). **Audit: pass_with_findings.**
 
-- **W3 — Pillar 11 enforcement + anomaly detection.** Five alert rules
+- **W3 - Pillar 11 enforcement + anomaly detection.** Five alert rules
   shipped as YAML (Pillar 11 commit, Pillar 11 PR, API error spike,
   cost anomaly, tool duration outlier). Bridge code
   (`src/aho/alerts/telegram_alerts.py`) implemented with typed-error
   hierarchy mapped to HTTP status codes (400/500/502/503) for engine
   retry semantics. Dedicated channel secrets defined as Kyle-created
   Pillar 11 surfaces (`ahomw:telegram_alerts_bot_token`,
-  `ahomw:telegram_alerts_chat_id`) — agent reads only. Rule 5
+  `ahomw:telegram_alerts_chat_id`) - agent reads only. Rule 5
   baseline calibration probe (`probes/w3_baseline_calibration.py`)
-  produced p99=803.6ms / threshold=2411ms from 21 samples — a
+  produced p99=803.6ms / threshold=2411ms from 21 samples - a
   starting threshold, not a calibrated one. **What did not ship:** the
-  rules are not wired to a live alert engine — that depends on an
+  rules are not wired to a live alert engine - that depends on an
   alert-engine selection ADR which is itself a carry-forward
   (W3-CF2). Synthetic alert delivery test (60s end-to-end fire-to-
   Telegram) is a carry-forward (W3-CF1) until the engine lands. This
@@ -168,7 +168,7 @@ plan-as-written.
   and unit-tested; the engine selection is a follow-on design decision
   that does not constrain the bridge. **Audit: pass_with_findings.**
 
-- **W4 — ADR-heavy close (re-scoped from cross-model cascade re-run).**
+- **W4 - ADR-heavy close (re-scoped from cross-model cascade re-run).**
   See §4 for the re-scoping rationale. As executed: three substantive
   ADRs landed (0006 iteration discipline, 0007 containerization,
   0008 dispatcher missing-model), 0.2.17 plan outline drafted opening
@@ -176,7 +176,7 @@ plan-as-written.
   0.2.16 retrospective (this document), drift sweep, acceptance
   archive. **Cross-model cascade re-run is not in this iteration's
   scope and graduates to a future iteration when prioritized.** The
-  Mercor reference pack stays at the W3 level of completeness — it
+  Mercor reference pack stays at the W3 level of completeness - it
   contains the dashboards, the alert rules, and the posture ADRs, but
   is not assembled as a single deployable unit with runbook. That
   assembly is a follow-on. **Audit: pending (this acceptance archive
@@ -192,7 +192,7 @@ state, line by line:
 | # | Criterion | State |
 |---|---|---|
 | 1 | `.claude/settings.json` OTEL env block | **Met.** W0. Literal `aho.iteration=0.2.16`/`aho.workstream=W{N}` values; `${VAR}` expansion is carry-forward F-W1-001. |
-| 2 | Pillar 8 cost-and-token surface (amended criterion) | **Met against amended criterion.** W1. Native Flutter claw3d dashboard ships at `web/claw3d/lib/main.dart` §Workstream Telemetry; `dashboards/api-otel-sample.json` is the on-disk OTEL response fixture. No Grafana JSON in export pack — that surface was never produced under W1's claw3d-redirect. Original line read "Grafana JSON exists in the export pack"; that statement was wrong against repo state and is corrected here. Criterion amendment authorized by Kyle at iteration close per ADR 0006 hard-meta-rule treatment; see `iteration-close-0.2.16.md` §Form 2 criterion amendment. |
+| 2 | Pillar 8 cost-and-token surface (amended criterion) | **Met against amended criterion.** W1. Native Flutter claw3d dashboard ships at `web/claw3d/lib/main.dart` §Workstream Telemetry; `dashboards/api-otel-sample.json` is the on-disk OTEL response fixture. No Grafana JSON in export pack - that surface was never produced under W1's claw3d-redirect. Original line read "Grafana JSON exists in the export pack"; that statement was wrong against repo state and is corrected here. Criterion amendment authorized by Kyle at iteration close per ADR 0006 hard-meta-rule treatment; see `iteration-close-0.2.16.md` §Form 2 criterion amendment. |
 | 3 | `TRACEPARENT` propagation in dispatcher + router with tests | **Met.** W2. Tests pass; backward compat preserved; end-to-end trace captured. |
 | 4 | Five alert rules + bridge code | **Met (rules + bridge); not met (engine wiring).** W3. Rules and bridge ship; engine selection ADR is the carry-forward gate (W3-CF1 through CF5). |
 | 5 | ADRs 0003–0008 published | **Met.** W0 (0003), W2 (0005), W4 (0006/0007/0008); 0004 was a W0 design-only ADR that lands fully in 0.2.x close-confirm cleanup. |
@@ -201,12 +201,12 @@ state, line by line:
 Honest read: 0.2.16 ships its core deliverable (instrumented Claude
 Code surface with cost attribution, monitored Pillar 11 invariant via
 shipped-but-not-wired bridge, end-to-end traces) and falls short on
-two clearly-bounded surfaces — (a) the alert engine is not selected,
+two clearly-bounded surfaces - (a) the alert engine is not selected,
 so the W3 rules do not fire end-to-end yet, and (b) the cross-model
 cascade Pillar 7 re-run did not happen this iteration.
 
 The §1.2 retroactive criterion **does not list** the cascade re-run or
-the Mercor export pack assembly — both were original-plan items that
+the Mercor export pack assembly - both were original-plan items that
 the §4 re-scoping moved out of scope. The honest answer to "did
 0.2.16 graduate" is "yes against the retroactive criterion; no
 against the original plan as written." The retroactive criterion is
@@ -216,7 +216,7 @@ record of what was intended at iteration open.
 
 ---
 
-## §4 What was deliberately deferred — and why
+## §4 What was deliberately deferred - and why
 
 ### §4.1 Cross-model cascade re-run + Pillar 7 verdict
 
@@ -231,7 +231,7 @@ designed coherently. Three ADRs (0006, 0007, 0008) consume more
 context-budget than a cascade re-run does, but they unblock 0.2.17
 planning in a way the cascade re-run does not.
 
-The cascade re-run is not abandoned — it is graduated to a future
+The cascade re-run is not abandoned - it is graduated to a future
 iteration where the iteration's deliverable explicitly is "Pillar 7
 defensible verdict on cross-family Auditor diversity." Bundling it
 into 0.2.16 W4 alongside the ADR work would have made W4 a
@@ -255,7 +255,7 @@ is a second external consumer in flight.
 
 W3's deferral set is a five-item carry-forward block targeted at
 "engine-selection ADR + bridge live wire-up (0.2.17 or 0.3)." The
-five items are intentionally not actionable in isolation — they all
+five items are intentionally not actionable in isolation - they all
 depend on the engine choice. This iteration ships the bridge, ships
 the rules, and ships the design discipline that says "the rules and
 bridge can be unit-tested without an engine." A future iteration
@@ -300,7 +300,7 @@ F-W1-001 carries the wrapper forward.
 Through 0.2.x the convention "no agent commits" was protocol. 0.2.16
 makes it a monitored invariant via `claude_code.commit.count` /
 `claude_code.pull_request.count` rules. The convention does not go
-away; the detection is additive. Both are real Pillar 11 surfaces —
+away; the detection is additive. Both are real Pillar 11 surfaces -
 the convention covers the agent's intent, the detection covers the
 operator's blast radius if the convention slips.
 
@@ -343,13 +343,13 @@ Trace nesting (`claude_code.interaction` → API spans → tool_use
 spans) is correct out of the box; aho's W2 child-span instrumentation
 hangs cleanly off the tool_use span via `TRACEPARENT`. The
 extended-thinking-content redaction at the Claude Code layer is
-unconditional and not overridable by any flag — confirmed in W0,
+unconditional and not overridable by any flag - confirmed in W0,
 documented in ADR 0003's known limitations.
 
 ### §6.2 Tool result content truncation at 60KB
 
 `OTEL_LOG_TOOL_CONTENT=1` truncates tool-result content payloads at
-60KB. Confirmed in W2 trace integration — large `Read` tool results
+60KB. Confirmed in W2 trace integration - large `Read` tool results
 (typical: aho-plan-{iter}.md at 30K chars renders as ~30K UTF-8) fit
 under the cap; multi-file `Read` outputs and large bash transcripts
 do not. The truncation is not a failure; it is a documented
@@ -365,7 +365,7 @@ W0's substrate fix raised Qwen Producer's `num_predict` from 2000 to
 Producer because thinking-mode exhausted 2000 budget on long prompts)
 is closed for prompts of this size class. This evidence is recorded
 in the substrate but **not yet exercised in a real cross-model
-cascade run** — the cascade re-run is graduated per §4.1.
+cascade run** - the cascade re-run is graduated per §4.1.
 
 ### §6.4 NEMOTRON-mini classifier category-mapping drift
 
@@ -395,7 +395,7 @@ doc) was followed for ADRs 0003, 0005, 0006, 0007, 0008.
 retrospective, the file enumerates **eight** items (counted by hand
 on the shipped file as of W3 close); W4 adds zero new items
 (the ADRs themselves close out two implicit carry-forwards from the
-0.2.15 retrospective — the engine-selection-ADR was deferred to
+0.2.15 retrospective - the engine-selection-ADR was deferred to
 0.2.17, and the dispatcher-on-missing-model question was answered by
 ADR 0008). Final close-out count is recorded in
 `carry-forwards-0.2.16.md` footer.
@@ -409,7 +409,7 @@ By target:
   (`${VAR}` expansion wrapper), W2 auditor-quality ignore-set
   reporting note.
 - **0.2.17**: AF004/AF005 (otel_aggregator dead/alias fields), W0
-  F-W0-004 (conftest allowlist brittleness — third recurrence), Mercor
+  F-W0-004 (conftest allowlist brittleness - third recurrence), Mercor
   Grafana historical-trend reference, dashboard polling cadence
   unification, W2-AF004 (dispatch.duration_ms error-path measurement
   gap), classifier category drift, closure-capture span-attribute
@@ -432,7 +432,7 @@ By target:
 The 0.2.17 plan opens with ADR 0006's deliverable paragraph +
 graduation criterion convention applied. The iteration deliverable
 is the **containerized aho image as a runnable harness surface on
-NZXTcos** — see `artifacts/iterations/0.2.17/aho-plan-0.2.17.md`
+NZXTcos** - see `artifacts/iterations/0.2.17/aho-plan-0.2.17.md`
 for the full text. Inheriting from 0.2.16:
 
 - Substrate: OTEL telemetry continues; `aho.workstream=W{N}` flows

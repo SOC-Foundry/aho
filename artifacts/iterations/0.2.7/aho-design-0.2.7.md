@@ -1,14 +1,14 @@
-# aho Design — 0.2.7
+# aho Design - 0.2.7
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 7
-**Theme:** Visibility + carry-forward closeout — flutter dashboard, install.fish coverage audit, orchestrator config, three deferred 0.2.5 defects
+**Theme:** Visibility + carry-forward closeout - flutter dashboard, install.fish coverage audit, orchestrator config, three deferred 0.2.5 defects
 **Predecessor:** 0.2.6 (live-fire hardening, closed clean)
 
 ---
 
 ## Why this iteration exists
 
-0.2.6 proved install.fish runs end-to-end on NZXTcos. What it didn't prove is that *every component declared in components.yaml is actually installed by some step in install.fish*. Right now there's no way to see this — Kyle's exact words: "I can't tell because I don't have a dashboard lol." That's not a joke; it's the diagnostic. The system has 88 declared components, 4 daemons, 9 MCP packages, 4 models, an OTEL pipeline, ChromaDB, age + fernet secrets, and an event log. Verifying state today requires running 6+ separate commands and reading the output by eye. That's the problem 0.2.7 fixes.
+0.2.6 proved install.fish runs end-to-end on NZXTcos. What it didn't prove is that *every component declared in components.yaml is actually installed by some step in install.fish*. Right now there's no way to see this - Kyle's exact words: "I can't tell because I don't have a dashboard lol." That's not a joke; it's the diagnostic. The system has 88 declared components, 4 daemons, 9 MCP packages, 4 models, an OTEL pipeline, ChromaDB, age + fernet secrets, and an event log. Verifying state today requires running 6+ separate commands and reading the output by eye. That's the problem 0.2.7 fixes.
 
 0.2.7 has three goals that share a theme of *visibility into the installed system*.
 
@@ -34,9 +34,9 @@
 ## Non-goals
 
 - P3 clone-to-deploy (still future iteration, likely 0.3.x once dashboard is in)
-- Dashboard authentication, multi-user, remote access — localhost only, single user
-- Real-time websocket updates — polling at 5s intervals is fine for v1
-- Replacing the existing bin/aho-dashboard JSON skeleton — the dashboard reads from it, doesn't replace it
+- Dashboard authentication, multi-user, remote access - localhost only, single user
+- Real-time websocket updates - polling at 5s intervals is fine for v1
+- Replacing the existing bin/aho-dashboard JSON skeleton - the dashboard reads from it, doesn't replace it
 - kjtcom anything
 - MCP fetch/github/slack/google-drive replacement ADR (still separate)
 - Telegram bot interactive token entry beyond what 0.2.6 already shipped
@@ -82,9 +82,9 @@ The audit process:
 5. Identify gaps and either fix in install.fish or document as intentional
 
 Predicted gaps (to be confirmed during W2):
-- **chromadb** — installed via pip as transitive dep, not explicitly. Either declare it explicitly in install.fish step 3 (python) or document the transitive path.
-- **opentelemetry exporter** — same pattern
-- **brave-integration** — module exists but no token configured. The new orchestrator config (W3) addresses this.
+- **chromadb** - installed via pip as transitive dep, not explicitly. Either declare it explicitly in install.fish step 3 (python) or document the transitive path.
+- **opentelemetry exporter** - same pattern
+- **brave-integration** - module exists but no token configured. The new orchestrator config (W3) addresses this.
 
 ---
 
@@ -110,7 +110,7 @@ New file: `~/.config/aho/orchestrator.json`. Schema:
 
 The brave token itself lives in the existing fernet secrets store under key `brave_search_token`, never plaintext on disk. `bin/aho-secrets-init` gains a `--add-brave-token` flag that prompts for the token, encrypts it, stores it, and updates orchestrator.json to reference the key.
 
-Engine field reserved for future per-workstream engine selection. For 0.2.7 it's metadata only — actual engine choice is still per-invocation. Future iteration uses this to drive default behavior.
+Engine field reserved for future per-workstream engine selection. For 0.2.7 it's metadata only - actual engine choice is still per-invocation. Future iteration uses this to drive default behavior.
 
 ---
 
@@ -139,10 +139,10 @@ Same scope as documented in `aho-design-0_2_5.md`. Restated briefly:
 
 1. **Dashboard depth for v1.** Six sections is the target. Is component coverage matrix the priority, or daemon health? If wall-clock pressure forces a cut, which two sections ship and which two defer to 0.2.8?
 
-2. **components.yaml audit — fix gaps in 0.2.7 or document them?** Predicted gaps (chromadb transitive, opentelemetry transitive, brave-integration unconfigured) all have a "leave it as-is and document" path and a "make install.fish explicit" path. Lean: document for transitive deps, fix for brave-integration. Confirm.
+2. **components.yaml audit - fix gaps in 0.2.7 or document them?** Predicted gaps (chromadb transitive, opentelemetry transitive, brave-integration unconfigured) all have a "leave it as-is and document" path and a "make install.fish explicit" path. Lean: document for transitive deps, fix for brave-integration. Confirm.
 
-3. **Brave token entry flow.** Same question as 0.2.5 telegram: capability gap with file-drop instructions, or interactive prompt inside `bin/aho-secrets-init --add-brave-token`? Lean interactive prompt this time — token is short, not multiline, low risk.
+3. **Brave token entry flow.** Same question as 0.2.5 telegram: capability gap with file-drop instructions, or interactive prompt inside `bin/aho-secrets-init --add-brave-token`? Lean interactive prompt this time - token is short, not multiline, low risk.
 
 4. **Engine field purpose.** Is the orchestrator.json `engine` field forward-looking (reserved metadata, no behavior change in 0.2.7), or should 0.2.7 actually change something based on it? Lean reserved.
 
-5. **Iteration size.** This is 7+ workstreams. Same risk as 0.2.5 — possible scope creep. Acceptable to defer dashboard sections 5 (MCP fleet) and 6 (model fleet) to 0.2.8 if W2 audit takes longer than expected?
+5. **Iteration size.** This is 7+ workstreams. Same risk as 0.2.5 - possible scope creep. Acceptable to defer dashboard sections 5 (MCP fleet) and 6 (model fleet) to 0.2.8 if W2 audit takes longer than expected?

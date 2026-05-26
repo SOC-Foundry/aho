@@ -1,4 +1,4 @@
-# aho Model Fleet — Architectural Specification
+# aho Model Fleet - Architectural Specification
 
 **Version:** 0.2.10
 **Date:** 2026-04-11

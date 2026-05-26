@@ -1,4 +1,4 @@
-# aho Plan — 0.2.10
+# aho Plan - 0.2.10
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 10
 **Theme:** Install surface implementation + CLI unification + observability deployment
@@ -15,7 +15,7 @@
 | W0 | Bumps + Kyle decisions + carry-forwards | bump | yes | 12 artifacts → 0.2.10, decisions.md with Q1-Q5, carry-forwards refresh |
 | W1 | Unified `aho` CLI skeleton | code | no | Python CLI under src/aho/cli.py with subcommand tree: run, doctor, iteration, secret, mcp, update, install |
 | W2 | Subcommand migration of existing wrappers | code | no | bin/aho-* wrappers become `aho <sub>` subcommands; shims preserved as thin forwarders |
-| W3 | `bin/aho-install` — local install directory populator | code | no | Creates ~/.local/share/aho/ layout, populates from repo, symlinks ~/.local/bin/aho |
+| W3 | `bin/aho-install` - local install directory populator | code | no | Creates ~/.local/share/aho/ layout, populates from repo, symlinks ~/.local/bin/aho |
 | W4 | Agent instruction split | code | no | CLAUDE-iteration.md + CLAUDE-run.md, GEMINI variants; persona 3 content per W8.5 §3 decision 4d |
 | W5 | OpenClaw → systemd user service + socket relocation | code | no | aho-openclaw.service unit file, socket at /run/user/$UID/openclaw.sock, Telegram daemon updated, end-to-end verified |
 | W6 | OpenClaw file bridge (chat + execute paths unified) | code | no | Agent can read files from $AHO_CWD and inject into LLM context. Core persona 3 blocker. Most complex workstream. |
@@ -62,7 +62,7 @@ If agent hits a capability gap (missing package, sudo required, etc.), same halt
 
 ## Out of scope
 
-- Persona 3 validation with real tasks (0.2.11 — now that entry point exists)
+- Persona 3 validation with real tasks (0.2.11 - now that entry point exists)
 - Persona 2 framework-mode (0.2.12)
 - P3 clone-to-deploy (0.2.13)
 - Remote agent executor (future)

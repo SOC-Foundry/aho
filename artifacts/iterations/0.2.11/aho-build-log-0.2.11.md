@@ -1,4 +1,4 @@
-# Build Log — aho 0.2.11
+# Build Log - aho 0.2.11
 
 **Phase:** 0 | **Iteration:** 2 | **Run:** 11
 **Theme:** Verifiable acceptance framework + gate reconciliation
@@ -28,8 +28,8 @@
 
 ## Agent Attribution
 
-- **claude-code:** W0-W9 (all workstreams) — 100% executor, 0% council
-- **Local fleet (Qwen, GLM, Nemotron):** 0 workstreams — not dispatched (G077)
+- **claude-code:** W0-W9 (all workstreams) - 100% executor, 0% council
+- **Local fleet (Qwen, GLM, Nemotron):** 0 workstreams - not dispatched (G077)
 - **Harness contributions:** AcceptanceCheck framework, daemon_healthy(), gate verbosity, schema v3
 
 ## Notes

@@ -1,4 +1,4 @@
-"""D8 — Anti-rubber-stamp hardening tests.
+"""D8 - Anti-rubber-stamp hardening tests.
 
 Three explicit failure-mode tests + three mutation tests that verify the
 hardening is what catches each failure mode (not some other code path).
@@ -11,7 +11,7 @@ Failure modes covered:
 3. Council dispatch drafter+auditor same-model-family → CouncilRoleCollapseError
 
 Each mutation test removes / weakens the hardening and confirms the
-underlying test would have passed in error — i.e. the hardening is
+underlying test would have passed in error - i.e. the hardening is
 load-bearing.
 """
 from __future__ import annotations
@@ -28,7 +28,7 @@ from aho.council import triage as triage_mod
 
 
 # ---------------------------------------------------------------------------
-# Helpers — mock the council._client.chat surface so we control model output
+# Helpers - mock the council._client.chat surface so we control model output
 # ---------------------------------------------------------------------------
 
 def _mock_chat_payload(content: str) -> Dict[str, Any]:
@@ -36,7 +36,7 @@ def _mock_chat_payload(content: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Failure mode 1 — nemotron out-of-rubric must raise
+# Failure mode 1 - nemotron out-of-rubric must raise
 # ---------------------------------------------------------------------------
 
 def test_nemotron_raises_on_out_of_rubric_category():
@@ -66,7 +66,7 @@ def test_mutation_nemotron_hardening_is_load_bearing(monkeypatch):
     """Mutation: if the rubric were widened to accept any string, the
     test_nemotron_raises_on_out_of_rubric_category test would PASS the
     bad output (wrongly returning a non-rubric category). Verify the
-    hardening — strict rubric — is what catches the failure mode.
+    hardening - strict rubric - is what catches the failure mode.
     """
     bad_output = json.dumps({
         "category": "wild-category-not-in-rubric",
@@ -89,12 +89,12 @@ def test_mutation_nemotron_hardening_is_load_bearing(monkeypatch):
         # WITHOUT the hardening, the bad category passes through:
         result = triage_mod.classify("artifact text")
     assert result["category"] == "wild-category-not-in-rubric", (
-        "mutation failed to bypass hardening — test isn't measuring what it claims"
+        "mutation failed to bypass hardening - test isn't measuring what it claims"
     )
 
 
 # ---------------------------------------------------------------------------
-# Failure mode 2 — llama clean+low_confidence must lock to surface_to_drafter
+# Failure mode 2 - llama clean+low_confidence must lock to surface_to_drafter
 # ---------------------------------------------------------------------------
 
 def test_llama_confidence_floor_locks_clean_at_low_confidence():
@@ -146,7 +146,7 @@ def test_mutation_confidence_floor_is_load_bearing(monkeypatch):
         result = audit_mod.audit("a clean-looking artifact with no defects")
     # WITHOUT the floor, the disposition stays clean:
     assert result["disposition"] == "clean", (
-        "mutation failed — floor logic wasn't actually bypassed"
+        "mutation failed - floor logic wasn't actually bypassed"
     )
     assert result["confidence_floor_locked"] is False
 
@@ -171,7 +171,7 @@ def test_enforce_confidence_floor_unit_table():
 
 
 # ---------------------------------------------------------------------------
-# Failure mode 3 — drafter+auditor same family must raise
+# Failure mode 3 - drafter+auditor same family must raise
 # ---------------------------------------------------------------------------
 
 def test_dispatch_role_collapse_drafter_auditor_same_family():
@@ -187,7 +187,7 @@ def test_dispatch_role_collapse_drafter_auditor_same_family():
 
 
 def test_dispatch_role_collapse_auditor_first_then_drafter():
-    """Order doesn't matter — auditor first, then drafter same family also raises."""
+    """Order doesn't matter - auditor first, then drafter same family also raises."""
     d = dispatch_mod.CouncilDispatch(iteration="role-collapse-test-2", tier="base")
     d.record_role_family("auditor", "qwen")
     with pytest.raises(dispatch_mod.CouncilRoleCollapseError):

@@ -1,4 +1,4 @@
-"""W3 D4 — replay W0 / W1 / W2 audits with RAG-enriched auditor.
+"""W3 D4 - replay W0 / W1 / W2 audits with RAG-enriched auditor.
 
 Re-runs the audit primitive against the same sealed acceptance archives
 W2 D9/D10/D11 audited, but with `rag_enrichment=True`. Output paths use
@@ -71,7 +71,7 @@ NON_RAG_PATHS: Dict[str, Path] = {
     "W2": ITER_ROOT / TARGET_ITERATION / "audit" / "W2.json",
 }
 
-# Phrases that signal the auditor flagged an ID as fake — the precise
+# Phrases that signal the auditor flagged an ID as fake - the precise
 # false-positive shape F-0.2.17-W2-006 names. If a non-RAG finding's
 # description matches and the corresponding RAG run did NOT produce the
 # same shape, that is a closed false positive.
@@ -324,11 +324,11 @@ def compare_rag_vs_non_rag(
         if not any(_topical_match(nf, rf) for rf in rag_findings)
     ]
 
-    # Substantive disagreement detection — the explicit halt condition.
+    # Substantive disagreement detection - the explicit halt condition.
     # The shape we care about: RAG version says 'clean' but non-RAG
     # version surfaced a Pillar 11 / secrets / git-op finding. We also
     # treat the inverse (RAG surfaces a substantive finding non-RAG
-    # missed) as substantive — either direction warrants drafter review.
+    # missed) as substantive - either direction warrants drafter review.
     def _has_substantive(findings: List[Dict[str, Any]]) -> bool:
         return any(
             any(kw in _normalise(f["description"]) for kw in SUBSTANTIVE_KEYWORDS)

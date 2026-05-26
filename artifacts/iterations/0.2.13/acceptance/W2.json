@@ -13,25 +13,25 @@
     "grep 'categories\\[-1\\]' src/aho/artifacts/nemotron_client.py"
   ],
   "outputs_produced": [
-    "src/aho/artifacts/nemotron_client.py — NemotronParseError class added (line 17), NemotronConnectionError class added (line 25), _classify_impl parse-failure path now raises NemotronParseError (line 90), connection/HTTP/timeout errors now raise NemotronConnectionError (lines 104, 118, 132), both categories[-1] fallbacks removed",
-    "artifacts/tests/test_nemotron_classifier.py — 3 new W2 test cases (good classification, unparseable response, connection error)"
+    "src/aho/artifacts/nemotron_client.py - NemotronParseError class added (line 17), NemotronConnectionError class added (line 25), _classify_impl parse-failure path now raises NemotronParseError (line 90), connection/HTTP/timeout errors now raise NemotronConnectionError (lines 104, 118, 132), both categories[-1] fallbacks removed",
+    "artifacts/tests/test_nemotron_classifier.py - 3 new W2 test cases (good classification, unparseable response, connection error)"
   ],
   "baseline_regression_status": "stable",
   "baseline_known_failures": 13,
   "baseline_new_failures": 0,
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ touch",
-    "G071 — nemotron_client is imported by harness_agent and nemoclaw at load time; if either daemon is running, restart needed. No daemons active in this session.",
-    "G079 — baseline_regression_check is the backstop, not regex counts; ran full suite, 13 known failures, zero new",
-    "G081 — no celebratory framing in this archive",
-    "G082 — canonical paths used; located nemotron_client via grep, not hardcoded assumption",
-    "G083 — zero except Exception in new/touched classify code; zero categories[-1] in executable code; verified via grep"
+    "G070 - cleared __pycache__ after src/aho/ touch",
+    "G071 - nemotron_client is imported by harness_agent and nemoclaw at load time; if either daemon is running, restart needed. No daemons active in this session.",
+    "G079 - baseline_regression_check is the backstop, not regex counts; ran full suite, 13 known failures, zero new",
+    "G081 - no celebratory framing in this archive",
+    "G082 - canonical paths used; located nemotron_client via grep, not hardcoded assumption",
+    "G083 - zero except Exception in new/touched classify code; zero categories[-1] in executable code; verified via grep"
   ],
   "audit_status": "pending_audit",
   "findings": {
     "d1_exception_hierarchy": {
       "status": "complete",
-      "detail": "Verified project convention is flat exceptions (GLMParseError(Exception) in evaluator_agent.py, DegenerateGenerationError(Exception) in repetition_detector.py). Followed flat convention: NemotronParseError(Exception) at line 17, NemotronConnectionError(Exception) at line 25. No base NemotronClassifyError — flat is the project pattern. Both carry diagnostic attributes: raw_response for parse errors, original_error for connection errors."
+      "detail": "Verified project convention is flat exceptions (GLMParseError(Exception) in evaluator_agent.py, DegenerateGenerationError(Exception) in repetition_detector.py). Followed flat convention: NemotronParseError(Exception) at line 17, NemotronConnectionError(Exception) at line 25. No base NemotronClassifyError - flat is the project pattern. Both carry diagnostic attributes: raw_response for parse errors, original_error for connection errors."
     },
     "d2_categories_minus_1_removal": {
       "status": "complete",

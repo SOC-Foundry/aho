@@ -15,7 +15,7 @@ os.environ["AHO_ITERATION"] = _ckpt["iteration"]
 LOG_PATH = Path("data/aho_event_log.jsonl")
 LOG_PATH.write_text("")  # clear
 
-# 1. Invoke the CLI (use 'status' — a real subcommand that logs)
+# 1. Invoke the CLI (use 'status' - a real subcommand that logs)
 import subprocess
 subprocess.run(["./bin/aho", "status"], capture_output=True)
 

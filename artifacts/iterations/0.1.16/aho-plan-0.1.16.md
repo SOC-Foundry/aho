@@ -1,4 +1,4 @@
-# aho 0.1.16 — Plan
+# aho 0.1.16 - Plan
 
 **Phase:** 0 | **Iteration:** 0.1.16 | **run_type:** mixed
 **Agent:** Claude Code single-agent throughout (no Gemini handoff)
@@ -16,9 +16,9 @@ tmux new-session -d -s aho-0.1.16 -c ~/dev/projects/aho
 tmux send-keys -t aho-0.1.16 'cd ~/dev/projects/aho; claude --dangerously-skip-permissions' Enter
 ```
 
-## W0 — Close sequence repair + canonical artifacts + hygiene
+## W0 - Close sequence repair + canonical artifacts + hygiene
 
-### Part A — Close sequence repair
+### Part A - Close sequence repair
 
 1. Read `src/aho/cli.py` and locate the iteration close subcommand (likely `def close()` or `def iteration_close()`).
 2. Refactor the close sequence into explicit ordered steps. Pseudocode:
@@ -46,9 +46,9 @@ def close_iteration(iteration: str) -> int:
     return 0
 ```
 
-3. Verify by reading the close subcommand top-to-bottom — each step is a labeled function call, no implicit ordering.
+3. Verify by reading the close subcommand top-to-bottom - each step is a labeled function call, no implicit ordering.
 
-### Part B — Canonical artifacts gate
+### Part B - Canonical artifacts gate
 
 ```fish
 mkdir -p artifacts/harness
@@ -69,11 +69,11 @@ Wire into doctor sequence in `src/aho/doctor.py`. Remove legacy `manifest` SHA25
 ```fish
 # base.md
 sed -i 's/^\*\*Version:\*\* 0\.1\.14/**Version:** 0.1.16/' artifacts/harness/base.md
-sed -i 's/aho 0\.1\.14 W2 — terminology repair/aho 0.1.16 W0 — close sequence repair/' artifacts/harness/base.md
+sed -i 's/aho 0\.1\.14 W2 - terminology repair/aho 0.1.16 W0 - close sequence repair/' artifacts/harness/base.md
 
 # agents-architecture.md
 sed -i 's/^\*\*Version:\*\* 0\.1\.14/**Version:** 0.1.16/' artifacts/harness/agents-architecture.md
-sed -i 's/Agents Architecture — aho 0\.1\.14/Agents Architecture — aho 0.1.16/' artifacts/harness/agents-architecture.md
+sed -i 's/Agents Architecture - aho 0\.1\.14/Agents Architecture - aho 0.1.16/' artifacts/harness/agents-architecture.md
 
 # model-fleet.md
 sed -i 's/^\*\*Version:\*\* 0\.1\.14/**Version:** 0.1.16/' artifacts/harness/model-fleet.md
@@ -90,9 +90,9 @@ Test the new gate manually before wiring into close:
 python -c "from aho.postflight.canonical_artifacts_current import check; print(check())"
 ```
 
-### Part C — Run file wiring
+### Part C - Run file wiring
 
-1. Locate run file generator. Likely `src/aho/feedback/run.py` or similar. The current generator emits a skeleton with `agent: "unknown"` and empty wall clock — find this code path.
+1. Locate run file generator. Likely `src/aho/feedback/run.py` or similar. The current generator emits a skeleton with `agent: "unknown"` and empty wall clock - find this code path.
 2. Refactor to import and consume `report_builder`:
 
 ```python
@@ -119,7 +119,7 @@ def build_run_file(iteration: str) -> Path:
 
 3. Update `prompts/run_file.md.j2` (or wherever the template lives) to include the workstream table with `{{ ws.agent }}` and `{{ ws.wall_clock }}` columns, plus a `## Component Activity` section that embeds `{{ components }}`.
 
-### Part D — Hygiene
+### Part D - Hygiene
 
 ```fish
 # README link fix
@@ -127,7 +127,7 @@ sed -i 's|artifacts/phase-charters/iao-phase-0.md|artifacts/phase-charters/aho-p
 sed -i 's|Iteration 0\.1\.14|Iteration 0.1.16|g' README.md
 
 # README footer aho.run
-sed -i 's|aho v0\.1\.14|aho v0.1.16 — aho.run|' README.md
+sed -i 's|aho v0\.1\.14|aho v0.1.16 - aho.run|' README.md
 
 # pyproject.toml version + URLs
 sed -i 's|^version = "0\.1\.13"|version = "0.1.16"|' pyproject.toml
@@ -160,14 +160,14 @@ python -c "from aho.postflight.canonical_artifacts_current import check; r = che
 python -m pytest artifacts/tests/ -x
 ```
 
-## W1 — Iteration 1 graduation ceremony
+## W1 - Iteration 1 graduation ceremony
 
 ```fish
 mkdir -p artifacts/iterations/0.1
 mkdir -p artifacts/iterations/0.2
 ```
 
-### Part A — Iteration 1 close artifact
+### Part A - Iteration 1 close artifact
 
 Create `artifacts/iterations/0.1/iteration-1-close.md`. Sections:
 - Header (iteration 1, runs 0.1.0–0.1.16, graduated 2026-04-11)
@@ -178,7 +178,7 @@ Create `artifacts/iterations/0.1/iteration-1-close.md`. Sections:
 - Lessons Learned: split-agent model, mechanical-first artifacts, postflight as gatekeeper, component visibility discipline, ordering bugs are silent killers, prose drift across rename sweeps
 - Iteration 1 Exit Criteria Evaluation (table)
 
-### Part B — Iteration 2 charter
+### Part B - Iteration 2 charter
 
 Create `artifacts/iterations/0.2/iteration-2-charter.md`. Sections:
 - Header (iteration 2, opens 2026-04-11, planned runs 0.2.1–0.2.x)
@@ -186,20 +186,20 @@ Create `artifacts/iterations/0.2/iteration-2-charter.md`. Sections:
 - Entry Criteria (from iteration 1 graduation): all checked
 - Exit Criteria: soc-foundry/aho repo live, P3 clone succeeds, smoke test passes, openclaw/nemoclaw/telegram all `active` not `stub`
 - Planned Runs:
-  - 0.2.1 — Cleanup + soc-foundry initial push + openclaw/nemoclaw global wrappers + telegram bridge
-  - 0.2.2 — P3 clone attempt + smoke test + capability gap capture
-  - 0.2.3+ — Whatever P3 surfaces, fix in tight runs
+  - 0.2.1 - Cleanup + soc-foundry initial push + openclaw/nemoclaw global wrappers + telegram bridge
+  - 0.2.2 - P3 clone attempt + smoke test + capability gap capture
+  - 0.2.3+ - Whatever P3 surfaces, fix in tight runs
 - Iteration 2 graduates when P3 runs an aho iteration end-to-end
 
-### Part C — Phase 0 charter update
+### Part C - Phase 0 charter update
 
 Edit `artifacts/phase-charters/aho-phase-0.md`:
 - Bump charter version to 0.1.16
-- Add iteration boundary section: "Iteration 1 (0.1.0–0.1.16) — graduated 2026-04-11. Iteration 2 (0.2.x) — active. Iteration 3 (0.3.x) — planned."
+- Add iteration boundary section: "Iteration 1 (0.1.0–0.1.16) - graduated 2026-04-11. Iteration 2 (0.2.x) - active. Iteration 3 (0.3.x) - planned."
 - Add `aho.run` to header
 - Update iteration roadmap table to reflect 3-iteration structure
 
-### Part D — README iteration roadmap
+### Part D - README iteration roadmap
 
 Replace flat 0.1.x list in README with:
 ```markdown
@@ -215,7 +215,7 @@ Replace flat 0.1.x list in README with:
 
 **W1 Gate:** four files exist; all reference iteration boundary correctly; charter at 0.1.16.
 
-## W2 — Dogfood + close (corrected sequence)
+## W2 - Dogfood + close (corrected sequence)
 
 This is the proof that W0 worked. The corrected close sequence runs against 0.1.16 itself.
 

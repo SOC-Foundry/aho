@@ -63,7 +63,7 @@ def check():
                 errors.append(f"§22 component count {unique_components} < {floor} (run_type: {run_type})")
         else:
             # Degrade to warn if §22 format doesn't match expected patterns
-            pass  # Don't fail on format mismatch — the bundle validator catches structural issues
+            pass  # Don't fail on format mismatch - the bundle validator catches structural issues
 
         if errors:
             return ("fail", f"{len(errors)} errors: {'; '.join(errors[:3])}")

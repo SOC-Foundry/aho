@@ -1,13 +1,13 @@
-"""Error-path dispatch.duration_ms measurement consistency (0.2.17 W0 — W2-AF004).
+"""Error-path dispatch.duration_ms measurement consistency (0.2.17 W0 - W2-AF004).
 
 Success path (dispatcher.py line ~466) reads dispatch.duration_ms from
-result['wall_clock_seconds'] * 1000 — same source as the event log,
+result['wall_clock_seconds'] * 1000 - same source as the event log,
 zero drift by construction. Error path (line ~458-461) reads it from
-(time.monotonic() - span_start) * 1000 — a different measurement site.
+(time.monotonic() - span_start) * 1000 - a different measurement site.
 
 The 0.2.16 carry-forward measured success-path drift at 0.11ms (rounding).
 Error-path drift was unmeasured. This test measures it and asserts <1ms.
-If this assertion ever fails the measurement sites should be unified —
+If this assertion ever fails the measurement sites should be unified -
 that is a larger refactor than this test, so the bound here is the
 trip-wire that surfaces the need.
 """
@@ -42,7 +42,7 @@ def _raising_urlopen(*_a, **_kw):
 class TestErrorPathDurationConsistency(unittest.TestCase):
     """Drift between span-end-minus-span-start and the dispatcher's reported
     dispatch.duration_ms attribute, measured on the error path with retries
-    exhausted. Bound: <1.0ms — exceeding it means the measurement sites have
+    exhausted. Bound: <1.0ms - exceeding it means the measurement sites have
     diverged enough that unification is warranted.
     """
 

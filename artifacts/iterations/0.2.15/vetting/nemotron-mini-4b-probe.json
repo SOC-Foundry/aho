@@ -11,13 +11,13 @@
     "stop_tokens_note": "Qwen stop tokens sent to Nemotron. No template leakage observed."
   },
   "classification": "compromised",
-  "classification_rationale": "Probe A fails (persona hallucination — returns 'BERT' instead of own name). Probes B, C, D pass. By strict criteria any probe failure = compromised. However, the failure mode is identity confusion only, not structural. The model's JSON, language, and classification capabilities are intact. The 0.2.13 W2.5 feature-bias finding is resolved.",
+  "classification_rationale": "Probe A fails (persona hallucination - returns 'BERT' instead of own name). Probes B, C, D pass. By strict criteria any probe failure = compromised. However, the failure mode is identity confusion only, not structural. The model's JSON, language, and classification capabilities are intact. The 0.2.13 W2.5 feature-bias finding is resolved.",
   "retest_vs_0213_w25": {
     "0213_finding": "80% feature-bias on classify task regardless of input",
     "0215_finding": "Classify returns 'bug' correctly. Feature-bias resolved. Identity probe fails instead.",
-    "conclusion": "0.2.13 W2.5 feature-bias was a substrate artifact of broken dispatcher. Fixed dispatcher resolves classification capability. Identity confusion is a new, distinct failure mode — Nemotron does not know its own model name."
+    "conclusion": "0.2.13 W2.5 feature-bias was a substrate artifact of broken dispatcher. Fixed dispatcher resolves classification capability. Identity confusion is a new, distinct failure mode - Nemotron does not know its own model name."
   },
-  "retain_remove_decision": "RETAIN WITH CAVEAT — model demonstrates functional structured output and classification. Identity failure is non-blocking for cascade roles that don't require self-identification. Usable for classification/triage roles. Not suitable for roles requiring model self-awareness.",
+  "retain_remove_decision": "RETAIN WITH CAVEAT - model demonstrates functional structured output and classification. Identity failure is non-blocking for cascade roles that don't require self-identification. Usable for classification/triage roles. Not suitable for roles requiring model self-awareness.",
   "probes": {
     "probe_a_identity": {
       "prompt": "Respond with your model name and nothing else.",
@@ -36,7 +36,7 @@
       "schema_match": true,
       "extraction_needed": false,
       "result": "pass",
-      "notes": "JSON parseable, schema match. Minor: items uppercase (A/B/C vs a/b/c) — not a schema violation, noted."
+      "notes": "JSON parseable, schema match. Minor: items uppercase (A/B/C vs a/b/c) - not a schema violation, noted."
     },
     "probe_c_language": {
       "prompt": "Briefly describe the ACID properties of a database transaction. Respond in English only.",
@@ -53,13 +53,13 @@
       "wall_clock_seconds": 0.09,
       "error": null,
       "result": "pass",
-      "notes": "Correct classification. 0.2.13 W2.5 returned 'feature' 80% of the time — that bias is resolved on fixed dispatcher."
+      "notes": "Correct classification. 0.2.13 W2.5 returned 'feature' 80% of the time - that bias is resolved on fixed dispatcher."
     }
   },
   "w2_concerns": [
     "Nemotron-specific stop tokens need research during W2",
     "Identity confusion may affect roles that reference model identity in prompts",
-    "Very fast inference (0.09s classify) — suitable for triage/classification roles if identity issue is non-blocking"
+    "Very fast inference (0.09s classify) - suitable for triage/classification roles if identity issue is non-blocking"
   ],
   "timestamp": "2026-04-13T16:47:00Z"
 }

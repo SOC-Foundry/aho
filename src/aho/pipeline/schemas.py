@@ -1,4 +1,4 @@
-"""Pipeline schemas — Role assignment, trace, and delta (0.2.14 W1).
+"""Pipeline schemas - Role assignment, trace, and delta (0.2.14 W1).
 
 Triple schema for the 5-stage cascade pipeline:
 - RoleAssignment: binds each pipeline role to a model_id

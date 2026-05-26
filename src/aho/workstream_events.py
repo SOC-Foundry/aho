@@ -1,4 +1,4 @@
-"""workstream_events.py — Emit workstream_start and workstream_complete events.
+"""workstream_events.py - Emit workstream_start and workstream_complete events.
 
 Events are appended to data/aho_event_log.jsonl via aho.logger.log_event().
 Both events include: iteration, workstream_id, timestamp, source_agent,
@@ -10,7 +10,7 @@ the event log for an existing workstream_complete with the same workstream_id
 and iteration.
 
 Schema v2 (0.2.11 W2): workstream_complete events may include
-acceptance_results — a list of AcceptanceResult dicts. When present,
+acceptance_results - a list of AcceptanceResult dicts. When present,
 schema_version=2 is set. When absent, schema_version is omitted (v1 compat).
 
 Schema v3 (0.2.13 W0): agents_involved extended from list[str] to
@@ -18,7 +18,7 @@ list[dict] with {agent: str, role: "primary"|"auditor"|"cameo"}.
 AgentInvolvement model in acceptance.py normalizes bare strings to
 {agent: str, role: "primary"} for backward compatibility.
 
-Test isolation (0.2.17 W0 — F-W0-004 closure): _resolve_checkpoint_root()
+Test isolation (0.2.17 W0 - F-W0-004 closure): _resolve_checkpoint_root()
 guards against the recurring failure mode of test code mutating the real
 .aho-checkpoint.json. When PYTEST_CURRENT_TEST is set, the resolved
 checkpoint dir MUST be a tempdir-rooted path (or AHO_TEST_CHECKPOINT_DIR
@@ -95,7 +95,7 @@ def _scan_events(iteration: str, workstream_id: str, event_type: str) -> bool:
 
 def emit_workstream_start(workstream_id: str, summary: str = "",
                           source_agent: str | None = None) -> dict | None:
-    """Emit a workstream_start event. Idempotent — skips if already started.
+    """Emit a workstream_start event. Idempotent - skips if already started.
 
     Also updates checkpoint: workstreams[WID] = "in_progress".
     """

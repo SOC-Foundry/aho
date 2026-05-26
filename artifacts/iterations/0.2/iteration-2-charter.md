@@ -1,4 +1,4 @@
-# Iteration 2 Charter — aho
+# Iteration 2 Charter - aho
 
 **Iteration:** 2 (runs 0.2.1–0.2.x)
 **Opens:** 2026-04-11
@@ -53,4 +53,4 @@ P3 runs an aho iteration end-to-end: `git clone` → `bin/aho-install` → `aho 
 
 ---
 
-*Iteration 2 charter — aho Phase 0. Created 2026-04-11 during 0.1.16 W1.*
+*Iteration 2 charter - aho Phase 0. Created 2026-04-11 during 0.1.16 W1.*

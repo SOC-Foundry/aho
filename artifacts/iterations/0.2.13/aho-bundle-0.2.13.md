@@ -12,12 +12,12 @@
 ## §1. Design
 
 ```markdown
-# aho 0.2.13 — Design Doc
+# aho 0.2.13 - Design Doc
 
 **Theme:** Dispatch-layer repair
 **Iteration type:** Repair (distinct from discovery/build)
 **Primary executor:** Claude Code (`claude --dangerously-skip-permissions`)
-**Auditor:** Gemini CLI (`gemini --yolo`) — Pattern C
+**Auditor:** Gemini CLI (`gemini --yolo`) - Pattern C
 **Sign-off:** Kyle
 **Success criterion:** Council health ≥50/100 (from 35.3)
 
@@ -46,7 +46,7 @@ graph BT
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -58,9 +58,9 @@ graph BT
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -115,18 +115,18 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 ## §2. Plan
 
 ```markdown
-# aho 0.2.13 — Plan Doc
+# aho 0.2.13 - Plan Doc
 
 **Theme:** Dispatch-layer repair | **Executor:** Claude Code | **Auditor:** Gemini CLI | **Sessions:** 2
 
 ---
 
-## W0 — Setup + Pattern C Prerequisites
+## W0 - Setup + Pattern C Prerequisites
 **Role:** Setup | **Session:** 1
 **Scope:**
 - Bump canonicals, version stamps
 - Executor health check (claude-code, gemini-cli, ollama, nemoclaw socket, daemons)
-- Patch postflight 2-tuple vs 3-tuple ValueError in `src/aho/cli.py` (not architectural — just make it work; robustness deferred to .14)
+- Patch postflight 2-tuple vs 3-tuple ValueError in `src/aho/cli.py` (not architectural - just make it work; robustness deferred to .14)
 - Extend schema v3 `agents_involved` to role-tagged: `{agent: str, role: "primary"|"auditor"|"cameo"}`. Update validator, update acceptance.py, update 0.2.12 archives retroactively (read-only migration).
 - Document Pattern C audit-loop protocol in `artifacts/harness/pattern-c-protocol.md`: when Gemini audits, what audit produces, how checkpoint advances, halt conditions.
 - Select Qwen cameo G083 site from 35 definitive list: smallest blast radius, single file, no cross-module imports. Record selection in W0 acceptance.
@@ -136,7 +136,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W1 — GLM Parser Fix
+## W1 - GLM Parser Fix
 **Role:** Repair | **Session:** 1
 **Scope:** Strip markdown fences (```json ... ```) before `json.loads()` in GLM evaluator. On parse failure, raise `GLMParseError`. Remove hardcoded `{score: 8, ship}` fallback. Test pairs: verified-good JSON input, verified-bad markdown-wrapped input, verified-bad malformed input.
 **Acceptance:** Parse test pairs all produce expected outcome (real result or raise). No baseline regression. No G083 pattern in new code.
@@ -144,7 +144,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W2 — Nemotron Classifier Fix
+## W2 - Nemotron Classifier Fix
 **Role:** Repair | **Session:** 1
 **Scope:** Raise `NemotronClassifyError` on parse failure in `_classify_impl`. Remove `return categories[-1]` default. Test pairs: good classification, malformed response, connection error.
 **Acceptance:** All three test cases produce expected behavior. No baseline regression. No G083 pattern in new code.
@@ -152,7 +152,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W2.5 — Model-Quality Gate (HARD GATE)
+## W2.5 - Model-Quality Gate (HARD GATE)
 **Role:** Gate | **Session:** 1
 **Scope:** With W1 and W2 parsers fixed, feed GLM 5 verified-bad evaluation inputs (code with known defects) and Nemotron 5 verified-misrouted classification inputs. Measure: do models produce real negative signal, or rubber-stamp through fixed parsers?
 **Halt condition:** If ≥3/5 GLM evaluations ship verified-defective code, OR ≥3/5 Nemotron classifications route verified-misrouted tasks correctly to wrong agent, iteration enters strategic-rescope. Close at W2.5 with substrate-truth report. Nemoclaw decision deferred to 0.2.14+.
@@ -161,7 +161,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W3 — Nemoclaw Benchmark
+## W3 - Nemoclaw Benchmark
 **Role:** Measurement | **Session:** 1 or 2
 **Scope:** 5 test tasks run two ways: direct Ollama invocation vs Nemoclaw socket dispatch. Measure latency, token cost, correctness. Record in `artifacts/iterations/0.2.13/nemoclaw-benchmark.json`.
 **Acceptance:** 5 tasks × 2 paths × 3 metrics captured. No baseline regression.
@@ -169,7 +169,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W4 — ADR-047 Nemoclaw Decision
+## W4 - ADR-047 Nemoclaw Decision
 **Role:** Decision | **Session:** 2
 **Scope:** Write ADR-047 with W3 evidence. Decision: keep, replace with direct Ollama, or hybrid. Include rationale, tradeoffs, migration path if replace/hybrid.
 **Acceptance:** ADR-047 exists, references W3 benchmark, decision explicit.
@@ -177,7 +177,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W5 — OpenClaw Audit
+## W5 - OpenClaw Audit
 **Role:** Discovery | **Session:** 2
 **Scope:** Same 7-section shape as Qwen/GLM/Nemotron audits in 0.2.12. Produce `openclaw-audit.md`. Status field: operational | gap | unknown.
 **Acceptance:** 7 sections complete, status determined.
@@ -185,7 +185,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W6 — G083 Tier 1: src/aho/agents/
+## W6 - G083 Tier 1: src/aho/agents/
 **Role:** Bulk Repair | **Session:** 2
 **Scope:** All G083 definitive sites in `src/aho/agents/`. Per-site commits. Halt on ANY regression.
 **Acceptance:** Zero G083 in agents/. baseline_regression_check green after each site.
@@ -193,7 +193,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W7 — G083 Tier 2: src/aho/council/
+## W7 - G083 Tier 2: src/aho/council/
 **Role:** Bulk Repair | **Session:** 2
 **Scope:** All G083 definitive sites in `src/aho/council/`. Per-site commits. Halt on regression.
 **Acceptance:** Zero G083 in council/. baseline clean.
@@ -201,7 +201,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W8 — G083 Tier 3: Remainder
+## W8 - G083 Tier 3: Remainder
 **Role:** Bulk Repair | **Session:** 2
 **Scope:** Remaining definitive sites from 35-site set. Halt on regression.
 **Acceptance:** All 35 definitive sites repaired. baseline clean.
@@ -209,7 +209,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W8.5 — Qwen Cameo
+## W8.5 - Qwen Cameo
 **Role:** Forensics | **Session:** 2
 **Scope:** Qwen executes the pre-scoped G083 site from W0. Full acceptance archive. Forensics data (time, context needs, bug-catching) captured for three-executor comparison.
 **Acceptance:** Site repaired, archive complete, forensics recorded.
@@ -217,7 +217,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W9 — G083 Ambiguous Triage
+## W9 - G083 Ambiguous Triage
 **Role:** Classification | **Session:** 2
 **Scope:** Classify 117 ambiguous `except Exception` cases into `artifacts/iterations/0.2.13/g083-ambiguous-classified.json`: safe | G083-class | needs-human-review. Execution deferred to 0.2.14.
 **Acceptance:** All 117 classified. File complete.
@@ -225,7 +225,7 @@ Schema v3 `agents_involved` extended in W0 to role-tag: `{agent, role: "primary"
 
 ---
 
-## W10 — Health Rerun + Close
+## W10 - Health Rerun + Close
 **Role:** Close | **Session:** 2
 **Scope:** Rerun `aho council status`. Verify health ≥50. Retrospective, carry-forwards, v10.66 bundle, Kyle's Notes stub, sign-off sheet.
 **Acceptance:** Health measured. All close artifacts present. Bundle 300-500KB.
@@ -240,7 +240,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §3.W0. Acceptance — W0
+## §3.W0. Acceptance - W0
 
 ```json
 {
@@ -279,14 +279,14 @@ Sized for 2 sessions. W2.5 gate may close early.
   "baseline_known_failures": 13,
   "baseline_new_failures": 0,
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after every src/aho/ touch",
-    "G071 — noted daemon restart needed if modules imported (postflight ran fine)",
-    "G078 — schema drift: added AgentInvolvement model to acceptance.py, updated test",
-    "G079 — no rigid numeric assertions in new code",
-    "G080 — documented Pattern C protocol in harness doc",
-    "G081 — no celebratory framing in this archive",
-    "G082 — canonical paths only (no hardcoded paths added)",
-    "G083 — no new except Exception blocks introduced, no hardcoded positive fallbacks"
+    "G070 - cleared __pycache__ after every src/aho/ touch",
+    "G071 - noted daemon restart needed if modules imported (postflight ran fine)",
+    "G078 - schema drift: added AgentInvolvement model to acceptance.py, updated test",
+    "G079 - no rigid numeric assertions in new code",
+    "G080 - documented Pattern C protocol in harness doc",
+    "G081 - no celebratory framing in this archive",
+    "G082 - canonical paths only (no hardcoded paths added)",
+    "G083 - no new except Exception blocks introduced, no hardcoded positive fallbacks"
   ],
   "audit_status": "pending_audit",
   "findings": {
@@ -319,17 +319,17 @@ Sized for 2 sessions. W2.5 gate may close early.
       "site": "src/aho/workstream_gate.py:24",
       "rationale": "Single file (47 lines). Private function _read_proceed_awaited(). No cross-module imports of the function. Isolated except Exception: return False handler. Existing test coverage: 8 tests in artifacts/tests/test_workstream_gate.py covering _read_proceed_awaited directly. Fix scope: replace blanket except Exception with specific exceptions (json.JSONDecodeError, FileNotFoundError) and log unexpected errors. No blast radius beyond this file.",
       "alternatives_considered": [
-        "compatibility.py:38 — no test coverage",
-        "pipelines/registry.py:28 — returns hardcoded dict, slightly higher blast radius"
+        "compatibility.py:38 - no test coverage",
+        "pipelines/registry.py:28 - returns hardcoded dict, slightly higher blast radius"
       ]
     },
     "baseline_additions": {
       "added_to_baseline": 3,
       "new_total": 13,
       "entries": [
-        "test_daemon_healthy.py::test_healthy_unit_passes — DBUS unavailable in sandbox",
-        "test_gate_verbosity.py::test_run_quality_emits_checks — iteration-state dependent (no run file at start)",
-        "test_ws_fixes.py::test_planned_ws_count_reads_plan_doc — hardcoded threshold from 0.2.12 plan"
+        "test_daemon_healthy.py::test_healthy_unit_passes - DBUS unavailable in sandbox",
+        "test_gate_verbosity.py::test_run_quality_emits_checks - iteration-state dependent (no run file at start)",
+        "test_ws_fixes.py::test_planned_ws_count_reads_plan_doc - hardcoded threshold from 0.2.12 plan"
       ],
       "note": "All 3 are pre-existing state/environment dependencies, not caused by W0 code changes."
     }
@@ -344,7 +344,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §3.W1. Acceptance — W1
+## §3.W1. Acceptance - W1
 
 ```json
 {
@@ -364,21 +364,21 @@ Sized for 2 sessions. W2.5 gate may close early.
     "grep 'score.*8|ship.*True' src/aho/agents/roles/evaluator_agent.py"
   ],
   "outputs_produced": [
-    "src/aho/agents/roles/evaluator_agent.py — GLMParseError class added (line 23), _strip_markdown_fences() helper added (line 30), json.loads() now operates on fence-stripped text, parse failure raises GLMParseError instead of returning hardcoded {score:8, ship} defaults",
-    "artifacts/tests/test_glm_parser.py — 3 new W1 test cases (clean JSON, markdown-wrapped, malformed)",
-    "artifacts/tests/test_evaluator_agent_score.py — test_malformed_json_uses_defaults renamed to test_malformed_json_raises_glm_parse_error, now expects GLMParseError",
-    "artifacts/tests/test_role_evaluator_agent.py — test_evaluator_agent_handles_non_json renamed to test_evaluator_agent_raises_on_non_json, now expects GLMParseError"
+    "src/aho/agents/roles/evaluator_agent.py - GLMParseError class added (line 23), _strip_markdown_fences() helper added (line 30), json.loads() now operates on fence-stripped text, parse failure raises GLMParseError instead of returning hardcoded {score:8, ship} defaults",
+    "artifacts/tests/test_glm_parser.py - 3 new W1 test cases (clean JSON, markdown-wrapped, malformed)",
+    "artifacts/tests/test_evaluator_agent_score.py - test_malformed_json_uses_defaults renamed to test_malformed_json_raises_glm_parse_error, now expects GLMParseError",
+    "artifacts/tests/test_role_evaluator_agent.py - test_evaluator_agent_handles_non_json renamed to test_evaluator_agent_raises_on_non_json, now expects GLMParseError"
   ],
   "baseline_regression_status": "stable",
   "baseline_known_failures": 13,
   "baseline_new_failures": 0,
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ touch",
-    "G071 — no daemon imports evaluator_agent at load time; no restart needed",
-    "G079 — baseline_regression_check is the backstop, not regex counts; ran full suite",
-    "G081 — no celebratory framing in this archive",
-    "G082 — canonical paths only; used grep to locate evaluator, not hardcoded",
-    "G083 — zero except Exception in new code; zero hardcoded positive fallbacks; verified via grep"
+    "G070 - cleared __pycache__ after src/aho/ touch",
+    "G071 - no daemon imports evaluator_agent at load time; no restart needed",
+    "G079 - baseline_regression_check is the backstop, not regex counts; ran full suite",
+    "G081 - no celebratory framing in this archive",
+    "G082 - canonical paths only; used grep to locate evaluator, not hardcoded",
+    "G083 - zero except Exception in new code; zero hardcoded positive fallbacks; verified via grep"
   ],
   "audit_status": "pending_audit",
   "findings": {
@@ -388,11 +388,11 @@ Sized for 2 sessions. W2.5 gate may close early.
     },
     "d2_glm_parse_error": {
       "status": "complete",
-      "detail": "GLMParseError(Exception) added at evaluator_agent.py:23. Follows project pattern (DegenerateGenerationError in repetition_detector.py). Carries raw_response attribute for caller diagnostics. Raised from json.JSONDecodeError/TypeError — chains original exception."
+      "detail": "GLMParseError(Exception) added at evaluator_agent.py:23. Follows project pattern (DegenerateGenerationError in repetition_detector.py). Carries raw_response attribute for caller diagnostics. Raised from json.JSONDecodeError/TypeError - chains original exception."
     },
     "d3_hardcoded_fallback_removed": {
       "status": "complete",
-      "detail": "Removed the pre-initialized result dict with score:8, recommendation:'ship', issues:[]. Parse result now populates result dict directly from parsed JSON. If parse fails, GLMParseError propagates to caller (conductor.py:44). Caller decides — parser does not mask failures."
+      "detail": "Removed the pre-initialized result dict with score:8, recommendation:'ship', issues:[]. Parse result now populates result dict directly from parsed JSON. If parse fails, GLMParseError propagates to caller (conductor.py:44). Caller decides - parser does not mask failures."
     },
     "d4_test_cases": {
       "status": "complete",
@@ -416,7 +416,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §3.W2. Acceptance — W2
+## §3.W2. Acceptance - W2
 
 ```json
 {
@@ -434,25 +434,25 @@ Sized for 2 sessions. W2.5 gate may close early.
     "grep 'categories\\[-1\\]' src/aho/artifacts/nemotron_client.py"
   ],
   "outputs_produced": [
-    "src/aho/artifacts/nemotron_client.py — NemotronParseError class added (line 17), NemotronConnectionError class added (line 25), _classify_impl parse-failure path now raises NemotronParseError (line 90), connection/HTTP/timeout errors now raise NemotronConnectionError (lines 104, 118, 132), both categories[-1] fallbacks removed",
-    "artifacts/tests/test_nemotron_classifier.py — 3 new W2 test cases (good classification, unparseable response, connection error)"
+    "src/aho/artifacts/nemotron_client.py - NemotronParseError class added (line 17), NemotronConnectionError class added (line 25), _classify_impl parse-failure path now raises NemotronParseError (line 90), connection/HTTP/timeout errors now raise NemotronConnectionError (lines 104, 118, 132), both categories[-1] fallbacks removed",
+    "artifacts/tests/test_nemotron_classifier.py - 3 new W2 test cases (good classification, unparseable response, connection error)"
   ],
   "baseline_regression_status": "stable",
   "baseline_known_failures": 13,
   "baseline_new_failures": 0,
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ touch",
-    "G071 — nemotron_client is imported by harness_agent and nemoclaw at load time; if either daemon is running, restart needed. No daemons active in this session.",
-    "G079 — baseline_regression_check is the backstop, not regex counts; ran full suite, 13 known failures, zero new",
-    "G081 — no celebratory framing in this archive",
-    "G082 — canonical paths used; located nemotron_client via grep, not hardcoded assumption",
-    "G083 — zero except Exception in new/touched classify code; zero categories[-1] in executable code; verified via grep"
+    "G070 - cleared __pycache__ after src/aho/ touch",
+    "G071 - nemotron_client is imported by harness_agent and nemoclaw at load time; if either daemon is running, restart needed. No daemons active in this session.",
+    "G079 - baseline_regression_check is the backstop, not regex counts; ran full suite, 13 known failures, zero new",
+    "G081 - no celebratory framing in this archive",
+    "G082 - canonical paths used; located nemotron_client via grep, not hardcoded assumption",
+    "G083 - zero except Exception in new/touched classify code; zero categories[-1] in executable code; verified via grep"
   ],
   "audit_status": "pending_audit",
   "findings": {
     "d1_exception_hierarchy": {
       "status": "complete",
-      "detail": "Verified project convention is flat exceptions (GLMParseError(Exception) in evaluator_agent.py, DegenerateGenerationError(Exception) in repetition_detector.py). Followed flat convention: NemotronParseError(Exception) at line 17, NemotronConnectionError(Exception) at line 25. No base NemotronClassifyError — flat is the project pattern. Both carry diagnostic attributes: raw_response for parse errors, original_error for connection errors."
+      "detail": "Verified project convention is flat exceptions (GLMParseError(Exception) in evaluator_agent.py, DegenerateGenerationError(Exception) in repetition_detector.py). Followed flat convention: NemotronParseError(Exception) at line 17, NemotronConnectionError(Exception) at line 25. No base NemotronClassifyError - flat is the project pattern. Both carry diagnostic attributes: raw_response for parse errors, original_error for connection errors."
     },
     "d2_categories_minus_1_removal": {
       "status": "complete",
@@ -484,7 +484,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §3.W2_5. Acceptance — W2.5
+## §3.W2_5. Acceptance - W2.5
 
 ```json
 {
@@ -494,7 +494,7 @@ Sized for 2 sessions. W2.5 gate may close early.
   "timestamp": "2026-04-13T01:35:00Z",
   "scope_confirmed": true,
   "gate_result": "proceed",
-  "gate_rationale": "Neither halt condition tripped. Nemotron: 0/10 silent empty returns or hardcoded defaults (3 mismatches are model non-determinism producing valid 'feature' category, not parser failures). GLM: 0/5 defective inputs rubber-stamped as ship/score>=7 (all 5 produced parse errors — 4 timeouts, 1 malformed JSON). However, substrate quality findings are severe: Nemotron has 80% feature-bias and GLM cannot produce parseable JSON within 180s.",
+  "gate_rationale": "Neither halt condition tripped. Nemotron: 0/10 silent empty returns or hardcoded defaults (3 mismatches are model non-determinism producing valid 'feature' category, not parser failures). GLM: 0/5 defective inputs rubber-stamped as ship/score>=7 (all 5 produced parse errors - 4 timeouts, 1 malformed JSON). However, substrate quality findings are severe: Nemotron has 80% feature-bias and GLM cannot produce parseable JSON within 180s.",
   "nemotron_halt_count": 0,
   "nemotron_pass_count": 5,
   "nemotron_mismatch_count": 3,
@@ -502,7 +502,7 @@ Sized for 2 sessions. W2.5 gate may close early.
   "nemotron_detail": {
     "feature_bucket": {
       "count": 3,
-      "result": "3/3 classified as 'feature' — baseline working",
+      "result": "3/3 classified as 'feature' - baseline working",
       "all_match": true
     },
     "empty_bucket": {
@@ -525,14 +525,14 @@ Sized for 2 sessions. W2.5 gate may close early.
     "hallucinated_category": {
       "count": 1,
       "result": "Model returned 'feature'. Historical: 'category_a'. Model no longer hallucinating this specific output.",
-      "note": "Input was 'test text' — may not be a representative production input. Model returned valid category instead of hallucinating."
+      "note": "Input was 'test text' - may not be a representative production input. Model returned valid category instead of hallucinating."
     },
     "reviewer_bucket": {
       "count": 1,
       "result": "Model returned 'feature'. Historical: 'reviewer'. Model no longer producing out-of-category response.",
-      "ground_truth_analysis": "Input is event JSON of a nemotron classify llm_call. Ground truth category would be 'noise' (meta-event). Model returned 'feature' instead — wrong classification but valid category. Parser correctly returned it."
+      "ground_truth_analysis": "Input is event JSON of a nemotron classify llm_call. Ground truth category would be 'noise' (meta-event). Model returned 'feature' instead - wrong classification but valid category. Parser correctly returned it."
     },
-    "dominant_pattern": "8/10 raw model responses were 'feature'. Model has strong feature-bias — effectively defaulting rather than genuinely classifying. Parser is correct; model quality is the concern."
+    "dominant_pattern": "8/10 raw model responses were 'feature'. Model has strong feature-bias - effectively defaulting rather than genuinely classifying. Parser is correct; model quality is the concern."
   },
   "glm_halt_count": 0,
   "glm_pass_count": 0,
@@ -540,32 +540,32 @@ Sized for 2 sessions. W2.5 gate may close early.
   "glm_detail": {
     "input_1_g083_site": {
       "ground_truth": "defective",
-      "result": "GLMParseError — malformed JSON after 105s. Raw response DID identify the defect ('Exception handling uses pass to mask failures'). Used wrong schema ('defects' array instead of requested 'score/issues/recommendation').",
+      "result": "GLMParseError - malformed JSON after 105s. Raw response DID identify the defect ('Exception handling uses pass to mask failures'). Used wrong schema ('defects' array instead of requested 'score/issues/recommendation').",
       "latency_ms": 105278,
       "rubber_stamp": false,
       "signal_present_in_text": true
     },
     "input_2_categories_fallback": {
       "ground_truth": "defective",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180102,
       "rubber_stamp": false
     },
     "input_3_synthetic_bug": {
       "ground_truth": "defective",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180007,
       "rubber_stamp": false
     },
     "input_4_tachtech_contradiction": {
       "ground_truth": "defective",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180103,
       "rubber_stamp": false
     },
     "input_5_clean_code": {
       "ground_truth": "clean",
-      "result": "GLMParseError — Ollama timeout at 180s",
+      "result": "GLMParseError - Ollama timeout at 180s",
       "latency_ms": 180082,
       "rubber_stamp": false,
       "note": "Control input also failed. GLM is non-functional as structured-output evaluator within current timeout."
@@ -580,17 +580,17 @@ Sized for 2 sessions. W2.5 gate may close early.
   "baseline_new_failures": 0,
   "baseline_newly_passing": ["test_telegram_ws_commands.py::TestWsLast::test_no_events", "test_daemon_healthy.py::test_healthy_unit_passes"],
   "gotcha_registry_consulted": [
-    "G070 — cleared __pycache__ after src/aho/ imports during measurement",
-    "G075 — canonical paths: event log at ~/.local/share/aho/events/aho_event_log.jsonl per G082",
-    "G079 — baseline_regression_check is backstop, not regex counts; 11 actual failures all in known 13",
-    "G081 — no celebratory framing in this archive",
-    "G082 — event log path from canonical location",
-    "G083 — no new code written; measurement only"
+    "G070 - cleared __pycache__ after src/aho/ imports during measurement",
+    "G075 - canonical paths: event log at ~/.local/share/aho/events/aho_event_log.jsonl per G082",
+    "G079 - baseline_regression_check is backstop, not regex counts; 11 actual failures all in known 13",
+    "G081 - no celebratory framing in this archive",
+    "G082 - event log path from canonical location",
+    "G083 - no new code written; measurement only"
   ],
   "findings": {
     "f1_nemotron_feature_bias": {
       "severity": "high",
-      "detail": "Nemotron-mini:4b returns 'feature' for 80% of inputs regardless of content. The model is not genuinely classifying — it's defaulting. This means the propose_gotcha pipeline has been routing nearly everything to 'feature' bucket, with occasional genuine gotcha/noise classifications. Parser fix (W2) is working correctly; the model itself is the quality bottleneck.",
+      "detail": "Nemotron-mini:4b returns 'feature' for 80% of inputs regardless of content. The model is not genuinely classifying - it's defaulting. This means the propose_gotcha pipeline has been routing nearly everything to 'feature' bucket, with occasional genuine gotcha/noise classifications. Parser fix (W2) is working correctly; the model itself is the quality bottleneck.",
       "carry_forward": true
     },
     "f2_glm_timeout_dominant": {
@@ -634,7 +634,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §4.W0. Audit — W0
+## §4.W0. Audit - W0
 
 ```json
 {
@@ -673,7 +673,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §4.W1. Audit — W1
+## §4.W1. Audit - W1
 
 ```json
 {
@@ -704,7 +704,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §4.W2. Audit — W2
+## §4.W2. Audit - W2
 
 ```json
 {
@@ -735,7 +735,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ---
 
-## §4.W2_5. Audit — W2.5
+## §4.W2_5. Audit - W2.5
 
 ```json
 {
@@ -769,7 +769,7 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 ## §5. Retrospective
 
-# Retrospective — aho 0.2.13
+# Retrospective - aho 0.2.13
 
 **Phase:** 0 | **Iteration:** 0.2.13 | **Executor:** claude-code (drafter) | **Auditor:** gemini-cli
 **Theme:** Dispatch-layer repair
@@ -782,9 +782,9 @@ Sized for 2 sessions. W2.5 gate may close early.
 
 11 workstreams plus a hard gate at W2.5, organized in a trident:
 
-- **Prong 1 (W0-W5):** Surgical fixes — setup, GLM parser repair, Nemotron classifier repair, model-quality gate, Nemoclaw benchmark, OpenClaw audit
-- **Prong 2 (W6-W9):** G083 bulk repair — 35 definitive sites across agents/, council/, and remainder, plus 117 ambiguous site triage
-- **Prong 3 (W8.5-W10):** Forensics + close — Qwen cameo, health rerun, retrospective
+- **Prong 1 (W0-W5):** Surgical fixes - setup, GLM parser repair, Nemotron classifier repair, model-quality gate, Nemoclaw benchmark, OpenClaw audit
+- **Prong 2 (W6-W9):** G083 bulk repair - 35 definitive sites across agents/, council/, and remainder, plus 117 ambiguous site triage
+- **Prong 3 (W8.5-W10):** Forensics + close - Qwen cameo, health rerun, retrospective
 
 The design acknowledged from the start that W2.5 was a hard gate: if models rubber-stamped through fixed parsers, the iteration would close early. The plan allocated two sessions and sized for the early-close possibility.
 
@@ -792,40 +792,40 @@ Success criterion: council health ≥50/100 (from 35.3).
 
 ## §2 What was delivered
 
-**W0 — Setup + Pattern C Prerequisites** (pass_with_findings)
+**W0 - Setup + Pattern C Prerequisites** (pass_with_findings)
 - VERSION bumped to 0.2.13 across 6 canonical files
 - Postflight 2-tuple ValueError patched in cli.py line 287
 - Schema v3 AgentInvolvement Pydantic model: normalizes bare strings to `{agent, role: "primary"}`, supports "primary"|"auditor"|"cameo"
 - Pattern C protocol documented in `artifacts/harness/pattern-c-protocol.md`
 - Qwen cameo site scoped: `src/aho/workstream_gate.py:24` (_read_proceed_awaited)
 - Baseline: 13 known failures, 0 new
-- Finding: postflight exit code 1 at iteration start (expected — missing artifacts)
+- Finding: postflight exit code 1 at iteration start (expected - missing artifacts)
 - Finding: baseline grew from 10→13, all 3 additions justified as pre-existing environment dependencies
 
-**W1 — GLM Parser Fix** (pass)
+**W1 - GLM Parser Fix** (pass)
 - `GLMParseError(Exception)` added to evaluator_agent.py
 - `_strip_markdown_fences()` helper handles ```json, bare ```, partial-wrap, whitespace
-- Hardcoded `{score: 8, recommendation: ship}` fallback removed — parse failures now raise
+- Hardcoded `{score: 8, recommendation: ship}` fallback removed - parse failures now raise
 - 3 new test cases, 2 existing tests updated to expect GLMParseError
 - Baseline: 13 known, 0 new
 
-**W2 — Nemotron Classifier Fix** (pass)
+**W2 - Nemotron Classifier Fix** (pass)
 - `NemotronParseError(Exception)` and `NemotronConnectionError(Exception)` added to nemotron_client.py
 - Both `categories[-1]` fallback returns removed
 - Blanket `except Exception` replaced with specific `requests.ConnectionError`, `requests.HTTPError`, `requests.Timeout`
 - 3 new test cases
-- Disclosed pre-existing G083 site at `nemotron_client.py:164` (`_call()`) — out of W2 scope
+- Disclosed pre-existing G083 site at `nemotron_client.py:164` (`_call()`) - out of W2 scope
 - Baseline: 13 known, 0 new
 
-**W2.5 — Model-Quality Gate** (pass_with_findings)
+**W2.5 - Model-Quality Gate** (pass_with_findings)
 - **GLM result:** 5/5 inputs produced GLMParseError. 4 timeouts at 180s, 1 malformed JSON at 105s. The one response that completed contained real analysis (identified G083 defect in raw text) but used the wrong JSON schema. GLM-4.6V-Flash-9B at Q4_K_M is non-functional as a structured-output evaluator.
-- **Nemotron result:** 10 inputs tested. 8/10 raw model responses were "feature" regardless of input content. 2/10 raised NemotronParseError (correct on empty responses). Model has severe feature-bias — effectively defaulting rather than classifying.
+- **Nemotron result:** 10 inputs tested. 8/10 raw model responses were "feature" regardless of input content. 2/10 raised NemotronParseError (correct on empty responses). Model has severe feature-bias - effectively defaulting rather than classifying.
 - **Gate decision:** Proceed (neither halt condition technically tripped), but substrate quality findings are severe enough to trigger Path A rescope. Parsers are honest (W1, W2 work). Models cannot produce usable signal through honest parsers.
 - Baseline: 13 known, 0 new. 2 tests newly passing (environment-specific).
 
 ## §3 What was skipped and why
 
-**W3 (Nemoclaw Benchmark), W4 (ADR-047 Nemoclaw Decision), W5 (OpenClaw Audit), W6 (G083 Tier 1: agents/), W7 (G083 Tier 2: council/), W8 (G083 Tier 3: remainder), W8.5 (Qwen Cameo), W9 (G083 Ambiguous Triage)** — all skipped per Path A rescope decision.
+**W3 (Nemoclaw Benchmark), W4 (ADR-047 Nemoclaw Decision), W5 (OpenClaw Audit), W6 (G083 Tier 1: agents/), W7 (G083 Tier 2: council/), W8 (G083 Tier 3: remainder), W8.5 (Qwen Cameo), W9 (G083 Ambiguous Triage)** - all skipped per Path A rescope decision.
 
 The trigger: W2.5 substrate findings. The iteration's design premised that fixing parsers (W1, W2) would restore honest signal from the dispatch layer. That premise was half-right: parsers are now honest, but the models behind them cannot produce usable structured output. GLM times out 80% of the time and produces wrong-schema JSON the other 20%. Nemotron returns "feature" 80% of the time regardless of input.
 
@@ -842,13 +842,13 @@ The rescope preserves these as carry-forwards for 0.2.14, where the model viabil
 0.2.13 was the first iteration using Pattern C: Claude Code as primary drafter, Gemini CLI as auditor, Kyle as signer.
 
 **What worked:**
-- Role separation was clean from W1 onward. Claude drafted, Gemini audited, neither crossed into the other's function. Audits were substantive — Gemini's W2.5 audit independently confirmed the substrate findings rather than rubber-stamping.
+- Role separation was clean from W1 onward. Claude drafted, Gemini audited, neither crossed into the other's function. Audits were substantive - Gemini's W2.5 audit independently confirmed the substrate findings rather than rubber-stamping.
 - State machine discipline improved after W0. The protocol doc (written in W0) defined the checkpoint lifecycle clearly: `in_progress → pending_audit → audit_complete → workstream_complete`.
 - Audit overhead was lower than budgeted. Design estimated ~20min per workstream × 11 workstreams = 3.5hr. Actual: 4 audits averaging 13min = ~52min total. Audits were lightweight verification, not re-execution.
 
 **What didn't work:**
 - W0 had role-crossing: Gemini attempted to emit `workstream_complete` in its audit, which is Claude's terminal event. Corrected in CLAUDE.md after W0 audit identified the ambiguity.
-- Terminal events (`workstream_complete`) require a fresh Claude session to fire after audit. This adds friction — four separate session entries were needed just for checkpoint hygiene. The protocol doc should specify this requirement explicitly.
+- Terminal events (`workstream_complete`) require a fresh Claude session to fire after audit. This adds friction - four separate session entries were needed just for checkpoint hygiene. The protocol doc should specify this requirement explicitly.
 - Triple-audit session (Gemini auditing W1, W2, W2.5 in one run) created audit archive timestamp coherence risk. All three archives got timestamps from the batch session, not from the original per-workstream audit window. No data loss occurred, but the risk was unnecessary.
 - `workstream_start` events were never emitted for any workstream. The event log has complete events but no start events, creating a cosmetic gap in the lifecycle record.
 
@@ -863,21 +863,21 @@ This is the headline of the iteration.
 
 **GLM-4.6V-Flash-9B at Q4_K_M quantization:**
 - 4/5 evaluation inputs timed out at 180s with no response
-- 1/5 responded at 105s with text that correctly identified the G083 defect ("Exception handling uses pass to mask failures") — but delivered it in the wrong JSON schema (`defects` array instead of `score/issues/recommendation`)
+- 1/5 responded at 105s with text that correctly identified the G083 defect ("Exception handling uses pass to mask failures") - but delivered it in the wrong JSON schema (`defects` array instead of `score/issues/recommendation`)
 - The model has evaluation capability buried in its text output, but cannot deliver structured JSON within any reasonable timeout at this quantization level
 - The evaluator agent is non-functional as currently configured
 
 **Nemotron-mini:4b:**
 - 8/10 classification inputs returned "feature" regardless of input content
 - 2/10 returned empty responses (correctly caught by NemotronParseError)
-- The model has severe feature-bias — it is not classifying, it is defaulting
+- The model has severe feature-bias - it is not classifying, it is defaulting
 - The propose_gotcha pipeline has been routing nearly everything to the "feature" bucket
 - Model behavior is non-deterministic across runs: same inputs produce different (but equally useless) outputs
 
 **What this means:**
 - The dispatch layer can no longer silently lie (W1, W2 achieved this)
-- The dispatch layer also cannot help — the models behind the honest parsers are non-functional or near-non-functional
-- Council health remains 35.3/100 — unchanged from 0.2.12. The parsers are fixed but the health score reflects member operational status, which hasn't changed
+- The dispatch layer also cannot help - the models behind the honest parsers are non-functional or near-non-functional
+- Council health remains 35.3/100 - unchanged from 0.2.12. The parsers are fixed but the health score reflects member operational status, which hasn't changed
 - The 0.2.14 model viability question supersedes everything: heavier quantization (Q8_0?), different model entirely (Qwen-as-evaluator?), or architectural pivot away from local LLM evaluation
 
 ## §6 Casing-variant design question
@@ -901,14 +901,14 @@ The decision affects how the classifier parser handles model non-determinism gen
 - **Checkpoint hygiene is manual overhead.** Terminal events required separate sessions. The workstream_start events were never emitted. Checkpoint reconciliation was a dedicated hygiene step. Consider automating checkpoint lifecycle in the harness for 0.2.14.
 - **Audit archive batching is a protocol gap.** The triple-audit session worked but creates timestamp coherence risk. Protocol should specify one audit per session, or explicitly document batch-audit timestamp semantics.
 - **Baseline stability is a strength.** 13 known failures, 0 new across all 4 workstreams. The test-baseline.json ledger and baseline_regression_check() are working as designed.
-- **Parser fixes are durable.** GLMParseError and NemotronParseError are structurally sound. When models eventually produce real output, the parsers will handle it correctly. The investment in W1 and W2 is not wasted — it's infrastructure for when the substrate improves.
+- **Parser fixes are durable.** GLMParseError and NemotronParseError are structurally sound. When models eventually produce real output, the parsers will handle it correctly. The investment in W1 and W2 is not wasted - it's infrastructure for when the substrate improves.
 
 
 ---
 
 ## §6. Carry-Forwards
 
-# Carry-Forwards — 0.2.13
+# Carry-Forwards - 0.2.13
 
 **Generated:** 2026-04-13 W10 Close
 
@@ -916,40 +916,40 @@ The decision affects how the classifier parser handles model non-determinism gen
 
 ## TO 0.2.14: MODEL VIABILITY + DEFERRED REPAIR
 
-- **Model viability assessment** — The dominant problem. GLM-4.6V-Flash-9B at Q4_K_M cannot produce structured output (80% timeout, 20% wrong schema). Nemotron-mini:4b returns "feature" 80% of the time. Options: heavier quantization (Q8_0), different evaluator model (Qwen-as-evaluator), text-mode parsing (accept unstructured GLM output), or abandon local LLM evaluation. **0.2.14 W0 candidate — must resolve before any dispatch work.**
+- **Model viability assessment** - The dominant problem. GLM-4.6V-Flash-9B at Q4_K_M cannot produce structured output (80% timeout, 20% wrong schema). Nemotron-mini:4b returns "feature" 80% of the time. Options: heavier quantization (Q8_0), different evaluator model (Qwen-as-evaluator), text-mode parsing (accept unstructured GLM output), or abandon local LLM evaluation. **0.2.14 W0 candidate - must resolve before any dispatch work.**
 
-- **G083 bulk fix (35 definitive sites)** — Deferred from W6-W8. Sites identified in 0.2.12 G083 scan. Tiered repair plan (agents/ → council/ → remainder) remains valid. Blocked on model viability: fixing exception handlers around non-functional models produces correct error handling of useless responses. **0.2.14 mid-iteration candidate, after model viability resolved.**
+- **G083 bulk fix (35 definitive sites)** - Deferred from W6-W8. Sites identified in 0.2.12 G083 scan. Tiered repair plan (agents/ → council/ → remainder) remains valid. Blocked on model viability: fixing exception handlers around non-functional models produces correct error handling of useless responses. **0.2.14 mid-iteration candidate, after model viability resolved.**
 
-- **G083 ambiguous triage (117 sites)** — Deferred from W9. Classification-only (safe | G083-class | needs-human-review). Execution deferred to 0.2.15+. **0.2.14 late-iteration candidate.**
+- **G083 ambiguous triage (117 sites)** - Deferred from W9. Classification-only (safe | G083-class | needs-human-review). Execution deferred to 0.2.15+. **0.2.14 late-iteration candidate.**
 
-- **Nemoclaw decision (ADR-047)** — Deferred from W3-W4. Original premise: benchmark Nemoclaw vs direct Ollama on latency/quality/cost, then decide keep/replace/hybrid. Premise needs revision per W2.5 substrate findings — decision depends on which models survive viability assessment. **0.2.14, after model viability.**
+- **Nemoclaw decision (ADR-047)** - Deferred from W3-W4. Original premise: benchmark Nemoclaw vs direct Ollama on latency/quality/cost, then decide keep/replace/hybrid. Premise needs revision per W2.5 substrate findings - decision depends on which models survive viability assessment. **0.2.14, after model viability.**
 
-- **OpenClaw audit** — Deferred from W5. Status remains "unknown" in council inventory. 7-section audit shape defined (matches Qwen/GLM/Nemotron audits from 0.2.12). **0.2.14 candidate, independent of model viability.**
+- **OpenClaw audit** - Deferred from W5. Status remains "unknown" in council inventory. 7-section audit shape defined (matches Qwen/GLM/Nemotron audits from 0.2.12). **0.2.14 candidate, independent of model viability.**
 
-- **Casing-variant Gotcha/gotch design decision** — Kyle input needed. Nemotron returns casing variants of categories ("Gotcha", "gotch"). Current parser: case-insensitive substring for close matches, NemotronParseError for distant mismatches. Options: soft-match, strict, or new diagnostic category. **Kyle decision before 0.2.14 plan.**
+- **Casing-variant Gotcha/gotch design decision** - Kyle input needed. Nemotron returns casing variants of categories ("Gotcha", "gotch"). Current parser: case-insensitive substring for close matches, NemotronParseError for distant mismatches. Options: soft-match, strict, or new diagnostic category. **Kyle decision before 0.2.14 plan.**
 
-- **Pattern C protocol: terminal-event session requirement** — Protocol doc should specify that `workstream_complete` events require a fresh executor session after audit, not an inline emit during the audit session. W0 role-crossing and the hygiene session exposed this gap. **0.2.14 harness update.**
+- **Pattern C protocol: terminal-event session requirement** - Protocol doc should specify that `workstream_complete` events require a fresh executor session after audit, not an inline emit during the audit session. W0 role-crossing and the hygiene session exposed this gap. **0.2.14 harness update.**
 
-- **Audit archive duplication prevention** — Triple-audit session created timestamp coherence risk. Protocol should specify one-audit-per-session or document batch-audit semantics. **0.2.14 protocol doc update.**
+- **Audit archive duplication prevention** - Triple-audit session created timestamp coherence risk. Protocol should specify one-audit-per-session or document batch-audit semantics. **0.2.14 protocol doc update.**
 
-- **Pre-existing G083 site: `nemotron_client.py:164` (`_call()`)** — Disclosed in W2 acceptance, confirmed in W2 audit. `except Exception as e: return f"Error: {e}"`. In the raw-call path (used by evaluator.py), not the classifier path. **0.2.14 G083 Tier 3 candidate.**
+- **Pre-existing G083 site: `nemotron_client.py:164` (`_call()`)** - Disclosed in W2 acceptance, confirmed in W2 audit. `except Exception as e: return f"Error: {e}"`. In the raw-call path (used by evaluator.py), not the classifier path. **0.2.14 G083 Tier 3 candidate.**
 
-- **OTEL per-agent instrumentation** — Deferred from 0.2.13 design. Traces for per-agent dispatch metrics. **0.2.14+ candidate.**
+- **OTEL per-agent instrumentation** - Deferred from 0.2.13 design. Traces for per-agent dispatch metrics. **0.2.14+ candidate.**
 
-- **README content review** — Deferred from 0.2.12→0.2.13→0.2.14. Staleness noted at 0.2.11 boundary. **0.2.14 candidate.**
+- **README content review** - Deferred from 0.2.12→0.2.13→0.2.14. Staleness noted at 0.2.11 boundary. **0.2.14 candidate.**
 
-- **Postflight robustness** — W0 patched the 2-tuple ValueError as a tactical fix. Proper architecture (plugin return contract, error handling) deferred. **0.2.14 candidate.**
+- **Postflight robustness** - W0 patched the 2-tuple ValueError as a tactical fix. Proper architecture (plugin return contract, error handling) deferred. **0.2.14 candidate.**
 
-- **Qwen cameo execution** — Deferred from W8.5. Site scoped in W0 (`workstream_gate.py:24`). Three-executor forensics data (Claude, Gemini, Qwen) still desired. **0.2.14 candidate, after model viability.**
+- **Qwen cameo execution** - Deferred from W8.5. Site scoped in W0 (`workstream_gate.py:24`). Three-executor forensics data (Claude, Gemini, Qwen) still desired. **0.2.14 candidate, after model viability.**
 
-- **workstream_start event emission** — 0.2.13 never emitted workstream_start events for any workstream. Event log has complete events but no starts. Cosmetic gap but reduces lifecycle traceability. **0.2.14 harness fix.**
+- **workstream_start event emission** - 0.2.13 never emitted workstream_start events for any workstream. Event log has complete events but no starts. Cosmetic gap but reduces lifecycle traceability. **0.2.14 harness fix.**
 
 
 ---
 
 ## §7. Kyle's Notes
 
-# Kyle's Notes — 0.2.13 (W10 Rescope Close)
+# Kyle's Notes - 0.2.13 (W10 Rescope Close)
 
 ## Questions for Sign-off
 
@@ -957,9 +957,9 @@ The decision affects how the classifier parser handles model non-determinism gen
 
 2. **Was Pattern C worth the audit overhead given W0 friction?** 4 audits × ~13min avg = ~52min total audit time, plus ~4 hygiene sessions for terminal events. Audits caught one real finding (W0 role-crossing) and confirmed substance on three others. Continue, modify (e.g., batch audits with explicit timestamp semantics), or revert to single-agent for 0.2.14?
 
-3. **Casing-variant Gotcha/gotch — what's the parser policy?** Current behavior: case-insensitive substring match for close variants ("Gotcha"→"gotcha"), NemotronParseError for distant mismatches ("gotch"). Options: (a) soft-match to nearest category, (b) strict exact-match only, (c) new diagnostic category for model quality monitoring. This affects how aggressively the classifier rejects non-deterministic model output.
+3. **Casing-variant Gotcha/gotch - what's the parser policy?** Current behavior: case-insensitive substring match for close variants ("Gotcha"→"gotcha"), NemotronParseError for distant mismatches ("gotch"). Options: (a) soft-match to nearest category, (b) strict exact-match only, (c) new diagnostic category for model quality monitoring. This affects how aggressively the classifier rejects non-deterministic model output.
 
-4. **Should 0.2.14 attempt heavier quantization (Q8_0?), different model entirely (Qwen-as-evaluator?), or abandon GLM-as-evaluator?** GLM-4.6V-Flash-9B at Q4_K_M has real evaluation capability (W2.5 input #1 raw text identified the defect) but cannot deliver structured output. Heavier quantization may help at the cost of VRAM/latency. Qwen-3.5:9B is already operational for dispatch — could it serve dual duty? Or is local evaluation a dead end at this hardware tier?
+4. **Should 0.2.14 attempt heavier quantization (Q8_0?), different model entirely (Qwen-as-evaluator?), or abandon GLM-as-evaluator?** GLM-4.6V-Flash-9B at Q4_K_M has real evaluation capability (W2.5 input #1 raw text identified the defect) but cannot deliver structured output. Heavier quantization may help at the cost of VRAM/latency. Qwen-3.5:9B is already operational for dispatch - could it serve dual duty? Or is local evaluation a dead end at this hardware tier?
 
 5. **Any process changes from this iteration to bake into the harness?** Candidates: automated checkpoint lifecycle (emit workstream_start/complete from harness, not manually), one-audit-per-session protocol, audit archive naming convention to prevent batch-timestamp overwrite risk.
 
@@ -970,7 +970,7 @@ The decision affects how the classifier parser handles model non-determinism gen
 
 ## §8. Run Report
 
-# aho Run Report — 0.2.13
+# aho Run Report - 0.2.13
 **Iteration:** 0.2.13
 **Theme:** Dispatch-layer repair
 **Primary executor:** claude-code (drafter) | **Auditor:** gemini-cli | **Execution model:** Pattern C
@@ -983,14 +983,14 @@ The decision affects how the classifier parser handles model non-determinism gen
 | W1 | GLM parser fix | 1 | Repair | pass | GLMParseError added, _strip_markdown_fences helper, hardcoded {score:8, ship} removed, 3 new tests + 2 updated |
 | W2 | Nemotron classifier fix | 1 | Repair | pass | NemotronParseError + NemotronConnectionError added, both categories[-1] removed, blanket except replaced with specific requests exceptions, 3 new tests |
 | W2.5 | Model-quality gate (HARD GATE) | 1 | Gate | pass_with_findings | GLM: 5/5 parse errors (4 timeout, 1 wrong schema). Nemotron: 8/10 "feature" bias. Parsers honest, models non-functional. Path A rescope triggered. |
-| W3 | Nemoclaw benchmark | — | Measurement | skipped_per_rescope | Deferred to 0.2.14 — premise depends on model viability |
-| W4 | ADR-047 Nemoclaw decision | — | Decision | skipped_per_rescope | Deferred to 0.2.14 — depends on W3 + model viability |
-| W5 | OpenClaw audit | — | Discovery | skipped_per_rescope | Deferred to 0.2.14 — independent of model viability but below priority line |
-| W6 | G083 Tier 1: agents/ | — | Bulk Repair | skipped_per_rescope | Deferred to 0.2.14 — fixing exception handlers around non-functional models |
-| W7 | G083 Tier 2: council/ | — | Bulk Repair | skipped_per_rescope | Deferred to 0.2.14 |
-| W8 | G083 Tier 3: remainder | — | Bulk Repair | skipped_per_rescope | Deferred to 0.2.14 |
-| W8.5 | Qwen cameo | — | Forensics | skipped_per_rescope | Deferred to 0.2.14 — site scoped but execution requires viable models |
-| W9 | G083 ambiguous triage | — | Classification | skipped_per_rescope | Deferred to 0.2.14 |
+| W3 | Nemoclaw benchmark | - | Measurement | skipped_per_rescope | Deferred to 0.2.14 - premise depends on model viability |
+| W4 | ADR-047 Nemoclaw decision | - | Decision | skipped_per_rescope | Deferred to 0.2.14 - depends on W3 + model viability |
+| W5 | OpenClaw audit | - | Discovery | skipped_per_rescope | Deferred to 0.2.14 - independent of model viability but below priority line |
+| W6 | G083 Tier 1: agents/ | - | Bulk Repair | skipped_per_rescope | Deferred to 0.2.14 - fixing exception handlers around non-functional models |
+| W7 | G083 Tier 2: council/ | - | Bulk Repair | skipped_per_rescope | Deferred to 0.2.14 |
+| W8 | G083 Tier 3: remainder | - | Bulk Repair | skipped_per_rescope | Deferred to 0.2.14 |
+| W8.5 | Qwen cameo | - | Forensics | skipped_per_rescope | Deferred to 0.2.14 - site scoped but execution requires viable models |
+| W9 | G083 ambiguous triage | - | Classification | skipped_per_rescope | Deferred to 0.2.14 |
 | W10 | Rescope close | 2 | Close | pending_audit | Council health 35.3/100 (unchanged from 0.2.12). Retrospective, carry-forwards, bundle, Kyle's notes, sign-off sheet. |
 
 **Delivered:** 4 workstreams (W0, W1, W2, W2.5) + 1 close (W10)
@@ -1001,7 +1001,7 @@ The decision affects how the classifier parser handles model non-determinism gen
 ## Rescope Decision Record
 
 **Trigger:** W2.5 substrate findings
-**Decision:** Path A — close iteration at W2.5, defer W3-W9 to 0.2.14
+**Decision:** Path A - close iteration at W2.5, defer W3-W9 to 0.2.14
 **Rationale:** Models behind honest parsers cannot produce usable output. Running bulk repair (W6-W9) or architecture decisions (W3-W4) on non-functional substrate produces meaningless data.
 **Auditor confirmation:** Gemini W2.5 audit (pass_with_findings) independently confirmed substrate quality findings.
 
@@ -1033,7 +1033,7 @@ See `kyle-notes-stub.md` for 6 questions.
 
 ## §9. Pattern C Protocol
 
-# Pattern C Protocol — aho 0.2.13
+# Pattern C Protocol - aho 0.2.13
 
 **Produced:** W0 | **Status:** Active for 0.2.13
 
@@ -1100,13 +1100,13 @@ A halt at any workstream triggers review with Kyle before proceeding. A halt at 
 
 ---
 
-## §10. Harness — base.md (verbatim)
+## §10. Harness - base.md (verbatim)
 
 ```markdown
 # aho - Base Harness
 
 **Version:** 0.2.10
-**Last updated:** 2026-04-11 (aho 0.2.1 W0 — global deployment)
+**Last updated:** 2026-04-11 (aho 0.2.1 W0 - global deployment)
 **Scope:** Universal aho methodology. Extended by project harnesses.
 **Status:** ahomw - inviolable
 
@@ -1118,7 +1118,7 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -1130,9 +1130,9 @@ These eleven pillars supersede the prior ten-pillar numbering (retired in 0.1.8)
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -1570,7 +1570,7 @@ Total gotchas in registry: 37
 ## §15. CLAUDE.md
 
 ```markdown
-# CLAUDE.md — aho 0.2.13
+# CLAUDE.md - aho 0.2.13
 
 You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI audits. Kyle signs.
 
@@ -1580,7 +1580,7 @@ You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI 
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -1592,9 +1592,9 @@ You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI 
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
@@ -1602,7 +1602,7 @@ You are Claude Code, primary drafter for aho 0.2.13 under Pattern C. Gemini CLI 
 
 Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Numbers honest to substance, not regex. "Clean close," "landed beautifully," "all green" are banned (G081).
 
-## Pattern C Role — Primary Drafter
+## Pattern C Role - Primary Drafter
 
 For each workstream N:
 1. Execute scope per `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`.
@@ -1636,13 +1636,13 @@ For each workstream N:
 **Theme:** Dispatch-layer repair.
 **Executor role:** You draft. Gemini audits. Kyle signs.
 **Success:** Council health ≥50/100 (from 35.3).
-**Hard gate:** W2.5 — if models rubber-stamp post-parse-fix, iteration closes early.
+**Hard gate:** W2.5 - if models rubber-stamp post-parse-fix, iteration closes early.
 
 ## Reference Reading (consult at diligence)
 
 - `artifacts/iterations/0.2.13/aho-design-0.2.13.md`
 - `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`
-- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/base.md` - canonical pillars, ADRs, patterns
 - `artifacts/harness/pattern-c-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
@@ -1651,7 +1651,7 @@ For each workstream N:
 ## W0 Findings Carried Forward
 
 - Do not grow `test-baseline.json` to paper over breakage. Additions require justification and Kyle sign-off.
-- Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity — this file is authoritative going forward.
+- Do not fire `workstream_complete` before Gemini's audit archive exists. W0 had state-machine ambiguity - this file is authoritative going forward.
 - Acceptance criteria drift gets flagged in findings, not quietly redefined.
 
 ```
@@ -1661,7 +1661,7 @@ For each workstream N:
 ## §16. GEMINI.md
 
 ```markdown
-# GEMINI.md — aho 0.2.13
+# GEMINI.md - aho 0.2.13
 
 You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. You audit. Kyle signs.
 
@@ -1671,7 +1671,7 @@ You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. 
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts. The harness is artifact-agnostic at its core and artifact-specialized at its overlays.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -1683,22 +1683,22 @@ You are Gemini CLI, auditor for aho 0.2.13 under Pattern C. Claude Code drafts. 
 
 8. **Efficacy is measured in cost delta.** Every run records orchestrator token cost, local fleet compute time, wall clock, delegate ratio, and output quality signal. Numbers ship with the run report.
 
-9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one — gotcha count is the compound-interest metric.
+9. **The gotcha registry is the harness's memory.** Every failure mode lands in the registry. A mature harness has more gotchas than an immature one - gotcha count is the compound-interest metric.
 
-10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) — routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
+10. **Runs are interrupt-disciplined, not interrupt-free.** Once a run launches, agents do not ping for preference, clarification, or approval. The single exception is unavoidable capability gaps (sudo, credentials, physical access) - routed through OpenClaw to a defined notification channel, logged as a first-class event, resumed from the last durable checkpoint.
 
 11. **The human holds the keys.** No agent writes to git. No agent merges. No agent pushes. No agent manages secrets. No wrapper surfaces `git commit` or `git push` under any role.
 
 ## Operating Stance
 
-Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.12 trajectory (45 → 25 → 20min per workstream) is your baseline — bring the same skepticism auditing Claude.
+Objective and skeptical by nature. Do not celebrate. Characterize honestly. Surface problems before accomplishments. Your 0.2.12 trajectory (45 → 25 → 20min per workstream) is your baseline - bring the same skepticism auditing Claude.
 
-## Pattern C Role — Auditor
+## Pattern C Role - Auditor
 
 For each workstream N:
 1. Claude writes `artifacts/iterations/0.2.13/acceptance/W{N}.json` with `audit_status: "pending_audit"`.
 2. Read it. Read `artifacts/harness/pattern-c-protocol.md` if unclear.
-3. Lightweight audit — **not re-execution:**
+3. Lightweight audit - **not re-execution:**
    - Scope matches plan doc?
    - Substance matches claimed scope?
    - Spot-check 1-2 high-risk claims independently.
@@ -1718,7 +1718,7 @@ For each workstream N:
 
 ## Budget
 
-15-25 min per audit. >40min means you're re-executing — stop, write what you have, flag to Kyle.
+15-25 min per audit. >40min means you're re-executing - stop, write what you have, flag to Kyle.
 
 ## Audit Archive Schema
 
@@ -1753,7 +1753,7 @@ For each workstream N:
 ## Hard Rules
 
 - No git commits or pushes (Pillar 11)
-- Never `cat ~/.config/fish/config.fish` — secrets leak (your incident; established rule)
+- Never `cat ~/.config/fish/config.fish` - secrets leak (your incident; established rule)
 - Fish shell: `printf` blocks not heredocs (G1), `command ls` (G22)
 - No reading secrets under any circumstance
 - Canonical resolvers only (G075, G082)
@@ -1762,7 +1762,7 @@ For each workstream N:
 
 - `artifacts/iterations/0.2.13/aho-design-0.2.13.md`
 - `artifacts/iterations/0.2.13/aho-plan-0.2.13.md`
-- `artifacts/harness/base.md` — canonical pillars, ADRs, patterns
+- `artifacts/harness/base.md` - canonical pillars, ADRs, patterns
 - `artifacts/harness/pattern-c-protocol.md`
 - `artifacts/harness/test-baseline.json`
 - `artifacts/harness/prompt-conventions.md`
@@ -1772,9 +1772,9 @@ For each workstream N:
 
 - Re-executing instead of auditing (budget blowout)
 - Rubber-stamping without spot-check (G083 in human form)
-- Scope creep — asking Claude to fix things outside the workstream
+- Scope creep - asking Claude to fix things outside the workstream
 - Missing drift because the archive is well-formatted (substance over form)
-- Advancing the checkpoint yourself (W0 mistake — do not repeat)
+- Advancing the checkpoint yourself (W0 mistake - do not repeat)
 
 ```
 
@@ -1785,9 +1785,9 @@ For each workstream N:
 ```markdown
 # aho
 
-**Agentic Harness Orchestration — methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
+**Agentic Harness Orchestration - methodology and Python package for running disciplined LLM-driven engineering iterations without human supervision.**
 
-aho treats the harness — pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator — as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
+aho treats the harness - pre-flight checks, post-flight gates, artifact templates, gotcha registry, evaluator - as the primary product, and the executing model (Claude, Gemini, Qwen) as the engine. The methodology provides a system for getting LLM agents to ship working software without supervision.
 
 **Phase 0 (Clone-to-Deploy)** | **Iteration 0.2.12** | **Status: Council Activation**
 
@@ -1821,15 +1821,15 @@ graph BT
 
 aho provides the complete infrastructure for running bounded, sequential LLM-driven engineering iterations:
 
-- **Artifact Loop** — Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
-- **Pre-flight / Post-flight Gates** — Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
-- **Pipeline Scaffolding** — 10-phase universal pipeline pattern reusable by consumer projects.
-- **Human Feedback Loop** — Run report with Kyle's notes → seed JSON → next iteration's design context.
-- **Secrets Architecture** — age encryption + OS keyring backend, session management.
-- **Gotcha Registry** — Known failure modes with mitigations, queried at iteration start (Pillar 9).
-- **Multi-Agent Orchestration** — Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
-- **`/ws` Streaming** — Telegram commands (`/ws status`, `/ws pause`, `/ws proceed`, `/ws last`) for real-time workstream monitoring and agent pause/proceed control from phone. Auto-push notifications on workstream completion.
-- **Install Surface Architecture** — Three-persona model (pipeline builder, framework host, impromptu assistant). `aho-run` spec'd as the persona 3 entry point for pwd-scoped one-shot work against arbitrary files. Persona 3 discovery in 0.2.9 confirmed the gap exists; install-surface-architecture.md is the scope contract for 0.2.10–0.2.13 implementation.
+- **Artifact Loop** - Design → Plan → Build Log → Report → Bundle. Qwen 3.5:9b generates artifacts via Ollama with word count enforcement and 3-retry escalation.
+- **Pre-flight / Post-flight Gates** - Environment validation before launch, quality gates after execution. Bundle quality enforced via §1–§22 spec.
+- **Pipeline Scaffolding** - 10-phase universal pipeline pattern reusable by consumer projects.
+- **Human Feedback Loop** - Run report with Kyle's notes → seed JSON → next iteration's design context.
+- **Secrets Architecture** - age encryption + OS keyring backend, session management.
+- **Gotcha Registry** - Known failure modes with mitigations, queried at iteration start (Pillar 9).
+- **Multi-Agent Orchestration** - Gemini CLI as primary executor, Qwen for artifacts, Nemotron for classification, GLM for vision.
+- **`/ws` Streaming** - Telegram commands (`/ws status`, `/ws pause`, `/ws proceed`, `/ws last`) for real-time workstream monitoring and agent pause/proceed control from phone. Auto-push notifications on workstream completion.
+- **Install Surface Architecture** - Three-persona model (pipeline builder, framework host, impromptu assistant). `aho-run` spec'd as the persona 3 entry point for pwd-scoped one-shot work against arbitrary files. Persona 3 discovery in 0.2.9 confirmed the gap exists; install-surface-architecture.md is the scope contract for 0.2.10–0.2.13 implementation.
 
 ---
 
@@ -1867,7 +1867,7 @@ aho/
 
 ## Phase 0 Status
 
-**Phase:** 0 — Clone-to-Deploy
+**Phase:** 0 - Clone-to-Deploy
 **Charter:** artifacts/phase-charters/aho-phase-0.md
 
 Phase 0 is complete when **soc-foundry/aho can be cloned on a second Arch Linux box (ThinkStation P3) and deploy LLMs, MCPs, and agents via the `/bin` wrapper package with zero manual Python edits.**
@@ -1892,7 +1892,7 @@ License to be determined before v0.6.0 release.
 
 ---
 
-*aho v0.2.12 — aho.run — Phase 0 — April 2026*
+*aho v0.2.12 - aho.run - Phase 0 - April 2026*
 
 *README last reviewed: 2026-04-12 by 0.2.12 W0 pass*
 
@@ -1905,9 +1905,9 @@ License to be determined before v0.6.0 release.
 ```markdown
 # aho changelog
 
-## [0.2.12] — 2026-04-12
+## [0.2.12] - 2026-04-12
 
-**Theme:** Council activation — discovery, visibility, design, measurement (gemini-cli primary executor)
+**Theme:** Council activation - discovery, visibility, design, measurement (gemini-cli primary executor)
 
 - Primary executor shift: gemini-cli takes the lead for all 20 workstreams (Pillar 1/8 focus)
 - Council inventory: structured audit of Qwen, GLM, Nemotron, OpenClaw, Nemoclaw, and MCP fleet (W1-W5)
@@ -1918,13 +1918,13 @@ License to be determined before v0.6.0 release.
 - Tech-legacy-audit: audit of shims, unused modules, and stale harness
 - 20 workstreams, per-workstream review ON
 
-## [0.2.11] — 2026-04-12
+## [0.2.11] - 2026-04-12
 
-**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams — executor-bias recognized mid-iteration, G077)
+**Theme:** Verifiable acceptance framework + gate reconciliation (rescoped from 19 to 9 workstreams - executor-bias recognized mid-iteration, G077)
 
 - AcceptanceCheck primitive: executable assertions replace prose acceptance claims (W1-W2)
 - Workstream events schema v2 (acceptance_results) + v3 (agents_involved, token_count, harness_contributions, ad_hoc_forensics_minutes)
-- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present — all resolved
+- Postflight gate reconciliation: artifacts_present, bundle_completeness, iteration_complete, pillars_present - all resolved
 - Gate verbosity: run_quality and structural_gates emit per-check CheckResult detail
 - 0.2.9 residual debt closed: readme_current timezone, bundle_quality §22, manifest_current self-ref exclusion
 - Event log relocated to ~/.local/share/aho/events/ with 100MB rotation (keep 3); 14 downstream path updates
@@ -1935,7 +1935,7 @@ License to be determined before v0.6.0 release.
 - Rescoped at W9: persona 3 → 0.2.13, AUR + tech debt → 0.2.14, council activation → 0.2.12
 - 9 workstreams executed (W0-W8 + W9 close), 64 new tests, per-workstream review ON throughout
 
-## [0.2.10] — 2026-04-12
+## [0.2.10] - 2026-04-12
 
 **Theme:** Install surface implementation + CLI unification + observability deployment
 
@@ -1957,7 +1957,7 @@ License to be determined before v0.6.0 release.
 - AUR install path deferred to 0.2.11 (CachyOS mirror PGP issue + Jaeger-bin AUR rename)
 - 227 tests (maintained from 0.2.9), 17 workstreams, W3/W5/W9/W10 re-executed after drift verification
 
-## [0.2.9] — 2026-04-11
+## [0.2.9] - 2026-04-11
 
 **Theme:** Remote operability plumbing + persona 3 discovery + install surface architecture
 
@@ -1965,25 +1965,25 @@ License to be determined before v0.6.0 release.
 - `.mcp.json` gitignored (machine-specific generated artifact)
 - Bootstrap npm list corrected from stale 11-package to current 8-package (9th is dart SDK-bundled)
 - Portability audit: 3 hardcoded paths fixed (smoke script, mcp-wiring.md, global-deployment.md), zero hardcodes remain in executable code
-- `src/aho/workstream_events.py` — `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
+- `src/aho/workstream_events.py` - `emit_workstream_start()` / `emit_workstream_complete()` with idempotent guards
 - CLI: `aho iteration workstream {start,complete}` subcommands
 - Telegram `/ws` command family: `/ws status`, `/ws pause`, `/ws proceed`, `/ws last`
 - Auto-push subscriber: tails event log, sends Telegram notification on `workstream_complete`
-- `src/aho/workstream_gate.py` — `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
-- `artifacts/harness/secrets-architecture.md` — three-layer model (age + keyring + fernet), junior-dev-readable
-- ADR-045: Discovery iteration formalization — three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
-- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed — structural gap documented
-- `artifacts/iterations/0.2.9/install-surface-architecture.md` — three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
+- `src/aho/workstream_gate.py` - `wait_if_paused()` polls checkpoint for `proceed_awaited` flag at workstream boundaries
+- `artifacts/harness/secrets-architecture.md` - three-layer model (age + keyring + fernet), junior-dev-readable
+- ADR-045: Discovery iteration formalization - three-type taxonomy (remediation/feature/discovery), per-workstream review sub-mode
+- Persona 3 validation: no entry point exists, chat/execute disconnected, 4/4 test tasks failed - structural gap documented
+- `artifacts/iterations/0.2.9/install-surface-architecture.md` - three-persona taxonomy, aho-run dispatch spec, 4 Kyle decisions, 0.2.10 scope contract
 - Updated roadmap: 0.2.10 install surface → 0.2.11 persona 3 validation → 0.2.12 persona 2 → 0.2.13 P3 clone graduation
 - 227 tests (up from 182), 10 workstreams (W8.5 inserted per ADR-045 discovery pattern)
 
-## [0.2.8] — 2026-04-11
+## [0.2.8] - 2026-04-11
 
-**Theme:** Discovery + exercise — MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
+**Theme:** Discovery + exercise - MCP utilization, source-of-truth reconciliation, harness-watcher diagnosis, bundle completeness, telegram inbound bridge
 
 - MCP-first mandate: CLAUDE.md + GEMINI.md gain MUST-strength MCP Toolchain section, [INSTALLED-NOT-WIRED] tag convention
 - Project `.mcp.json` wires 9 MCP servers as Claude Code tool connections (8 npm + 1 SDK-bundled dart)
-- `bin/aho-mcp smoke` — 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
+- `bin/aho-mcp smoke` - 9 per-server CLI smoke scripts + aggregator producing `data/mcp_readiness.json`
 - Dashboard MCP verifier: aggregator reads smoke results, 85 ok / 0 missing / 0 unknown (zero unknowns for first time)
 - components.yaml reconciled: 4 dead entries removed, flutter-mcp replaced with dart mcp-server, server-everything added. 88 → 85 components
 - `mcp_sources_aligned` postflight gate: diffs components.yaml against bin/aho-mcp, caught server-everything gap on first run
@@ -1995,59 +1995,59 @@ License to be determined before v0.6.0 release.
 - Telegram inbound bridge: getUpdates polling, /status /iteration /last + free-text→openclaw, verified live on phone
 - 182 tests (up from 158), 14 workstreams (largest iteration), MCP fleet smoke 9/9 pass
 
-## [0.2.7] — 2026-04-11
+## [0.2.7] - 2026-04-11
 
-**Theme:** Visibility + carry-forward closeout — dashboard, coverage audit, orchestrator config
+**Theme:** Visibility + carry-forward closeout - dashboard, coverage audit, orchestrator config
 
-- `src/aho/dashboard/` — new Python module: aggregator + HTTP server for localhost dashboard
+- `src/aho/dashboard/` - new Python module: aggregator + HTTP server for localhost dashboard
 - `bin/aho-dashboard` rewritten to serve `/api/state` (aggregated JSON) and `/` (Flutter app)
 - `/api/state` endpoint aggregates system, component, daemon, trace, MCP, and model state with 2s cache
-- Flutter Web dashboard at `web/claw3d/` — 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
+- Flutter Web dashboard at `web/claw3d/` - 6 sections: banner, component matrix, daemon health, traces, MCP fleet, model fleet
 - Trident palette (#0D9488 shaft, #161B22 background, #4ADE80 accent), monospace typography, 5s polling
-- `components-coverage.md` — 88 components audited, all mapped to install.fish steps, zero gaps
-- `~/.config/aho/orchestrator.json` — engine (reserved), search provider, openclaw/nemoclaw model config
-- `bin/aho-secrets-init --add-brave-token` — interactive prompt, fernet-encrypted storage
+- `components-coverage.md` - 88 components audited, all mapped to install.fish steps, zero gaps
+- `~/.config/aho/orchestrator.json` - engine (reserved), search provider, openclaw/nemoclaw model config
+- `bin/aho-secrets-init --add-brave-token` - interactive prompt, fernet-encrypted storage
 - openclaw and nemoclaw read model defaults from orchestrator.json, fallback to hardcoded
-- `set_attrs_from_dict()` helper in logger.py — recursive OTEL span attribute flattening (aho-G064 final fix)
+- `set_attrs_from_dict()` helper in logger.py - recursive OTEL span attribute flattening (aho-G064 final fix)
 - 158 tests passing (up from 143)
 
-## [0.2.6] — 2026-04-11
+## [0.2.6] - 2026-04-11
 
-**Theme:** install.fish live-fire hardening — pacman, secrets, telegram doctor
+**Theme:** install.fish live-fire hardening - pacman, secrets, telegram doctor
 
-- Removed ollama from `pacman-packages.txt` — installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
+- Removed ollama from `pacman-packages.txt` - installed via upstream script, CachyOS pacman package corrupt + conflicts with `/usr/share/ollama`
 - `bin/aho-pacman`: added `_pkg_present` fallback that checks `command -q` for upstream-installed packages
 - `bin/aho-secrets-init`: rewritten to check fernet secrets store + telegram daemon instead of bogus `.age` file scaffold
 - `aho doctor preflight`: telegram check now shows `@aho_run_bot` via cached `getMe` API response
 - Telegram daemon writes bot identity to `~/.local/state/aho/telegram_bot.json` on startup
 - install.fish completes all 9 steps clean on NZXTcos, second run fully idempotent
 
-## [0.2.5] — 2026-04-11
+## [0.2.5] - 2026-04-11
 
 **Theme:** Clone-to-deploy install.fish + 0.2.3 carry-forward hardening
 
 - `install.fish` rewritten as thin 9-step orchestrator with resume support via `install.state`
 - 6 new bin wrappers: `aho-pacman`, `aho-aur`, `aho-models`, `aho-secrets-init`, `aho-systemd`, `aho-python`
 - 3 declarative lists: `pacman-packages.txt` (15 packages), `aur-packages.txt` (empty), `model-fleet.txt` (4 models)
-- `bin/aho-install` renamed to `bin/aho-bootstrap` — install.fish is now the top-level entry point
+- `bin/aho-install` renamed to `bin/aho-bootstrap` - install.fish is now the top-level entry point
 - `bin/aho-secrets-init`: age keygen + keyring bootstrap + telegram scaffold with capability gap halt
 - `bin/aho-systemd install` deploys all 4 user daemons including `aho-harness-watcher.service` (0.2.3 W3 fix)
-- OTEL `aho.tokens` dict→scalar flatten — no more `Invalid type dict` errors (aho-G064)
+- OTEL `aho.tokens` dict→scalar flatten - no more `Invalid type dict` errors (aho-G064)
 - Evaluator score parser: scale detection (0-1 → 0-10), preserves `raw_score` and `raw_recommendation`
 - `bin/aho-conductor smoke`: verifiable smoke test with file marker + event log span assertion (aho-G065)
 - 2 new gotchas: aho-G064, aho-G065. Registry at 19 entries
 - 143 tests pass (was 137)
 
-## [0.2.4] — 2026-04-11
+## [0.2.4] - 2026-04-11
 
-**Theme:** W1 remediation — canonical MCP list correction + verification harness
+**Theme:** W1 remediation - canonical MCP list correction + verification harness
 
 - MCP fleet corrected from 12 to 9 registry-verified packages
 - Removed: server-github (moved to Go binary), server-google-drive (archived), server-slack (deprecated), server-fetch (Python-only)
 - Added: server-everything (reference/test server)
 - `bin/aho-mcp` fish scoping fix: `set -l` → `set -g` for script-level constants (aho-G062)
 - `bin/aho-mcp doctor` gains registry verification pass via `npm view`
-- New postflight gate: `mcp_canonical_registry_verify` — fails on 404 or deprecation
+- New postflight gate: `mcp_canonical_registry_verify` - fails on 404 or deprecation
 - New e2e CLI test: `tests/integration/test_aho_mcp_cli_e2e.fish`
 - 2 new gotchas: aho-G062 (fish set -l scoping), aho-G063 (canonical list registry verification)
 - Gotcha registry at 17 entries
@@ -2055,17 +2055,17 @@ License to be determined before v0.6.0 release.
 - 10 canonical artifacts at 0.2.4
 - 137 tests passing
 
-## [0.2.3] — 2026-04-11
+## [0.2.3] - 2026-04-11
 
 **Theme:** Three-agent role split + MCP fleet + dashboard plumbing
 
 - Three-agent role split: WorkstreamAgent (Qwen), EvaluatorAgent (GLM), HarnessAgent (Nemotron) at `src/aho/agents/roles/`
 - Conductor orchestrator: dispatch → nemoclaw.route → workstream → evaluator → telegram
 - 12 MCP servers as global npm components with `bin/aho-mcp` manager (list/status/doctor/install)
-- `aho-harness-watcher.service` — 4th systemd user daemon, long-lived event log watcher
+- `aho-harness-watcher.service` - 4th systemd user daemon, long-lived event log watcher
 - Localhost dashboard plumbing: dashboard_port=7800, aho_role field, heartbeat emission (30s intervals)
-- `artifacts/harness/dashboard-contract.md` — canonical artifact #9 (heartbeat schema, health states)
-- `artifacts/harness/mcp-fleet.md` — canonical artifact #10 (12-server fleet spec)
+- `artifacts/harness/dashboard-contract.md` - canonical artifact #9 (heartbeat schema, health states)
+- `artifacts/harness/mcp-fleet.md` - canonical artifact #10 (12-server fleet spec)
 - `web/claw3d/index.html` placeholder (real implementation in 0.2.6)
 - `bin/aho-dashboard` skeleton (127.0.0.1:7800, traces.jsonl tail as JSON)
 - Bundle expanded with §24 Infrastructure, §25 Harnesses, §26 Configuration
@@ -2076,9 +2076,9 @@ License to be determined before v0.6.0 release.
 - 10 canonical artifacts at 0.2.3
 - 137 tests passing (29 new)
 
-## [0.2.2] — 2026-04-11
+## [0.2.2] - 2026-04-11
 
-**Theme:** Global daemons — openclaw, nemoclaw, telegram graduate from stub to active
+**Theme:** Global daemons - openclaw, nemoclaw, telegram graduate from stub to active
 
 - OpenClaw global daemon: `--serve` mode with Unix socket, session pool (5 max), JSON protocol, systemd user service `aho-openclaw.service`, `bin/aho-openclaw` wrapper
 - NemoClaw global daemon: `--serve` mode with Unix socket, Nemotron routing + OpenClaw session pool, systemd user service `aho-nemoclaw.service`, `bin/aho-nemoclaw` wrapper
@@ -2092,29 +2092,29 @@ License to be determined before v0.6.0 release.
 - `evaluator.py`: AHO_EVAL_DEBUG logging for warn/reject loop investigation
 - 108 tests passing (21 new: 7 openclaw, 6 nemoclaw, 8 telegram)
 
-## [0.2.1] — 2026-04-11
+## [0.2.1] - 2026-04-11
 
 **Theme:** Global deployment architecture + native OTEL collector + model fleet pre-pull
 
-- Global deployment architecture (`global-deployment.md`) — hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
-- Real `bin/aho-install` — idempotent fish installer with platform check, XDG dirs, pip install, linger verification
-- `bin/aho-uninstall` — clean removal with safety contract (never touches data/artifacts/git)
+- Global deployment architecture (`global-deployment.md`) - hybrid systemd model, install paths, lifecycle, capability gaps, uninstall contract, idempotency contract
+- Real `bin/aho-install` - idempotent fish installer with platform check, XDG dirs, pip install, linger verification
+- `bin/aho-uninstall` - clean removal with safety contract (never touches data/artifacts/git)
 - Native OTEL collector as systemd user service (`aho-otel-collector.service`, otelcol-contrib v0.149.0)
-- OTEL always-on by default — opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
+- OTEL always-on by default - opt-out via `AHO_OTEL_DISABLED=1` (was opt-in `AHO_OTEL_ENABLED=1`)
 - OTEL spans in 6 components: qwen-client, nemotron-client, glm-client, openclaw, nemoclaw, telegram
-- `bin/aho-models-status` — Ollama fleet status wrapper
-- `bin/aho-otel-status` — collector service + trace status
+- `bin/aho-models-status` - Ollama fleet status wrapper
+- `bin/aho-otel-status` - collector service + trace status
 - Doctor: install_scripts, linger, model_fleet (4 models), otel_collector checks added
 - `build_log_complete.py` design path fix using `get_artifacts_root()`
 - 8 canonical artifacts (added global-deployment.md)
 - 87 tests passing (7 new OTEL instrumentation tests)
 
-## [0.1.16] — 2026-04-11
+## [0.1.16] - 2026-04-11
 
 **Theme:** Close sequence repair + iteration 1 graduation
 
 - Close sequence refactored: tests → bundle → report → run file → postflight → .aho.json → checkpoint
-- Canonical artifacts gate (`canonical_artifacts_current.py`) — 7 versioned artifacts checked at close
+- Canonical artifacts gate (`canonical_artifacts_current.py`) - 7 versioned artifacts checked at close
 - Run file wired through report_builder for agent attribution and component activity section
 - `aho_json.py` helper for `last_completed_iteration` auto-update
 - Iteration 1 graduation ceremony: close artifact, iteration 2 charter, phase 0 charter update
@@ -2124,11 +2124,11 @@ License to be determined before v0.6.0 release.
 - pyproject.toml: version 0.1.16, project URLs added
 - `_iao_data()` bug fixed in components attribution CLI
 
-## [0.1.15] — 2026-04-11
+## [0.1.15] - 2026-04-11
 
 **Theme:** Foundation for Phase 0 exit
 
-- Mechanical report builder (`report_builder.py`) — ground-truth-driven, Qwen as commentary only
+- Mechanical report builder (`report_builder.py`) - ground-truth-driven, Qwen as commentary only
 - Component manifest system (`components.yaml`, `aho components` CLI, §23 bundle section)
 - OpenTelemetry dual emitter in `logger.py` (JSONL authoritative, OTEL additive)
 - Flutter `/app` scaffold with 5 placeholder pages
@@ -2137,7 +2137,7 @@ License to be determined before v0.6.0 release.
 - MANIFEST.json refresh with blake2b hashes
 - CHANGELOG.md restored with full iteration history
 
-## [0.1.14] — 2026-04-11
+## [0.1.14] - 2026-04-11
 
 **Theme:** Evaluator hardening + Qwen loop reliability
 
@@ -2147,7 +2147,7 @@ License to be determined before v0.6.0 release.
 - Seed extraction CLI (`aho iteration seed`)
 - Two-pass artifact generation for design and plan docs
 
-## [0.1.13] — 2026-04-10
+## [0.1.13] - 2026-04-10
 
 **Theme:** Folder consolidation + build log split
 
@@ -2157,7 +2157,7 @@ License to be determined before v0.6.0 release.
 - Graduation analysis via `aho iteration graduate`
 - Event log JSONL structured logging
 
-## [0.1.12] — 2026-04-10
+## [0.1.12] - 2026-04-10
 
 **Theme:** RAG archive + ChromaDB integration
 
@@ -2166,7 +2166,7 @@ License to be determined before v0.6.0 release.
 - GLM client integration alongside Qwen and Nemotron
 - Evaluator baseline reload fix (aho-G060)
 
-## [0.1.11] — 2026-04-10
+## [0.1.11] - 2026-04-10
 
 **Theme:** Agent roles + secret rotation
 
@@ -2175,7 +2175,7 @@ License to be determined before v0.6.0 release.
 - Age + OS keyring secret backends
 - Pipeline validation improvements
 
-## [0.1.10] — 2026-04-09
+## [0.1.10] - 2026-04-09
 
 **Theme:** Pipeline scaffolding + doctor levels
 
@@ -2184,7 +2184,7 @@ License to be determined before v0.6.0 release.
 - Postflight plugin system with dynamic module loading
 - Disk space and dependency checks
 
-## [0.1.9] — 2026-04-09
+## [0.1.9] - 2026-04-09
 
 **Theme:** IAO → AHO rename
 
@@ -2195,18 +2195,18 @@ License to be determined before v0.6.0 release.
 - Renamed gotcha code prefix ahomw-G* → aho-G*
 - Build log filename split: manual authoritative, Qwen synthesis to -synthesis suffix (ADR-042)
 
-## [0.1.0-alpha] — 2026-04-08
+## [0.1.0-alpha] - 2026-04-08
 
 First versioned release. Extracted from kjtcom POC project as iaomw (later renamed iao, then aho).
 
-- iaomw.paths — path-agnostic project root resolution
-- iaomw.registry — script and gotcha registry queries
-- iaomw.bundle — bundle generator with 10-item minimum spec
-- iaomw.compatibility — data-driven compatibility checker
-- iaomw.doctor — shared pre/post-flight health check module
-- iaomw.cli — CLI with project, init, status, check, push subcommands
-- iaomw.harness — two-harness alignment tool
-- pyproject.toml — pip-installable package
+- iaomw.paths - path-agnostic project root resolution
+- iaomw.registry - script and gotcha registry queries
+- iaomw.bundle - bundle generator with 10-item minimum spec
+- iaomw.compatibility - data-driven compatibility checker
+- iaomw.doctor - shared pre/post-flight health check module
+- iaomw.cli - CLI with project, init, status, check, push subcommands
+- iaomw.harness - two-harness alignment tool
+- pyproject.toml - pip-installable package
 - Linux + fish + Python 3.11+ targeted
 
 ```
@@ -2780,10 +2780,10 @@ First versioned release. Extracted from kjtcom POC project as iaomw (later renam
 ## §22. Prior Iteration Retrospective (0.2.12)
 
 ```markdown
-# Retrospective — aho 0.2.12
+# Retrospective - aho 0.2.12
 
 **Phase:** 0 | **Iteration:** 0.2.12 | **Executor:** gemini-cli
-**Theme:** Council Activation — Discovery, Visibility, Design, Measurement
+**Theme:** Council Activation - Discovery, Visibility, Design, Measurement
 **Status:** Closed (Rescoped at W8)
 
 ---
@@ -2838,7 +2838,7 @@ See `carry-forwards.md` for the explicit breakdown.
 ## §23. Prior Iteration Carry-Forwards (0.2.12)
 
 ```markdown
-# Carry-Forwards — 0.2.12
+# Carry-Forwards - 0.2.12
 
 **Generated:** 2026-04-12 W8 Close
 

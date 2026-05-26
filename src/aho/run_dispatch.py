@@ -1,6 +1,6 @@
-"""aho run dispatch — connects to OpenClaw daemon and dispatches a task.
+"""aho run dispatch - connects to OpenClaw daemon and dispatches a task.
 
-0.2.10 W7 — Persona 3 entry point implementation.
+0.2.10 W7 - Persona 3 entry point implementation.
 Reads pwd, connects to openclaw socket, sends run command, streams result.
 """
 import json
@@ -81,6 +81,6 @@ def dispatch_run(
     except socket.timeout:
         return {"ok": False, "error": f"Timed out after {timeout}s waiting for response"}
     except ConnectionRefusedError:
-        return {"ok": False, "error": "Connection refused — OpenClaw daemon may have crashed"}
+        return {"ok": False, "error": "Connection refused - OpenClaw daemon may have crashed"}
     except Exception as e:
         return {"ok": False, "error": str(e)}

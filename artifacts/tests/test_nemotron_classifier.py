@@ -1,4 +1,4 @@
-"""Tests for Nemotron classifier — W2 0.2.13.
+"""Tests for Nemotron classifier - W2 0.2.13.
 
 Three test cases:
 1. Verified-good: well-formed classification → returns real category

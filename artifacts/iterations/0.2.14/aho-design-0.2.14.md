@@ -1,4 +1,4 @@
-# aho 0.2.14 — Design Doc
+# aho 0.2.14 - Design Doc
 
 **Theme:** Council wiring verification + cascade smoke test
 **Iteration type:** Wiring (distinct from discovery/build/repair/measurement)
@@ -30,7 +30,7 @@ graph BT
 
 2. **The harness is the contract.** Agent instructions live in versioned harness files that change at phase or iteration boundaries, not in per-run markdown regenerated from scratch. The orchestrator points at the harness; it does not carry the contract in its own context.
 
-3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs — all artifacts.
+3. **Everything is artifacts.** Every task is artifacts-in to artifacts-out. Code, reports, schemas, analyses, migrations, audits, designs - all artifacts.
 
 4. **Wrappers are the tool surface.** Agents never call raw tools. Every tool is invoked through a `/bin` wrapper. Wrappers are versioned with the harness, instrumented for the event log, and replayable from recorded inputs.
 
@@ -56,15 +56,15 @@ graph BT
 
 ## Architecture (target, to be wired)
 
-**Target context:** aho is heading to Firestore-hosted (NoSQL document store, kjtcom data layer pattern). Pipeline architecture must be Firestore-aware in its data flow even when 0.2.14 still operates on local filesystem staging. NoSQL manual being the smoke-test document is intentional — first council exposure to the data architecture they'll be operating against.
+**Target context:** aho is heading to Firestore-hosted (NoSQL document store, kjtcom data layer pattern). Pipeline architecture must be Firestore-aware in its data flow even when 0.2.14 still operates on local filesystem staging. NoSQL manual being the smoke-test document is intentional - first council exposure to the data architecture they'll be operating against.
 
-**Pipeline roles (5 slots, 4 distinct roles — Indexer appears twice):**
+**Pipeline roles (5 slots, 4 distinct roles - Indexer appears twice):**
 
-1. **Indexer-in** — Pre-producer. Scans input against registries. Flags gotchas, ADRs, patterns. Proposes deltas if input reveals gaps.
-2. **Producer** — Initial analysis from input.
-3. **Auditor** — Receives Producer's work product AND Indexer-in's proposed deltas. Validates both.
-4. **Indexer-out** — Post-auditor. Scans Auditor's findings. Proposes deltas based on what audit surfaced.
-5. **Assessor** — Receives all prior work products + Indexer-out's proposed deltas. Meta-assessment. Validates Indexer-out's deltas. Final work product.
+1. **Indexer-in** - Pre-producer. Scans input against registries. Flags gotchas, ADRs, patterns. Proposes deltas if input reveals gaps.
+2. **Producer** - Initial analysis from input.
+3. **Auditor** - Receives Producer's work product AND Indexer-in's proposed deltas. Validates both.
+4. **Indexer-out** - Post-auditor. Scans Auditor's findings. Proposes deltas based on what audit surfaced.
+5. **Assessor** - Receives all prior work products + Indexer-out's proposed deltas. Meta-assessment. Validates Indexer-out's deltas. Final work product.
 
 **Malleable role assignment.** Roles bind to models per-run. 0.2.14 verifies binding mechanism works for at least one assignment; 0.2.15+ matrix-tests systematically.
 
@@ -76,12 +76,12 @@ Claude drafts. Gemini audits. Kyle commits. Modifications:
 
 - Emitter table: Claude emits `workstream_start`, `pending_audit`, `workstream_complete`. Gemini emits `audit_complete`. No other emitters.
 - `workstream_start` REQUIRED at workstream begin.
-- Audit archive overwrites forbidden — re-audits versioned (`W{N}-v2.json`).
+- Audit archive overwrites forbidden - re-audits versioned (`W{N}-v2.json`).
 - `emit_workstream_complete()` side-effect bug patched in W0.
 
 ## Scope
 
-**In scope:** Harness hygiene (root cleanup, README/CHANGELOG, protocol patches, emit fix), model docs review, council member vetting (every declared member invoked), pipeline schemas (role, trace, delta — minimum viable), 5-stage cascade orchestrator built and wired, NoSQL manual smoke test on verified members with one role assignment, sign-off package.
+**In scope:** Harness hygiene (root cleanup, README/CHANGELOG, protocol patches, emit fix), model docs review, council member vetting (every declared member invoked), pipeline schemas (role, trace, delta - minimum viable), 5-stage cascade orchestrator built and wired, NoSQL manual smoke test on verified members with one role assignment, sign-off package.
 
 **Out of scope (deferred to 0.2.15+):** Matrix testing, dashboards, role-model fit measurement, council architecture decisions (GLM requantization, Nemotron policy, council health formula, casing-variants), registry write-back automation, G083 bulk fix, Firestore migration of staging, OpenClaw deep audit beyond vetting inclusion.
 
@@ -95,11 +95,11 @@ Claude drafts. Gemini audits. Kyle commits. Modifications:
 
 ## Risks
 
-1. **Member vetting reveals most are not reachable.** If 10 of 17 fail invocation, cascade has 7 viable members across 4 roles — Pillar 7 gets thin. Mitigation: that's the substrate truth this iteration exists to surface.
+1. **Member vetting reveals most are not reachable.** If 10 of 17 fail invocation, cascade has 7 viable members across 4 roles - Pillar 7 gets thin. Mitigation: that's the substrate truth this iteration exists to surface.
 
 2. **Cascade smoke test fails.** Some handoff doesn't work; some role can't produce output on 201-page document. Mitigation: each failure is a finding for 0.2.15. Iteration still closes honestly.
 
-3. **NoSQL manual at 201 pages overwhelms small models.** Mitigation: that's measurement, not failure. Smoke test only requires one role assignment to succeed — if Qwen handles all five roles solo (Pillar 7 violation but viable for smoke), that proves cascade.
+3. **NoSQL manual at 201 pages overwhelms small models.** Mitigation: that's measurement, not failure. Smoke test only requires one role assignment to succeed - if Qwen handles all five roles solo (Pillar 7 violation but viable for smoke), that proves cascade.
 
 4. **Pattern C audit overhead on 3 workstreams.** Less compounding risk than 6+ workstream iterations. Should land cleanly.
 

@@ -1,11 +1,11 @@
-# Pre-Iteration Decisions — 0.2.12
+# Pre-Iteration Decisions - 0.2.12
 
-Theme: Council activation — discovery, visibility, design, measurement
+Theme: Council activation - discovery, visibility, design, measurement
 Primary executor: gemini-cli (0.37.1 confirmed operational)
 Sessions: 3 (W0-W7 discovery+visibility, W8-W14 design+implementation-start, W15-W19 dispatch+measure+close)
 Council dispatch minimum: 3 real dispatches (W13 Qwen, W14 GLM, W15 MCP workflow-participant)
 Tech-debt audit: audit-only in W18, execution deferred to 0.2.14
-Pattern framework: 5 seeds in W12 — planner-discipline, age-fernet-keyring, install-surface, daemon-lifecycle, council-dispatch
+Pattern framework: 5 seeds in W12 - planner-discipline, age-fernet-keyring, install-surface, daemon-lifecycle, council-dispatch
 README review: content review in W18 (not append-only)
 
 ## Canonical Eleven Pillars of AHO (quoted verbatim from README per G073):

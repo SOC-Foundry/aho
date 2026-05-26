@@ -1,9 +1,9 @@
-"""Tests for the workstream-init settings.json wrapper (0.2.17 W0 — F-W1-001).
+"""Tests for the workstream-init settings.json wrapper (0.2.17 W0 - F-W1-001).
 
 The wrapper writes literal AHO_ITERATION + workstream values into the
 .claude/settings.json env block's OTEL_RESOURCE_ATTRIBUTES csv string.
 Other csv keys (service.name, aho.role, etc.) are preserved in order.
-Idempotent — second invocation with same args returns False (no change).
+Idempotent - second invocation with same args returns False (no change).
 """
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""aho.materiality — OTEL counter primitives for the four-bucket protocol.
+"""aho.materiality - OTEL counter primitives for the four-bucket protocol.
 
 Counters (per ADR-0010 materiality measurement protocol):
   - claim_vs_artifact_mismatches.caught_by_llama      (incremented in W2)
@@ -8,7 +8,7 @@ Counters (per ADR-0010 materiality measurement protocol):
 
 W2's bar: OTEL signals emit, structurally correct. Downstream renderer
 (claw3d brick) lands in W3. The counters are real OTEL Counter
-instruments under the global MeterProvider — whether the recorded
+instruments under the global MeterProvider - whether the recorded
 measurements reach an exporter depends on the host OTEL config.
 """
 from __future__ import annotations
@@ -128,5 +128,5 @@ def record_carry_forward_resolution(
 
 
 def counters_introspect() -> Dict[str, bool]:
-    """For probes — confirms each counter is built (otel available)."""
+    """For probes - confirms each counter is built (otel available)."""
     return {name: _counters.get(name) is not None for name in COUNTER_NAMES}
