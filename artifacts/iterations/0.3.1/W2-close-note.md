@@ -244,3 +244,13 @@ audit-machinery iteration scoping at retrospective time.
 
 `workstream_complete` event NOT emitted from this session. Operator
 sign-off precedes the emit.
+
+## Operator sign-off
+
+Signed by: Kyle Thompson
+Date: 2026-05-28T05:08:39Z
+Disposition acknowledged: pass_with_findings (drafter-arbitrated from llama self-audit halt)
+Structural closures acknowledged: F-0.2.18-W2-002, F-0.2.18-W2-003, F-0.2.18-W2-004, F-0.3.1-W0-005
+Code-closed Track-B-gated acknowledged: F-0.3.1-W0-003 (OTLP to Beacon; awaits endpoint+token)
+New carry-forward acknowledged: F-0.3.1-W2-001 (cosmetic; gcloud/JRE emulator tooling absent; mock coverage in place)
+Iteration early-close acknowledged: 0.3.1 closes at W2; W3-W7 pivot to 0.3.2 on p3cos (a8cos base-tier cannot run 9B council producer)

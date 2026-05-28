@@ -69,10 +69,24 @@ def _build_system_prompt(categories: list[str], bias: Optional[str]) -> str:
 
 
 def _match_category(raw: str, categories: list[str]) -> Optional[str]:
-    normalized = raw.strip().strip("'\"").strip()
+    normalized = raw.strip().strip("'\"").strip().lower()
+    if not normalized:
+        return None
+    # 1) Exact substring: the category name appears in the response.
     for cat in categories:
-        if cat.lower() in normalized.lower():
+        if cat.lower() in normalized:
             return cat
+    # 2) Prefix near-miss: small classifier models emit a stem/variant that
+    #    shares a leading prefix with a category (observed: "review" for
+    #    "reviewer"). Compare against the response's first token so trailing
+    #    words do not defeat the match. Require >=4 shared leading chars to
+    #    avoid spurious matches on short tokens.
+    head = normalized.split()[0]
+    if len(head) >= 4:
+        for cat in categories:
+            c = cat.lower()
+            if c.startswith(head) or head.startswith(c):
+                return cat
     return None
 
 

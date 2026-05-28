@@ -21,14 +21,16 @@ aho is governance infrastructure for LLM-driven engineering. The four properties
 
 The combination - and the compliance-shaped framing - is the differentiator. Agent orchestrators (LangChain, AutoGen, CrewAI), observability platforms (LangSmith, Langfuse, Helicone, Phoenix), eval platforms (Braintrust, Promptfoo), and IDE-embedded agents (Cursor, Claude Code) each cover one corner of this surface. None build governance.
 
-## Status (0.3.1 in flight)
+## Status (0.3.1 closed at W2, substrate-pivot driven)
 
-- **Current iteration:** 0.3.1, seven workstreams. W0 closed (documentary substrate + ADR placements + CLAUDE.md rewrite). W1 closed (substrate freshness, 13-fact telemetry, ChromaDB bootstrap, `bin/aho-doctor`, idempotent `install.fish`). W2–W7 remaining.
-- **Latest closed iteration:** 0.2.18 (image rebuild + 0.2.17 carry-forward closures). Container image `ghcr.io/soc-foundry/aho:0.2.18`.
-- **Auditor primitive:** in-container `llama3.2:3b` at base tier with W3-0.2.17 RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions. Seven deployments to date; bootstrap test 11 in the architecture progression. **First non-vacuous filter-eligibility check** at 0.3.1 W1 D8 - RAG enrichment `registered_count=20` of 28 detected refs against the populated ChromaDB collection (vs 0/26 at 0.3.1 W0 D9 with empty collection). W4-0.2.17 filter regression check passes non-vacuously.
-- **Materiality status:** N=5 below the N≥8 threshold per ADR-0010 - **qualified validation, not full validation**.
-- **Partial-tier auditor seat:** `qwen3.5:9b` planned for partial-tier host deployment at 0.3.1 W3.
-- **Substrate freshness:** ADR-0011 lightweight tier shipped at W1 of 0.3.1. 13 substrate facts emit `aho.observable.last_verified_age_seconds` OTEL gauge. Dashboard brick grid at `/substrate`.
+- **Latest closed iteration:** 0.3.1 (early close at W2). Three workstreams delivered on base-tier hosts as host-agnostic codebase substrate: W0 documentary substrate (plan-doc + ADR-0011 + ADR-0012 + CLAUDE.md rewrite + carry-forward fold-in); W1 substrate-freshness telemetry + ChromaDB bootstrap + idempotent `install.fish` + `bin/aho-doctor`; W2 env-driven OTLP exporter + tenant-aware Firestore writer + `install.fish` tier-aware refactor + alert bridge scaffolding. W3-W7 deferred to 0.3.2. Canonical iteration-close note at `artifacts/iterations/0.3.1/iteration-close-0.3.1.md`.
+- **Substrate-pivot finding driving the early close:** 9B-class producer / evaluator models (qwen3.5:9b + GLM-4.6V-Flash-9B) do not converge in bounded time on consumer-iGPU base-tier substrate. Three empirical runs of `aho-conductor smoke` on base-tier all failed at the producer stage (TIMEOUT at 16K context; thinking-repetition runaway at 4K context; `/no_think` directive ignored by the Ollama qwen3.5:9b variant). The architectural conclusion, folded into the carry-forwards: the council producer / evaluator seats are partial-tier work; base-tier hosts orchestrate and run the lighter `llama3.2:3b` auditor seat only. 0.3.2 executes the partial-tier deployment and routes the heavy producer / evaluator dispatch via tailnet-bound Ollama.
+- **Prior closed iteration:** 0.2.18 (image rebuild + 0.2.17 carry-forward closures). Container image `ghcr.io/soc-foundry/aho:0.2.18`. 0.3.1 did not cut a new image; the substrate work was host-side + codebase.
+- **Auditor primitive:** in-container `llama3.2:3b` at base tier with W3-0.2.17 RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions. Deployed across W0, W1, W2 of 0.3.1 (each iteration close ran the primitive against substantively different audit-target shapes). **First non-vacuous filter-eligibility check** at 0.3.1 W1 D8 - RAG enrichment `registered_count=20` of 28 detected refs against the populated ChromaDB collection (vs 0/26 at 0.3.1 W0 D9 with empty collection).
+- **Materiality status:** N count tracking continues across iterations; formal accounting against the ADR-0010 N≥8 threshold is drafter-managed in the per-iteration retrospective.
+- **Partial-tier auditor seat:** `qwen3.5:9b` planned for partial-tier host deployment at 0.3.2 W3 (was 0.3.1 W3; moved by the substrate-pivot).
+- **Substrate freshness:** ADR-0011 lightweight tier shipped at W1 of 0.3.1. 13 substrate facts emit `aho.observable.last_verified_age_seconds` OTEL gauge; W2 expanded the surface with alert-bridge-related telemetry. Dashboard brick grid at `/substrate`.
+- **Council global-use wiring (out-of-band, uncommitted at 0.3.1 close):** project-context-aware `aho-conductor dispatch` reachable from any project folder on the host, router prefix-near-miss fix, advisory routing in the conductor, clean exception handling, tier-aware context windows. Six source files + two documentation files staged in the working tree; operator commits when the drafter folds them into 0.3.2 as a sub-deliverable of the partial-tier deployment work. Full inventory in the partial-tier council port analysis under `artifacts/iterations/0.3.1/`.
 
 ## Why aho - cost and token utilization
 
@@ -43,7 +45,7 @@ These are mechanism claims, not benchmark claims. The mechanisms compound across
 
 ## The Pillars
 
-aho's operating principles. Numbered, named, and binding. Pillars 1–11 from `artifacts/harness/base.md`; Pillars 12 + 13 land formally at W6 of 0.3.1.
+aho's operating principles. Numbered, named, and binding. Pillars 1-11 from `artifacts/harness/base.md`; Pillars 12 + 13 drafted; formal adoption planned at W6 of 0.3.2 (was W6 of 0.3.1; moved by the substrate-pivot early close).
 
 1. **Delegate everything delegable.** The paid orchestrator decides; the local free fleet executes.
 2. **The harness is the contract.** Agent instructions live in versioned harness files, not model context.
@@ -54,10 +56,10 @@ aho's operating principles. Numbered, named, and binding. Pillars 1–11 from `a
 7. **Generation and evaluation are separate roles.** Drafter and reviewer are different agents.
 8. **Efficacy is measured in cost delta.** Wall clock, token cost, and delegate ratio are ground truth.
 9. **The gotcha registry is the harness's memory.** Failure modes are indexed with mitigations.
-10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt. _**W6 amendment** clarifies: capability gap = information only the operator can provide. Missing-but-installable substrate components are NOT capability gaps - install and proceed._
-11. **The human holds the keys.** No agent writes to git. _**W6 amendment** narrows scope to git operations only, plus a small operator-only host-action list (secret decryption, /etc/sudoers, hardware procurement, disruptive reboots). Substrate component installation is executor scope._
-12. **Substrate is probed, never assumed.** Every workstream's first deliverable verifies required substrate components via `install.fish --check` (idempotent end-to-end) or `bin/aho-doctor`. Inheritance of substrate state from prior iterations or sibling hosts is not assumed; it is measured. _New at W6 of 0.3.1._
-13. **Hosts are fungible.** The substrate exists to be rebuilt. Artifacts and registries are durable; host machines are not. The harness does not gate on host-preservation concerns; idempotent `install.fish` + sealed archives + gotcha registry persist across host rebuilds. _New at W6 of 0.3.1._
+10. **Runs are interrupt-disciplined.** No preference prompts mid-run; only capability gaps halt. _**W6 amendment** (drafted; formal adoption at W6 of 0.3.2) clarifies: capability gap = information only the operator can provide. Missing-but-installable substrate components are NOT capability gaps - install and proceed._
+11. **The human holds the keys.** No agent writes to git. _**W6 amendment** (drafted; formal adoption at W6 of 0.3.2) narrows scope to git operations only, plus a small operator-only host-action list (secret decryption, /etc/sudoers, hardware procurement, disruptive reboots). Substrate component installation is executor scope._
+12. **Substrate is probed, never assumed.** Every workstream's first deliverable verifies required substrate components via `install.fish --check` (idempotent end-to-end) or `bin/aho-doctor`. Inheritance of substrate state from prior iterations or sibling hosts is not assumed; it is measured. _Drafted; formal adoption at W6 of 0.3.2._
+13. **Hosts are fungible.** The substrate exists to be rebuilt. Artifacts and registries are durable; host machines are not. The harness does not gate on host-preservation concerns; idempotent `install.fish` + sealed archives + gotcha registry persist across host rebuilds. _Drafted; formal adoption at W6 of 0.3.2._
 
 Each pillar is enforced by tooling, registry entries, or both. Pillar violations are findings; repeated violations are gotcha registry entries with mitigations.
 
@@ -134,7 +136,7 @@ Runs locally on every engineer's host. Distributed as signed container images.
 
 ### Tier 2: central serving plane
 
-- **Central OTel aggregator** - self-hosted OpenTelemetry aggregation platform; FastAPI + TimescaleDB; receives from all engineer-local collectors. Standing up during 0.3.1 W2.
+- **Central OTel aggregator** - self-hosted OpenTelemetry aggregation platform; FastAPI + TimescaleDB; receives from all engineer-local collectors. **Code-closed but pending operator-side provisioning:** env-driven OTLP outbound code landed in 0.3.1 W2 (reads `OTEL_EXPORTER_OTLP_ENDPOINT` per SDK standard, no aho-side code change needed to flip over); aggregator endpoint + bearer pending operator-side Beacon convergence. ADR-0013 candidate "Beacon as canonical OTLP aggregator" lands formally in 0.3.2 W6.
 - **Central Firestore** - gotcha registry entries, audit dispositions, materiality counter, substrate-freshness telemetry, pipeline outputs, attribution mappings. Multi-tenant data writer ships at 0.3.1 W2; same image runs in any tenant deployment, configuration is the boundary.
 - **inference-gateway** _(future, post-0.3.x)_ - per-tenant routing, Pillar 11 admission gating, TRACEPARENT propagation crossing engineer-to-backend boundary, audit log emission for every model call.
 - **vllm pods, api-proxy, audit-dispatcher, embedding-service, batch-worker-pool** _(future, post-0.3.x)_ - Kubernetes-with-GPU workload for high-throughput council dispatches.
@@ -277,13 +279,13 @@ Three rules verbatim:
 2. Per-user secret access via host-side broker.
 3. No SSH agent socket forwarded.
 
-The broker is the only path from in-container code to host-stored secrets. **W6 of 0.3.1 ADR-0009 amendment** canonicalizes the broker socket path to `$XDG_RUNTIME_DIR/aho-secrets.sock`.
+The broker is the only path from in-container code to host-stored secrets. **ADR-0009 amendment** canonicalizing the broker socket path to `$XDG_RUNTIME_DIR/aho-secrets.sock` is drafted and planned for W6 of 0.3.2 (was W6 of 0.3.1; moved by the substrate-pivot early close).
 
 `aho secrets-test` returns SHA-256 fingerprints (first 8 hex + length), never raw values.
 
-### Three-axis tier model (ADR-0007 amendment at W6 of 0.3.1)
+### Three-axis tier model (ADR-0007 amendment planned at W6 of 0.3.2)
 
-Replaces single-axis VRAM-only tier with three orthogonal axes:
+Drafted in 0.3.1 (carry-forward "Council producer / evaluator seats are partial-tier work" captured in CLAUDE.md after the substrate-pivot finding); formal ADR amendment lands at W6 of 0.3.2. Replaces single-axis VRAM-only tier with three orthogonal axes:
 
 1. **Capacity tier** (VRAM-based): base (<12GB) / partial (12-32GB) / full (≥32GB or multi-GPU)
 2. **Substrate tier** (inference performance): consumer-iGPU / consumer-dGPU / workstation-dGPU / datacenter-dGPU
@@ -295,8 +297,8 @@ Naming the orthogonality prevents conflation. A deployment can move along any ax
 
 ### Per-tier auditor seat
 
-- **Base tier hosts:** `llama3.2:3b` in-container auditor with RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions
-- **Partial tier hosts:** `qwen3.5:9b` in-container auditor (deployed at 0.3.1 W3; replaces llama3.2:3b for higher-consistency partial-tier audit)
+- **Base tier hosts:** `llama3.2:3b` in-container auditor with RAG enrichment + W4-0.2.17 deterministic post-hoc filter + W0-0.2.18 anti-rubber-stamp extensions. Per the 0.3.1 substrate-pivot carry-forward, base tier is also confirmed as the only council role base hosts run; producer / evaluator dispatch routes to partial tier.
+- **Partial tier hosts:** `qwen3.5:9b` in-container auditor (deployed at 0.3.2 W3; replaces llama3.2:3b for higher-consistency partial-tier audit). Also hosts the council producer (`qwen3.5:9b`) + evaluator (`GLM-4.6V-Flash-9B`) dispatch; base-tier `aho-conductor` reaches these via tailnet-bound Ollama (cross-host transport landing in 0.3.2 as a sub-deliverable of W3).
 - **Full tier hosts:** deferred to 0.4.x+
 
 ### Council model bundle per tier
@@ -309,27 +311,35 @@ Naming the orthogonality prevents conflation. A deployment can move along any ax
 
 ## Iteration model
 
-### 0.3.1 (in flight)
+### 0.3.1 (closed at W2, substrate-pivot driven)
 
-Seven workstreams. Focus: substrate freshness telemetry, ChromaDB bootstrap, install.fish idempotency hardening, aho-doctor wrapper, partial-tier deployment, central OTel aggregator integration, ADR consolidation.
+Seven workstreams planned; three delivered. Early close at W2 driven by the substrate-pivot finding (consumer-iGPU base-tier hardware cannot run the 9B council producer / evaluator to convergence; empirical evidence from three `aho-conductor smoke` runs). The council producer / evaluator seats are partial-tier work; W3-W7 move to 0.3.2 where partial-tier compute is available.
 
-- **W0 ✅** documentary substrate (plan-doc + ADR-0011 + ADR-0012 + CLAUDE.md rewrite + carry-forward fold-in)
+- **W0 ✅** documentary substrate (plan-doc + ADR-0011 substrate freshness + ADR-0012 Chain of Trust L5 + CLAUDE.md rewrite + carry-forward fold-in)
 - **W1 ✅** substrate hardening + bootstrap (install.fish 19-step idempotent; aho-rag-bootstrap; aho-doctor; 13-fact telemetry; dashboard brick grid; tests)
-- **W2** install.fish tier-aware refactor + central OTel aggregator integration + multi-tenant Firestore writer
-- **W3** council-mining retrospective (classify the artifact corpus into four quadrants, produce augmented gotcha registry)
-- **W4** Firestore schema dry-run
-- **W5** repo-resident docs reframing (Chain of Trust L5, multi-host deployment, identity discipline)
-- **W6** ADR consolidation + Pillar 10/11 amendments + new Pillars 12+13 + harness/base.md version-bump
-- **W7** final closures + iteration-final self-audit + iteration-close note
+- **W2 ✅** env-driven OTLP exporter + tenant-aware Firestore writer (per-tenant project-boundary pattern) + install.fish tier-aware refactor (auto-detect at install time) + alert bridge scaffolding
+- **W3-W7 ⏭** deferred to 0.3.2
 
-### 0.3.2
+Iteration-close note crowns the workstream chain at `artifacts/iterations/0.3.1/iteration-close-0.3.1.md`. Substrate-pivot analysis (full evidence, scope, code-change inventory, transport decision, risk register, acceptance criteria for the partial-tier council port) is sealed alongside the close notes under `artifacts/iterations/0.3.1/`.
 
-Two terminal deliverables:
+Out-of-band on base-tier during the close sequence: council global-use wiring (project-context-aware `aho-conductor dispatch` reachable from any project folder; router prefix-near-miss fix; advisory routing fallback; clean `_COUNCIL_ERRORS` exception handling; tier-aware context windows). Six source files + two docs + a CLAUDE.md carry-forward, all uncommitted at iteration close; operator commits when the drafter folds them into 0.3.2 W3 (or new W3.5).
 
-1. **Central deployment** - populate Firestore with current aho substrate state, write OCI image pointers, stand up central OTel aggregator
-2. **Partial container image** - cut from partial-tier host with `qwen3.5:9b` + `nomic-embed-text` + `GLM-4.6V-Flash-9B` baked in; tagged at ghcr.io
+### 0.3.2 (next; absorbs original 0.3.1 W3-W7 scope + the partial-tier council port)
 
-### 0.3.3+
+- **W3** Partial-tier host deployment + `qwen3.5:9b` auditor seat. Includes the cross-host council transport (tailnet-bound Ollama; env-configurable `AHO_OLLAMA_BASE` in the three Ollama client surfaces; Tailscale ACL as the auth boundary, no app-layer auth). The 0.3.1 out-of-band council global-use wiring folds in here as a W3 sub-deliverable (or W3.5).
+- **W4** Firestore schema dry-run (first substantial tenant-data write using the W2-0.3.1 writer module)
+- **W5** Repo-resident docs reframing (Chain of Trust L5 framing + multi-host deployment + identity discipline)
+- **W6** ADR consolidation + Pillar 10/11 amendments + new Pillars 12 + 13 + harness/base.md version-bump. ADR-0007 three-axis amendment lands here per the 0.3.1 carry-forward. ADR-0009 broker-socket canonicalization amendment lands here. ADR-0013 candidate "Beacon as canonical OTLP aggregator" formalizes the env-driven outbound shipped in W2-0.3.1.
+- **W7** Final code-change closures + iteration-final self-audit + iteration-close note
+
+### 0.3.3 (after 0.3.2 close)
+
+Two terminal deliverables that were originally framed as 0.3.2 but move down the chain:
+
+1. **Central deployment** - populate Firestore with current aho substrate state, write OCI image pointers, complete central OTel aggregator standup
+2. **Partial container image** - cut from a partial-tier host with `qwen3.5:9b` + `nomic-embed-text` + `GLM-4.6V-Flash-9B` baked in; tagged at ghcr.io
+
+### 0.3.4+
 
 First non-internal tenant onboarding. Synthetic-first (internal engineer's home lab as synthetic-isolated tenant) or production-first (first real tenant). Per-engineer onboarding gets a documented runbook: install.fish + tier.json + local collector + per-engineer attribution + identity discipline lane setup.
 
@@ -508,6 +518,8 @@ The drafter / executor / auditor / operator separation is structural; contributi
 See [CHANGELOG.md](CHANGELOG.md) for full iteration history back to 0.1.0-alpha.
 
 Per-iteration close notes live alongside the sealed acceptance and audit archives under [`artifacts/iterations/{version}/`](artifacts/iterations/). Canonical iteration retrospectives at [`docs/retrospectives/`](docs/retrospectives/).
+
+Most recent iteration-close: [`artifacts/iterations/0.3.1/iteration-close-0.3.1.md`](artifacts/iterations/0.3.1/iteration-close-0.3.1.md) (0.3.1 closed at W2, substrate-pivot driven; W3-W7 deferred to 0.3.2).
 
 ## License
 

@@ -62,6 +62,7 @@ class OpenClawSession:
         model: str = None,
         role: str = "assistant",
         system_prompt: Optional[str] = None,
+        num_ctx: Optional[int] = None,
     ):
         if model is None:
             from aho.orchestrator_config import get_openclaw_model
@@ -69,7 +70,14 @@ class OpenClawSession:
         self.model = model
         self.role = role
         self.system_prompt = system_prompt or f"You are a helpful {role}. Be concise."
-        self.client = QwenClient(model=model, verbose=False)
+        # Tier-aware context window: base-tier hosts (CPU) get a smaller
+        # window so a warm dispatch completes in bounded time; partial/full
+        # tier keeps QwenClient's historical 16384 default.
+        if num_ctx is None:
+            from aho.orchestrator_config import get_tier_num_ctx
+            num_ctx = get_tier_num_ctx()
+        self.num_ctx = num_ctx
+        self.client = QwenClient(model=model, verbose=False, num_ctx=num_ctx)
         self.history: list[dict] = []
         self.session_id = str(uuid.uuid4())[:8]
         self.workdir = Path(f"/tmp/openclaw-{self.session_id}")
