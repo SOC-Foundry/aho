@@ -1,7 +1,0 @@
-# aho AUR packages
-#
-# 0.2.10 W8/W9: otelcol-contrib and jaeger for local observability.
-# Installed via bin/aho-aur install. Both run as systemd --user services.
-#
-otelcol-contrib
-jaeger
