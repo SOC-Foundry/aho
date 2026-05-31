@@ -58,19 +58,37 @@ function _get_manifest_items
 end
 
 function sync_pacman
-    set -l packages (_get_manifest_items "$MANIFEST_PACMAN")
-    if test -z "$packages"
+    set -l manifest_packages (_get_manifest_items "$MANIFEST_PACMAN")
+    if test -z "$manifest_packages"
         _warn "no packages found in $MANIFEST_PACMAN"
         return 0
     end
 
-    if test $dry_run -eq 1
-        _info "[DRY RUN] would ensure "(count $packages)" pacman packages are installed"
+    _info "filtering manifest against available repository packages..."
+    set -l repo_packages (pacman -Slq)
+    
+    set -l to_install
+    for p in $manifest_packages
+        if contains $p $repo_packages
+            set -a to_install $p
+        else
+            # Silent skip for things that are likely AUR or stale
+            continue
+        end
+    end
+
+    if test -z "$to_install"
+        _info "all native packages already accounted for (or none found in repos)"
         return 0
     end
 
-    _info "synchronizing "(count $packages)" native packages..."
-    sudo pacman -S --needed --noconfirm $packages
+    if test $dry_run -eq 1
+        _info "[DRY RUN] would ensure "(count $to_install)" native packages are installed"
+        return 0
+    end
+
+    _info "synchronizing "(count $to_install)" native packages..."
+    sudo pacman -S --needed --noconfirm $to_install
     return $status
 end
 
@@ -91,9 +109,16 @@ function sync_aur
     end
 
     _info "synchronizing "(count $packages)" AUR packages..."
-    # yay -S --needed is generally idempotent and safe
-    yay -S --needed --noconfirm $packages
-    return $status
+    # We use --needed to avoid re-installing. 
+    # We handle potential conflicts (like jack vs jack2) by allowing yay to proceed where possible.
+    # On CachyOS, jack2 is often preferred over jack.
+    for p in $packages
+        _info "  checking $p ..."
+        # Try to install individually to avoid one failure blocking the whole fleet
+        # and use --noconfirm but let it fail if there's a hard conflict.
+        yay -S --needed --noconfirm $p; or _warn "failed to sync AUR package: $p (might be a conflict or repo move)"
+    end
+    return 0
 end
 
 function sync_ollama
@@ -103,7 +128,10 @@ function sync_ollama
     end
 
     if not command -q ollama
-        _error "ollama binary not found. please run bin/aho-ollama-global-16gb.fish"
+        _error "ollama binary not found."
+        _info "on this machine (Intel Arc GPU), you may need a specific Ollama setup."
+        _info "try running the 16GB script if you have the VRAM, or the 8GB version:"
+        _info "  sudo fish ./bin/aho-ollama-global.fish"
         return 1
     end
 
