@@ -1,6 +1,10 @@
 #!/usr/bin/env fish
 # aho-ollama-verify.fish
-# Functional smoke tests for the global Ollama council fleet on 8GB hardware.
+# Functional smoke tests for the global Ollama council fleet (8GB baseline, runs great on 16GB).
+#
+# The global installer (aho-ollama-global.fish) now automatically runs a lightweight
+# post-deploy 'ollama list' validation + generate/embed smoke after pulls finish.
+# Use this script for the deeper per-model VRAM + structured JSON + timing diagnostics.
 #
 # Usage:
 #   ./bin/aho-ollama-verify.fish                 # Test the practical light core

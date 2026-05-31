@@ -1,6 +1,10 @@
 # Archived legacy code and full history (local only - intentionally not pushed)
 archive/
 
+# Deployment tooling (intentionally tracked)
+# install.fish + manifests/ are meant to be cloned and run on other Arch machines.
+# They are not machine-specific and should be version controlled.
+
 # General build / artifacts
 build/
 dist/

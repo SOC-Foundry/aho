@@ -1,0 +1,13 @@
+# Ollama model roster for aho council (16GB baseline)
+# One model per line. Comments with # are ignored.
+# Order can imply rough priority for pre-flight pulls.
+
+nomic-embed-text
+llama3.2:3b
+nemotron-mini:4b
+qwen3:8b
+llava:13b
+phi4:14b
+deepseek-r1:14b
+qwen2.5:14b
+qwen3.5:35b-a3b
