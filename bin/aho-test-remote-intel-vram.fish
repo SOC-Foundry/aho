@@ -5,12 +5,19 @@
 
 set -l host $argv[1]
 if test -z "$host"
-    echo "Usage: $argv[0] [user@]hostname"
+    set -l script_name (status filename | path basename)
+    echo "Usage: $script_name [user@]hostname"
+    echo "Example: $script_name kthompson@x9cos"
     exit 1
 end
 
 echo "=== Remote Intel Arc iGPU / NPU Smoke Test (Lunar Lake) ==="
 echo "Target: $host"
+echo ""
+echo "Note: Lunar Lake (Ultra 7 268V) uses unified on-package LPDDR5X memory."
+echo "There is no dedicated VRAM like on discrete NVIDIA GPUs."
+echo "The Arc iGPU and NPU share memory with the CPU. btop often shows nothing."
+echo "intel_gpu_top is the correct tool (the script will try to ensure it is available)."
 echo ""
 
 if not ssh -o ConnectTimeout=8 $host "echo ok" >/dev/null 2>&1
