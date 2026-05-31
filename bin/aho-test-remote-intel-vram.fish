@@ -1,123 +1,173 @@
 #!/usr/bin/env fish
 # aho-test-remote-intel-vram.fish
 # Smoke test for Intel Arc iGPU / NPU offloading on Lunar Lake (Ultra 7 268V class)
-# Run this from another machine via SSH to observe real GPU behavior on the target.
+# 
+# Usage:
+#   Local test (on the machine itself):
+#     ./aho-test-remote-intel-vram.fish
+#     ./aho-test-remote-intel-vram.fish localhost
+# 
+#   Remote test (from another machine):
+#     ./aho-test-remote-intel-vram.fish user@hostname
 
 set -l host $argv[1]
-if test -z "$host"
-    set -l script_name (status filename | path basename)
-    echo "Usage: $script_name [user@]hostname"
-    echo "Example: $script_name kthompson@x9cos"
-    exit 1
-end
 
-echo "=== Remote Intel Arc iGPU / NPU Smoke Test (Lunar Lake) ==="
-echo "Target: $host"
-echo ""
-echo "Note: Lunar Lake (Ultra 7 268V) uses unified on-package LPDDR5X memory."
-echo "There is no dedicated VRAM like on discrete NVIDIA GPUs."
-echo "The Arc iGPU and NPU share memory with the CPU. btop often shows nothing."
-echo "intel_gpu_top is the correct tool (the script will try to ensure it is available)."
-echo ""
-
-if not ssh -o ConnectTimeout=8 $host "echo ok" >/dev/null 2>&1
-    echo "ERROR: Cannot SSH to $host"
-    exit 1
-end
-
-echo "SSH connection OK"
-echo ""
-
-ssh $host '
-    echo "=== Running on $(hostname) ==="
+function _run_test_locally
+    echo "=== Running LOCAL Intel Arc iGPU / NPU test on $(hostname) ==="
     echo "Date: $(date)"
     echo ""
 
     set -l models (ollama list 2>/dev/null | tail -n +2 | awk "{print \$1}" | string trim)
 
     if test (count $models) -eq 0
-        echo "No models found via ollama list. Exiting."
-        exit 1
+        echo "No models found via ollama list."
+        return 1
     end
 
-    echo "Models found on target:"
+    echo "Models found:"
     for m in $models
         echo "  - $m"
     end
     echo ""
 
-    # Robust detection/install of intel_gpu_top
-    set -l gpu_top ""
+    # Try to get intel_gpu_top
+    set -l gpu_tool ""
     if command -q intel_gpu_top
-        set gpu_top (command -v intel_gpu_top)
+        set gpu_tool (command -v intel_gpu_top)
     else
-        echo "intel_gpu_top not found in PATH. Attempting installation..."
-        set -l installed 0
+        echo "intel_gpu_top not found. Trying to install intel-gpu-tools..."
         if sudo pacman -S --noconfirm intel-gpu-tools >/dev/null 2>&1
-            set installed 1
-        else if command -q yay; and yay -S --noconfirm intel-gpu-tools >/dev/null 2>&1
-            set installed 1
-        end
-
-        if test $installed -eq 1
-            echo "Package installed. Refreshing command cache..."
+            or command -q yay; and yay -S --noconfirm intel-gpu-tools >/dev/null 2>&1
+            echo "Installed intel-gpu-tools."
             hash -r 2>/dev/null; or true
-            # Some systems need this after pacman in non-interactive shells
-            if test -x /usr/bin/intel_gpu_top
-                set gpu_top /usr/bin/intel_gpu_top
-            else if test -x /usr/local/bin/intel_gpu_top
-                set gpu_top /usr/local/bin/intel_gpu_top
-            else if command -q intel_gpu_top
-                set gpu_top (command -v intel_gpu_top)
+            if command -q intel_gpu_top
+                set gpu_tool (command -v intel_gpu_top)
+            else if test -x /usr/bin/intel_gpu_top
+                set gpu_tool /usr/bin/intel_gpu_top
             end
         else
-            echo "Automatic install of intel-gpu-tools failed."
+            echo "Could not install intel-gpu-tools automatically."
         end
     end
 
-    if test -n "$gpu_top"
-        echo "GPU monitoring tool available: $gpu_top"
+    if test -n "$gpu_tool"
+        echo "Using GPU monitor: $gpu_tool"
     else
-        echo "WARNING: intel_gpu_top is NOT available. GPU utilization will not be shown."
-        echo "You can try manually: sudo pacman -S intel-gpu-tools"
+        echo "WARNING: intel_gpu_top is not available. GPU utilization data will be limited."
     end
 
     echo ""
-    echo "Note on Lunar Lake (Ultra 7 268V + Arc 140V):"
-    echo "This chip uses unified on-package memory (no dedicated VRAM like NVIDIA)."
-    echo "The iGPU and NPU share the LPDDR5X with the CPU."
-    echo "btop often shows nothing useful for this iGPU."
-    echo "intel_gpu_top is the correct tool, but support on very new Arc parts can be limited."
+    echo "Note: This is a Lunar Lake machine (Intel Core Ultra 7 268V + Arc 140V)."
+    echo "It uses unified on-package memory. There is no separate VRAM."
+    echo "btop rarely shows useful GPU data here. intel_gpu_top is the right tool."
     echo ""
 
     for model in $models
-        echo "=== Testing model: $model ==="
-        echo "Forcing load + short inference (preferring GPU/NPU)..."
-        echo ""
-
-        # Try to bias toward GPU. On Lunar Lake this may use iGPU or NPU depending on Ollama build.
-        env OLLAMA_INTEL_GPU=1 timeout 30 ollama run $model "Respond with exactly the word PONG." 2>&1 | tail -5
+        echo "=== Testing: $model ==="
+        echo "Running short inference (GPU preference)..."
+        env OLLAMA_INTEL_GPU=1 timeout 30 ollama run $model "Say exactly: PONG" 2>&1 | tail -4
 
         echo ""
-        if test -n "$gpu_top"
-            echo "GPU activity sample (5 seconds):"
-            # -s 1000 = sample every 1s, -o - = output to stdout
-            timeout 6 $gpu_top -s 1000 -o - 2>/dev/null | head -15 || echo "intel_gpu_top sampling returned no data (common on some Lunar Lake configs)"
+        if test -n "$gpu_tool"
+            echo "GPU activity (5s sample):"
+            timeout 6 $gpu_tool -s 1000 -o - 2>/dev/null | head -12 || echo "intel_gpu_top returned no data (this can happen on some Lunar Lake configs)"
         else
-            echo "Skipping GPU sampling (tool not available)."
+            echo "Skipping detailed GPU sampling."
         end
 
         echo ""
-        echo "System memory after load:"
+        echo "Memory:"
         free -h | grep -E "Mem:|Swap:"
 
         echo ""
-        echo "Ollama currently loaded models:"
-        ollama ps 2>/dev/null || echo "ollama ps failed"
+        echo "Currently loaded in Ollama:"
+        ollama ps 2>/dev/null || echo "ollama ps unavailable"
 
         echo "---------------------------------------------"
         echo ""
     end
 
-    echo "Test finished on $(hostname)"
-'
+    echo "Local test complete."
+end
+
+function _run_test_remote
+    set -l target $argv[1]
+    echo "=== Remote test mode -> $target ==="
+
+    if not ssh -o ConnectTimeout=8 $target "echo ok" >/dev/null 2>&1
+        echo "ERROR: Cannot SSH to $target"
+        exit 1
+    end
+
+    echo "SSH OK. Running remote test..."
+    echo ""
+
+    # Send the local test function to the remote and execute it
+    ssh $target '
+        # Inline the local test logic (kept in sync with _run_test_locally)
+        echo "=== Running on $(hostname) ==="
+        echo "Date: $(date)"
+        echo ""
+
+        set -l models (ollama list 2>/dev/null | tail -n +2 | awk "{print \$1}" | string trim)
+
+        if test (count $models) -eq 0
+            echo "No models found"
+            exit 1
+        end
+
+        echo "Models: $models"
+        echo ""
+
+        set -l gpu_tool ""
+        if command -q intel_gpu_top
+            set gpu_tool (command -v intel_gpu_top)
+        else
+            echo "Trying to install intel-gpu-tools..."
+            if sudo pacman -S --noconfirm intel-gpu-tools >/dev/null 2>&1 || yay -S --noconfirm intel-gpu-tools >/dev/null 2>&1
+                echo "Installed"
+                hash -r 2>/dev/null; or true
+                if command -q intel_gpu_top
+                    set gpu_tool (command -v intel_gpu_top)
+                else if test -x /usr/bin/intel_gpu_top
+                    set gpu_tool /usr/bin/intel_gpu_top
+                end
+            else
+                echo "Install failed"
+            end
+        end
+
+        if test -n "$gpu_tool"
+            echo "GPU tool: $gpu_tool"
+        else
+            echo "No intel_gpu_top available"
+        end
+
+        echo ""
+        echo "Note: Lunar Lake unified memory - no dedicated VRAM."
+        echo ""
+
+        for model in $models
+            echo "=== $model ==="
+            env OLLAMA_INTEL_GPU=1 timeout 30 ollama run $model "PONG" 2>&1 | tail -4
+            echo ""
+            if test -n "$gpu_tool"
+                timeout 6 $gpu_tool -s 1000 -o - 2>/dev/null | head -12 || echo "GPU sampling gave no data"
+            else
+                echo "No GPU tool"
+            end
+            echo "Mem: $(free -h | grep Mem)"
+            ollama ps 2>/dev/null
+            echo "----"
+        end
+        echo "Done on $(hostname)"
+    '
+end
+
+# --- Main logic ---
+
+if test -z "$host"; or test "$host" = "localhost"; or test "$host" = "."
+    _run_test_locally
+else
+    _run_test_remote $host
+end
