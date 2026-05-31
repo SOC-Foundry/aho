@@ -38,7 +38,8 @@
 set -g script_name "aho-ollama-global"
 
 # Location of this aho checkout (so we can create stable shims for global use)
-set -g project_root (dirname (realpath (status filename)))
+set -l script_dir (dirname (realpath (status --current-filename)))
+set -g project_root (dirname $script_dir)
 
 set -g OLLAMA_USER "ollama"
 set -g OLLAMA_HOME "/var/lib/ollama"

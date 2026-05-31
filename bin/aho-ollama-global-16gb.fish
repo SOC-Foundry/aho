@@ -34,7 +34,8 @@ set -g SERVICE_FILE "/etc/systemd/system/ollama.service"
 set -g FISH_GLOBAL_CONF "/etc/fish/conf.d/ollama.fish"
 
 # Location of this aho checkout (for stable CLI shims)
-set -g project_root (dirname (realpath (status filename)))
+set -l script_dir (dirname (realpath (status --current-filename)))
+set -g project_root (dirname $script_dir)
 
 # 16GB RTX 2000 Ada fleet - rich role-specialized set
 # Pulled in roughly small-to-large order. Heaviest last.
