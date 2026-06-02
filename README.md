@@ -1,101 +1,101 @@
-# aho (Fresh Start)
+# aho
 
-**Governance infrastructure for LLM-driven engineering — rebuilt around local models.**
+**Governance infrastructure for LLM-driven engineering on local hardware.**
 
-This is a clean pivot after archiving the 0.3.x legacy implementation.
+## What is AHO
 
-## Current Direction
+AHO is a disciplined system for doing serious engineering work with small, role-specialized local models instead of relying on one giant frontier model.
 
-We are building a new, lean, hardware-aware **Ollama multi-model council** using role-specialized models instead of one giant frontier agent.
+The core idea is simple but powerful:
 
-Focus areas for this phase:
-- Practical simultaneous model loading on consumer GPUs (starting with 8GB, targeting 16GB+)
-- Role-specialized prompting (triage, auditor, embedder, producer, vision)
-- Preserving and evolving the real institutional memory (Pillars + Gotcha Registry)
-- Idempotent deployment and verification tooling for multi-machine fleets
+- The **Captain** (you) sets the destination and overall intent.
+- A rotating **Navigator** translates that intent into concrete orders.
+- A small standing crew of specialized models (Helmsman, Bosun, Seaman, Quartermaster) executes the work.
+- External specialists (Coxswain) are brought in temporarily when unique expertise is required.
 
-## Repository Structure (Post-Archive)
+This is not prompt engineering. It is crew engineering.
 
-```
-.
-├── archive/0.3.2/               # Complete legacy from the 0.3.x era
-│   └── artifacts-legacy/        # All old iterations, tests, code, etc.
-├── artifacts/                   # The preserved core wisdom
-│   ├── harness/                 # Pillars (base.md), adversarial authorship, etc.
-│   ├── adrs/                    # Architectural decisions worth carrying forward
-│   └── gotcha_archive.json      # Institutional memory of failure modes + mitigations
-├── bin/
-│   ├── aho-ollama-global.fish   # Global multi-user Ollama + models installer
-│   └── aho-ollama-verify.fish   # Functional + VRAM smoke tests
-├── harness/                     # New harness definitions (role instructions, routing)
-├── council/                     # New council implementation (model wiring, orchestration)
-├── docs/                        # Light documentation + historical handoffs
-└── README.md
-```
+## How It Works - The Naval Council Model
 
-## Preserved Value
+AHO runs as a small-ship crew rather than a traditional “one model does everything” setup. The structure uses explicit naval roles so that responsibilities, accountability, and rotation are clear.
 
-The things worth carrying forward from years of work:
+### Core Standing Crew (always-hot on 16 GB)
 
-- **The Pillars** — Especially cost-delta measurement, human holds the keys, substrate probing, and host fungibility.
-- **Gotcha Registry** — 37+ indexed failure modes with mitigations.
-- **ADR discipline** and the better architectural decisions.
-- The philosophy of **rich harnesses over raw model intelligence**.
+- **Helmsman** (`hermes3:3b`): The primary steering role. Responsible for the actual high-quality drafting, rewriting, and repair work. This is the model that does the heavy lifting on producing refined output.
+- **Bosun** (`qwen2.5:3b`): Handles repairs and process discipline. Owns fixing structural problems in the work (broken sections, duplication, inconsistent quality, etc.) and enforcing standards.
+- **Seaman** (`gemma2:2b`): The flexible generalist. Good at a wide variety of specific tasks, quick scans, and triage. Can be thrown at many different jobs.
+- **Quartermaster** (`nomic-embed-text`): Maintains the “stores” and charts. Provides semantic retrieval and memory over source material (the PDF in the Sea Gypsy case), tracks what has been addressed, and supplies precise context when the rest of the crew needs it.
 
-The full historical record (all iterations, acceptance archives, etc.) lives in `archive/0.3.2/artifacts-legacy/`.
+### Rotating / Ephemeral Roles
 
-## Current Tooling
+- **Navigator**: The current executor of a major task. Translates the Captain’s intent into concrete orders for the crew and keeps the overall effort on course. This role is deliberately ephemeral and rotates. Grok currently fills it for most work, but Claude or Gemini can step in.
+- **Coxswain**: A temporary specialist brought in by the Captain or Navigator for specific sub-tasks that require unique expertise the standing crew doesn’t have (advanced reasoning, long-context work, coding, domain knowledge, etc.). The Coxswain operates for a defined scope and then stands down. This role can be filled by Claude, Gemini, or even Grok depending on the need.
 
-- `bin/aho-ollama-global.fish` — One-shot system-wide Ollama (systemd service + ollama user + shared /var/lib/ollama) + fleet pull. Now includes built-in post-deploy `ollama list` validation + minimal generate/embed smoke test that runs automatically after the last model finishes.
-- `bin/aho-ollama-verify.fish` — Deeper functional + VRAM snapshot verification (light core by default; `--all` for heavies). Use after the global installer or for ongoing health.
+Here is the current role assignment:
 
-These were developed on an 8GB RTX 2080 SUPER baseline and are running on the current 16 GB development host (RTX 2000 Ada). The declared fleet is conservative for 16 GB; simultaneous loading capacity will be measured next.
+| Role              | Model                          | Notes |
+|-------------------|--------------------------------|-------|
+| Captain           | Human (user)                   | Ultimate authority. Sets the destination and overall intent. |
+| Navigator         | Rotating (Grok, Claude, Gemini, etc.) | The current executor of a major task. Translates the Captain’s intent into concrete orders for the crew. This role is ephemeral and rotates depending on who is steering a given voyage. |
+| Helmsman          | hermes3:3b                     | Primary steering. Responsible for the actual high-quality work of moving the project forward and producing refined output. |
+| Bosun             | qwen2.5:3b                     | Repairs issues that arise (structural problems in the text, broken processes, duplication, etc.). Maintains standards and process discipline. |
+| Seaman            | gemma2:2b                      | Most flexible generalist. Good at a variety of specific tasks but less optimal for heavy multitasking or long-horizon strategy. |
+| Quartermaster     | nomic-embed-text               | Maintains the “stores” and charts. Responsible for retrieval, semantic memory of source material, versioning discipline, and providing precise context to the rest of the crew. |
+| Coxswain          | Claude / Gemini / Grok (as needed) | Temporary specialist brought in by the Captain or Navigator for specific sub-tasks that require unique expertise not covered by the core crew. Operates for a defined scope and then returns to shore. |
 
-### Global Engagement (outside the aho repo)
+This small-ship model forces flexibility. The Navigator sometimes has to chip in on execution, the Helmsman is expected to follow orders but can also surface process problems, and external Coxswains can be called in without bloating the always-hot crew. The goal is disciplined, role-aware collaboration rather than one giant prompt.
 
-Running `./bin/aho-ollama-global.fish` (under sudo) does two things for "council from anywhere":
+## The Eleven Pillars
 
-1. Deploys the full Ollama system service + all models (visible to every user via `ollama list` / `OLLAMA_HOST`).
-2. Installs stable shims for `aho`, `aho-conductor`, and `aho-ollama-verify` into the invoking user's `~/.local/bin/`, plus ensures that directory is on their `fish` PATH.
+These remain the foundational operating principles (sourced from `artifacts/harness/base.md`). They have not been significantly revised since earlier work with Claude and are likely due for an update.
 
-After the global run + re-login (or `exec fish`):
-- You can type `aho-conductor dispatch "..."` or `aho ...` from **any** directory on the machine.
-- The (future) lean Ollama council implementation will be reachable without per-project setup or being inside this checkout.
+1. Delegate everything delegable.
+2. The harness is the contract.
+3. Everything is artifacts.
+4. Wrappers are the tool surface.
+5. Three octets, three meanings: phase, iteration, run.
+6. Transitions are durable.
+7. Generation and evaluation are separate roles.
+8. Efficacy is measured in cost delta.
+9. The gotcha registry is the harness’s memory.
+10. Runs are interrupt-disciplined, not interrupt-free.
+11. The human holds the keys.
 
-This fulfills the long-standing requirement that the LLM council can be engaged from Claude Code (or other agents) in unrelated projects. See the handoff prompt in `docs/` for the original contract.
+> **Note:** These pillars are currently under review. Several were written for a different era of tooling and may need updating to better reflect the current small-model, role-specialized council approach.
 
-## Hardware Context
+## Concrete Example: The Sea Gypsy
 
-- Current development host (this clone): **16 GB VRAM** (NVIDIA RTX 2000 Ada) — this is the "p3cos" class machine from prior audits.
-- The scripts + README still reference the 8 GB baseline for conservatism; actual simultaneous capacity on 16 GB will be measured with the new verify tooling.
+The current driving project is the transcription and cleanup of *The Sea Gypsy* (1924), a travel/adventure book co-authored by Edward A. Salisbury and Merian C. Cooper (the man who would later create *King Kong*).
 
-See `artifacts/aho-fresh-start-current-state-audit-2026-05-30.md` (and the p3cos reference it compares against) for the full before/after analysis of the legacy reset.
+### Why We’re Doing It
+This is family history. Edward A. Salisbury was the user’s great-great-grandfather. The book is a first-hand account of a global voyage on the ketch *Wisdom*, including time in the Andaman Islands, Abyssinia, the South Seas, and the Red Sea. The goal is to produce a clean, readable version so the user’s 17-year-old son can actually engage with his ancestor’s story.
 
-## Next Steps (Overnight-Friendly)
+Edward Salsbury captured exotic animals from the South Pacific for carnivals. He later began capturing cannibals and selling them to carnivals as well. He and Merian C. Cooper became close friends and business partners; together they made the film *Gow* in 1928.
 
-1. **Fire up the installer overnight** (dedicated 16GB version):
-   ```
-   tmux new -s aho-ollama
-   sudo fish ./bin/aho-ollama-global-16gb.fish
-   ```
-   This version is tuned for your RTX 2000 Ada 16GB. It pulls a rich role-specialized fleet (Phi-4 14B, Qwen3 8B for evaluation, DeepSeek R1 14B, small specialized models, vision, nomic RAG + one extra heavy) and runs individual smoke tests with aggressive VRAM offloading between each model.
-   The script will:
-   - Set up the system-wide Ollama service + fleet
-   - Run the built-in `ollama list` validation + generate/embed smoke
-   - Install `aho` / `aho-conductor` / `aho-ollama-verify` shims into `~/.local/bin` (with PATH)
-2. Morning: re-login (or `exec fish`), then from **any directory**:
-   ```
-   ollama list
-   aho-ollama-verify
-   ./bin/aho-ollama-verify.fish --all   # if desired
-   ```
-   You should also be able to run `aho-conductor` (once the new council dispatcher is wired) from any project.
-3. Use the measured VRAM numbers + successful smoke to design the role-specialized harness in `harness/` and the new council router in `council/`.
-4. Evolve the preserved `artifacts/harness/base.md` Pillars + `gotcha_archive.json` into the living contract for the lean Ollama council.
+This led a group of investors to loan both men a large sum of money so that Salsbury could capture a 100-foot gorilla in the South Pacific. Salsbury took the money and went to Italy instead, where he died sailing the *Wisdom* drunk. The investors then came after Cooper to repay the loan. Cooper created *King Kong* to pay them back. And the story in *The Sea Gypsy* is, in essence, the tale of what would have happened if Salsbury had actually succeeded.
+
+### Challenges Overcome
+- The source PDF was a poor 1920s scan (reprinted by “Forgotten Books”) with heavy OCR artifacts, vector pages, JPX errors, and full-page illustration plates that traditional OCR turned into garbage.
+- Early passes were pure CPU (ocrmypdf + tesseract) and produced usable but rough text.
+- We then shifted to using the small local council (the same four models above) for a multi-round “debate” system: one model finds problems, another reviews against the original PDF, and the strongest writer produces repairs.
+- We had to invent and iterate on process (linear passes → debate system → proper cumulative versioning) while the models themselves were doing the text work.
+
+### Progress Made (as of early June 2026)
+- Multiple cumulative versioned artifacts produced (v2 → v3 → v4 linear passes, followed by a full overnight debate run producing v5 material).
+- A working multi-agent debate system using the naval roles above.
+- Strict discipline around always improving the *latest* version instead of branching or resetting.
+- A proper ephemeral workspace model (`tmp/`) created so project work can live separately from the core aho harnesses and eventually migrate cleanly to the target GCP project (tteos).
+- 77+ sections meaningfully improved in a single 3-round overnight debate pass.
+
+### What Still Needs Work
+- Hardware is the current limiter. The 16 GB RTX 2000 Ada is workable but forces compromises on model size and parallelism. Better hardware will unlock significantly stronger Helmsman and Reviewer performance.
+- The debate system’s final assembly and merging logic is still crude. We are actively improving the “merger” tooling so that debate improvements integrate cleanly into the main reading copy instead of producing messy partial files.
+- The 11 Pillars themselves need a serious review pass. Many were written for a different tooling era.
+
+This project has become the primary forcing function for evolving the aho council from “Grok designs clever prompts” into a real, self-improving crew that can operate over long time horizons.
 
 ---
 
-**This is no longer the old heavy Python council.**  
-We're starting fresh with local models, real hardware constraints, and the parts of the old work that actually mattered.
+## Changelog
 
-Legacy code and full history: `archive/0.3.2/`
+*(Changelog to be appended here once retrieved)*

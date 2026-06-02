@@ -75,8 +75,8 @@ if test -n "$vram"
     end
 end
 
-# 4. Quick health ping on core small models
-for model in llama3.2:3b nemotron-mini:4b
+# 4. Quick health ping on v3 pinned hot-tier council (nomic + hermes3 + qwen2.5:3b + gemma2)
+for model in nomic-embed-text hermes3:3b qwen2.5:3b gemma2:2b
     if not ollama run $model "ping" --keep-alive 1m > /dev/null 2>&1
         _warn "$model did not respond quickly"
     else

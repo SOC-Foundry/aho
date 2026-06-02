@@ -1,13 +1,29 @@
-# Ollama model roster for aho council (16GB baseline)
+# Ollama model roster for aho council (16GB p3cos v3 - 2026-05-31)
 # One model per line. Comments with # are ignored.
-# Order can imply rough priority for pre-flight pulls.
+# This is the validated pinned hot-tier for dependable small council work this week.
 
-nomic-embed-text
-llama3.2:3b
-nemotron-mini:4b
-qwen3:8b
+# === Tier 1: Always-Hot Pinned Fast Council (aggressive keep_alive=-1) ===
+# Total pinned footprint ~9.5-10.5 GB with good headroom at working context.
+nomic-embed-text          # RAG embeddings (always hot, negligible cost)
+hermes3:3b                # Tool-use / function-calling / agentic specialist (clear winner)
+qwen2.5:3b                # Structured output, JSON, routing & classification
+gemma2:2b                 # Ultra-fast triage / first responder
+nemotron-mini:4b          # Secondary structured/classifier (distinct role from qwen2.5)
+
+# === On-demand / Medium (load when needed, short keep_alive) ===
+llama3.2:3b               # Generalist fallback (mature, stable)
+qwen3:8b                  # Medium fallback (use sparingly - eviction prone in past tests)
+
+# === Vision (on-demand) ===
 llava:13b
-phi4:14b
-deepseek-r1:14b
+
+# === Heavy / Deliberate (shelved for this week's small-council focus) ===
+phi4:14b                  # Primary strong generalist - load only for hard tasks
+deepseek-r1:14b           # Heavy reasoner - deliberate use only
 qwen2.5:14b
-qwen3.5:35b-a3b
+qwen3.5:35b-a3b           # Nuclear MoE option
+
+# Notes:
+# - The 5-model hot tier above was selected after expanded matrix + 14B headroom tests + Gemini+Claude v2 review.
+# - Use pinning (keep_alive=-1) for Tier 1. Short keep_alive for everything else.
+# - Run preflight before important sessions. Run 60-min pinned stability test before production reliance.

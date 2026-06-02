@@ -52,3 +52,8 @@ models/
 *.zip
 *.tar.gz
 *.iso
+
+# Ephemeral project work (customer data, experiments, one-off tasks)
+# These live locally on engineer machines and are meant to migrate to tteos.
+# Never committed to this repo.
+tmp/

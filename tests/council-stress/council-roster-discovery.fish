@@ -49,7 +49,7 @@ offload_all
 echo "Baseline VRAM: "(vram) | tee -a $LOGFILE
 
 echo ""
-echo "=== Scenario A: Fast Trio (llama3.2 + nemotron + qwen3:8b) ===" | tee -a $LOGFILE
+echo "=== Scenario A: Fast Trio + qwen3:8b fallback (llama3.2 + nemotron + qwen3:8b) ===" | tee -a $LOGFILE
 force_load llama3.2:3b
 force_load nemotron-mini:4b
 force_load qwen3:8b
@@ -65,11 +65,11 @@ timed_prompt qwen3:8b "One sentence commit message for Safari login fix" | tee -
 offload_all
 
 echo ""
-echo "=== Scenario B: Fast trio + phi4:14b ===" | tee -a $LOGFILE
+echo "=== Scenario B: Fast trio + deepseek-r1:14b (primary reasoner) ===" | tee -a $LOGFILE
 force_load llama3.2:3b
 force_load nemotron-mini:4b
 force_load qwen3:8b
-force_load phi4:14b
+force_load deepseek-r1:14b
 echo "Loaded:" | tee -a $LOGFILE
 ollama ps | tee -a $LOGFILE
 echo "VRAM: "(vram) | tee -a $LOGFILE
@@ -78,7 +78,7 @@ echo "Concurrent tasks under pressure:" | tee -a $LOGFILE
 timed_prompt llama3.2:3b "Quick triage" | tee -a $LOGFILE
 timed_prompt nemotron-mini:4b "Bug or feature?" | tee -a $LOGFILE
 timed_prompt qwen3:8b "Short commit message" | tee -a $LOGFILE
-timed_prompt phi4:14b "Is adding input sanitization safe? one sentence" | tee -a $LOGFILE
+timed_prompt deepseek-r1:14b "Is adding input sanitization safe? one sentence" | tee -a $LOGFILE
 
 offload_all
 
