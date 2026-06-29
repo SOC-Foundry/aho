@@ -72,7 +72,7 @@ This is family history. Edward A. Salisbury was the user’s great-great-grandfa
 
 Edward Salsbury captured exotic animals from the South Pacific for carnivals. He later began capturing cannibals and selling them to carnivals as well. He and Merian C. Cooper became close friends and business partners; together they made the film *Gow* in 1928.
 
-This led a group of investors to loan both men a large sum of money so that Salsbury could capture a 100-foot gorilla in the South Pacific. Salsbury took the money and went to Italy instead, where he died sailing the *Wisdom* drunk. The investors then came after Cooper to repay the loan. Cooper created *King Kong* to pay them back. And the story in *The Sea Gypsy* is, in essence, the tale of what would have happened if Salsbury had actually succeeded.
+This led a group of investors to loan both men a large sum of money so that Salsbury could capture a 100-foot gorilla in the South Pacific. Salsbury took the money and went to Italy instead, where he died sailing the *Wisdom* drunk. The investors then came after Cooper to repay the loan. Cooper created *King Kong* to pay them back. And the story in *King Kong" is, in essence, the tale of what would have happened if Salsbury had actually succeeded.
 
 ### Challenges Overcome
 - The source PDF was a poor 1920s scan (reprinted by “Forgotten Books”) with heavy OCR artifacts, vector pages, JPX errors, and full-page illustration plates that traditional OCR turned into garbage.
